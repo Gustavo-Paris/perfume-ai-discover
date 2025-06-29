@@ -1,0 +1,269 @@
+
+import { Perfume } from '@/types';
+
+export const samplePerfumes: Perfume[] = [
+  {
+    id: '1',
+    name: 'Sauvage',
+    brand: 'Dior',
+    family: 'Aromática',
+    gender: 'masculino',
+    size_ml: [50, 100],
+    price_full: 589.00,
+    price_5ml: 45.00,
+    price_10ml: 89.00,
+    stock_full: 15,
+    stock_5ml: 50,
+    stock_10ml: 30,
+    description: 'Uma fragrância selvagem e nobre, inspirada na natureza intocada. Sauvage é uma criação que captura tanto a frescura quanto a potência.',
+    image_url: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Bergamota', 'Pimenta Rosa'],
+      heart: ['Gerânio', 'Lavanda', 'Sálvia Sclarea'],
+      base: ['Ambroxan', 'Cedro', 'Patchouli']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '2',
+    name: 'J\'adore',
+    brand: 'Dior',
+    family: 'Floral',
+    gender: 'feminino',
+    size_ml: [50, 100],
+    price_full: 649.00,
+    price_5ml: 49.00,
+    price_10ml: 95.00,
+    stock_full: 20,
+    stock_5ml: 40,
+    stock_10ml: 25,
+    description: 'Um bouquet floral sensual e feminino. J\'adore é uma homenagem às mulheres, sua beleza e feminilidade.',
+    image_url: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Pêra', 'Melão', 'Magnólia'],
+      heart: ['Lírio do Vale', 'Frésia', 'Rosa'],
+      base: ['Cedro', 'Sândalo', 'Almíscar']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '3',
+    name: 'Acqua di Giò',
+    brand: 'Giorgio Armani',
+    family: 'Aquática',
+    gender: 'masculino',
+    size_ml: [50, 100],
+    price_full: 459.00,
+    price_5ml: 39.00,
+    price_10ml: 75.00,
+    stock_full: 25,
+    stock_5ml: 60,
+    stock_10ml: 35,
+    description: 'Inspirado pela beleza de Pantelleria, onde a terra encontra o mar. Uma fragrância aquática e refrescante.',
+    image_url: 'https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Bergamota', 'Néroli', 'Limão Verde'],
+      heart: ['Jasmim', 'Calone', 'Rosa'],
+      base: ['Almíscar Branco', 'Cedro', 'Patchouli']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '4',
+    name: 'Black Opium',
+    brand: 'Yves Saint Laurent',
+    family: 'Oriental',
+    gender: 'feminino',
+    size_ml: [50, 90],
+    price_full: 569.00,
+    price_5ml: 47.00,
+    price_10ml: 91.00,
+    stock_full: 18,
+    stock_5ml: 45,
+    stock_10ml: 28,
+    description: 'Uma fragrância viciante que revela a faceta mais ousada da feminilidade. Café preto, flores brancas e baunilha.',
+    image_url: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59db9?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Groselha Preta', 'Pêra', 'Flor de Laranjeira'],
+      heart: ['Café', 'Jasmim', 'Flor de Amêndoa'],
+      base: ['Baunilha', 'Patchouli', 'Cedro']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '5',
+    name: 'Light Blue',
+    brand: 'Dolce & Gabbana',
+    family: 'Floral Frutal',
+    gender: 'feminino',
+    size_ml: [50, 100],
+    price_full: 429.00,
+    price_5ml: 37.00,
+    price_10ml: 71.00,
+    stock_full: 22,
+    stock_5ml: 55,
+    stock_10ml: 32,
+    description: 'Inspirado pelo verão siciliano. Uma fragrância fresca e mediterrânea que evoca a brisa do mar.',
+    image_url: 'https://images.unsplash.com/photo-1580870069867-74c57ee1bb07?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Limão Siciliano', 'Maçã Verde', 'Sino de Bluebell'],
+      heart: ['Bambu', 'Jasmim', 'Rosa Branca'],
+      base: ['Cedro', 'Almíscar', 'Âmbar']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '6',
+    name: 'One Million',
+    brand: 'Paco Rabanne',
+    family: 'Oriental Especiada',
+    gender: 'masculino',
+    size_ml: [50, 100],
+    price_full: 389.00,
+    price_5ml: 35.00,
+    price_10ml: 67.00,
+    stock_full: 30,
+    stock_5ml: 70,
+    stock_10ml: 40,
+    description: 'Uma fragrância para homens que ousam sonhar grande. Sedutor, poderoso e magnético.',
+    image_url: 'https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Toranja', 'Hortelã', 'Mandarina Vermelha'],
+      heart: ['Canela', 'Especiarias', 'Rosa'],
+      base: ['Âmbar', 'Couro', 'Madeira']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '7',
+    name: 'CK One',
+    brand: 'Calvin Klein',
+    family: 'Cítrica',
+    gender: 'unissex',
+    size_ml: [50, 100, 200],
+    price_full: 289.00,
+    price_5ml: 29.00,
+    price_10ml: 55.00,
+    stock_full: 35,
+    stock_5ml: 80,
+    stock_10ml: 50,
+    description: 'A primeira fragrância unissex. Livre, natural e espontânea. Uma fragrância que quebrou barreiras.',
+    image_url: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Bergamota', 'Limão', 'Mandarina'],
+      heart: ['Jasmim', 'Lírio do Vale', 'Rosa'],
+      base: ['Almíscar', 'Sândalo', 'Cedro']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '8',
+    name: 'Euphoria',
+    brand: 'Calvin Klein',
+    family: 'Oriental Floral',
+    gender: 'feminino',
+    size_ml: [50, 100],
+    price_full: 349.00,
+    price_5ml: 33.00,
+    price_10ml: 63.00,
+    stock_full: 28,
+    stock_5ml: 65,
+    stock_10ml: 38,
+    description: 'Uma fragrância que captura a essência da feminilidade moderna. Sedutora e misteriosa.',
+    image_url: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Romã', 'Caqui', 'Maçã Verde'],
+      heart: ['Lótus', 'Orquídea', 'Champagne'],
+      base: ['Âmbar', 'Violeta', 'Madeira']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '9',
+    name: 'Invictus',
+    brand: 'Paco Rabanne',
+    family: 'Aquática',
+    gender: 'masculino',
+    size_ml: [50, 100],
+    price_full: 429.00,
+    price_5ml: 37.00,
+    price_10ml: 71.00,
+    stock_full: 20,
+    stock_5ml: 50,
+    stock_10ml: 30,
+    description: 'O perfume da vitória. Para homens que fazem suas próprias regras e conquistam seus sonhos.',
+    image_url: 'https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Toranja', 'Folhas de Louro', 'Violeta Marinha'],
+      heart: ['Jasmim', 'Madeira Gaiac', 'Hedione'],
+      base: ['Âmbar Cinza', 'Musgo de Carvalho', 'Patchouli']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '10',
+    name: 'La Vie Est Belle',
+    brand: 'Lancôme',
+    family: 'Oriental Gourmand',
+    gender: 'feminino',
+    size_ml: [50, 75, 100],
+    price_full: 629.00,
+    price_5ml: 48.00,
+    price_10ml: 93.00,
+    stock_full: 25,
+    stock_5ml: 45,
+    stock_10ml: 28,
+    description: 'A vida é bela! Uma fragrância que celebra a felicidade e a joie de vivre francesa.',
+    image_url: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Groselha Preta', 'Pêra'],
+      heart: ['Íris', 'Jasmim', 'Flor de Laranjeira'],
+      base: ['Pralinê', 'Baunilha', 'Patchouli']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '11',
+    name: 'Le Labo Santal 33',
+    brand: 'Le Labo',
+    family: 'Amadeirada',
+    gender: 'unissex',
+    size_ml: [50, 100],
+    price_full: 789.00,
+    price_5ml: 59.00,
+    price_10ml: 115.00,
+    stock_full: 12,
+    stock_5ml: 25,
+    stock_10ml: 18,
+    description: 'O perfume cult de Nova York. Sândalo cremoso com notas de cardamomo e íris. Irresistível e viciante.',
+    image_url: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Cardamomo', 'Íris', 'Violeta'],
+      heart: ['Sândalo', 'Papiro', 'Rosa'],
+      base: ['Cedro', 'Couro', 'Âmbar']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '12',
+    name: 'Chanel N°5',
+    brand: 'Chanel',
+    family: 'Floral Aldeídica',
+    gender: 'feminino',
+    size_ml: [50, 100],
+    price_full: 899.00,
+    price_5ml: 65.00,
+    price_10ml: 125.00,
+    stock_full: 8,
+    stock_5ml: 20,
+    stock_10ml: 12,
+    description: 'O perfume mais famoso do mundo. Criado por Ernest Beaux em 1921, é sinônimo de elegância e sofisticação.',
+    image_url: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59db9?w=400&h=500&fit=crop',
+    notes: {
+      top: ['Aldeídos', 'Ylang-ylang', 'Néroli'],
+      heart: ['Íris', 'Jasmim', 'Rosa'],
+      base: ['Sândalo', 'Vetiver', 'Baunilha']
+    },
+    created_at: '2024-01-01T00:00:00Z'
+  }
+];
