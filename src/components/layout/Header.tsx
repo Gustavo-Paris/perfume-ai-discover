@@ -1,14 +1,24 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, Menu, X, Search, Heart } from 'lucide-react';
+import { ShoppingBag, User, Menu, X, Search, Heart, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { items } = useCart();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -19,6 +29,11 @@ const Header = () => {
     { name: 'Sobre', href: '/sobre' },
     { name: 'Contato', href: '/contato' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md">
@@ -71,9 +86,39 @@ const Header = () => {
                 </span>
               )}
             </Button>
-            <Button variant="ghost" size="icon">
-              <User className="h-4 w-4" />
-            </Button>
+            
+            {/* User Menu */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    Pedidos
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    Endereços
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="outline" onClick={() => navigate('/auth')}>
+                Entrar
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu */}
@@ -110,10 +155,34 @@ const Header = () => {
                     </Link>
                   ))}
                   <div className="border-t pt-6 space-y-4">
-                    <Button variant="outline" className="w-full justify-start">
-                      <User className="mr-2 h-4 w-4" />
-                      Minha Conta
-                    </Button>
+                    {user ? (
+                      <>
+                        <Button variant="outline" className="w-full justify-start">
+                          <User className="mr-2 h-4 w-4" />
+                          Minha Conta
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start"
+                          onClick={handleSignOut}
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Sair
+                        </Button>
+                      </>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => {
+                          navigate('/auth');
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Entrar
+                      </Button>
+                    )}
                     <Button variant="outline" className="w-full justify-start">
                       <Heart className="mr-2 h-4 w-4" />
                       Favoritos
