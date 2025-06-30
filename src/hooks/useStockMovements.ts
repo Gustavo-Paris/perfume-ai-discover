@@ -16,7 +16,7 @@ export const useStockMovements = (perfumeId?: string) => {
         `)
         .order('created_at', { ascending: false });
       
-      if (perfumeId) {
+      if (perfumeId && perfumeId !== 'all') {
         query = query.eq('perfume_id', perfumeId);
       }
       

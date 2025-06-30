@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, Menu, X, Search, Heart, LogOut } from 'lucide-react';
+import { ShoppingBag, User, Menu, X, Search, Heart, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
@@ -108,6 +108,19 @@ const Header = () => {
                     Endereços
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/admin/perfumes')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Admin - Perfumes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/admin/lots')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Admin - Lotes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/admin/inventory')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Admin - Estoque
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
@@ -161,6 +174,41 @@ const Header = () => {
                           <User className="mr-2 h-4 w-4" />
                           Minha Conta
                         </Button>
+                        <div className="space-y-2">
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start"
+                            onClick={() => {
+                              navigate('/admin/perfumes');
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            <Settings className="mr-2 h-4 w-4" />
+                            Admin - Perfumes
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start"
+                            onClick={() => {
+                              navigate('/admin/lots');
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            <Settings className="mr-2 h-4 w-4" />
+                            Admin - Lotes
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start"
+                            onClick={() => {
+                              navigate('/admin/inventory');
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            <Settings className="mr-2 h-4 w-4" />
+                            Admin - Estoque
+                          </Button>
+                        </div>
                         <Button 
                           variant="outline" 
                           className="w-full justify-start"

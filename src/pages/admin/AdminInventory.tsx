@@ -80,7 +80,7 @@ const AdminInventory = () => {
                     <SelectValue placeholder="Todos os perfumes" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os perfumes</SelectItem>
+                    <SelectItem value="all">Todos os perfumes</SelectItem>
                     {perfumes?.map((perfume) => (
                       <SelectItem key={perfume.id} value={perfume.id}>
                         {perfume.brand} - {perfume.name}
