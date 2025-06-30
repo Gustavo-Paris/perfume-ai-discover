@@ -99,7 +99,7 @@ const Home = () => {
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        viewport={{ once: true, threshold: 0.1 }}
+        viewport={{ once: true }}
       >
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
@@ -177,7 +177,7 @@ const Home = () => {
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        viewport={{ once: true, threshold: 0.1 }}
+        viewport={{ once: true }}
       >
         <div className="container mx-auto max-w-4xl text-center">
           <div className="glass-gold rounded-3xl p-12 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
