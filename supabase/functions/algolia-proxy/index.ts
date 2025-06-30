@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import algoliasearch from 'https://esm.sh/algoliasearch@4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -83,9 +82,6 @@ serve(async (req) => {
       });
     }
 
-    const client = algoliasearch(algoliaAppId, algoliaSearchKey);
-    const index = client.initIndex('perfumes');
-
     const searchParams = {
       hitsPerPage: 8,
       attributesToRetrieve: ["id", "name", "brand", "price_full", "image_url"],
@@ -94,9 +90,37 @@ serve(async (req) => {
       ...params
     };
 
-    const { hits } = await index.search(query, searchParams);
+    // Use direct HTTP request to Algolia Search API
+    const searchUrl = `https://${algoliaAppId}-dsn.algolia.net/1/indexes/perfumes/query`;
+    
+    const searchResponse = await fetch(searchUrl, {
+      method: 'POST',
+      headers: {
+        'X-Algolia-API-Key': algoliaSearchKey,
+        'X-Algolia-Application-Id': algoliaAppId,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        ...searchParams
+      })
+    });
 
-    return new Response(JSON.stringify({ hits }), {
+    if (!searchResponse.ok) {
+      const errorText = await searchResponse.text();
+      console.error('Algolia search error:', errorText);
+      return new Response(JSON.stringify({ 
+        error: 'Search service unavailable' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    const searchResult = await searchResponse.json();
+    console.log(`Search performed for query: "${query}", found ${searchResult.hits?.length || 0} results`);
+
+    return new Response(JSON.stringify({ hits: searchResult.hits || [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
