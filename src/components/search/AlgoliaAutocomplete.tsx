@@ -12,7 +12,7 @@ interface SearchResult {
   name: string;
   brand: string;
   image_url: string;
-  price_5ml: number;
+  price_full: number;
 }
 
 const AlgoliaAutocomplete = () => {
@@ -137,7 +137,7 @@ const AlgoliaAutocomplete = () => {
                     <p className="font-medium text-sm truncate">{perfume.name}</p>
                     <p className="text-xs text-muted-foreground">{perfume.brand}</p>
                     <p className="text-xs font-medium text-gold-600">
-                      A partir de R$ {perfume.price_5ml?.toFixed(2).replace('.', ',')}
+                      R$ {perfume.price_full?.toFixed(2).replace('.', ',')}
                     </p>
                   </div>
                 </button>

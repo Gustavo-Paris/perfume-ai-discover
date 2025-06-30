@@ -37,13 +37,13 @@ serve(async (req) => {
     // Get all perfumes from database
     const { data: perfumes, error } = await supabaseClient
       .from('perfumes')
-      .select('*');
+      .select('id, name, brand, family, top_notes, heart_notes, base_notes, price_full, image_url');
 
     if (error) {
       throw error;
     }
 
-    // Transform perfumes for Algolia
+    // Transform perfumes for Algolia - only include fields we need for search
     const algoliaObjects = perfumes.map(perfume => ({
       objectID: perfume.id,
       id: perfume.id,
@@ -56,9 +56,7 @@ serve(async (req) => {
         ...(perfume.base_notes || [])
       ].join(', '),
       price_full: perfume.price_full,
-      price_5ml: perfume.price_5ml,
       image_url: perfume.image_url,
-      gender: perfume.gender,
     }));
 
     // Save objects to Algolia
