@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,7 +58,7 @@ const ConversationChat = ({
         <div className="space-y-6 py-6">
           {messages.length === 0 && (
             <div className="text-center py-12 animate-fade-in">
-              <div className="ai-glow w-16 h-16 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-6">
+              <div className="cyber-glow w-16 h-16 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="h-8 w-8 text-white animate-pulse" />
               </div>
               <h3 className="font-cormorant text-3xl font-semibold mb-4 text-luxury-800">
@@ -69,7 +68,7 @@ const ConversationChat = ({
                 Digite "Olá" para começar sua jornada personalizada de descoberta de fragrâncias
               </p>
               <div className="glass-luxury rounded-2xl p-4 border border-luxury-300/40 max-w-sm mx-auto">
-                <div className="tech-status justify-center text-luxury-600 font-montserrat">
+                <div className="cyber-status justify-center text-ai-active font-montserrat">
                   <span className="text-sm">Sistema pronto para interação</span>
                 </div>
               </div>
@@ -90,7 +89,7 @@ const ConversationChat = ({
                 <CardContent className="p-5">
                   <div className="flex items-start space-x-3">
                     {message.role === 'assistant' ? (
-                      <div className="ai-glow w-8 h-8 rounded-full bg-gradient-gold-elegant flex items-center justify-center flex-shrink-0 mt-1">
+                      <div className="cyber-glow w-8 h-8 rounded-full bg-gradient-gold-elegant flex items-center justify-center flex-shrink-0 mt-1">
                         <Star className="h-4 w-4 text-white" />
                       </div>
                     ) : (
@@ -114,8 +113,8 @@ const ConversationChat = ({
                           })}
                         </span>
                         {message.role === 'assistant' && (
-                          <div className="tech-status">
-                            <span className="text-xs text-tech-green font-montserrat">IA</span>
+                          <div className="cyber-status">
+                            <span className="text-xs text-ai-active font-montserrat">IA</span>
                           </div>
                         )}
                       </div>
@@ -131,15 +130,15 @@ const ConversationChat = ({
               <Card className="luxury-card border-luxury-300/40 bg-luxury-50/90">
                 <CardContent className="p-5">
                   <div className="flex items-center space-x-3">
-                    <div className="ai-glow w-8 h-8 rounded-full bg-gradient-gold-elegant flex items-center justify-center">
+                    <div className="cyber-glow w-8 h-8 rounded-full bg-gradient-gold-elegant flex items-center justify-center">
                       <Star className="h-4 w-4 text-white animate-pulse" />
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-luxury-600 text-sm font-montserrat">Processando</span>
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-tech-blue rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-tech-purple rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-tech-pink rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-cyber-blue rounded-full animate-cyber-pulse"></div>
+                        <div className="w-2 h-2 bg-cyber-purple rounded-full animate-cyber-pulse" style={{ animationDelay: '0.3s' }}></div>
+                        <div className="w-2 h-2 bg-cyber-pink rounded-full animate-cyber-pulse" style={{ animationDelay: '0.6s' }}></div>
                       </div>
                     </div>
                   </div>
@@ -166,7 +165,7 @@ const ConversationChat = ({
               />
               {inputMessage && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="w-2 h-2 bg-tech-green rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-ai-active rounded-full animate-cyber-pulse"></div>
                 </div>
               )}
             </div>

@@ -37,8 +37,8 @@ const SessionHistory = ({ onLoadSession, currentSessionId }: SessionHistoryProps
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-tech-green/20 text-tech-green border-tech-green/30';
-      case 'active': return 'bg-tech-cyan/20 text-tech-cyan border-tech-cyan/30';
+      case 'completed': return 'bg-ai-complete/20 text-ai-complete border-ai-complete/30';
+      case 'active': return 'bg-ai-active/20 text-ai-active border-ai-active/30';
       case 'abandoned': return 'bg-luxury-400/20 text-luxury-500 border-luxury-400/30';
       default: return 'bg-luxury-400/20 text-luxury-500 border-luxury-400/30';
     }
@@ -71,7 +71,7 @@ const SessionHistory = ({ onLoadSession, currentSessionId }: SessionHistoryProps
   if (sessions.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="luxury-glow w-16 h-16 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-6">
+        <div className="cyber-glow w-16 h-16 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-6">
           <AtomIcon className="h-8 w-8 text-white" />
         </div>
         <h3 className="font-cormorant text-2xl font-semibold text-luxury-700 mb-2">
@@ -90,7 +90,7 @@ const SessionHistory = ({ onLoadSession, currentSessionId }: SessionHistoryProps
         <h3 className="font-cormorant text-2xl font-semibold text-luxury-700">
           Histórico de Curadorias
         </h3>
-        <div className="tech-status text-luxury-500 font-montserrat">
+        <div className="cyber-status text-ai-active font-montserrat">
           <span className="text-sm">{sessions.length} sessões armazenadas</span>
         </div>
       </div>
@@ -109,7 +109,7 @@ const SessionHistory = ({ onLoadSession, currentSessionId }: SessionHistoryProps
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-medium text-luxury-700">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-gold-500 to-luxury-600 flex items-center justify-center">
+                    <div className="cyber-glow w-8 h-8 rounded-full bg-gradient-to-r from-gold-500 to-luxury-600 flex items-center justify-center">
                       <Sparkles className="h-4 w-4 text-white" />
                     </div>
                     <div>
@@ -148,7 +148,7 @@ const SessionHistory = ({ onLoadSession, currentSessionId }: SessionHistoryProps
                   )}
                 </div>
                 {currentSessionId === session.id && (
-                  <div className="tech-status text-tech-green font-montserrat">
+                  <div className="cyber-status text-ai-active font-montserrat">
                     <span className="text-xs">Ativo</span>
                   </div>
                 )}

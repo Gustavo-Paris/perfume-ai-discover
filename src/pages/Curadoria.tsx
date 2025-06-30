@@ -145,18 +145,18 @@ const Curadoria = () => {
   if (error) {
     return (
       <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-        <FloatingParticles count={15} />
+        <FloatingParticles count={15} cyberpunkRatio={0.7} />
         <div className="container mx-auto px-4 max-w-2xl relative z-10">
-          <Card className="glass-luxury border-red-500/50 bg-red-950/20">
+          <Card className="glass-luxury border-ai-error/50 bg-red-950/20">
             <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mx-auto mb-4">
+              <div className="cyber-glow w-16 h-16 rounded-full bg-gradient-to-r from-ai-error to-cyber-pink flex items-center justify-center mx-auto mb-4">
                 <Zap className="h-8 w-8 text-white" />
               </div>
-              <p className="text-red-400 mb-4 text-lg font-montserrat">Sistema Temporariamente Indisponível</p>
+              <p className="text-ai-error mb-4 text-lg font-montserrat">Sistema Temporariamente Indisponível</p>
               <p className="text-red-300 font-medium mb-6">{error}</p>
               <Button 
                 onClick={handleReset}
-                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white border-0"
+                className="bg-gradient-to-r from-ai-error to-cyber-pink hover:from-red-500 hover:to-red-600 text-white border-0"
               >
                 <AtomIcon className="mr-2 h-4 w-4" />
                 Reconectar Sistema
@@ -171,7 +171,7 @@ const Curadoria = () => {
   if (showHistory) {
     return (
       <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-        <FloatingParticles count={25} />
+        <FloatingParticles count={25} cyberpunkRatio={0.4} />
         <div className="container mx-auto px-4 max-w-4xl relative z-10">
           <div className="mb-8 flex items-center justify-between">
             <h1 className="font-cormorant text-5xl font-bold text-white">
@@ -205,7 +205,7 @@ const Curadoria = () => {
   if (showResults) {
     return (
       <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-        <FloatingParticles count={30} />
+        <FloatingParticles count={30} cyberpunkRatio={0.2} />
         <div className="container mx-auto px-4 relative z-10">
           <RecommendationResults 
             recommendedIds={recommendedIds}
@@ -220,13 +220,13 @@ const Curadoria = () => {
   if (isAnalyzing) {
     return (
       <div className="min-h-screen elegant-bg py-12 relative overflow-hidden flex items-center justify-center">
-        <FloatingParticles count={40} />
+        <FloatingParticles count={40} cyberpunkRatio={0.8} />
         <div className="text-center relative z-10 max-w-2xl mx-auto px-4">
-          <div className="ai-glow w-32 h-32 rounded-full bg-gradient-to-r from-gold-500 to-luxury-600 flex items-center justify-center mx-auto mb-8 animate-ai-glow">
+          <div className="cyber-glow w-32 h-32 rounded-full bg-gradient-to-r from-gold-500 to-luxury-600 flex items-center justify-center mx-auto mb-8 animate-cyber-glow">
             <Sparkles className="h-16 w-16 text-white animate-pulse" />
           </div>
           <h2 className="font-cormorant text-5xl font-bold mb-6 text-white">
-            <span className="ai-shimmer bg-clip-text text-transparent animate-gradient-x">
+            <span className="cyber-shimmer bg-clip-text text-transparent animate-gradient-x">
               Análise Inteligente
             </span>
           </h2>
@@ -234,12 +234,12 @@ const Curadoria = () => {
             Nossa inteligência artificial está processando suas preferências para descobrir as fragrâncias perfeitas
           </p>
           <div className="flex justify-center items-center space-x-4 mb-8">
-            <div className="w-3 h-3 bg-tech-blue rounded-full animate-bounce"></div>
-            <div className="w-3 h-3 bg-tech-purple rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-3 h-3 bg-tech-pink rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-3 h-3 bg-cyber-blue rounded-full animate-cyber-pulse"></div>
+            <div className="w-3 h-3 bg-cyber-purple rounded-full animate-cyber-pulse" style={{ animationDelay: '0.3s' }}></div>
+            <div className="w-3 h-3 bg-cyber-pink rounded-full animate-cyber-pulse" style={{ animationDelay: '0.6s' }}></div>
           </div>
           <div className="glass-luxury rounded-2xl p-6 border border-luxury-700/40">
-            <div className="tech-status justify-center text-luxury-300 font-montserrat">
+            <div className="cyber-status justify-center text-ai-processing font-montserrat">
               <span className="text-sm">Processando dados sensoriais...</span>
             </div>
           </div>
@@ -250,11 +250,11 @@ const Curadoria = () => {
 
   return (
     <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-      <FloatingParticles count={25} />
+      <FloatingParticles count={25} cyberpunkRatio={0.3} />
       
       <div className="container mx-auto px-4 max-w-4xl relative z-10">
         <div className="text-center mb-12 animate-fade-in">
-          <div className="ai-glow w-24 h-24 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-8 animate-float">
+          <div className="cyber-glow w-24 h-24 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-8 animate-float">
             <Sparkles className="h-12 w-12 text-white animate-pulse" />
           </div>
           <h1 className="font-cormorant text-6xl md:text-7xl font-bold mb-6">
@@ -281,8 +281,8 @@ const Curadoria = () => {
               </Button>
               
               {currentSessionId && (
-                <div className="tech-status text-tech-green bg-tech-green/10 px-4 py-2 rounded-full border border-tech-green/30 font-montserrat">
-                  <span className="text-sm font-medium">Sessão Ativa</span>
+                <div className="cyber-status text-ai-active bg-ai-active/10 px-4 py-2 rounded-full border border-ai-active/30 font-montserrat">
+                  <span className="text-sm font-medium">Sistema Ativo</span>
                 </div>
               )}
             </div>
@@ -294,7 +294,7 @@ const Curadoria = () => {
             <CardTitle className="font-cormorant text-3xl text-center text-luxury-800 flex items-center justify-center space-x-3">
               <Star className="h-7 w-7 text-gold-500" />
               <span>Sistema de Curadoria</span>
-              <AtomIcon className="h-7 w-7 text-luxury-600 animate-tech-pulse" />
+              <AtomIcon className="h-7 w-7 text-ai-active animate-cyber-pulse" />
             </CardTitle>
           </CardHeader>
           <CardContent className="h-full p-0 bg-gradient-to-b from-white/50 to-luxury-50/70">

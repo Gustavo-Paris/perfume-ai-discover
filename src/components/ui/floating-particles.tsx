@@ -7,48 +7,68 @@ interface Particle {
   animationDelay: number;
   size: number;
   color: string;
+  type: 'luxury' | 'cyber';
 }
 
 interface FloatingParticlesProps {
   count?: number;
   className?: string;
+  cyberpunkRatio?: number; // 0 to 1, percentage of cyberpunk particles
 }
 
-const FloatingParticles = ({ count = 20, className = "" }: FloatingParticlesProps) => {
+const FloatingParticles = ({ 
+  count = 20, 
+  className = "", 
+  cyberpunkRatio = 0.3 
+}: FloatingParticlesProps) => {
   const [particles, setParticles] = useState<Particle[]>([]);
 
-  const colors = [
+  const luxuryColors = [
     '#D4AF37', // Gold
-    '#3B82F6', // AI Blue
-    '#8B5CF6', // AI Purple  
-    '#EC4899', // AI Pink
-    '#00D4FF', // AI Cyan
+    '#B8860B', // Dark gold
+    '#FFD700', // Bright gold
     '#FFFFFF'  // White
   ];
 
+  const cyberpunkColors = [
+    '#00F5FF', // Cyber blue
+    '#BF00FF', // Cyber purple
+    '#FF1493', // Cyber pink
+    '#00FF41', // Cyber green
+  ];
+
   useEffect(() => {
-    const newParticles = Array.from({ length: count }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      animationDelay: Math.random() * 12,
-      size: Math.random() * 2 + 1,
-      color: colors[Math.floor(Math.random() * colors.length)],
-    }));
+    const newParticles = Array.from({ length: count }, (_, i) => {
+      const isCyber = Math.random() < cyberpunkRatio;
+      const colors = isCyber ? cyberpunkColors : luxuryColors;
+      
+      return {
+        id: i,
+        left: Math.random() * 100,
+        animationDelay: Math.random() * 12,
+        size: isCyber ? Math.random() * 1.5 + 0.5 : Math.random() * 2 + 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        type: isCyber ? 'cyber' : 'luxury'
+      } as Particle;
+    });
     setParticles(newParticles);
-  }, [count]);
+  }, [count, cyberpunkRatio]);
 
   return (
     <div className={`particle-container-luxury ${className}`}>
       {particles.map((particle) => (
         <div
           key={particle.id}
-          className="particle-luxury"
+          className={`particle-luxury ${particle.type === 'cyber' ? 'animate-cyber-pulse' : ''}`}
           style={{
             left: `${particle.left}%`,
             width: `${particle.size}px`,
             height: `${particle.size}px`,
             backgroundColor: particle.color,
             animationDelay: `${particle.animationDelay}s`,
+            boxShadow: particle.type === 'cyber' 
+              ? `0 0 8px ${particle.color}, 0 0 12px ${particle.color}` 
+              : 'none',
           }}
         />
       ))}

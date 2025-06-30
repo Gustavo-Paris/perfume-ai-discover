@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -58,6 +57,8 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				
+				// Perfumaria Luxo - Cores elegantes e tradicionais
 				gold: {
 					50: '#FFFBEB',
 					100: '#FEF3C7',
@@ -83,13 +84,27 @@ export default {
 					900: '#0F172A',
 					950: '#020617',
 				},
-				tech: {
-					cyan: '#00D4FF',
-					purple: '#8B5CF6',
-					pink: '#EC4899',
-					blue: '#3B82F6',
-					green: '#10B981',
+				
+				// IA Cyberpunk - Cores neon vibrantes para elementos de IA
+				cyber: {
+					blue: '#00F5FF',      // Cyan elétrico
+					purple: '#BF00FF',    // Magenta vibrante  
+					pink: '#FF1493',      // Deep pink neon
+					green: '#00FF41',     // Matrix green
+					orange: '#FF6600',    // Laranja cyber
+					yellow: '#FFFF00',    // Amarelo elétrico
 				},
+				
+				// IA Status - Cores específicas para status de IA
+				ai: {
+					active: '#00F5FF',    // Sistema ativo
+					processing: '#BF00FF', // Processando
+					complete: '#00FF41',   // Completo
+					error: '#FF1493',      // Erro
+					warning: '#FF6600',    // Aviso
+					idle: '#64748B',       // Inativo
+				},
+				
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -108,71 +123,61 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
 				},
 				'fade-in': {
-					'0%': {
-						opacity: '0',
-						transform: 'translateY(10px)'
-					},
-					'100%': {
-						opacity: '1',
-						transform: 'translateY(0)'
-					}
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
 				},
 				'float': {
-					'0%, 100%': {
-						transform: 'translateY(0px)'
-					},
-					'50%': {
-						transform: 'translateY(-10px)'
-					}
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
 				},
-				'ai-glow': {
+				
+				// IA Cyberpunk Animations
+				'cyber-glow': {
 					'0%': {
-						boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+						boxShadow: '0 0 20px #00F5FF, 0 0 40px #00F5FF, 0 0 60px #00F5FF',
 					},
 					'25%': {
-						boxShadow: '0 0 30px rgba(139, 92, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3)',
+						boxShadow: '0 0 25px #BF00FF, 0 0 50px #BF00FF, 0 0 75px #BF00FF',
 					},
 					'50%': {
-						boxShadow: '0 0 40px rgba(236, 72, 153, 0.7), 0 0 60px rgba(139, 92, 246, 0.4)',
+						boxShadow: '0 0 30px #FF1493, 0 0 60px #FF1493, 0 0 90px #FF1493',
 					},
 					'75%': {
-						boxShadow: '0 0 35px rgba(0, 212, 255, 0.6), 0 0 50px rgba(236, 72, 153, 0.3)',
+						boxShadow: '0 0 25px #00FF41, 0 0 50px #00FF41, 0 0 75px #00FF41',
 					},
 					'100%': {
-						boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+						boxShadow: '0 0 20px #00F5FF, 0 0 40px #00F5FF, 0 0 60px #00F5FF',
 					}
 				},
-				'ai-shimmer': {
-					'0%': {
-						backgroundPosition: '-200% 0'
+				'cyber-pulse': {
+					'0%, 100%': {
+						backgroundColor: '#00F5FF',
+						boxShadow: '0 0 10px #00F5FF'
 					},
-					'100%': {
-						backgroundPosition: '200% 0'
+					'33%': {
+						backgroundColor: '#BF00FF',
+						boxShadow: '0 0 15px #BF00FF'
+					},
+					'66%': {
+						backgroundColor: '#FF1493',
+						boxShadow: '0 0 15px #FF1493'
 					}
+				},
+				'cyber-shimmer': {
+					'0%': { backgroundPosition: '-200% 0' },
+					'100%': { backgroundPosition: '200% 0' }
 				},
 				'gradient-x': {
-					'0%, 100%': {
-						backgroundPosition: '0% 50%'
-					},
-					'50%': {
-						backgroundPosition: '100% 50%'
-					}
+					'0%, 100%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' }
 				},
 				'particle-luxury': {
 					'0%': {
@@ -190,14 +195,6 @@ export default {
 						transform: 'translateY(-100vh) translateX(30px) rotate(180deg) scale(0)',
 						opacity: '0'
 					}
-				},
-				'tech-pulse': {
-					'0%, 100%': {
-						opacity: '0.4'
-					},
-					'50%': {
-						opacity: '1'
-					}
 				}
 			},
 			animation: {
@@ -205,16 +202,18 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.6s ease-out',
 				'float': 'float 3s ease-in-out infinite',
-				'ai-glow': 'ai-glow 4s ease-in-out infinite',
 				'gradient-x': 'gradient-x 4s ease infinite',
-				'ai-shimmer': 'ai-shimmer 3s linear infinite',
 				'particle-luxury': 'particle-luxury 12s linear infinite',
-				'tech-pulse': 'tech-pulse 2s ease-in-out infinite'
+				
+				// IA Cyberpunk Animations
+				'cyber-glow': 'cyber-glow 3s ease-in-out infinite',
+				'cyber-pulse': 'cyber-pulse 2s ease-in-out infinite',
+				'cyber-shimmer': 'cyber-shimmer 2s linear infinite',
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'luxury-pattern': 'radial-gradient(circle at 2px 2px, rgba(212,175,55,0.1) 1px, transparent 0)',
-				'ai-gradient': 'linear-gradient(45deg, #3B82F6, #8B5CF6, #EC4899, #00D4FF)',
+				'cyber-gradient': 'linear-gradient(45deg, #00F5FF, #BF00FF, #FF1493, #00FF41)',
 			}
 		}
 	},
