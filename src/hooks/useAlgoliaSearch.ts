@@ -77,8 +77,7 @@ export const useAlgoliaSearch = () => {
           params: {
             hitsPerPage: 8,
             attributesToRetrieve: ["id", "name", "brand", "price_full", "image_url"],
-            attributesToHighlight: [],
-            restrictSearchableAttributes: ['name', 'brand', 'family', 'notes']
+            attributesToHighlight: []
           }
         }
       });

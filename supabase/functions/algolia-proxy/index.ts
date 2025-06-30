@@ -83,11 +83,11 @@ serve(async (req) => {
       });
     }
 
+    // Simplified search parameters - removing restrictSearchableAttributes
     const searchParams = {
       hitsPerPage: 8,
       attributesToRetrieve: ["id", "name", "brand", "price_full", "image_url"],
       attributesToHighlight: [],
-      restrictSearchableAttributes: ['name', 'brand', 'family', 'notes'],
       ...params
     };
 
