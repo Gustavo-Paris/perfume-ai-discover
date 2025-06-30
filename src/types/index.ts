@@ -88,3 +88,58 @@ export interface Address {
   country: string;
   created_at: string;
 }
+
+// New types for inventory management
+export interface DatabasePerfume {
+  id: string;
+  brand: string;
+  name: string;
+  description: string | null;
+  family: string;
+  gender: 'masculino' | 'feminino' | 'unissex';
+  top_notes: string[];
+  heart_notes: string[];
+  base_notes: string[];
+  price_5ml: number | null;
+  price_10ml: number | null;
+  price_full: number;
+  image_url: string | null;
+  category: string | null;
+  created_at: string;
+}
+
+export interface Warehouse {
+  id: string;
+  name: string;
+  location: string;
+  is_primary: boolean;
+  created_at: string;
+}
+
+export interface InventoryLot {
+  id: string;
+  perfume_id: string;
+  lot_code: string;
+  expiry_date: string | null;
+  qty_ml: number;
+  warehouse_id: string;
+  created_at: string;
+}
+
+export interface StockMovement {
+  id: string;
+  perfume_id: string;
+  lot_id: string | null;
+  change_ml: number;
+  movement_type: 'purchase' | 'fraction' | 'sale' | 'return' | 'adjust';
+  related_order_id: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface UserRole {
+  id: string;
+  user_id: string;
+  role: 'admin' | 'customer';
+  created_at: string;
+}

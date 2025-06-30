@@ -57,6 +57,105 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_lots: {
+        Row: {
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          lot_code: string
+          perfume_id: string
+          qty_ml: number
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          lot_code: string
+          perfume_id: string
+          qty_ml?: number
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          lot_code?: string
+          perfume_id?: string
+          qty_ml?: number
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_lots_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_lots_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfumes: {
+        Row: {
+          base_notes: string[] | null
+          brand: string
+          category: string | null
+          created_at: string | null
+          description: string | null
+          family: string
+          gender: string
+          heart_notes: string[] | null
+          id: string
+          image_url: string | null
+          name: string
+          price_10ml: number | null
+          price_5ml: number | null
+          price_full: number
+          top_notes: string[] | null
+        }
+        Insert: {
+          base_notes?: string[] | null
+          brand: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          family: string
+          gender: string
+          heart_notes?: string[] | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price_10ml?: number | null
+          price_5ml?: number | null
+          price_full: number
+          top_notes?: string[] | null
+        }
+        Update: {
+          base_notes?: string[] | null
+          brand?: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          family?: string
+          gender?: string
+          heart_notes?: string[] | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price_10ml?: number | null
+          price_5ml?: number | null
+          price_full?: number
+          top_notes?: string[] | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -84,15 +183,114 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          change_ml: number
+          created_at: string | null
+          id: string
+          lot_id: string | null
+          movement_type: string
+          notes: string | null
+          perfume_id: string
+          related_order_id: string | null
+        }
+        Insert: {
+          change_ml: number
+          created_at?: string | null
+          id?: string
+          lot_id?: string | null
+          movement_type: string
+          notes?: string | null
+          perfume_id: string
+          related_order_id?: string | null
+        }
+        Update: {
+          change_ml?: number
+          created_at?: string | null
+          id?: string
+          lot_id?: string | null
+          movement_type?: string
+          notes?: string | null
+          perfume_id?: string
+          related_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      warehouses: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          location: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          location: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          location?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "customer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -207,6 +405,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "customer"],
+    },
   },
 } as const

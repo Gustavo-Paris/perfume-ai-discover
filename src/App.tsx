@@ -12,6 +12,9 @@ import Curadoria from "./pages/Curadoria";
 import Catalogo from "./pages/Catalogo";
 import Carrinho from "./pages/Carrinho";
 import Auth from "./pages/Auth";
+import AdminPerfumes from "./pages/admin/AdminPerfumes";
+import AdminInventory from "./pages/admin/AdminInventory";
+import AdminLots from "./pages/admin/AdminLots";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +35,9 @@ const App = () => (
                 <Route path="/catalogo" element={<Catalogo />} />
                 <Route path="/carrinho" element={<Carrinho />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/admin/perfumes" element={<AdminPerfumes />} />
+                <Route path="/admin/inventory" element={<AdminInventory />} />
+                <Route path="/admin/lots" element={<AdminLots />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
