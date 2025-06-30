@@ -57,6 +57,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_providers: {
+        Row: {
+          api_key_env: string
+          created_at: string
+          id: string
+          is_default: boolean
+          model: string
+          name: string
+          temperature: number
+        }
+        Insert: {
+          api_key_env: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          model?: string
+          name: string
+          temperature?: number
+        }
+        Update: {
+          api_key_env?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          model?: string
+          name?: string
+          temperature?: number
+        }
+        Relationships: []
+      }
       inventory_lots: {
         Row: {
           created_at: string | null
@@ -182,6 +212,41 @@ export type Database = {
           tier?: string | null
         }
         Relationships: []
+      }
+      recommendation_sessions: {
+        Row: {
+          ai_provider_id: string
+          answers_json: Json
+          created_at: string
+          id: string
+          recommended_json: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_provider_id: string
+          answers_json: Json
+          created_at?: string
+          id?: string
+          recommended_json?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_provider_id?: string
+          answers_json?: Json
+          created_at?: string
+          id?: string
+          recommended_json?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendation_sessions_ai_provider_id_fkey"
+            columns: ["ai_provider_id"]
+            isOneToOne: false
+            referencedRelation: "ai_providers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_movements: {
         Row: {

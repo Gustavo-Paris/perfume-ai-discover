@@ -7,11 +7,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
+import { toast } from '@/hooks/use-toast';
 import PerfumeCard from '@/components/perfume/PerfumeCard';
-import { samplePerfumes } from '@/data/perfumes';
+import { useRecommend } from '@/hooks/useRecommend';
+import { usePerfumes } from '@/hooks/usePerfumes';
+import { RecommendationAnswers } from '@/types/recommendation';
 
 interface Question {
-  id: string;
+  id: keyof RecommendationAnswers;
   title: string;
   type: 'radio' | 'textarea';
   options?: string[];
@@ -59,9 +62,12 @@ const questions: Question[] = [
 
 const Curadoria = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Partial<RecommendationAnswers>>({});
   const [showResults, setShowResults] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
+
+  const { recommend, loading: isAnalyzing } = useRecommend();
+  const { data: databasePerfumes } = usePerfumes();
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
@@ -70,18 +76,22 @@ const Curadoria = () => {
     setAnswers(prev => ({ ...prev, [question.id]: value }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
-      // Start analysis
-      setIsAnalyzing(true);
-      
-      // Simulate AI analysis
-      setTimeout(() => {
-        setIsAnalyzing(false);
+      // Final step - get AI recommendations
+      try {
+        const result = await recommend(answers as RecommendationAnswers);
+        setRecommendedIds(result.perfumeIds);
         setShowResults(true);
-      }, 3000);
+      } catch (error) {
+        toast({
+          title: "Erro ao processar recomendações",
+          description: "Tente novamente em instantes.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -93,35 +103,7 @@ const Curadoria = () => {
 
   const canProceed = () => {
     const question = questions[currentQuestion];
-    return answers[question.id] && answers[question.id].trim() !== '';
-  };
-
-  // Mock AI recommendations based on answers
-  const getRecommendations = () => {
-    const genderAnswer = answers.gender;
-    const familyAnswer = answers.family;
-    
-    let filtered = samplePerfumes;
-    
-    // Filter by gender preference
-    if (genderAnswer?.includes('masculino')) {
-      filtered = filtered.filter(p => p.gender === 'masculino' || p.gender === 'unissex');
-    } else if (genderAnswer?.includes('feminino')) {
-      filtered = filtered.filter(p => p.gender === 'feminino' || p.gender === 'unissex');
-    }
-    
-    // Filter by fragrance family
-    if (familyAnswer?.includes('Fresca')) {
-      filtered = filtered.filter(p => p.family.includes('Cítrica') || p.family.includes('Aquática'));
-    } else if (familyAnswer?.includes('Floral')) {
-      filtered = filtered.filter(p => p.family.includes('Floral'));
-    } else if (familyAnswer?.includes('Amadeirada')) {
-      filtered = filtered.filter(p => p.family.includes('Amadeirada') || p.family.includes('Aromática'));
-    } else if (familyAnswer?.includes('Oriental')) {
-      filtered = filtered.filter(p => p.family.includes('Oriental'));
-    }
-    
-    return filtered.slice(0, 6);
+    return answers[question.id] && String(answers[question.id]).trim() !== '';
   };
 
   if (isAnalyzing) {
@@ -136,7 +118,7 @@ const Curadoria = () => {
             <p className="text-muted-foreground">Nossa IA está processando suas respostas para encontrar os perfumes ideais</p>
           </div>
           <div className="w-64 mx-auto">
-            <Progress value={66} className="h-2" />
+            <Progress value={75} className="h-2" />
           </div>
         </div>
       </div>
@@ -144,8 +126,15 @@ const Curadoria = () => {
   }
 
   if (showResults) {
-    const recommendations = getRecommendations();
-    
+    const recommendedPerfumes = databasePerfumes?.filter(p => 
+      recommendedIds.includes(p.id)
+    ) || [];
+
+    // Sort by recommendation order
+    const sortedPerfumes = recommendedIds
+      .map(id => recommendedPerfumes.find(p => p.id === id))
+      .filter(Boolean);
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
         <div className="container mx-auto px-4">
@@ -162,9 +151,33 @@ const Curadoria = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {recommendations.map((perfume) => (
-              <PerfumeCard key={perfume.id} perfume={perfume} />
-            ))}
+            {sortedPerfumes.map((perfume) => {
+              // Convert DatabasePerfume to Perfume format
+              const perfumeForCard = {
+                id: perfume.id,
+                name: perfume.name,
+                brand: perfume.brand,
+                family: perfume.family,
+                gender: perfume.gender,
+                size_ml: [50, 100],
+                price_full: Number(perfume.price_full),
+                price_5ml: perfume.price_5ml ? Number(perfume.price_5ml) : 0,
+                price_10ml: perfume.price_10ml ? Number(perfume.price_10ml) : 0,
+                stock_full: 10,
+                stock_5ml: 50,
+                stock_10ml: 30,
+                description: perfume.description || '',
+                image_url: perfume.image_url || '',
+                top_notes: perfume.top_notes,
+                heart_notes: perfume.heart_notes,
+                base_notes: perfume.base_notes,
+                created_at: perfume.created_at
+              };
+
+              return (
+                <PerfumeCard key={perfume.id} perfume={perfumeForCard} />
+              );
+            })}
           </div>
 
           <div className="text-center space-y-4">
@@ -176,6 +189,7 @@ const Curadoria = () => {
                 setCurrentQuestion(0);
                 setAnswers({});
                 setShowResults(false);
+                setRecommendedIds([]);
               }}>
                 Refazer Curadoria
               </Button>
