@@ -31,7 +31,8 @@ const SessionHistory = ({ onLoadSession, currentSessionId }: SessionHistoryProps
   }, [getUserSessions]);
 
   const getSessionPreview = (session: ConversationalSession) => {
-    const lastMessage = session.conversation_json?.[session.conversation_json.length - 1];
+    const messages = session.conversation_json || [];
+    const lastMessage = messages[messages.length - 1];
     return lastMessage?.content?.substring(0, 100) + '...' || 'Nova conversa';
   };
 
@@ -120,7 +121,7 @@ const SessionHistory = ({ onLoadSession, currentSessionId }: SessionHistoryProps
                   <Clock className="h-3 w-3" />
                   <span>{session.conversation_json?.length || 0} mensagens</span>
                 </div>
-                {session.recommended_perfumes && (
+                {session.recommended_perfumes && session.recommended_perfumes.length > 0 && (
                   <div className="flex items-center space-x-1">
                     <Sparkles className="h-3 w-3" />
                     <span>{session.recommended_perfumes.length} recomendações</span>

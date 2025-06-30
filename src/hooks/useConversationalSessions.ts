@@ -14,6 +14,25 @@ export interface ConversationalSession {
   updated_at: string;
 }
 
+// Helper function to convert ConversationMessage to JSON-compatible format
+const conversationToJson = (conversation: ConversationMessage[]) => {
+  return conversation.map(msg => ({
+    role: msg.role,
+    content: msg.content,
+    timestamp: msg.timestamp.toISOString()
+  }));
+};
+
+// Helper function to convert JSON back to ConversationMessage format
+const jsonToConversation = (json: any[]): ConversationMessage[] => {
+  if (!Array.isArray(json)) return [];
+  return json.map(msg => ({
+    role: msg.role,
+    content: msg.content,
+    timestamp: new Date(msg.timestamp)
+  }));
+};
+
 export const useConversationalSessions = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,14 +48,20 @@ export const useConversationalSessions = () => {
         .from('conversational_sessions')
         .insert({
           user_id: user?.id,
-          conversation_json: conversation,
+          conversation_json: conversationToJson(conversation),
           session_status: 'active'
         })
         .select()
         .single();
 
       if (createError) throw createError;
-      return data;
+
+      // Convert back to proper format
+      return {
+        ...data,
+        conversation_json: jsonToConversation(data.conversation_json as any[]),
+        recommended_perfumes: data.recommended_perfumes as string[] || []
+      } as ConversationalSession;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar sessão';
       setError(errorMessage);
@@ -59,15 +84,36 @@ export const useConversationalSessions = () => {
     setError(null);
 
     try {
+      const updateData: any = {};
+      
+      if (updates.conversation_json) {
+        updateData.conversation_json = conversationToJson(updates.conversation_json);
+      }
+      if (updates.recommended_perfumes) {
+        updateData.recommended_perfumes = updates.recommended_perfumes;
+      }
+      if (updates.session_status) {
+        updateData.session_status = updates.session_status;
+      }
+      if (updates.user_profile_data) {
+        updateData.user_profile_data = updates.user_profile_data;
+      }
+
       const { data, error: updateError } = await supabase
         .from('conversational_sessions')
-        .update(updates)
+        .update(updateData)
         .eq('id', sessionId)
         .select()
         .single();
 
       if (updateError) throw updateError;
-      return data;
+
+      // Convert back to proper format
+      return {
+        ...data,
+        conversation_json: jsonToConversation(data.conversation_json as any[]),
+        recommended_perfumes: data.recommended_perfumes as string[] || []
+      } as ConversationalSession;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar sessão';
       setError(errorMessage);
@@ -89,7 +135,13 @@ export const useConversationalSessions = () => {
         .single();
 
       if (fetchError) throw fetchError;
-      return data as ConversationalSession;
+
+      // Convert back to proper format
+      return {
+        ...data,
+        conversation_json: jsonToConversation(data.conversation_json as any[]),
+        recommended_perfumes: data.recommended_perfumes as string[] || []
+      } as ConversationalSession;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar sessão';
       setError(errorMessage);
@@ -113,7 +165,13 @@ export const useConversationalSessions = () => {
         .order('updated_at', { ascending: false });
 
       if (fetchError) throw fetchError;
-      return data as ConversationalSession[];
+
+      // Convert back to proper format
+      return (data || []).map(session => ({
+        ...session,
+        conversation_json: jsonToConversation(session.conversation_json as any[]),
+        recommended_perfumes: session.recommended_perfumes as string[] || []
+      })) as ConversationalSession[];
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar sessões';
       setError(errorMessage);
@@ -140,7 +198,15 @@ export const useConversationalSessions = () => {
         .maybeSingle();
 
       if (fetchError) throw fetchError;
-      return data as ConversationalSession | null;
+      
+      if (!data) return null;
+
+      // Convert back to proper format
+      return {
+        ...data,
+        conversation_json: jsonToConversation(data.conversation_json as any[]),
+        recommended_perfumes: data.recommended_perfumes as string[] || []
+      } as ConversationalSession;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar sessão recente';
       setError(errorMessage);
