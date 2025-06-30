@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -77,7 +78,7 @@ export const useAlgoliaSearch = () => {
             hitsPerPage: 8,
             attributesToRetrieve: ["id", "name", "brand", "price_full", "image_url"],
             attributesToHighlight: [],
-            attributesToSearchIn: ['name', 'brand', 'family', 'notes']
+            restrictSearchableAttributes: ['name', 'brand', 'family', 'notes']
           }
         }
       });
@@ -98,3 +99,4 @@ export const useAlgoliaSearch = () => {
 
   return { search, isAvailable };
 };
+

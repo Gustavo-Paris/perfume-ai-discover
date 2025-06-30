@@ -1,4 +1,5 @@
 
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -86,7 +87,7 @@ serve(async (req) => {
       hitsPerPage: 8,
       attributesToRetrieve: ["id", "name", "brand", "price_full", "image_url"],
       attributesToHighlight: [],
-      attributesToSearchIn: ['name', 'brand', 'family', 'notes'],
+      restrictSearchableAttributes: ['name', 'brand', 'family', 'notes'],
       ...params
     };
 
@@ -135,3 +136,4 @@ serve(async (req) => {
     });
   }
 });
+
