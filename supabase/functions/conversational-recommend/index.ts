@@ -47,6 +47,10 @@ serve(async (req) => {
       content: msg.content
     })) || [];
 
+    // Check if this is a continuation after recommendations
+    const isContinuation = message.includes('viu as 3 recomendações') || 
+                          message.includes('Continue a conversa');
+
     // System prompt for conversational curation
     const systemPrompt = `Você é um especialista em perfumaria brasileiro que faz curadoria personalizada através de conversas naturais e fluidas.
 
@@ -79,7 +83,9 @@ QUANDO RECOMENDAR:
 
 APÓS AS RECOMENDAÇÕES:
 - O cliente pode continuar a conversa se não gostar das sugestões
-- Esteja pronto para ajustar baseado no feedback
+- Pergunte especificamente o que não agradou nas recomendações anteriores
+- Explore novos aspectos do perfil do cliente
+- Faça novas recomendações baseadas no feedback
 - Mantenha o tom consultivo e acolhedor
 
 CATÁLOGO DISPONÍVEL:
@@ -101,14 +107,25 @@ REGRAS:
 - Uma pergunta por vez
 - Seja genuinamente curioso
 - SEMPRE pergunte sobre experiências passadas
-- Adapte-se às respostas`;
+- Adapte-se às respostas
+- Se o cliente não gostou das recomendações, explore mais profundamente suas preferências`;
 
     // Prepare messages for OpenAI
-    const messages = [
+    let messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationContext,
-      { role: 'user', content: message }
+      ...conversationContext
     ];
+
+    // If it's a continuation, don't add the system message as user message
+    if (!isContinuation) {
+      messages.push({ role: 'user', content: message });
+    } else {
+      // Add context for continuation
+      messages.push({ 
+        role: 'system', 
+        content: 'O usuário acabou de ver as 3 recomendações mas gostaria de explorar outras opções. Pergunte especificamente o que não agradou nas sugestões para refinar ainda mais as recomendações.' 
+      });
+    }
 
     console.log('Sending to OpenAI with messages:', messages.length);
 
@@ -140,7 +157,7 @@ REGRAS:
     const shouldRecommend = aiResponse.toLowerCase().includes('deixe-me analisar') || 
                            aiResponse.toLowerCase().includes('analisar suas preferências') ||
                            aiResponse.toLowerCase().includes('encontrar os perfumes ideais') ||
-                           conversationHistory.length >= 10;
+                           (conversationHistory.length >= 10 && !isContinuation);
 
     let recommendations: string[] = [];
     let isComplete = false;
@@ -151,7 +168,7 @@ REGRAS:
 
 Conversa completa:
 ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
-Última mensagem: ${message}
+${!isContinuation ? `Última mensagem: ${message}` : ''}
 
 Catálogo disponível:
 ${JSON.stringify(availablePerfumes.map(p => ({

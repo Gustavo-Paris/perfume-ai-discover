@@ -17,17 +17,24 @@ export const useConversationalRecommend = () => {
     setError(null);
 
     try {
-      // Add user message to conversation
-      const newUserMessage: ConversationMessage = {
-        role: 'user',
-        content: userMessage,
-        timestamp: new Date()
-      };
+      // Only add user message to conversation if it's not a system context message
+      const isSystemMessage = userMessage.includes('viu as 3 recomendações') || 
+                              userMessage.includes('Continue a conversa');
+      
+      let newUserMessage: ConversationMessage | null = null;
+      
+      if (!isSystemMessage) {
+        newUserMessage = {
+          role: 'user',
+          content: userMessage,
+          timestamp: new Date()
+        };
 
-      setConversation(prev => ({
-        ...prev,
-        messages: [...prev.messages, newUserMessage]
-      }));
+        setConversation(prev => ({
+          ...prev,
+          messages: [...prev.messages, newUserMessage]
+        }));
+      }
 
       // Send to edge function
       const { data, error: functionError } = await supabase.functions.invoke('conversational-recommend', {

@@ -67,6 +67,9 @@ const Curadoria = () => {
     setShowResults(false);
     setIsAnalyzing(false);
     // Keep the conversation history and recommendations for context
+    // Add a system message to help the AI understand the context
+    const contextMessage = "O usuário viu as 3 recomendações mas gostaria de explorar outras opções. Continue a conversa perguntando o que não agradou nas sugestões anteriores para refinar ainda mais.";
+    sendMessage(contextMessage);
   };
 
   if (error) {
