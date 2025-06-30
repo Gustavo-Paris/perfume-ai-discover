@@ -7,20 +7,32 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
 import { toast } from '@/hooks/use-toast';
-import { samplePerfumes } from '@/data/perfumes';
+import { usePerfumes } from '@/hooks/usePerfumes';
+import { DatabasePerfume } from '@/types';
 
 const PerfumeDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { data: databasePerfumes, isLoading } = usePerfumes();
   const [selectedSize, setSelectedSize] = useState<5 | 10 | null>(5);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
 
-  // Find perfume by id
-  const perfume = samplePerfumes.find(p => p.id === id);
+  // Find perfume by id from database
+  const databasePerfume = databasePerfumes?.find((p: DatabasePerfume) => p.id === id);
 
-  if (!perfume) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg">Carregando perfume...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!databasePerfume) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -32,6 +44,28 @@ const PerfumeDetails = () => {
       </div>
     );
   }
+
+  // Convert DatabasePerfume to Perfume format for compatibility with cart
+  const perfume = {
+    id: databasePerfume.id,
+    name: databasePerfume.name,
+    brand: databasePerfume.brand,
+    family: databasePerfume.family,
+    gender: databasePerfume.gender,
+    size_ml: [50, 100],
+    price_full: Number(databasePerfume.price_full),
+    price_5ml: databasePerfume.price_5ml ? Number(databasePerfume.price_5ml) : 0,
+    price_10ml: databasePerfume.price_10ml ? Number(databasePerfume.price_10ml) : 0,
+    stock_full: 10,
+    stock_5ml: 50,
+    stock_10ml: 30,
+    description: databasePerfume.description || '',
+    image_url: databasePerfume.image_url || '',
+    top_notes: databasePerfume.top_notes,
+    heart_notes: databasePerfume.heart_notes,
+    base_notes: databasePerfume.base_notes,
+    created_at: databasePerfume.created_at
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize) return;
@@ -136,7 +170,7 @@ const PerfumeDetails = () => {
             <div>
               <h3 className="font-semibold mb-3">Tamanho</h3>
               <div className="flex gap-3">
-                {perfume.price_5ml && (
+                {perfume.price_5ml && perfume.price_5ml > 0 && (
                   <Button
                     variant={selectedSize === 5 ? "default" : "outline"}
                     onClick={() => setSelectedSize(5)}
@@ -144,7 +178,7 @@ const PerfumeDetails = () => {
                     5ml - R$ {perfume.price_5ml.toFixed(2).replace('.', ',')}
                   </Button>
                 )}
-                {perfume.price_10ml && (
+                {perfume.price_10ml && perfume.price_10ml > 0 && (
                   <Button
                     variant={selectedSize === 10 ? "default" : "outline"}
                     onClick={() => setSelectedSize(10)}

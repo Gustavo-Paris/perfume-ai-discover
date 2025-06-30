@@ -9,9 +9,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import PerfumeCard from '@/components/perfume/PerfumeCard';
-import { samplePerfumes } from '@/data/perfumes';
+import { usePerfumes } from '@/hooks/usePerfumes';
+import { DatabasePerfume } from '@/types';
 
 const Catalogo = () => {
+  const { data: databasePerfumes, isLoading } = usePerfumes();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -19,14 +21,40 @@ const Catalogo = () => {
   const [selectedFamilies, setSelectedFamilies] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 1000]);
 
+  // Convert DatabasePerfume to Perfume format for compatibility
+  const perfumes = useMemo(() => {
+    if (!databasePerfumes) return [];
+    
+    return databasePerfumes.map((dbPerfume: DatabasePerfume) => ({
+      id: dbPerfume.id,
+      name: dbPerfume.name,
+      brand: dbPerfume.brand,
+      family: dbPerfume.family,
+      gender: dbPerfume.gender,
+      size_ml: [50, 100], // Default sizes since this info isn't in database
+      price_full: Number(dbPerfume.price_full),
+      price_5ml: dbPerfume.price_5ml ? Number(dbPerfume.price_5ml) : 0,
+      price_10ml: dbPerfume.price_10ml ? Number(dbPerfume.price_10ml) : 0,
+      stock_full: 10, // Default stock since this info isn't in database
+      stock_5ml: 50,
+      stock_10ml: 30,
+      description: dbPerfume.description || '',
+      image_url: dbPerfume.image_url || '',
+      top_notes: dbPerfume.top_notes,
+      heart_notes: dbPerfume.heart_notes,
+      base_notes: dbPerfume.base_notes,
+      created_at: dbPerfume.created_at
+    }));
+  }, [databasePerfumes]);
+
   // Get unique values for filters
-  const brands = [...new Set(samplePerfumes.map(p => p.brand))];
-  const genders = [...new Set(samplePerfumes.map(p => p.gender))];
-  const families = [...new Set(samplePerfumes.map(p => p.family))];
+  const brands = [...new Set(perfumes.map(p => p.brand))];
+  const genders = [...new Set(perfumes.map(p => p.gender))];
+  const families = [...new Set(perfumes.map(p => p.family))];
 
   // Filter and sort perfumes
   const filteredPerfumes = useMemo(() => {
-    let filtered = samplePerfumes.filter(perfume => {
+    let filtered = perfumes.filter(perfume => {
       // Search filter
       const matchesSearch = perfume.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            perfume.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -42,7 +70,8 @@ const Catalogo = () => {
       const matchesFamily = selectedFamilies.length === 0 || selectedFamilies.includes(perfume.family);
 
       // Price filter (using 5ml price as reference)
-      const matchesPrice = perfume.price_5ml >= priceRange[0] && perfume.price_5ml <= priceRange[1];
+      const referencePrice = perfume.price_5ml || perfume.price_full / 10; // Fallback calculation
+      const matchesPrice = referencePrice >= priceRange[0] && referencePrice <= priceRange[1];
 
       return matchesSearch && matchesBrand && matchesGender && matchesFamily && matchesPrice;
     });
@@ -55,16 +84,20 @@ const Catalogo = () => {
         case 'brand':
           return a.brand.localeCompare(b.brand);
         case 'price-low':
-          return a.price_5ml - b.price_5ml;
+          const priceA = a.price_5ml || a.price_full / 10;
+          const priceB = b.price_5ml || b.price_full / 10;
+          return priceA - priceB;
         case 'price-high':
-          return b.price_5ml - a.price_5ml;
+          const priceA2 = a.price_5ml || a.price_full / 10;
+          const priceB2 = b.price_5ml || b.price_full / 10;
+          return priceB2 - priceA2;
         default:
           return 0;
       }
     });
 
     return filtered;
-  }, [searchTerm, sortBy, selectedBrands, selectedGenders, selectedFamilies, priceRange]);
+  }, [perfumes, searchTerm, sortBy, selectedBrands, selectedGenders, selectedFamilies, priceRange]);
 
   const handleBrandChange = (brand: string, checked: boolean) => {
     if (checked) {
@@ -97,6 +130,18 @@ const Catalogo = () => {
     setPriceRange([0, 1000]);
     setSearchTerm('');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg">Carregando perfumes...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const FilterContent = () => (
     <div className="space-y-6">
