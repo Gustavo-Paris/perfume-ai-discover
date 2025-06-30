@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import algoliasearch from 'https://esm.sh/algoliasearch@4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -31,9 +30,6 @@ serve(async (req) => {
       });
     }
 
-    const client = algoliasearch(algoliaAppId, algoliaAdminKey);
-    const index = client.initIndex('perfumes');
-
     // Get all perfumes from database
     const { data: perfumes, error } = await supabaseClient
       .from('perfumes')
@@ -59,13 +55,41 @@ serve(async (req) => {
       image_url: perfume.image_url,
     }));
 
-    // Save objects to Algolia
-    await index.saveObjects(algoliaObjects);
+    // Use direct HTTP request to Algolia instead of the SDK
+    const algoliaUrl = `https://${algoliaAppId}-dsn.algolia.net/1/indexes/perfumes/batch`;
+    
+    const algoliaResponse = await fetch(algoliaUrl, {
+      method: 'POST',
+      headers: {
+        'X-Algolia-API-Key': algoliaAdminKey,
+        'X-Algolia-Application-Id': algoliaAppId,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        requests: [
+          {
+            action: 'clear'
+          },
+          {
+            action: 'addObject',
+            body: algoliaObjects
+          }
+        ]
+      })
+    });
 
-    console.log(`Synced ${algoliaObjects.length} perfumes to Algolia`);
+    if (!algoliaResponse.ok) {
+      const errorText = await algoliaResponse.text();
+      console.error('Algolia API error:', errorText);
+      throw new Error(`Algolia API error: ${algoliaResponse.status} - ${errorText}`);
+    }
+
+    const algoliaResult = await algoliaResponse.json();
+    console.log(`Synced ${algoliaObjects.length} perfumes to Algolia`, algoliaResult);
 
     return new Response(JSON.stringify({ 
-      message: `Successfully synced ${algoliaObjects.length} perfumes to Algolia` 
+      message: `Successfully synced ${algoliaObjects.length} perfumes to Algolia`,
+      result: algoliaResult
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
