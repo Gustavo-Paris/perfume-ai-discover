@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import AdminPerfumes from "./pages/admin/AdminPerfumes";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminLots from "./pages/admin/AdminLots";
+import PerfumeDetails from "./pages/PerfumeDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="/catalogo" element={<Catalogo />} />
                 <Route path="/carrinho" element={<Carrinho />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/perfume/:id" element={<PerfumeDetails />} />
                 <Route path="/admin/perfumes" element={<AdminPerfumes />} />
                 <Route path="/admin/inventory" element={<AdminInventory />} />
                 <Route path="/admin/lots" element={<AdminLots />} />
