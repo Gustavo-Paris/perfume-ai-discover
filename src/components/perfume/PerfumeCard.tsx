@@ -17,26 +17,26 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
 
-  const handleQuickAdd = (e: React.MouseEvent) => {
+  const handleQuickAdd = (e: React.MouseEvent, size: 5 | 10) => {
     e.stopPropagation();
     addItem({
       perfume,
-      size: 5,
+      size,
       quantity: 1
     });
     
     toast({
       title: "Adicionado ao carrinho!",
-      description: `${perfume.name} 5ml foi adicionado ao seu carrinho.`,
+      description: `${perfume.name} ${size}ml foi adicionado ao seu carrinho.`,
     });
   };
 
   return (
     <div className="perfume-card group cursor-pointer" onClick={() => navigate(`/perfume/${perfume.id}`)}>
       {/* Image Container */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-4">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-4 bg-white">
         <img
-          src={perfume.image_url}
+          src={perfume.image_url || '/placeholder.svg'}
           alt={perfume.name}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -103,14 +103,29 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           </div>
         </div>
 
-        {/* Quick Add Button */}
-        <Button 
-          onClick={handleQuickAdd}
-          className="w-full gradient-gold text-white hover:opacity-90"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          + 5 mL
-        </Button>
+        {/* Quick Add Buttons */}
+        <div className="flex gap-2">
+          {perfume.price_5ml && perfume.price_5ml > 0 && (
+            <Button 
+              onClick={(e) => handleQuickAdd(e, 5)}
+              className="flex-1 gradient-gold text-white hover:opacity-90"
+              size="sm"
+            >
+              <Plus className="mr-1 h-3 w-3" />
+              5ml - R$ {perfume.price_5ml.toFixed(2).replace('.', ',')}
+            </Button>
+          )}
+          {perfume.price_10ml && perfume.price_10ml > 0 && (
+            <Button 
+              onClick={(e) => handleQuickAdd(e, 10)}
+              className="flex-1 gradient-gold text-white hover:opacity-90"
+              size="sm"
+            >
+              <Plus className="mr-1 h-3 w-3" />
+              10ml - R$ {perfume.price_10ml.toFixed(2).replace('.', ',')}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
