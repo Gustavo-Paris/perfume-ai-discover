@@ -15,7 +15,7 @@ const HeaderNavigation = () => {
         <Link
           key={item.name}
           to={item.href}
-          className="text-sm font-medium transition-colors hover:text-gold-600"
+          className="text-sm font-medium text-white navbar-link transition-colors"
         >
           {item.name}
         </Link>

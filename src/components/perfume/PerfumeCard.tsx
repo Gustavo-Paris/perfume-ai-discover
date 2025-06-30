@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Heart, Plus, Eye } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Perfume } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,9 +35,23 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
 
   return (
     <TooltipProvider>
-      <div className="perfume-card group cursor-pointer" onClick={() => navigate(`/perfume/${perfume.id}`)}>
+      <motion.div 
+        className="product-card group cursor-pointer"
+        onClick={() => navigate(`/perfume/${perfume.id}`)}
+        whileHover={{ 
+          scale: 1.03,
+          y: -4
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ 
+          type: "spring",
+          stiffness: 300,
+          damping: 30
+        }}
+      >
         {/* Image Container */}
-        <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-4 bg-white">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-4 bg-navy/40">
           <img
             src={perfume.image_url || '/placeholder.svg'}
             alt={perfume.name}
@@ -48,23 +63,23 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           />
           
           {/* Overlay Actions */}
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute inset-0 bg-navy/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute top-4 right-4 space-y-2">
               <Button
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 bg-white/90 hover:bg-white"
+                className="h-8 w-8 bg-white/90 hover:bg-white text-navy"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsLiked(!isLiked);
                 }}
               >
-                <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                <Heart className={`h-4 w-4 ${isLiked ? 'fill-neonC text-neonC' : ''}`} />
               </Button>
               <Button
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 bg-white/90 hover:bg-white"
+                className="h-8 w-8 bg-white/90 hover:bg-white text-navy"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/perfume/${perfume.id}`);
@@ -80,9 +95,10 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             <Badge 
               variant="secondary" 
               className={`
-                ${perfume.gender === 'masculino' ? 'bg-blue-100 text-blue-800' : ''}
-                ${perfume.gender === 'feminino' ? 'bg-pink-100 text-pink-800' : ''}
-                ${perfume.gender === 'unissex' ? 'bg-purple-100 text-purple-800' : ''}
+                font-body text-xs
+                ${perfume.gender === 'masculino' ? 'bg-neonB/20 text-neonB border-neonB/30' : ''}
+                ${perfume.gender === 'feminino' ? 'bg-neonC/20 text-neonC border-neonC/30' : ''}
+                ${perfume.gender === 'unissex' ? 'bg-neonA/20 text-neonA border-neonA/30' : ''}
               `}
             >
               {perfume.gender}
@@ -91,19 +107,19 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
         </div>
 
         {/* Content */}
-        <div className="space-y-3">
+        <div className="space-y-3 p-4">
           <div>
-            <p className="text-sm text-muted-foreground">{perfume.brand}</p>
-            <h3 className="font-playfair font-semibold text-lg leading-tight">
+            <p className="text-sm text-white/60 font-body">{perfume.brand}</p>
+            <h3 className="font-heading font-semibold text-lg leading-tight text-white">
               {perfume.name}
             </h3>
-            <p className="text-sm text-muted-foreground">{perfume.family}</p>
+            <p className="text-sm text-white/60 font-body">{perfume.family}</p>
           </div>
 
           {/* Price */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-bold text-lg">
+              <p className="font-bold text-lg text-gold">
                 A partir de R$ {perfume.price_5ml.toFixed(2).replace('.', ',')}
               </p>
             </div>
@@ -116,7 +132,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 5)}
-                    className="flex-1 gradient-gold text-white hover:opacity-90"
+                    className="flex-1 btn-primary"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
@@ -133,7 +149,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 10)}
-                    className="flex-1 gradient-gold text-white hover:opacity-90"
+                    className="flex-1 btn-primary"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
@@ -147,7 +163,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
     </TooltipProvider>
   );
 };

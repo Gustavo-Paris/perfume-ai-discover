@@ -1,12 +1,14 @@
+
 import { useState, useEffect } from 'react';
 import { Sparkles, History, Zap, Star, AtomIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import ConversationChat from '@/components/curadoria/ConversationChat';
 import RecommendationResults from '@/components/curadoria/RecommendationResults';
 import SessionHistory from '@/components/curadoria/SessionHistory';
-import FloatingParticles from '@/components/ui/floating-particles';
+import BackgroundGlow from '@/components/ui/BackgroundGlow';
 import { useConversationalRecommend } from '@/hooks/useConversationalRecommend';
 import { useConversationalSessions, ConversationalSession } from '@/hooks/useConversationalSessions';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,7 +70,6 @@ const Curadoria = () => {
 
   const handleSendMessage = async (message: string) => {
     try {
-      // Check if message contains analysis phrase
       const isAnalysisMessage = message.toLowerCase().includes('deixe-me analisar') || 
                                 message.toLowerCase().includes('analisar suas preferências') ||
                                 message.toLowerCase().includes('encontrar os perfumes ideais');
@@ -80,7 +81,6 @@ const Curadoria = () => {
       const response = await sendMessage(message);
       
       if (response.isComplete && response.recommendations) {
-        // Show analyzing state for a moment before showing results
         setTimeout(() => {
           setRecommendedIds(response.recommendations);
           setShowResults(true);
@@ -113,15 +113,12 @@ const Curadoria = () => {
   const handleContinueConversation = () => {
     setShowResults(false);
     setIsAnalyzing(false);
-    // Keep the conversation history and recommendations for context
-    // Add a system message to help the AI understand the context
     const contextMessage = "O usuário viu as 3 recomendações mas gostaria de explorar outras opções. Continue a conversa perguntando o que não agradou nas sugestões anteriores para refinar ainda mais.";
     sendMessage(contextMessage);
   };
 
   const handleLoadSession = async (session: ConversationalSession) => {
     try {
-      // This will be handled by the useConversationalRecommend hook
       setShowHistory(false);
       
       if (session.recommended_perfumes && session.session_status === 'completed') {
@@ -144,19 +141,23 @@ const Curadoria = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-        <FloatingParticles count={15} cyberpunkRatio={0.7} />
+      <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+        <BackgroundGlow />
         <div className="container mx-auto px-4 max-w-2xl relative z-10">
-          <Card className="glass-luxury border-ai-error/50 bg-red-950/20">
+          <Card className="glass-effect border-neonC/50">
             <CardContent className="p-6 text-center">
-              <div className="cyber-glow w-16 h-16 rounded-full bg-gradient-to-r from-ai-error to-cyber-pink flex items-center justify-center mx-auto mb-4">
+              <motion.div 
+                className="w-16 h-16 rounded-full bg-gradient-to-r from-neonC to-neonA flex items-center justify-center mx-auto mb-4 neon-glow"
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              >
                 <Zap className="h-8 w-8 text-white" />
-              </div>
-              <p className="text-ai-error mb-4 text-lg font-montserrat">Sistema Temporariamente Indisponível</p>
-              <p className="text-red-300 font-medium mb-6">{error}</p>
+              </motion.div>
+              <p className="text-neonC mb-4 text-lg font-heading">Sistema Temporariamente Indisponível</p>
+              <p className="text-white/70 font-body mb-6">{error}</p>
               <Button 
                 onClick={handleReset}
-                className="bg-gradient-to-r from-ai-error to-cyber-pink hover:from-red-500 hover:to-red-600 text-white border-0"
+                className="btn-primary"
               >
                 <AtomIcon className="mr-2 h-4 w-4" />
                 Reconectar Sistema
@@ -170,24 +171,27 @@ const Curadoria = () => {
 
   if (showHistory) {
     return (
-      <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-        <FloatingParticles count={25} cyberpunkRatio={0.4} />
+      <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+        <BackgroundGlow />
         <div className="container mx-auto px-4 max-w-4xl relative z-10">
-          <div className="mb-8 flex items-center justify-between">
-            <h1 className="font-cormorant text-5xl font-bold text-white">
-              <span className="bg-gradient-to-r from-gold-400 via-white to-gold-400 bg-clip-text text-transparent">
+          <motion.div 
+            className="mb-8 flex items-center justify-between"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="font-heading text-5xl font-bold text-white">
+              <span className="ai-gradient bg-clip-text text-transparent">
                 Histórico de Curadoria
               </span>
             </h1>
             <Button 
               onClick={() => setShowHistory(false)}
-              variant="outline"
-              className="glass-luxury text-white border-luxury-700 hover:border-gold-500/50 hover:bg-luxury-800/50 font-montserrat"
+              className="btn-secondary"
             >
               <Star className="mr-2 h-4 w-4" />
               Voltar ao Sistema
             </Button>
-          </div>
+          </motion.div>
           
           <Card className="glass-luxury">
             <CardContent className="p-6">
@@ -204,8 +208,8 @@ const Curadoria = () => {
 
   if (showResults) {
     return (
-      <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-        <FloatingParticles count={30} cyberpunkRatio={0.2} />
+      <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+        <BackgroundGlow />
         <div className="container mx-auto px-4 relative z-10">
           <RecommendationResults 
             recommendedIds={recommendedIds}
@@ -219,27 +223,53 @@ const Curadoria = () => {
 
   if (isAnalyzing) {
     return (
-      <div className="min-h-screen elegant-bg py-12 relative overflow-hidden flex items-center justify-center">
-        <FloatingParticles count={40} cyberpunkRatio={0.8} />
+      <div className="min-h-screen bg-navy py-12 relative overflow-hidden flex items-center justify-center">
+        <BackgroundGlow />
         <div className="text-center relative z-10 max-w-2xl mx-auto px-4">
-          <div className="cyber-glow w-32 h-32 rounded-full bg-gradient-to-r from-gold-500 to-luxury-600 flex items-center justify-center mx-auto mb-8 animate-cyber-glow">
-            <Sparkles className="h-16 w-16 text-white animate-pulse" />
-          </div>
-          <h2 className="font-cormorant text-5xl font-bold mb-6 text-white">
-            <span className="cyber-shimmer bg-clip-text text-transparent animate-gradient-x">
+          <motion.div 
+            className="w-32 h-32 rounded-full ai-gradient flex items-center justify-center mx-auto mb-8 neon-glow"
+            animate={{ 
+              rotate: [0, 360],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+              scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+            }}
+          >
+            <Sparkles className="h-16 w-16 text-white" />
+          </motion.div>
+          <motion.h2 
+            className="font-heading text-5xl font-bold mb-6 text-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <span className="ai-gradient bg-clip-text text-transparent">
               Análise Inteligente
             </span>
-          </h2>
-          <p className="text-xl text-luxury-300 max-w-xl mx-auto mb-8 leading-relaxed font-montserrat">
+          </motion.h2>
+          <p className="text-xl text-white/70 max-w-xl mx-auto mb-8 leading-relaxed font-body">
             Nossa inteligência artificial está processando suas preferências para descobrir as fragrâncias perfeitas
           </p>
           <div className="flex justify-center items-center space-x-4 mb-8">
-            <div className="w-3 h-3 bg-cyber-blue rounded-full animate-cyber-pulse"></div>
-            <div className="w-3 h-3 bg-cyber-purple rounded-full animate-cyber-pulse" style={{ animationDelay: '0.3s' }}></div>
-            <div className="w-3 h-3 bg-cyber-pink rounded-full animate-cyber-pulse" style={{ animationDelay: '0.6s' }}></div>
+            <motion.div 
+              className="w-3 h-3 bg-neonB rounded-full"
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+            />
+            <motion.div 
+              className="w-3 h-3 bg-neonA rounded-full"
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+            />
+            <motion.div 
+              className="w-3 h-3 bg-neonC rounded-full"
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+            />
           </div>
-          <div className="glass-luxury rounded-2xl p-6 border border-luxury-700/40">
-            <div className="cyber-status justify-center text-ai-processing font-montserrat">
+          <div className="glass-effect rounded-2xl p-6">
+            <div className="flex items-center justify-center space-x-2 text-neonB font-body">
               <span className="text-sm">Processando dados sensoriais...</span>
             </div>
           </div>
@@ -249,64 +279,103 @@ const Curadoria = () => {
   }
 
   return (
-    <div className="min-h-screen elegant-bg py-12 relative overflow-hidden">
-      <FloatingParticles count={25} cyberpunkRatio={0.3} />
+    <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+      <BackgroundGlow />
       
       <div className="container mx-auto px-4 max-w-4xl relative z-10">
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="cyber-glow w-24 h-24 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-8 animate-float">
-            <Sparkles className="h-12 w-12 text-white animate-pulse" />
-          </div>
-          <h1 className="font-cormorant text-6xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-gold-400 via-white to-gold-400 bg-clip-text text-transparent">
-              Curadoria Inteligente
-            </span>
+        <motion.div 
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.div 
+            className="w-24 h-24 rounded-full bg-gold flex items-center justify-center mx-auto mb-8"
+            animate={{ 
+              rotate: [0, 360],
+              boxShadow: [
+                "0 0 20px rgba(212, 175, 55, 0.3)",
+                "0 0 40px rgba(212, 175, 55, 0.6)",
+                "0 0 20px rgba(212, 175, 55, 0.3)"
+              ]
+            }}
+            transition={{ 
+              rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+              boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+            }}
+          >
+            <Sparkles className="h-12 w-12 text-navy" />
+          </motion.div>
+          <h1 className="font-heading text-6xl md:text-7xl font-bold mb-6 text-white">
+            Curadoria Inteligente
           </h1>
-          <p className="text-luxury-300 text-xl mb-2 max-w-2xl mx-auto leading-relaxed font-montserrat">
+          <p className="text-white/70 text-xl mb-2 max-w-2xl mx-auto leading-relaxed font-body">
             Tecnologia avançada para descoberta personalizada de fragrâncias
           </p>
-          <p className="text-luxury-400 text-lg max-w-xl mx-auto font-montserrat">
+          <p className="text-white/50 text-lg max-w-xl mx-auto font-body">
             Converse com nossa IA e descubra suas 3 fragrâncias ideais
           </p>
           
           {isAuthenticated && (
-            <div className="mt-8 flex justify-center items-center space-x-6 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            <motion.div 
+              className="mt-8 flex justify-center items-center space-x-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <Button 
                 onClick={() => setShowHistory(true)}
-                variant="outline"
-                className="glass-luxury text-white border-luxury-700/40 hover:border-gold-500/50 hover:bg-luxury-800/50 transition-all duration-300 font-montserrat"
+                className="btn-secondary"
               >
                 <History className="h-4 w-4 mr-2" />
                 <span>Histórico</span>
               </Button>
               
               {currentSessionId && (
-                <div className="cyber-status text-ai-active bg-ai-active/10 px-4 py-2 rounded-full border border-ai-active/30 font-montserrat">
-                  <span className="text-sm font-medium">Sistema Ativo</span>
+                <div className="flex items-center space-x-2 bg-neonB/10 px-4 py-2 rounded-full border border-neonB/30 font-body">
+                  <div className="w-2 h-2 bg-neonB rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-neonB">Sistema Ativo</span>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
 
-        <Card className="luxury-card tech-overlay h-[750px] overflow-hidden animate-fade-in border-luxury-300/40" style={{ animationDelay: '0.5s' }}>
-          <CardHeader className="border-b border-luxury-200/30 bg-gradient-to-r from-white/98 to-luxury-50/98 backdrop-blur-sm">
-            <CardTitle className="font-cormorant text-3xl text-center text-luxury-800 flex items-center justify-center space-x-3">
-              <Star className="h-7 w-7 text-gold-500" />
-              <span>Sistema de Curadoria</span>
-              <AtomIcon className="h-7 w-7 text-ai-active animate-cyber-pulse" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-full p-0 bg-gradient-to-b from-white/50 to-luxury-50/70">
-            <ConversationChat
-              messages={conversation.messages}
-              onSendMessage={handleSendMessage}
-              onReset={handleReset}
-              loading={loading}
-              isComplete={conversation.isComplete}
-            />
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="luxury-card h-[750px] overflow-hidden border-white/20">
+            <CardHeader className="border-b border-white/10 bg-navy/95 backdrop-blur-sm">
+              <CardTitle className="font-heading text-3xl text-center text-white flex items-center justify-center space-x-3">
+                <Star className="h-7 w-7 text-gold" />
+                <span>Sistema de Curadoria</span>
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 360],
+                    color: ["#7F5AF0", "#14B8FF", "#EA4C89", "#7F5AF0"]
+                  }}
+                  transition={{ 
+                    rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+                    color: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                  }}
+                >
+                  <AtomIcon className="h-7 w-7" />
+                </motion.div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-full p-0 bg-navy/70">
+              <ConversationChat
+                messages={conversation.messages}
+                onSendMessage={handleSendMessage}
+                onReset={handleReset}
+                loading={loading}
+                isComplete={conversation.isComplete}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
