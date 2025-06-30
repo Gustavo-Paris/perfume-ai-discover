@@ -17,11 +17,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 30,
     description: 'Uma fragrância selvagem e nobre, inspirada na natureza intocada. Sauvage é uma criação que captura tanto a frescura quanto a potência.',
     image_url: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Bergamota', 'Pimenta Rosa'],
-      heart: ['Gerânio', 'Lavanda', 'Sálvia Sclarea'],
-      base: ['Ambroxan', 'Cedro', 'Patchouli']
-    },
+    top_notes: ['Bergamota', 'Pimenta Rosa'],
+    heart_notes: ['Gerânio', 'Lavanda', 'Sálvia Sclarea'],
+    base_notes: ['Ambroxan', 'Cedro', 'Patchouli'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -39,11 +37,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 25,
     description: 'Um bouquet floral sensual e feminino. J\'adore é uma homenagem às mulheres, sua beleza e feminilidade.',
     image_url: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Pêra', 'Melão', 'Magnólia'],
-      heart: ['Lírio do Vale', 'Frésia', 'Rosa'],
-      base: ['Cedro', 'Sândalo', 'Almíscar']
-    },
+    top_notes: ['Pêra', 'Melão', 'Magnólia'],
+    heart_notes: ['Lírio do Vale', 'Frésia', 'Rosa'],
+    base_notes: ['Cedro', 'Sândalo', 'Almíscar'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -61,11 +57,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 35,
     description: 'Inspirado pela beleza de Pantelleria, onde a terra encontra o mar. Uma fragrância aquática e refrescante.',
     image_url: 'https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Bergamota', 'Néroli', 'Limão Verde'],
-      heart: ['Jasmim', 'Calone', 'Rosa'],
-      base: ['Almíscar Branco', 'Cedro', 'Patchouli']
-    },
+    top_notes: ['Bergamota', 'Néroli', 'Limão Verde'],
+    heart_notes: ['Jasmim', 'Calone', 'Rosa'],
+    base_notes: ['Almíscar Branco', 'Cedro', 'Patchouli'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -83,11 +77,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 28,
     description: 'Uma fragrância viciante que revela a faceta mais ousada da feminilidade. Café preto, flores brancas e baunilha.',
     image_url: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59db9?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Groselha Preta', 'Pêra', 'Flor de Laranjeira'],
-      heart: ['Café', 'Jasmim', 'Flor de Amêndoa'],
-      base: ['Baunilha', 'Patchouli', 'Cedro']
-    },
+    top_notes: ['Groselha Preta', 'Pêra', 'Flor de Laranjeira'],
+    heart_notes: ['Café', 'Jasmim', 'Flor de Amêndoa'],
+    base_notes: ['Baunilha', 'Patchouli', 'Cedro'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -105,11 +97,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 32,
     description: 'Inspirado pelo verão siciliano. Uma fragrância fresca e mediterrânea que evoca a brisa do mar.',
     image_url: 'https://images.unsplash.com/photo-1580870069867-74c57ee1bb07?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Limão Siciliano', 'Maçã Verde', 'Sino de Bluebell'],
-      heart: ['Bambu', 'Jasmim', 'Rosa Branca'],
-      base: ['Cedro', 'Almíscar', 'Âmbar']
-    },
+    top_notes: ['Limão Siciliano', 'Maçã Verde', 'Sino de Bluebell'],
+    heart_notes: ['Bambu', 'Jasmim', 'Rosa Branca'],
+    base_notes: ['Cedro', 'Almíscar', 'Âmbar'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -127,11 +117,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 40,
     description: 'Uma fragrância para homens que ousam sonhar grande. Sedutor, poderoso e magnético.',
     image_url: 'https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Toranja', 'Hortelã', 'Mandarina Vermelha'],
-      heart: ['Canela', 'Especiarias', 'Rosa'],
-      base: ['Âmbar', 'Couro', 'Madeira']
-    },
+    top_notes: ['Toranja', 'Hortelã', 'Mandarina Vermelha'],
+    heart_notes: ['Canela', 'Especiarias', 'Rosa'],
+    base_notes: ['Âmbar', 'Couro', 'Madeira'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -149,11 +137,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 50,
     description: 'A primeira fragrância unissex. Livre, natural e espontânea. Uma fragrância que quebrou barreiras.',
     image_url: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Bergamota', 'Limão', 'Mandarina'],
-      heart: ['Jasmim', 'Lírio do Vale', 'Rosa'],
-      base: ['Almíscar', 'Sândalo', 'Cedro']
-    },
+    top_notes: ['Bergamota', 'Limão', 'Mandarina'],
+    heart_notes: ['Jasmim', 'Lírio do Vale', 'Rosa'],
+    base_notes: ['Almíscar', 'Sândalo', 'Cedro'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -171,11 +157,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 38,
     description: 'Uma fragrância que captura a essência da feminilidade moderna. Sedutora e misteriosa.',
     image_url: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Romã', 'Caqui', 'Maçã Verde'],
-      heart: ['Lótus', 'Orquídea', 'Champagne'],
-      base: ['Âmbar', 'Violeta', 'Madeira']
-    },
+    top_notes: ['Romã', 'Caqui', 'Maçã Verde'],
+    heart_notes: ['Lótus', 'Orquídea', 'Champagne'],
+    base_notes: ['Âmbar', 'Violeta', 'Madeira'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -193,11 +177,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 30,
     description: 'O perfume da vitória. Para homens que fazem suas próprias regras e conquistam seus sonhos.',
     image_url: 'https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Toranja', 'Folhas de Louro', 'Violeta Marinha'],
-      heart: ['Jasmim', 'Madeira Gaiac', 'Hedione'],
-      base: ['Âmbar Cinza', 'Musgo de Carvalho', 'Patchouli']
-    },
+    top_notes: ['Toranja', 'Folhas de Louro', 'Violeta Marinha'],
+    heart_notes: ['Jasmim', 'Madeira Gaiac', 'Hedione'],
+    base_notes: ['Âmbar Cinza', 'Musgo de Carvalho', 'Patchouli'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -215,11 +197,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 28,
     description: 'A vida é bela! Uma fragrância que celebra a felicidade e a joie de vivre francesa.',
     image_url: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Groselha Preta', 'Pêra'],
-      heart: ['Íris', 'Jasmim', 'Flor de Laranjeira'],
-      base: ['Pralinê', 'Baunilha', 'Patchouli']
-    },
+    top_notes: ['Groselha Preta', 'Pêra'],
+    heart_notes: ['Íris', 'Jasmim', 'Flor de Laranjeira'],
+    base_notes: ['Pralinê', 'Baunilha', 'Patchouli'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -237,11 +217,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 18,
     description: 'O perfume cult de Nova York. Sândalo cremoso com notas de cardamomo e íris. Irresistível e viciante.',
     image_url: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Cardamomo', 'Íris', 'Violeta'],
-      heart: ['Sândalo', 'Papiro', 'Rosa'],
-      base: ['Cedro', 'Couro', 'Âmbar']
-    },
+    top_notes: ['Cardamomo', 'Íris', 'Violeta'],
+    heart_notes: ['Sândalo', 'Papiro', 'Rosa'],
+    base_notes: ['Cedro', 'Couro', 'Âmbar'],
     created_at: '2024-01-01T00:00:00Z'
   },
   {
@@ -259,11 +237,9 @@ export const samplePerfumes: Perfume[] = [
     stock_10ml: 12,
     description: 'O perfume mais famoso do mundo. Criado por Ernest Beaux em 1921, é sinônimo de elegância e sofisticação.',
     image_url: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59db9?w=400&h=500&fit=crop',
-    notes: {
-      top: ['Aldeídos', 'Ylang-ylang', 'Néroli'],
-      heart: ['Íris', 'Jasmim', 'Rosa'],
-      base: ['Sândalo', 'Vetiver', 'Baunilha']
-    },
+    top_notes: ['Aldeídos', 'Ylang-ylang', 'Néroli'],
+    heart_notes: ['Íris', 'Jasmim', 'Rosa'],
+    base_notes: ['Sândalo', 'Vetiver', 'Baunilha'],
     created_at: '2024-01-01T00:00:00Z'
   }
 ];
