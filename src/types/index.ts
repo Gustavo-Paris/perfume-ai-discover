@@ -1,4 +1,3 @@
-
 export interface Perfume {
   id: string;
   name: string;
@@ -14,11 +13,9 @@ export interface Perfume {
   stock_10ml: number;
   description: string;
   image_url: string;
-  notes: {
-    top: string[];
-    heart: string[];
-    base: string[];
-  };
+  top_notes: string[];
+  heart_notes: string[];
+  base_notes: string[];
   created_at: string;
 }
 
