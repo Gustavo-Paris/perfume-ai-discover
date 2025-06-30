@@ -87,6 +87,39 @@ export type Database = {
         }
         Relationships: []
       }
+      conversational_sessions: {
+        Row: {
+          conversation_json: Json
+          created_at: string
+          id: string
+          recommended_perfumes: Json | null
+          session_status: string
+          updated_at: string
+          user_id: string | null
+          user_profile_data: Json | null
+        }
+        Insert: {
+          conversation_json?: Json
+          created_at?: string
+          id?: string
+          recommended_perfumes?: Json | null
+          session_status?: string
+          updated_at?: string
+          user_id?: string | null
+          user_profile_data?: Json | null
+        }
+        Update: {
+          conversation_json?: Json
+          created_at?: string
+          id?: string
+          recommended_perfumes?: Json | null
+          session_status?: string
+          updated_at?: string
+          user_id?: string | null
+          user_profile_data?: Json | null
+        }
+        Relationships: []
+      }
       inventory_lots: {
         Row: {
           created_at: string | null

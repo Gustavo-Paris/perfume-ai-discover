@@ -1,23 +1,70 @@
-import { useState } from 'react';
-import { Sparkles } from 'lucide-react';
+
+import { useState, useEffect } from 'react';
+import { Sparkles, History } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import ConversationChat from '@/components/curadoria/ConversationChat';
 import RecommendationResults from '@/components/curadoria/RecommendationResults';
+import SessionHistory from '@/components/curadoria/SessionHistory';
 import { useConversationalRecommend } from '@/hooks/useConversationalRecommend';
+import { useConversationalSessions, ConversationalSession } from '@/hooks/useConversationalSessions';
+import { supabase } from '@/integrations/supabase/client';
 
 const Curadoria = () => {
   const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const { 
     conversation, 
     sendMessage, 
     resetConversation, 
+    currentSessionId,
     loading, 
     error 
   } = useConversationalRecommend();
+
+  const { getSession } = useConversationalSessions();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load session data when conversation changes
+  useEffect(() => {
+    const loadSessionRecommendations = async () => {
+      if (currentSessionId && conversation.isComplete) {
+        try {
+          const session = await getSession(currentSessionId);
+          if (session.recommended_perfumes) {
+            setRecommendedIds(session.recommended_perfumes);
+            if (session.session_status === 'completed') {
+              setShowResults(true);
+            }
+          }
+        } catch (err) {
+          console.log('Error loading session recommendations:', err);
+        }
+      }
+    };
+
+    loadSessionRecommendations();
+  }, [currentSessionId, conversation.isComplete, getSession]);
 
   const handleSendMessage = async (message: string) => {
     try {
@@ -72,6 +119,29 @@ const Curadoria = () => {
     sendMessage(contextMessage);
   };
 
+  const handleLoadSession = async (session: ConversationalSession) => {
+    try {
+      // This will be handled by the useConversationalRecommend hook
+      setShowHistory(false);
+      
+      if (session.recommended_perfumes && session.session_status === 'completed') {
+        setRecommendedIds(session.recommended_perfumes);
+        setShowResults(true);
+      }
+      
+      toast({
+        title: "Sessão carregada",
+        description: "Sua conversa anterior foi restaurada com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao carregar sessão",
+        description: "Não foi possível carregar a sessão. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
@@ -86,6 +156,35 @@ const Curadoria = () => {
               >
                 Tentar Novamente
               </button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (showHistory) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="font-playfair text-3xl font-bold">
+              Histórico de Curadorias
+            </h1>
+            <Button 
+              onClick={() => setShowHistory(false)}
+              variant="outline"
+            >
+              Voltar
+            </Button>
+          </div>
+          
+          <Card className="perfume-card">
+            <CardContent className="p-6">
+              <SessionHistory 
+                onLoadSession={handleLoadSession}
+                currentSessionId={currentSessionId}
+              />
             </CardContent>
           </Card>
         </div>
@@ -145,6 +244,26 @@ const Curadoria = () => {
           <p className="text-muted-foreground text-lg">
             Converse comigo e descobriremos juntos suas 3 fragrâncias ideais
           </p>
+          
+          {isAuthenticated && (
+            <div className="mt-4 flex justify-center space-x-4">
+              <Button 
+                onClick={() => setShowHistory(true)}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <History className="h-4 w-4" />
+                <span>Ver Histórico</span>
+              </Button>
+              
+              {currentSessionId && (
+                <div className="text-sm text-green-600 flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Sessão ativa salva</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <Card className="perfume-card h-[700px]">
