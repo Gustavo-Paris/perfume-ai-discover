@@ -22,9 +22,8 @@ export default {
 			fontFamily: {
 				heading: ['Playfair Display', 'serif'],
 				body: ['Inter', 'sans-serif'],
-				'cormorant': ['Cormorant Garamond', 'serif'],
-				'montserrat': ['Montserrat', 'sans-serif'],
-				'inter': ['Inter', 'sans-serif'],
+				display: ['Playfair Display', 'serif'],
+				sans: ['Inter', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -61,12 +60,9 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				
-				// New Brand Colors
+				// Brand Colors
 				navy: '#0B1D37',
 				gold: '#D4AF37',
-				neonA: '#7F5AF0',
-				neonB: '#14B8FF', 
-				neonC: '#EA4C89',
 				
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
@@ -79,16 +75,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
-			gradientColorStops: {
-				ai: ['#7F5AF0', '#14B8FF', '#EA4C89'],
-			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
-			},
-			boxShadow: {
-				glow: '0 0 12px rgba(20,184,255,0.5)',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -109,25 +99,29 @@ export default {
 						transform: 'translateY(0)' 
 					}
 				},
-				'pulseGlow': {
+				'ai-beam': {
 					'0%': { 
-						boxShadow: '0 0 6px rgba(127,90,240,0.4)' 
+						backgroundPosition: '0% 50%' 
 					},
 					'100%': { 
-						boxShadow: '0 0 16px rgba(234,76,137,0.6)' 
+						backgroundPosition: '100% 50%' 
 					}
 				},
-				'float': {
-					'0%, 100%': { transform: 'translateY(0px)' },
-					'50%': { transform: 'translateY(-10px)' }
-				},
+				'pulse-dots': {
+					'0%, 100%': { 
+						opacity: '0.4' 
+					},
+					'50%': { 
+						opacity: '1' 
+					}
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in-up': 'fade-in-up 0.15s ease-out',
-				'pulseGlow': 'pulseGlow 4s infinite alternate',
-				'float': 'float 3s ease-in-out infinite',
+				'fade-in-up': 'fade-in-up 0.12s ease-out',
+				'ai-beam': 'ai-beam 8s linear infinite',
+				'pulse-dots': 'pulse-dots 0.8s ease-in-out infinite',
 			},
 		}
 	},

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Sparkles, History, Zap, Star, AtomIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import ConversationChat from '@/components/curadoria/ConversationChat';
 import RecommendationResults from '@/components/curadoria/RecommendationResults';
 import SessionHistory from '@/components/curadoria/SessionHistory';
-import BackgroundGlow from '@/components/ui/BackgroundGlow';
+import AIBeam from '@/components/ui/AIBeam';
 import { useConversationalRecommend } from '@/hooks/useConversationalRecommend';
 import { useConversationalSessions, ConversationalSession } from '@/hooks/useConversationalSessions';
 import { supabase } from '@/integrations/supabase/client';
@@ -142,19 +141,18 @@ const Curadoria = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
-        <BackgroundGlow />
         <div className="container mx-auto px-4 max-w-2xl relative z-10">
-          <Card className="glass-effect border-neonC/50">
+          <Card className="glass-gold border-red-500/50">
             <CardContent className="p-6 text-center">
               <motion.div 
-                className="w-16 h-16 rounded-full bg-gradient-to-r from-neonC to-neonA flex items-center justify-center mx-auto mb-4 neon-glow"
+                className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4"
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                <Zap className="h-8 w-8 text-white" />
+                <Zap className="h-8 w-8 text-red-400" />
               </motion.div>
-              <p className="text-neonC mb-4 text-lg font-heading">Sistema Temporariamente Indisponível</p>
-              <p className="text-white/70 font-body mb-6">{error}</p>
+              <p className="text-red-400 mb-4 text-lg font-display">Sistema Temporariamente Indisponível</p>
+              <p className="text-white/70 mb-6">{error}</p>
               <Button 
                 onClick={handleReset}
                 className="btn-primary"
@@ -172,17 +170,14 @@ const Curadoria = () => {
   if (showHistory) {
     return (
       <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
-        <BackgroundGlow />
         <div className="container mx-auto px-4 max-w-4xl relative z-10">
           <motion.div 
             className="mb-8 flex items-center justify-between"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-heading text-5xl font-bold text-white">
-              <span className="ai-gradient bg-clip-text text-transparent">
-                Histórico de Curadoria
-              </span>
+            <h1 className="font-display text-4xl font-bold text-gold">
+              Histórico de Curadoria
             </h1>
             <Button 
               onClick={() => setShowHistory(false)}
@@ -193,8 +188,8 @@ const Curadoria = () => {
             </Button>
           </motion.div>
           
-          <Card className="glass-luxury">
-            <CardContent className="p-6">
+          <Card className="glass-gold rounded-3xl">
+            <CardContent className="p-8">
               <SessionHistory 
                 onLoadSession={handleLoadSession}
                 currentSessionId={currentSessionId}
@@ -209,7 +204,6 @@ const Curadoria = () => {
   if (showResults) {
     return (
       <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
-        <BackgroundGlow />
         <div className="container mx-auto px-4 relative z-10">
           <RecommendationResults 
             recommendedIds={recommendedIds}
@@ -224,10 +218,9 @@ const Curadoria = () => {
   if (isAnalyzing) {
     return (
       <div className="min-h-screen bg-navy py-12 relative overflow-hidden flex items-center justify-center">
-        <BackgroundGlow />
         <div className="text-center relative z-10 max-w-2xl mx-auto px-4">
           <motion.div 
-            className="w-32 h-32 rounded-full ai-gradient flex items-center justify-center mx-auto mb-8 neon-glow"
+            className="w-32 h-32 rounded-full bg-gold/20 flex items-center justify-center mx-auto mb-8"
             animate={{ 
               rotate: [0, 360],
               scale: [1, 1.1, 1]
@@ -237,39 +230,25 @@ const Curadoria = () => {
               scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
             }}
           >
-            <Sparkles className="h-16 w-16 text-white" />
+            <Sparkles className="h-16 w-16 text-gold" />
           </motion.div>
           <motion.h2 
-            className="font-heading text-5xl font-bold mb-6 text-white"
+            className="font-display text-4xl font-bold mb-6 text-gold"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <span className="ai-gradient bg-clip-text text-transparent">
-              Análise Inteligente
-            </span>
+            Análise Inteligente
           </motion.h2>
-          <p className="text-xl text-white/70 max-w-xl mx-auto mb-8 leading-relaxed font-body">
+          <p className="text-xl text-white/80 max-w-xl mx-auto mb-8 leading-relaxed">
             Nossa inteligência artificial está processando suas preferências para descobrir as fragrâncias perfeitas
           </p>
-          <div className="flex justify-center items-center space-x-4 mb-8">
-            <motion.div 
-              className="w-3 h-3 bg-neonB rounded-full"
-              animate={{ scale: [1, 1.5, 1] }}
-              transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-            />
-            <motion.div 
-              className="w-3 h-3 bg-neonA rounded-full"
-              animate={{ scale: [1, 1.5, 1] }}
-              transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-            />
-            <motion.div 
-              className="w-3 h-3 bg-neonC rounded-full"
-              animate={{ scale: [1, 1.5, 1] }}
-              transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-            />
+          <div className="typing-dots justify-center mb-8">
+            <div className="typing-dot"></div>
+            <div className="typing-dot"></div>
+            <div className="typing-dot"></div>
           </div>
-          <div className="glass-effect rounded-2xl p-6">
-            <div className="flex items-center justify-center space-x-2 text-neonB font-body">
+          <div className="glass-gold rounded-2xl p-6">
+            <div className="flex items-center justify-center space-x-2 text-gold/70">
               <span className="text-sm">Processando dados sensoriais...</span>
             </div>
           </div>
@@ -280,45 +259,28 @@ const Curadoria = () => {
 
   return (
     <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
-      <BackgroundGlow />
-      
-      <div className="container mx-auto px-4 max-w-4xl relative z-10">
+      <div className="container mx-auto px-4 max-w-7xl relative z-10">
         <motion.div 
-          className="text-center mb-12"
+          className="text-center mb-16 max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <motion.div 
-            className="w-24 h-24 rounded-full bg-gold flex items-center justify-center mx-auto mb-8"
-            animate={{ 
-              rotate: [0, 360],
-              boxShadow: [
-                "0 0 20px rgba(212, 175, 55, 0.3)",
-                "0 0 40px rgba(212, 175, 55, 0.6)",
-                "0 0 20px rgba(212, 175, 55, 0.3)"
-              ]
-            }}
-            transition={{ 
-              rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-              boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-            }}
-          >
-            <Sparkles className="h-12 w-12 text-navy" />
-          </motion.div>
-          <h1 className="font-heading text-6xl md:text-7xl font-bold mb-6 text-white">
+          <h1 className="font-display text-6xl md:text-7xl font-bold mb-6 text-gold">
             Curadoria Inteligente
           </h1>
-          <p className="text-white/70 text-xl mb-2 max-w-2xl mx-auto leading-relaxed font-body">
+          <p className="text-white/80 text-xl mb-2 max-w-2xl mx-auto leading-relaxed">
             Tecnologia avançada para descoberta personalizada de fragrâncias
           </p>
-          <p className="text-white/50 text-lg max-w-xl mx-auto font-body">
+          <p className="text-white/60 text-lg max-w-xl mx-auto mb-8">
             Converse com nossa IA e descubra suas 3 fragrâncias ideais
           </p>
           
+          <AIBeam />
+          
           {isAuthenticated && (
             <motion.div 
-              className="mt-8 flex justify-center items-center space-x-6"
+              className="flex justify-center items-center space-x-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -332,9 +294,9 @@ const Curadoria = () => {
               </Button>
               
               {currentSessionId && (
-                <div className="flex items-center space-x-2 bg-neonB/10 px-4 py-2 rounded-full border border-neonB/30 font-body">
-                  <div className="w-2 h-2 bg-neonB rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-neonB">Sistema Ativo</span>
+                <div className="flex items-center space-x-2 glass-gold px-4 py-2 rounded-full">
+                  <div className="w-2 h-2 bg-gold rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-gold">Sistema Ativo</span>
                 </div>
               )}
             </motion.div>
@@ -342,30 +304,13 @@ const Curadoria = () => {
         </motion.div>
 
         <motion.div
+          className="max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="luxury-card h-[750px] overflow-hidden border-white/20">
-            <CardHeader className="border-b border-white/10 bg-navy/95 backdrop-blur-sm">
-              <CardTitle className="font-heading text-3xl text-center text-white flex items-center justify-center space-x-3">
-                <Star className="h-7 w-7 text-gold" />
-                <span>Sistema de Curadoria</span>
-                <motion.div
-                  animate={{ 
-                    rotate: [0, 360],
-                    color: ["#7F5AF0", "#14B8FF", "#EA4C89", "#7F5AF0"]
-                  }}
-                  transition={{ 
-                    rotate: { duration: 3, repeat: Infinity, ease: "linear" },
-                    color: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                  }}
-                >
-                  <AtomIcon className="h-7 w-7" />
-                </motion.div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="h-full p-0 bg-navy/70">
+          <Card className="glass-gold rounded-3xl h-[700px] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+            <CardContent className="h-full p-0">
               <ConversationChat
                 messages={conversation.messages}
                 onSendMessage={handleSendMessage}

@@ -17,9 +17,9 @@ const Header = () => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-navy/95 backdrop-blur-md">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full h-14 bg-navy/80 backdrop-blur-lg border-b border-gold/10">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex h-14 items-center justify-between">
           <HeaderLogo />
           <HeaderNavigation />
           <HeaderActions />
@@ -29,7 +29,7 @@ const Header = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="relative text-white hover:text-gold hover:bg-white/10"
+              className="relative text-white hover:text-gold"
               onClick={() => navigate('/carrinho')}
             >
               <ShoppingBag className="h-4 w-4" />

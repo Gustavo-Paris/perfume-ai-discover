@@ -1,8 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -73,15 +71,15 @@
 
 @layer base {
   html {
-    @apply bg-navy text-white scroll-smooth font-body;
+    @apply bg-navy text-white scroll-smooth font-sans;
   }
   
   body {
-    @apply bg-navy text-white font-body;
+    @apply bg-navy text-white font-sans;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-wide;
+    @apply font-display tracking-wide text-gold;
   }
   
   a, button {
@@ -90,69 +88,85 @@
 }
 
 @layer components {
-  /* Brand Specific Classes */
-  .neon-glow {
-    animation: pulseGlow 4s infinite alternate;
-  }
-  
-  .brand-gradient {
-    background: linear-gradient(135deg, #7F5AF0 0%, #14B8FF 50%, #EA4C89 100%);
-  }
-  
+  /* AI Gradient */
   .ai-gradient {
-    background: linear-gradient(90deg, #7F5AF0, #14B8FF, #EA4C89);
-    background-size: 200% 200%;
-    animation: gradientShift 3s ease-in-out infinite;
+    background: linear-gradient(90deg, #14B8FF 0%, #7F5AF0 50%, #EA4C89 100%);
   }
   
-  /* Button Styles */
+  .ai-gradient-subtle {
+    background: linear-gradient(90deg, rgba(20,184,255,0.12) 0%, rgba(127,90,240,0.12) 50%, rgba(234,76,137,0.12) 100%);
+  }
+  
+  /* Glassmorphism */
+  .glass {
+    @apply bg-navy/40 backdrop-blur-lg border border-white/10;
+  }
+  
+  .glass-gold {
+    @apply bg-navy/40 backdrop-blur-lg border border-gold/12;
+  }
+  
+  /* Buttons */
   .btn-primary {
-    @apply bg-gold text-navy font-medium px-6 py-3 rounded-lg hover:bg-white hover:text-navy transition-all duration-200;
+    @apply bg-gold text-navy font-medium px-6 py-2 rounded-full hover:translate-y-[1px] transition-all duration-200;
+    box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);
   }
   
   .btn-secondary {
-    @apply border border-gold text-gold bg-transparent px-6 py-3 rounded-lg hover:bg-gold/10 transition-all duration-200;
+    @apply border border-gold/40 text-gold bg-transparent px-6 py-2 rounded-full hover:bg-gold/10 transition-all duration-200;
   }
   
-  /* Product Card */
-  .product-card {
-    @apply rounded-2xl bg-navy/60 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-neonB hover:shadow-glow hover:-translate-y-1;
-  }
-  
-  /* Chat Styles */
+  /* Chat Elements */
   .chat-user {
-    background: linear-gradient(135deg, #7F5AF0, #EA4C89);
-    @apply text-white rounded-2xl px-4 py-3;
+    @apply bg-gold text-navy rounded-xl px-4 py-3 font-medium;
   }
   
   .chat-ai {
-    @apply bg-gold text-navy rounded-2xl px-4 py-3;
+    @apply bg-navy/30 backdrop-blur-md border border-gold/10 text-white/90 rounded-xl px-4 py-3;
   }
   
-  /* Layout Elements */
+  /* Navbar */
   .navbar-link {
-    @apply hover:text-neonB hover:underline underline-offset-4 decoration-2;
+    @apply uppercase tracking-wide text-sm text-white/90 hover:text-white relative;
   }
   
-  .glass-effect {
-    @apply bg-navy/80 backdrop-blur-md border border-white/10 rounded-xl;
+  .navbar-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 ai-gradient transform scale-x-0 transition-transform duration-200 origin-left;
   }
   
-  /* Luxury Elements (maintaining some of the original perfume luxury) */
-  .luxury-card {
-    background: rgba(11, 29, 55, 0.95);
-    @apply backdrop-blur-sm border border-white/20 rounded-2xl p-8 transition-all duration-300 hover:shadow-xl hover:border-gold/50;
+  .navbar-link:hover::after {
+    @apply scale-x-100;
   }
   
-  .glass-luxury {
-    background: rgba(11, 29, 55, 0.90);
-    @apply backdrop-blur-xl border border-white/30 shadow-lg;
+  /* AI Beam */
+  .ai-beam {
+    @apply w-full h-px ai-gradient animate-ai-beam;
+    filter: blur(4px);
+    background-size: 200% 200%;
+  }
+  
+  /* Typing dots */
+  .typing-dots {
+    @apply flex space-x-1;
+  }
+  
+  .typing-dot {
+    @apply w-2 h-2 rounded-full ai-gradient animate-pulse-dots;
+  }
+  
+  .typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  .typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
   }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -160,20 +174,9 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gold/80 rounded-full;
+  @apply bg-gold/60 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gold;
-}
-
-/* Keyframes */
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50% }
-  50% { background-position: 100% 50% }
-}
-
-@keyframes pulseGlow {
-  from { box-shadow: 0 0 6px rgba(127,90,240,0.4); }
-  to { box-shadow: 0 0 16px rgba(234,76,137,0.6); }
+  @apply bg-gold/80;
 }
