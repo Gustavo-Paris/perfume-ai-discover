@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Heart, ShoppingCart, Eye } from 'lucide-react';
+import { Heart, Plus, Eye } from 'lucide-react';
 import { Perfume } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,36 +13,28 @@ interface PerfumeCardProps {
 }
 
 const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
-  const [selectedSize, setSelectedSize] = useState(5);
   const [isLiked, setIsLiked] = useState(false);
   const { addItem } = useCart();
   const navigate = useNavigate();
 
-  const getPrice = (size: number) => {
-    switch (size) {
-      case 5: return perfume.price_5ml;
-      case 10: return perfume.price_10ml;
-      default: return perfume.price_full;
-    }
-  };
-
-  const handleAddToCart = () => {
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
     addItem({
       perfume,
-      size: selectedSize,
+      size: 5,
       quantity: 1
     });
     
     toast({
       title: "Adicionado ao carrinho!",
-      description: `${perfume.name} ${selectedSize}ml foi adicionado ao seu carrinho.`,
+      description: `${perfume.name} 5ml foi adicionado ao seu carrinho.`,
     });
   };
 
   return (
-    <div className="perfume-card group">
+    <div className="perfume-card group cursor-pointer" onClick={() => navigate(`/perfume/${perfume.id}`)}>
       {/* Image Container */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-lg mb-4">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-4">
         <img
           src={perfume.image_url}
           alt={perfume.name}
@@ -56,7 +48,10 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
               variant="secondary"
               size="icon"
               className="h-8 w-8 bg-white/90 hover:bg-white"
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLiked(!isLiked);
+              }}
             >
               <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
             </Button>
@@ -64,7 +59,10 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
               variant="secondary"
               size="icon"
               className="h-8 w-8 bg-white/90 hover:bg-white"
-              onClick={() => navigate(`/perfume/${perfume.id}`)}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/perfume/${perfume.id}`);
+              }}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -96,58 +94,22 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           <p className="text-sm text-muted-foreground">{perfume.family}</p>
         </div>
 
-        {/* Size Selection */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Tamanho:</p>
-          <div className="flex space-x-2">
-            <Button
-              variant={selectedSize === 5 ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedSize(5)}
-              className="text-xs"
-            >
-              5ml
-            </Button>
-            <Button
-              variant={selectedSize === 10 ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedSize(10)}
-              className="text-xs"
-            >
-              10ml
-            </Button>
-            {perfume.size_ml.includes(50) && (
-              <Button
-                variant={selectedSize === 50 ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedSize(50)}
-                className="text-xs"
-              >
-                50ml
-              </Button>
-            )}
-          </div>
-        </div>
-
         {/* Price */}
         <div className="flex items-center justify-between">
           <div>
             <p className="font-bold text-lg">
-              R$ {getPrice(selectedSize).toFixed(2).replace('.', ',')}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              ou 3x de R$ {(getPrice(selectedSize) / 3).toFixed(2).replace('.', ',')}
+              A partir de R$ {perfume.price_5ml.toFixed(2).replace('.', ',')}
             </p>
           </div>
         </div>
 
-        {/* Add to Cart Button */}
+        {/* Quick Add Button */}
         <Button 
-          onClick={handleAddToCart}
+          onClick={handleQuickAdd}
           className="w-full gradient-gold text-white hover:opacity-90"
         >
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          Adicionar
+          <Plus className="mr-2 h-4 w-4" />
+          + 5 mL
         </Button>
       </div>
     </div>

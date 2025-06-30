@@ -1,9 +1,10 @@
 
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Search, Heart } from 'lucide-react';
+import { ShoppingBag, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import HeaderUserMenu from './HeaderUserMenu';
+import AlgoliaAutocomplete from '@/components/search/AlgoliaAutocomplete';
 
 const HeaderActions = () => {
   const { items } = useCart();
@@ -12,9 +13,9 @@ const HeaderActions = () => {
 
   return (
     <div className="hidden md:flex items-center space-x-4">
-      <Button variant="ghost" size="icon">
-        <Search className="h-4 w-4" />
-      </Button>
+      <div className="w-64">
+        <AlgoliaAutocomplete />
+      </div>
       <Button variant="ghost" size="icon">
         <Heart className="h-4 w-4" />
       </Button>
