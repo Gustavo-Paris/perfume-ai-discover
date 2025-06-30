@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { Sparkles, History } from 'lucide-react';
+import { Sparkles, History, Zap, Brain, Cpu } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import ConversationChat from '@/components/curadoria/ConversationChat';
 import RecommendationResults from '@/components/curadoria/RecommendationResults';
 import SessionHistory from '@/components/curadoria/SessionHistory';
+import FloatingParticles from '@/components/ui/floating-particles';
 import { useConversationalRecommend } from '@/hooks/useConversationalRecommend';
 import { useConversationalSessions, ConversationalSession } from '@/hooks/useConversationalSessions';
 import { supabase } from '@/integrations/supabase/client';
@@ -144,18 +145,23 @@ const Curadoria = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
-        <div className="container mx-auto px-4 max-w-2xl">
-          <Card className="border-red-200 bg-red-50">
+      <div className="min-h-screen bg-gradient-to-br from-tech-950 via-tech-900 to-tech-950 neural-bg py-12 relative overflow-hidden">
+        <FloatingParticles count={15} />
+        <div className="container mx-auto px-4 max-w-2xl relative z-10">
+          <Card className="tech-card border-red-500/50 bg-red-950/20">
             <CardContent className="p-6 text-center">
-              <p className="text-red-600 mb-4">Ops! Algo deu errado:</p>
-              <p className="text-red-800 font-medium mb-4">{error}</p>
-              <button 
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mx-auto mb-4">
+                <Zap className="h-8 w-8 text-white" />
+              </div>
+              <p className="text-red-400 mb-4 text-lg">Sistema Temporariamente Indisponível</p>
+              <p className="text-red-300 font-medium mb-6">{error}</p>
+              <Button 
                 onClick={handleReset}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white border-0"
               >
-                Tentar Novamente
-              </button>
+                <Cpu className="mr-2 h-4 w-4" />
+                Reconectar Sistema
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -165,21 +171,24 @@ const Curadoria = () => {
 
   if (showHistory) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="font-playfair text-3xl font-bold">
-              Histórico de Curadorias
+      <div className="min-h-screen bg-gradient-to-br from-tech-950 via-tech-900 to-tech-950 neural-bg py-12 relative overflow-hidden">
+        <FloatingParticles count={25} />
+        <div className="container mx-auto px-4 max-w-4xl relative z-10">
+          <div className="mb-8 flex items-center justify-between">
+            <h1 className="font-playfair text-4xl font-bold text-white">
+              <span className="gradient-text">Histórico Neural</span>
             </h1>
             <Button 
               onClick={() => setShowHistory(false)}
               variant="outline"
+              className="glass-dark text-white border-tech-700 hover:border-gold-500/50 hover:bg-tech-800/50"
             >
-              Voltar
+              <Brain className="mr-2 h-4 w-4" />
+              Voltar ao Sistema
             </Button>
           </div>
           
-          <Card className="perfume-card">
+          <Card className="tech-card">
             <CardContent className="p-6">
               <SessionHistory 
                 onLoadSession={handleLoadSession}
@@ -194,8 +203,9 @@ const Curadoria = () => {
 
   if (showResults) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
-        <div className="container mx-auto px-4">
+      <div className="min-h-screen bg-gradient-to-br from-tech-950 via-tech-900 to-tech-950 neural-bg py-12 relative overflow-hidden">
+        <FloatingParticles count={30} />
+        <div className="container mx-auto px-4 relative z-10">
           <RecommendationResults 
             recommendedIds={recommendedIds}
             onStartOver={handleStartOver}
@@ -208,22 +218,27 @@ const Curadoria = () => {
 
   if (isAnalyzing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="text-center">
-            <div className="w-20 h-20 rounded-full gradient-gold flex items-center justify-center mx-auto mb-6 animate-pulse">
-              <Sparkles className="h-10 w-10 text-white animate-spin" />
-            </div>
-            <h2 className="font-playfair text-3xl font-bold mb-4">
-              Analisando suas preferências...
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Estou processando nossa conversa e encontrando os perfumes perfeitos para você
-            </p>
-            <div className="mt-8 flex justify-center space-x-2">
-              <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce"></div>
-              <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+      <div className="min-h-screen bg-gradient-to-br from-tech-950 via-tech-900 to-tech-950 neural-bg py-12 relative overflow-hidden flex items-center justify-center">
+        <FloatingParticles count={40} />
+        <div className="text-center relative z-10 max-w-2xl mx-auto px-4">
+          <div className="ai-glow w-32 h-32 rounded-full bg-gradient-to-r from-tech-500 to-gold-500 flex items-center justify-center mx-auto mb-8 animate-glow-pulse">
+            <Brain className="h-16 w-16 text-white animate-pulse" />
+          </div>
+          <h2 className="font-playfair text-4xl font-bold mb-6 text-white">
+            <span className="gradient-text typing-effect">Processamento Neural Ativo</span>
+          </h2>
+          <p className="text-xl text-tech-300 max-w-xl mx-auto mb-8 leading-relaxed">
+            Nossa IA está analisando suas preferências através de algoritmos avançados para descobrir as fragrâncias perfeitas
+          </p>
+          <div className="flex justify-center items-center space-x-3 mb-8">
+            <div className="w-3 h-3 bg-tech-400 rounded-full animate-bounce"></div>
+            <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-3 bg-tech-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+          <div className="bg-tech-900/50 backdrop-blur-sm rounded-lg p-4 border border-tech-800/50">
+            <div className="flex items-center justify-center space-x-2 text-tech-400">
+              <Cpu className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Processando dados sensoriais...</span>
             </div>
           </div>
         </div>
@@ -232,47 +247,54 @@ const Curadoria = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full gradient-gold flex items-center justify-center mx-auto mb-6">
-            <Sparkles className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-tech-950 via-tech-900 to-tech-950 neural-bg py-12 relative overflow-hidden">
+      <FloatingParticles count={25} />
+      
+      <div className="container mx-auto px-4 max-w-4xl relative z-10">
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="ai-glow w-20 h-20 rounded-full bg-gradient-ai flex items-center justify-center mx-auto mb-8 animate-gradient-x">
+            <Sparkles className="h-10 w-10 text-white animate-pulse" />
           </div>
-          <h1 className="font-playfair text-3xl md:text-4xl font-bold mb-4">
-            Curadoria Inteligente
+          <h1 className="font-playfair text-5xl md:text-6xl font-bold mb-6">
+            <span className="gradient-text">Curadoria Neural</span>
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Converse comigo e descobriremos juntos suas 3 fragrâncias ideais
+          <p className="text-tech-300 text-xl mb-2 max-w-2xl mx-auto leading-relaxed">
+            Sistema de Inteligência Artificial avançado para descoberta de fragrâncias
+          </p>
+          <p className="text-tech-400 text-lg max-w-xl mx-auto">
+            Converse com nossa IA e descubra suas 3 fragrâncias ideais através de análise comportamental
           </p>
           
           {isAuthenticated && (
-            <div className="mt-4 flex justify-center space-x-4">
+            <div className="mt-8 flex justify-center items-center space-x-6 animate-fade-in" style={{ animationDelay: '0.3s' }}>
               <Button 
                 onClick={() => setShowHistory(true)}
                 variant="outline"
-                className="flex items-center space-x-2"
+                className="glass-dark text-white border-tech-700/50 hover:border-gold-500/50 hover:bg-tech-800/50 transition-all duration-300"
               >
-                <History className="h-4 w-4" />
-                <span>Ver Histórico</span>
+                <History className="h-4 w-4 mr-2" />
+                <span>Histórico Neural</span>
               </Button>
               
               {currentSessionId && (
-                <div className="text-sm text-green-600 flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Sessão ativa salva</span>
+                <div className="flex items-center space-x-2 text-green-400 bg-green-950/20 px-4 py-2 rounded-full border border-green-800/50">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">Sessão Ativa</span>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        <Card className="perfume-card h-[700px]">
-          <CardHeader>
-            <CardTitle className="font-playfair text-xl text-center">
-              Sua Consultoria Personalizada
+        <Card className="tech-card h-[750px] overflow-hidden animate-fade-in" style={{ animationDelay: '0.5s' }}>
+          <CardHeader className="border-b border-tech-800/50 bg-gradient-to-r from-tech-950/80 to-tech-900/80">
+            <CardTitle className="font-playfair text-2xl text-center text-white flex items-center justify-center space-x-3">
+              <Brain className="h-6 w-6 text-gold-400 animate-pulse" />
+              <span>Interface de Curadoria Inteligente</span>
+              <Cpu className="h-6 w-6 text-tech-400 animate-neural-pulse" />
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-full p-0">
+          <CardContent className="h-full p-0 bg-gradient-to-b from-tech-950/40 to-tech-900/60">
             <ConversationChat
               messages={conversation.messages}
               onSendMessage={handleSendMessage}
