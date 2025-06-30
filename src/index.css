@@ -91,7 +91,7 @@
   }
   
   .luxury-card {
-    @apply bg-white/95 backdrop-blur-sm border border-luxury-200/30 rounded-2xl p-8 transition-all duration-700 hover:shadow-2xl hover:bg-white hover:border-gold-300/40 hover:scale-[1.02];
+    @apply bg-white/95 backdrop-blur-sm border border-luxury-200/30 rounded-2xl p-8 transition-all duration-500 hover:shadow-2xl hover:bg-white hover:border-gold-300/40;
   }
   
   .tech-overlay {
@@ -100,27 +100,35 @@
   
   .tech-overlay::before {
     content: '';
-    @apply absolute inset-0 bg-holographic-bg opacity-0 transition-opacity duration-500;
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: linear-gradient(45deg, 
+      rgba(59, 130, 246, 0.03), 
+      rgba(139, 92, 246, 0.03), 
+      rgba(236, 72, 153, 0.03), 
+      rgba(0, 212, 255, 0.03)
+    );
     background-size: 400% 400%;
-    animation: holographic 8s ease-in-out infinite;
+    animation: gradient-x 8s ease-in-out infinite;
   }
   
   .tech-overlay:hover::before {
     @apply opacity-100;
   }
   
-  .luxury-glow {
+  .ai-glow {
     @apply relative;
   }
   
-  .luxury-glow::before {
+  .ai-glow::before {
     content: '';
-    @apply absolute inset-0 rounded-2xl bg-gradient-to-r from-gold-500/20 to-tech-cyan/20 opacity-0 blur-xl transition-opacity duration-500;
+    @apply absolute inset-0 rounded-2xl opacity-0 blur-xl transition-opacity duration-700;
+    background: linear-gradient(45deg, #3B82F6, #8B5CF6, #EC4899, #00D4FF);
+    background-size: 400% 400%;
+    animation: ai-glow 4s ease-in-out infinite;
   }
   
-  .luxury-glow:hover::before {
-    @apply opacity-100;
-    animation: luxe-glow 3s ease-in-out infinite;
+  .ai-glow:hover::before {
+    @apply opacity-30;
   }
   
   .elegant-bg {
@@ -136,25 +144,26 @@
   
   .particle-luxury {
     @apply absolute w-1 h-1 rounded-full opacity-70;
-    background: linear-gradient(45deg, #D4AF37, #00D4FF, #8B5CF6);
+    background: linear-gradient(45deg, #D4AF37, #3B82F6, #8B5CF6, #EC4899);
     animation: particle-luxury 12s linear infinite;
   }
   
-  .shimmer-luxury {
+  .ai-shimmer {
     background: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(212, 175, 55, 0.3) 30%,
-      rgba(0, 212, 255, 0.2) 50%,
-      rgba(139, 92, 246, 0.2) 70%,
+      rgba(59, 130, 246, 0.3) 20%,
+      rgba(139, 92, 246, 0.4) 40%,
+      rgba(236, 72, 153, 0.3) 60%,
+      rgba(0, 212, 255, 0.2) 80%,
       rgba(255, 255, 255, 0) 100%
     );
     background-size: 200% 100%;
-    @apply animate-shimmer;
+    @apply animate-ai-shimmer;
   }
   
   .glass-luxury {
-    @apply backdrop-blur-xl bg-luxury-900/80 border border-luxury-700/50;
+    @apply backdrop-blur-xl bg-white/90 border border-luxury-300/50;
   }
   
   .tech-status {
@@ -166,6 +175,18 @@
     @apply w-2 h-2 rounded-full animate-tech-pulse;
     background: linear-gradient(45deg, #00D4FF, #10B981);
   }
+
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+
+  .chat-hover-smooth {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .chat-hover-smooth:hover {
+    @apply scale-[1.005] transform-gpu;
+  }
 }
 
 /* Custom scrollbar luxury */
@@ -174,7 +195,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-luxury-950/20;
+  @apply bg-luxury-950/10;
 }
 
 ::-webkit-scrollbar-thumb {

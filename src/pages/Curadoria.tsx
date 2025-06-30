@@ -222,11 +222,11 @@ const Curadoria = () => {
       <div className="min-h-screen elegant-bg py-12 relative overflow-hidden flex items-center justify-center">
         <FloatingParticles count={40} />
         <div className="text-center relative z-10 max-w-2xl mx-auto px-4">
-          <div className="luxury-glow w-32 h-32 rounded-full bg-gradient-to-r from-gold-500 to-luxury-600 flex items-center justify-center mx-auto mb-8 animate-luxe-glow">
+          <div className="ai-glow w-32 h-32 rounded-full bg-gradient-to-r from-gold-500 to-luxury-600 flex items-center justify-center mx-auto mb-8 animate-ai-glow">
             <Sparkles className="h-16 w-16 text-white animate-pulse" />
           </div>
           <h2 className="font-cormorant text-5xl font-bold mb-6 text-white">
-            <span className="bg-gradient-to-r from-gold-400 via-tech-cyan to-gold-400 bg-clip-text text-transparent animate-gradient-x">
+            <span className="ai-shimmer bg-clip-text text-transparent animate-gradient-x">
               Análise Inteligente
             </span>
           </h2>
@@ -234,11 +234,11 @@ const Curadoria = () => {
             Nossa inteligência artificial está processando suas preferências para descobrir as fragrâncias perfeitas
           </p>
           <div className="flex justify-center items-center space-x-4 mb-8">
-            <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce"></div>
-            <div className="w-3 h-3 bg-tech-cyan rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-3 h-3 bg-tech-purple rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-3 h-3 bg-tech-blue rounded-full animate-bounce"></div>
+            <div className="w-3 h-3 bg-tech-purple rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-3 bg-tech-pink rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
           </div>
-          <div className="glass-luxury rounded-2xl p-6 border border-luxury-700/50">
+          <div className="glass-luxury rounded-2xl p-6 border border-luxury-700/40">
             <div className="tech-status justify-center text-luxury-300 font-montserrat">
               <span className="text-sm">Processando dados sensoriais...</span>
             </div>
@@ -254,7 +254,7 @@ const Curadoria = () => {
       
       <div className="container mx-auto px-4 max-w-4xl relative z-10">
         <div className="text-center mb-12 animate-fade-in">
-          <div className="luxury-glow w-24 h-24 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-8 animate-float">
+          <div className="ai-glow w-24 h-24 rounded-full bg-gradient-gold-elegant flex items-center justify-center mx-auto mb-8 animate-float">
             <Sparkles className="h-12 w-12 text-white animate-pulse" />
           </div>
           <h1 className="font-cormorant text-6xl md:text-7xl font-bold mb-6">
@@ -274,7 +274,7 @@ const Curadoria = () => {
               <Button 
                 onClick={() => setShowHistory(true)}
                 variant="outline"
-                className="glass-luxury text-white border-luxury-700/50 hover:border-gold-500/50 hover:bg-luxury-800/50 transition-all duration-300 font-montserrat"
+                className="glass-luxury text-white border-luxury-700/40 hover:border-gold-500/50 hover:bg-luxury-800/50 transition-all duration-300 font-montserrat"
               >
                 <History className="h-4 w-4 mr-2" />
                 <span>Histórico</span>
@@ -289,15 +289,15 @@ const Curadoria = () => {
           )}
         </div>
 
-        <Card className="luxury-card tech-overlay h-[750px] overflow-hidden animate-fade-in" style={{ animationDelay: '0.5s' }}>
-          <CardHeader className="border-b border-luxury-200/30 bg-gradient-to-r from-white/95 to-luxury-50/95 backdrop-blur-sm">
+        <Card className="luxury-card tech-overlay h-[750px] overflow-hidden animate-fade-in border-luxury-300/40" style={{ animationDelay: '0.5s' }}>
+          <CardHeader className="border-b border-luxury-200/30 bg-gradient-to-r from-white/98 to-luxury-50/98 backdrop-blur-sm">
             <CardTitle className="font-cormorant text-3xl text-center text-luxury-800 flex items-center justify-center space-x-3">
               <Star className="h-7 w-7 text-gold-500" />
               <span>Sistema de Curadoria</span>
               <AtomIcon className="h-7 w-7 text-luxury-600 animate-tech-pulse" />
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-full p-0 bg-gradient-to-b from-white/40 to-luxury-50/60">
+          <CardContent className="h-full p-0 bg-gradient-to-b from-white/50 to-luxury-50/70">
             <ConversationChat
               messages={conversation.messages}
               onSendMessage={handleSendMessage}

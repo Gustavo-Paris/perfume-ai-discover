@@ -19,9 +19,10 @@ const FloatingParticles = ({ count = 20, className = "" }: FloatingParticlesProp
 
   const colors = [
     '#D4AF37', // Gold
-    '#00D4FF', // Tech Cyan
-    '#8B5CF6', // Tech Purple
-    '#10B981', // Tech Green
+    '#3B82F6', // AI Blue
+    '#8B5CF6', // AI Purple  
+    '#EC4899', // AI Pink
+    '#00D4FF', // AI Cyan
     '#FFFFFF'  // White
   ];
 

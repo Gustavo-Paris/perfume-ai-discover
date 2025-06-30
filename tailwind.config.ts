@@ -86,8 +86,9 @@ export default {
 				tech: {
 					cyan: '#00D4FF',
 					purple: '#8B5CF6',
+					pink: '#EC4899',
+					blue: '#3B82F6',
 					green: '#10B981',
-					electric: '#3B82F6',
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
@@ -140,12 +141,29 @@ export default {
 						transform: 'translateY(-10px)'
 					}
 				},
-				'luxe-glow': {
-					'0%, 100%': {
-						boxShadow: '0 0 20px rgba(212, 175, 55, 0.4)',
+				'ai-glow': {
+					'0%': {
+						boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+					},
+					'25%': {
+						boxShadow: '0 0 30px rgba(139, 92, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3)',
 					},
 					'50%': {
-						boxShadow: '0 0 40px rgba(212, 175, 55, 0.7), 0 0 60px rgba(0, 212, 255, 0.3)',
+						boxShadow: '0 0 40px rgba(236, 72, 153, 0.7), 0 0 60px rgba(139, 92, 246, 0.4)',
+					},
+					'75%': {
+						boxShadow: '0 0 35px rgba(0, 212, 255, 0.6), 0 0 50px rgba(236, 72, 153, 0.3)',
+					},
+					'100%': {
+						boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)',
+					}
+				},
+				'ai-shimmer': {
+					'0%': {
+						backgroundPosition: '-200% 0'
+					},
+					'100%': {
+						backgroundPosition: '200% 0'
 					}
 				},
 				'gradient-x': {
@@ -154,24 +172,6 @@ export default {
 					},
 					'50%': {
 						backgroundPosition: '100% 50%'
-					}
-				},
-				'shimmer': {
-					'0%': {
-						backgroundPosition: '-200% 0'
-					},
-					'100%': {
-						backgroundPosition: '200% 0'
-					}
-				},
-				'holographic': {
-					'0%, 100%': {
-						backgroundPosition: '0% 50%',
-						opacity: '0.6'
-					},
-					'50%': {
-						backgroundPosition: '100% 50%',
-						opacity: '0.9'
 					}
 				},
 				'particle-luxury': {
@@ -205,17 +205,16 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.6s ease-out',
 				'float': 'float 3s ease-in-out infinite',
-				'luxe-glow': 'luxe-glow 3s ease-in-out infinite',
+				'ai-glow': 'ai-glow 4s ease-in-out infinite',
 				'gradient-x': 'gradient-x 4s ease infinite',
-				'shimmer': 'shimmer 2.5s linear infinite',
-				'holographic': 'holographic 3s ease-in-out infinite',
+				'ai-shimmer': 'ai-shimmer 3s linear infinite',
 				'particle-luxury': 'particle-luxury 12s linear infinite',
 				'tech-pulse': 'tech-pulse 2s ease-in-out infinite'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'luxury-pattern': 'radial-gradient(circle at 2px 2px, rgba(212,175,55,0.1) 1px, transparent 0)',
-				'holographic-bg': 'linear-gradient(45deg, transparent, rgba(0,212,255,0.1), rgba(139,92,246,0.1), rgba(16,185,129,0.1), transparent)',
+				'ai-gradient': 'linear-gradient(45deg, #3B82F6, #8B5CF6, #EC4899, #00D4FF)',
 			}
 		}
 	},
