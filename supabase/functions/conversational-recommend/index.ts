@@ -50,7 +50,7 @@ serve(async (req) => {
     // System prompt for conversational curation
     const systemPrompt = `Você é um especialista em perfumaria brasileiro que faz curadoria personalizada através de conversas naturais e fluidas.
 
-SEU OBJETIVO: Descobrir as preferências do cliente através de uma conversa envolvente e recomendar perfumes perfeitos para ele.
+SEU OBJETIVO: Descobrir as preferências do cliente através de uma conversa envolvente e recomendar os 3 perfumes mais precisos para ele.
 
 ESTILO DE CONVERSA:
 - Seja caloroso, acolhedor e genuinamente interessado
@@ -58,22 +58,29 @@ ESTILO DE CONVERSA:
 - Use linguagem brasileira informal mas sofisticada
 - Seja um consultor experiente, não um robô
 
-PROCESSO:
+PROCESSO DE DESCOBERTA:
 1. INÍCIO: Cumprimente e pergunte sobre a busca (para si ou presente)
-2. EXPLORAR: Descubra gradualmente:
+2. EXPLORAR GRADUALMENTE:
    - Gênero e ocasiões de uso
    - Preferências de intensidade
    - Famílias olfativas que gosta/não gosta
-   - Experiências passadas com perfumes
+   - IMPORTANTE: Pergunte sobre perfumes que já provou e gostou/não gostou
    - Orçamento (de forma sutil)
    - Personalidade e estilo
 3. APROFUNDAR: Faça perguntas específicas baseadas nas respostas
-4. FINALIZAR: Quando tiver informações suficientes, diga que encontrou perfumes perfeitos
+4. ANÁLISE: Quando tiver informações suficientes, diga "Perfeito! Deixe-me analisar suas preferências e encontrar os perfumes ideais para você..."
+5. FINALIZAR: Apresente as 3 recomendações mais precisas
 
 QUANDO RECOMENDAR:
-- Após 4-6 trocas de mensagens
+- Após 5-7 trocas de mensagens
 - Quando entender bem o perfil do cliente
-- Diga: "Perfeito! Com base em nossa conversa, encontrei algumas fragrâncias que combinam perfeitamente com você."
+- SEMPRE pergunte sobre experiências passadas com perfumes
+- Priorize QUALIDADE sobre quantidade nas recomendações
+
+APÓS AS RECOMENDAÇÕES:
+- O cliente pode continuar a conversa se não gostar das sugestões
+- Esteja pronto para ajustar baseado no feedback
+- Mantenha o tom consultivo e acolhedor
 
 CATÁLOGO DISPONÍVEL:
 ${JSON.stringify(availablePerfumes.slice(0, 20).map(p => ({
@@ -93,6 +100,7 @@ REGRAS:
 - Não faça listas de perguntas
 - Uma pergunta por vez
 - Seja genuinamente curioso
+- SEMPRE pergunte sobre experiências passadas
 - Adapte-se às respostas`;
 
     // Prepare messages for OpenAI
@@ -129,33 +137,42 @@ REGRAS:
     console.log('AI Response:', aiResponse);
 
     // Check if AI wants to make recommendations
-    const shouldRecommend = aiResponse.toLowerCase().includes('encontrei') || 
-                           aiResponse.toLowerCase().includes('recomendo') ||
-                           aiResponse.toLowerCase().includes('perfeito') ||
-                           conversationHistory.length >= 8;
+    const shouldRecommend = aiResponse.toLowerCase().includes('deixe-me analisar') || 
+                           aiResponse.toLowerCase().includes('analisar suas preferências') ||
+                           aiResponse.toLowerCase().includes('encontrar os perfumes ideais') ||
+                           conversationHistory.length >= 10;
 
     let recommendations: string[] = [];
     let isComplete = false;
 
     if (shouldRecommend) {
       // Generate recommendations based on conversation
-      const recommendationPrompt = `Baseado nesta conversa sobre preferências de perfume, escolha 5 perfumes que melhor combinam com o cliente.
+      const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha apenas os 3 perfumes que mais precisamente combinam com o cliente.
 
-Conversa:
+Conversa completa:
 ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
 Última mensagem: ${message}
 
-Catálogo:
+Catálogo disponível:
 ${JSON.stringify(availablePerfumes.map(p => ({
   id: p.id,
   name: p.name,
   brand: p.brand,
   family: p.family,
   gender: p.gender,
-  description: p.description
+  description: p.description,
+  top_notes: p.top_notes,
+  heart_notes: p.heart_notes,
+  base_notes: p.base_notes
 })), null, 2)}
 
-Responda APENAS com um array JSON de IDs dos perfumes, ordenados do melhor para o cliente. Exemplo: ["id1", "id2", "id3", "id4", "id5"]`;
+CRITÉRIOS DE SELEÇÃO:
+- Máxima precisão baseada nas preferências reveladas
+- Considere experiências passadas mencionadas
+- Priorize qualidade da combinação sobre quantidade
+- Ordene do mais adequado para o menos adequado
+
+Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: ["id1", "id2", "id3"]`;
 
       const recResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -165,12 +182,12 @@ Responda APENAS com um array JSON de IDs dos perfumes, ordenados do melhor para 
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
-          temperature: 0.3,
+          temperature: 0.2,
           messages: [
-            { role: 'system', content: 'Você é um especialista em perfumaria que escolhe perfumes baseado em conversas. Responda apenas com arrays JSON de IDs.' },
+            { role: 'system', content: 'Você é um especialista em perfumaria que escolhe perfumes com máxima precisão baseado em conversas. Responda apenas com arrays JSON de IDs.' },
             { role: 'user', content: recommendationPrompt }
           ],
-          max_tokens: 200
+          max_tokens: 150
         }),
       });
 
@@ -181,12 +198,12 @@ Responda APENAS com um array JSON de IDs dos perfumes, ordenados do melhor para 
         try {
           const parsedRecs = JSON.parse(recContent);
           if (Array.isArray(parsedRecs)) {
-            recommendations = parsedRecs.slice(0, 5);
+            recommendations = parsedRecs.slice(0, 3);
             isComplete = true;
           }
         } catch (e) {
           console.log('Failed to parse recommendations, using fallback');
-          recommendations = availablePerfumes.slice(0, 5).map(p => p.id);
+          recommendations = availablePerfumes.slice(0, 3).map(p => p.id);
           isComplete = true;
         }
       }

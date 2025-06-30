@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { useConversationalRecommend } from '@/hooks/useConversationalRecommend';
 const Curadoria = () => {
   const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const { 
     conversation, 
@@ -21,13 +21,29 @@ const Curadoria = () => {
 
   const handleSendMessage = async (message: string) => {
     try {
+      // Check if message contains analysis phrase
+      const isAnalysisMessage = message.toLowerCase().includes('deixe-me analisar') || 
+                                message.toLowerCase().includes('analisar suas preferências') ||
+                                message.toLowerCase().includes('encontrar os perfumes ideais');
+      
+      if (isAnalysisMessage) {
+        setIsAnalyzing(true);
+      }
+
       const response = await sendMessage(message);
       
       if (response.isComplete && response.recommendations) {
-        setRecommendedIds(response.recommendations);
-        setShowResults(true);
+        // Show analyzing state for a moment before showing results
+        setTimeout(() => {
+          setRecommendedIds(response.recommendations);
+          setShowResults(true);
+          setIsAnalyzing(false);
+        }, 2000);
+      } else {
+        setIsAnalyzing(false);
       }
     } catch (error) {
+      setIsAnalyzing(false);
       toast({
         title: "Erro na conversa",
         description: "Houve um problema. Tente novamente.",
@@ -40,10 +56,17 @@ const Curadoria = () => {
     resetConversation();
     setRecommendedIds([]);
     setShowResults(false);
+    setIsAnalyzing(false);
   };
 
   const handleStartOver = () => {
     handleReset();
+  };
+
+  const handleContinueConversation = () => {
+    setShowResults(false);
+    setIsAnalyzing(false);
+    // Keep the conversation history and recommendations for context
   };
 
   if (error) {
@@ -74,7 +97,33 @@ const Curadoria = () => {
           <RecommendationResults 
             recommendedIds={recommendedIds}
             onStartOver={handleStartOver}
+            onContinueConversation={handleContinueConversation}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (isAnalyzing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gold-50 to-white py-12">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center">
+            <div className="w-20 h-20 rounded-full gradient-gold flex items-center justify-center mx-auto mb-6 animate-pulse">
+              <Sparkles className="h-10 w-10 text-white animate-spin" />
+            </div>
+            <h2 className="font-playfair text-3xl font-bold mb-4">
+              Analisando suas preferências...
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Estou processando nossa conversa e encontrando os perfumes perfeitos para você
+            </p>
+            <div className="mt-8 flex justify-center space-x-2">
+              <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce"></div>
+              <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-3 h-3 bg-gold-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -91,7 +140,7 @@ const Curadoria = () => {
             Curadoria Inteligente
           </h1>
           <p className="text-muted-foreground text-lg">
-            Converse comigo e descobriremos juntos suas fragrâncias ideais
+            Converse comigo e descobriremos juntos suas 3 fragrâncias ideais
           </p>
         </div>
 
