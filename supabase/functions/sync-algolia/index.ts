@@ -1,4 +1,5 @@
 
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -55,10 +56,28 @@ serve(async (req) => {
       image_url: perfume.image_url,
     }));
 
-    // Use direct HTTP request to Algolia instead of the SDK
-    const algoliaUrl = `https://${algoliaAppId}-dsn.algolia.net/1/indexes/perfumes/batch`;
+    // First, clear the index
+    const clearUrl = `https://${algoliaAppId}-dsn.algolia.net/1/indexes/perfumes/clear`;
     
-    const algoliaResponse = await fetch(algoliaUrl, {
+    const clearResponse = await fetch(clearUrl, {
+      method: 'POST',
+      headers: {
+        'X-Algolia-API-Key': algoliaAdminKey,
+        'X-Algolia-Application-Id': algoliaAppId,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!clearResponse.ok) {
+      const errorText = await clearResponse.text();
+      console.error('Algolia clear error:', errorText);
+      throw new Error(`Algolia clear error: ${clearResponse.status} - ${errorText}`);
+    }
+
+    // Then, add all objects
+    const addUrl = `https://${algoliaAppId}-dsn.algolia.net/1/indexes/perfumes/batch`;
+    
+    const addResponse = await fetch(addUrl, {
       method: 'POST',
       headers: {
         'X-Algolia-API-Key': algoliaAdminKey,
@@ -66,25 +85,20 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        requests: [
-          {
-            action: 'clear'
-          },
-          {
-            action: 'addObject',
-            body: algoliaObjects
-          }
-        ]
+        requests: algoliaObjects.map(obj => ({
+          action: 'addObject',
+          body: obj
+        }))
       })
     });
 
-    if (!algoliaResponse.ok) {
-      const errorText = await algoliaResponse.text();
-      console.error('Algolia API error:', errorText);
-      throw new Error(`Algolia API error: ${algoliaResponse.status} - ${errorText}`);
+    if (!addResponse.ok) {
+      const errorText = await addResponse.text();
+      console.error('Algolia add error:', errorText);
+      throw new Error(`Algolia add error: ${addResponse.status} - ${errorText}`);
     }
 
-    const algoliaResult = await algoliaResponse.json();
+    const algoliaResult = await addResponse.json();
     console.log(`Synced ${algoliaObjects.length} perfumes to Algolia`, algoliaResult);
 
     return new Response(JSON.stringify({ 
@@ -105,3 +119,4 @@ serve(async (req) => {
     });
   }
 });
+
