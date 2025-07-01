@@ -140,3 +140,36 @@ export interface UserRole {
   role: 'admin' | 'customer';
   created_at: string;
 }
+
+export interface CartItemDB {
+  id: string;
+  user_id: string | null;
+  perfume_id: string;
+  size_ml: number;
+  quantity: number;
+  created_at: string;
+}
+
+export interface OrderDraft {
+  id: string;
+  user_id: string;
+  address_id: string | null;
+  shipping_service: string | null;
+  shipping_cost: number | null;
+  status: 'draft' | 'quote_ready' | 'confirmed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShippingQuote {
+  service: string;
+  price: number;
+  deadline: number;
+  company: string;
+}
+
+export interface CheckoutStep {
+  step: number;
+  title: string;
+  completed: boolean;
+}

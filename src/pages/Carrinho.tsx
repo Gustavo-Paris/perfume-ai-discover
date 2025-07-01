@@ -6,23 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useCart } from '@/hooks/useCart';
+import { useCart } from '@/contexts/CartContext';
 
 const Carrinho = () => {
-  const { items, updateQuantity, removeItem, getTotal, clearCart } = useCart();
-  const [promoCode, setPromoCode] = useState('');
+  const { items, updateQuantity, removeItem, getTotal, clearCart, loading } = useCart();
 
   const subtotal = getTotal();
   const shipping = subtotal >= 299 ? 0 : 15.90;
   const total = subtotal + shipping;
+  const pointsToEarn = Math.floor(total);
 
   const formatPrice = (price: number) => 
     `R$ ${price.toFixed(2).replace('.', ',')}`;
 
   const getPriceForSize = (perfume: any, size: number) => {
     switch (size) {
-      case 5: return perfume.price_5ml;
-      case 10: return perfume.price_10ml;
+      case 5: return perfume.price_5ml || 0;
+      case 10: return perfume.price_10ml || 0;
       default: return perfume.price_full;
     }
   };
@@ -68,6 +68,7 @@ const Carrinho = () => {
             variant="outline" 
             onClick={clearCart}
             className="text-red-600 hover:text-red-700"
+            disabled={loading}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Limpar Carrinho
@@ -84,7 +85,7 @@ const Carrinho = () => {
                     {/* Product Image */}
                     <div className="w-full md:w-32 h-48 md:h-32 flex-shrink-0">
                       <img
-                        src={item.perfume.image_url}
+                        src={item.perfume.image_url || '/placeholder.svg'}
                         alt={item.perfume.name}
                         className="w-full h-full object-cover rounded-lg"
                       />
@@ -118,6 +119,7 @@ const Carrinho = () => {
                           size="icon"
                           onClick={() => removeItem(item.perfume.id, item.size)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          disabled={loading}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -131,7 +133,7 @@ const Carrinho = () => {
                             size="icon"
                             className="h-8 w-8"
                             onClick={() => updateQuantity(item.perfume.id, item.size, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
+                            disabled={item.quantity <= 1 || loading}
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
@@ -141,6 +143,7 @@ const Carrinho = () => {
                             size="icon"
                             className="h-8 w-8"
                             onClick={() => updateQuantity(item.perfume.id, item.size, item.quantity + 1)}
+                            disabled={loading}
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
@@ -187,6 +190,11 @@ const Carrinho = () => {
                   </p>
                 )}
 
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Pontos a ganhar</span>
+                  <span>{pointsToEarn} pontos</span>
+                </div>
+
                 <Separator />
 
                 <div className="flex justify-between font-bold text-lg">
@@ -195,11 +203,15 @@ const Carrinho = () => {
                 </div>
 
                 <Button 
+                  asChild
                   className="w-full gradient-gold text-white hover:opacity-90"
                   size="lg"
+                  disabled={loading}
                 >
-                  Finalizar Compra
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link to="/checkout">
+                    Finalizar Compra
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
 
                 <div className="text-center text-sm text-muted-foreground">

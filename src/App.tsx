@@ -1,15 +1,18 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { CartProvider } from "./contexts/CartContext";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/Home";
 import Curadoria from "./pages/Curadoria";
 import Catalogo from "./pages/Catalogo";
 import Carrinho from "./pages/Carrinho";
+import Checkout from "./pages/Checkout";
 import Auth from "./pages/Auth";
 import AdminPerfumes from "./pages/admin/AdminPerfumes";
 import AdminInventory from "./pages/admin/AdminInventory";
@@ -26,28 +29,31 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/curadoria" element={<Curadoria />} />
-                <Route path="/catalogo" element={<Catalogo />} />
-                <Route path="/carrinho" element={<Carrinho />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/perfume/:id" element={<PerfumeDetails />} />
-                <Route path="/admin/perfumes" element={<AdminPerfumes />} />
-                <Route path="/admin/inventory" element={<AdminInventory />} />
-                <Route path="/admin/lots" element={<AdminLots />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </BrowserRouter>
+        <CartProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/curadoria" element={<Curadoria />} />
+                  <Route path="/catalogo" element={<Catalogo />} />
+                  <Route path="/carrinho" element={<Carrinho />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/perfume/:id" element={<PerfumeDetails />} />
+                  <Route path="/admin/perfumes" element={<AdminPerfumes />} />
+                  <Route path="/admin/inventory" element={<AdminInventory />} />
+                  <Route path="/admin/lots" element={<AdminLots />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </BrowserRouter>
+        </CartProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

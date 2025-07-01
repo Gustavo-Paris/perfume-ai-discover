@@ -87,6 +87,41 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          perfume_id: string
+          quantity: number
+          size_ml: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          perfume_id: string
+          quantity?: number
+          size_ml: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          perfume_id?: string
+          quantity?: number
+          size_ml?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversational_sessions: {
         Row: {
           conversation_json: Json
@@ -161,6 +196,47 @@ export type Database = {
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_drafts: {
+        Row: {
+          address_id: string | null
+          created_at: string
+          id: string
+          shipping_cost: number | null
+          shipping_service: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_id?: string | null
+          created_at?: string
+          id?: string
+          shipping_cost?: number | null
+          shipping_service?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_id?: string | null
+          created_at?: string
+          id?: string
+          shipping_cost?: number | null
+          shipping_service?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_drafts_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "addresses"
             referencedColumns: ["id"]
           },
         ]
