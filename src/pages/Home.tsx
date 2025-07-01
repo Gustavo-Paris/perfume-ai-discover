@@ -1,11 +1,14 @@
+
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, Truck, HeartHandshake, Star, Cpu, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
+
 const Home = () => {
-  return <div className="min-h-screen bg-white">
+  return (
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative min-h-[calc(100vh-56px)] py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
         <div className="container mx-auto max-w-7xl">
@@ -199,16 +202,18 @@ const Home = () => {
             </p>
             
             <div className="ai-halo rounded-3xl">
-              <Button asChild size="lg" className="bg-gold text-navy rounded-full font-medium text-lg px-10 py-4 hover:bg-gold/90">
+              <Button asChild size="lg" className="bg-navy/70 hover:bg-navy/90 text-white rounded-full font-medium text-lg px-10 py-4">
                 <Link to="/curadoria" className="py-0 px-[20px]">
                   Iniciar Curadoria Gratuita
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <Sparkles className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
             </div>
           </div>
         </div>
       </motion.section>
-    </div>;
+    </div>
+  );
 };
+
 export default Home;
