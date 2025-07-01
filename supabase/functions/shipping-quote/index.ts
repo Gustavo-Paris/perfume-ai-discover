@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const MELHOR_ENVIO_API = 'https://sandbox.melhorenvio.com.br/api/v2/me';
-const MELHOR_ENVIO_AUTH_URL = 'https://sandbox.melhorenvio.com.br/oauth/token';
+const MELHOR_ENVIO_CALC_API = 'https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate';
 
 interface ShippingQuoteRequest {
   orderDraftId: string;
@@ -76,28 +76,25 @@ serve(async (req) => {
       );
     }
 
-    // Get Melhor Envio credentials
+    // Get Melhor Envio credentials - now we only need the token
     const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_TOKEN');
-    const melhorEnvioClientId = Deno.env.get('MELHOR_ENVIO_CLIENT_ID');
-    const melhorEnvioClientSecret = Deno.env.get('MELHOR_ENVIO_CLIENT_SECRET');
     
-    console.log('=== MELHOR ENVIO CREDENTIALS CHECK ===');
+    console.log('=== MELHOR ENVIO TOKEN CHECK ===');
     console.log('Token exists:', !!melhorEnvioToken);
-    console.log('Client ID exists:', !!melhorEnvioClientId);
-    console.log('Client Secret exists:', !!melhorEnvioClientSecret);
+    console.log('Token length:', melhorEnvioToken?.length || 0);
     
-    if (!melhorEnvioToken || !melhorEnvioClientId || !melhorEnvioClientSecret) {
-      console.log('Missing Melhor Envio credentials - using mock data');
+    if (!melhorEnvioToken) {
+      console.log('Missing Melhor Envio token - using mock data');
       
       const mockQuotes: ShippingQuote[] = [
         {
-          service: 'PAC (Credenciais Incompletas)',
+          service: 'PAC (Token Ausente)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX (Credenciais Incompletas)',
+          service: 'SEDEX (Token Ausente)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -108,12 +105,8 @@ serve(async (req) => {
         JSON.stringify({ 
           quotes: mockQuotes,
           debug: {
-            message: 'Credenciais incompletas do Melhor Envio',
-            missing: {
-              token: !melhorEnvioToken,
-              clientId: !melhorEnvioClientId,
-              clientSecret: !melhorEnvioClientSecret
-            }
+            message: 'Token do Melhor Envio não configurado',
+            missing: { token: true }
           }
         }),
         { 
@@ -122,69 +115,10 @@ serve(async (req) => {
         }
       );
     }
-
-    // Generate access token using client credentials
-    console.log('=== GENERATING ACCESS TOKEN ===');
-    
-    const tokenResponse = await fetch(MELHOR_ENVIO_AUTH_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': 'Aplicação teste@exemplo.com'
-      },
-      body: JSON.stringify({
-        grant_type: 'client_credentials',
-        client_id: melhorEnvioClientId,
-        client_secret: melhorEnvioClientSecret,
-        scope: ''
-      })
-    });
-
-    console.log('Token response status:', tokenResponse.status);
-
-    if (!tokenResponse.ok) {
-      const tokenError = await tokenResponse.text();
-      console.error('Token generation failed:', tokenError);
-      
-      const fallbackQuotes: ShippingQuote[] = [
-        {
-          service: 'PAC (Erro na Autenticação)',
-          price: 15.90,
-          deadline: 8,
-          company: 'Correios'
-        },
-        {
-          service: 'SEDEX (Erro na Autenticação)',
-          price: 25.50,
-          deadline: 3,
-          company: 'Correios'
-        }
-      ];
-
-      return new Response(
-        JSON.stringify({ 
-          quotes: fallbackQuotes,
-          debug: {
-            error: `Token generation failed: ${tokenResponse.status}`,
-            message: tokenError
-          }
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-    
-    console.log('Access token generated successfully');
 
     // Calculate package dimensions and weight
     const totalWeight = cartItems?.reduce((total, item) => {
-      const itemWeight = item.size_ml * 1.2;
+      const itemWeight = item.size_ml * 1.2; // aproximadamente 1.2g por ml
       return total + (itemWeight * item.quantity);
     }, 0) || 100;
 
@@ -194,51 +128,66 @@ serve(async (req) => {
       length: 25
     };
 
-    // Prepare shipping calculation request
+    // Clean CEP (remove formatting)
+    const destinationCep = orderDraft.addresses.cep.replace(/\D/g, '');
+
+    // Prepare shipping calculation request according to Melhor Envio API docs
     const shippingRequest = {
       from: {
-        postal_code: "01310-100" // CEP de origem (substitua pelo seu CEP)
+        postal_code: "01310-100" // CEP de origem (São Paulo)
       },
       to: {
-        postal_code: orderDraft.addresses.cep.replace(/\D/g, '')
+        postal_code: destinationCep
       },
-      package: {
-        height: packageDimensions.height,
+      products: [{
+        id: "1",
         width: packageDimensions.width,
+        height: packageDimensions.height,
         length: packageDimensions.length,
-        weight: Math.max(totalWeight / 1000, 0.1)
-      }
+        weight: Math.max(totalWeight / 1000, 0.1), // Convert to kg, minimum 100g
+        insurance_value: 100, // Valor do seguro
+        quantity: 1
+      }],
+      options: {
+        receipt: false,
+        own_hand: false
+      },
+      services: "1,2" // 1 = PAC, 2 = SEDEX
     };
 
-    console.log('Shipping request payload:', JSON.stringify(shippingRequest, null, 2));
+    console.log('=== MELHOR ENVIO CALCULATION REQUEST ===');
+    console.log('Destination CEP:', destinationCep);
+    console.log('Package weight (kg):', Math.max(totalWeight / 1000, 0.1));
+    console.log('Request payload:', JSON.stringify(shippingRequest, null, 2));
 
-    // Call Melhor Envio API for shipping calculation
-    const response = await fetch(`${MELHOR_ENVIO_API}/shipment/calculate`, {
+    // Call Melhor Envio API directly with user token
+    const response = await fetch(MELHOR_ENVIO_CALC_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-        'User-Agent': 'Aplicação teste@exemplo.com'
+        'Authorization': `Bearer ${melhorEnvioToken}`,
+        'User-Agent': 'Aplicação perfumes@exemplo.com'
       },
       body: JSON.stringify(shippingRequest)
     });
 
-    console.log('Shipping calculation response status:', response.status);
+    console.log('=== MELHOR ENVIO API RESPONSE ===');
+    console.log('Response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Shipping calculation API error:', response.status, errorText);
+      console.error('Melhor Envio API error:', response.status, errorText);
       
       const fallbackQuotes: ShippingQuote[] = [
         {
-          service: 'PAC (Erro no Cálculo)',
+          service: 'PAC (Erro na API)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX (Erro no Cálculo)',
+          service: 'SEDEX (Erro na API)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -249,8 +198,10 @@ serve(async (req) => {
         JSON.stringify({ 
           quotes: fallbackQuotes,
           debug: {
-            error: `Calculation API Error: ${response.status}`,
-            message: errorText
+            error: `Melhor Envio API Error: ${response.status}`,
+            message: errorText,
+            cep: destinationCep,
+            weight: Math.max(totalWeight / 1000, 0.1)
           }
         }),
         { 
@@ -261,7 +212,7 @@ serve(async (req) => {
     }
 
     const shippingData = await response.json();
-    console.log('Shipping calculation success:', JSON.stringify(shippingData, null, 2));
+    console.log('Melhor Envio response data:', JSON.stringify(shippingData, null, 2));
 
     // Format response to match our interface
     const quotes: ShippingQuote[] = [];
@@ -270,26 +221,13 @@ serve(async (req) => {
       shippingData.forEach((option: any) => {
         if (option.price && option.delivery_time) {
           quotes.push({
-            service: option.name || option.service_name || 'Serviço',
+            service: option.name || option.company?.name || 'Serviço',
             price: parseFloat(option.price),
             deadline: parseInt(option.delivery_time),
-            company: option.company?.name || option.company || 'Transportadora'
+            company: option.company?.name || 'Transportadora'
           });
         }
       });
-    } else if (shippingData && typeof shippingData === 'object') {
-      if (shippingData.services && Array.isArray(shippingData.services)) {
-        shippingData.services.forEach((option: any) => {
-          if (option.price && option.delivery_time) {
-            quotes.push({
-              service: option.name || option.service_name || 'Serviço',
-              price: parseFloat(option.price),
-              deadline: parseInt(option.delivery_time),
-              company: option.company?.name || option.company || 'Transportadora'
-            });
-          }
-        });
-      }
     }
 
     console.log('Final processed quotes:', quotes);
@@ -298,13 +236,13 @@ serve(async (req) => {
       console.log('No valid quotes found, returning fallback data');
       const fallbackQuotes: ShippingQuote[] = [
         {
-          service: 'PAC (Sem Cotações)',
+          service: 'PAC (Sem Cotações Válidas)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX (Sem Cotações)',
+          service: 'SEDEX (Sem Cotações Válidas)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -316,7 +254,7 @@ serve(async (req) => {
           quotes: fallbackQuotes,
           debug: {
             originalResponse: shippingData,
-            message: 'No valid quotes found in API response'
+            message: 'Nenhuma cotação válida encontrada na resposta da API'
           }
         }),
         { 
@@ -337,10 +275,31 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in shipping-quote function:', error);
     
+    const fallbackQuotes: ShippingQuote[] = [
+      {
+        service: 'PAC (Erro Interno)',
+        price: 15.90,
+        deadline: 8,
+        company: 'Correios'
+      },
+      {
+        service: 'SEDEX (Erro Interno)',
+        price: 25.50,
+        deadline: 3,
+        company: 'Correios'
+      }
+    ];
+    
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        quotes: fallbackQuotes,
+        debug: {
+          error: 'Erro interno da função',
+          message: error.message
+        }
+      }),
       { 
-        status: 500, 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
