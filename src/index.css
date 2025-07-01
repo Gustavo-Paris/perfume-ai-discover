@@ -197,7 +197,7 @@
   }
   
   .chat-ai {
-    @apply bg-gold/10 text-white rounded-2xl px-4 py-3 max-w-[85%] border border-gold/20;
+    @apply bg-yellow-100 text-gray-800 rounded-2xl px-4 py-3 max-w-[85%] border border-yellow-200;
   }
   
   /* Typing animation */
@@ -206,7 +206,7 @@
   }
   
   .typing-dot {
-    @apply w-2 h-2 bg-gold rounded-full animate-pulse;
+    @apply w-2 h-2 bg-yellow-500 rounded-full animate-pulse;
     animation-delay: var(--delay, 0ms);
   }
   
@@ -216,23 +216,6 @@
   
   .typing-dot:nth-child(3) {
     --delay: 400ms;
-  }
-
-  /* Background colors */
-  .bg-navy {
-    background-color: #1a1f2e;
-  }
-  
-  .text-gold {
-    color: #f4d03f;
-  }
-  
-  .bg-gold {
-    background-color: #f4d03f;
-  }
-  
-  .glass-gold {
-    @apply bg-white/5 backdrop-blur-xl border border-gold/20;
   }
 
   /* Animation utilities */
