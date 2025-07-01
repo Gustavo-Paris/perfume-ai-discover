@@ -52,21 +52,7 @@ const Home = () => {
                 </div>
 
                 {/* Social Proof */}
-                <div className="mt-12 pt-8 border-t border-gray-200">
-                  <div className="flex items-center space-x-6">
-                    <div className="flex items-center">
-                      <div className="flex -space-x-2">
-                        {[1, 2, 3, 4].map(i => <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 border-2 border-white" />)}
-                      </div>
-                      <div className="ml-3">
-                        <div className="flex items-center">
-                          {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
-                        </div>
-                        <p className="text-sm text-gray-600">2.500+ clientes satisfeitos</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                
               </div>
             </motion.div>
 
