@@ -71,10 +71,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const formattedItems: CartItem[] = cartItems?.map((item: any) => ({
       perfume: {
         ...item.perfumes,
-        size_ml: item.perfumes.size_ml || [],
-        stock_full: item.perfumes.stock_full || 0,
-        stock_5ml: item.perfumes.stock_5ml || 0,
-        stock_10ml: item.perfumes.stock_10ml || 0
+        gender: item.perfumes.gender as 'masculino' | 'feminino' | 'unissex',
+        size_ml: [],
+        stock_full: 0,
+        stock_5ml: 0,
+        stock_10ml: 0
       } as Perfume,
       size: item.size_ml,
       quantity: item.quantity
@@ -199,10 +200,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const formattedPerfume: Perfume = {
       ...perfume,
-      size_ml: perfume.size_ml || [],
-      stock_full: perfume.stock_full || 0,
-      stock_5ml: perfume.stock_5ml || 0,
-      stock_10ml: perfume.stock_10ml || 0
+      gender: perfume.gender as 'masculino' | 'feminino' | 'unissex',
+      size_ml: [],
+      stock_full: 0,
+      stock_5ml: 0,
+      stock_10ml: 0
     };
 
     if (existingItemIndex >= 0) {
