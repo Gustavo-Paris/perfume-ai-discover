@@ -96,6 +96,28 @@
     background-clip: text;
   }
 
+  /* AI Halo effect for buttons */
+  .ai-halo {
+    @apply relative;
+  }
+  
+  .ai-halo:before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #14B8FF, #7F5AF0, #EA4C89);
+    filter: blur(6px);
+    opacity: 0.9;
+    z-index: -1;
+    animation: halo 4s linear infinite;
+  }
+  
+  @keyframes halo {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
   /* Modern gradient */
   .gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

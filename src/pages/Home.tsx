@@ -39,11 +39,11 @@ const Home = () => {
                     <Button 
                       asChild 
                       size="lg" 
-                      className="bg-gold text-navy rounded-full font-medium text-base px-8 py-4 hover:bg-gold/90"
+                      className="bg-navy/70 hover:bg-navy/90 text-white rounded-full font-medium text-base px-8 py-4"
                     >
                       <Link to="/curadoria">
                         Começar Curadoria
-                        <ArrowRight className="ml-2 h-5 w-5" />
+                        <Sparkles className="ml-2 h-[18px] w-[18px]" />
                       </Link>
                     </Button>
                   </div>
