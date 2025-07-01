@@ -22,10 +22,7 @@ const Home = () => {
             ease: "easeOut"
           }} className="order-2 lg:order-1">
               <div className="max-w-xl">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Cpu className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm text-gray-600 font-medium">Powered by AI</span>
-                </div>
+                
                 
                 <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 text-gray-900 leading-tight">
                   Descubra o
