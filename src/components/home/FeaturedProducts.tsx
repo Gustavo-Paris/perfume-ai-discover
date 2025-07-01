@@ -15,11 +15,32 @@ const FeaturedProducts = () => {
   const featuredPerfumes = perfumes?.slice(0, 8) || [];
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % Math.max(1, featuredPerfumes.length - 3));
+    setCurrentIndex((prev) => (prev + 1) % featuredPerfumes.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + Math.max(1, featuredPerfumes.length - 3)) % Math.max(1, featuredPerfumes.length - 3));
+    setCurrentIndex((prev) => (prev - 1 + featuredPerfumes.length) % featuredPerfumes.length);
+  };
+
+  // Calcular quantos slides são visíveis por vez
+  const getVisibleCount = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024) return 4; // lg: 4 cards
+      if (window.innerWidth >= 640) return 2;  // sm: 2 cards
+      return 1; // mobile: 1 card
+    }
+    return 1;
+  };
+
+  const visibleCount = getVisibleCount();
+  const maxIndex = Math.max(0, featuredPerfumes.length - visibleCount);
+
+  const nextSlideResponsive = () => {
+    setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
+  };
+
+  const prevSlideResponsive = () => {
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
   };
 
   if (isLoading) {
@@ -62,25 +83,25 @@ const FeaturedProducts = () => {
         </div>
 
         <div className="relative">
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex justify-between items-center absolute top-1/2 -translate-y-1/2 w-full z-10 pointer-events-none">
+          {/* Navigation Buttons - Always visible but adapted for mobile */}
+          <div className="flex justify-between items-center absolute top-1/2 -translate-y-1/2 w-full z-10 pointer-events-none px-2 md:px-0">
             <Button
               variant="outline"
               size="icon"
-              className="pointer-events-auto bg-white shadow-lg border-gray-200 text-gray-700 hover:bg-gray-50 -ml-6"
-              onClick={prevSlide}
+              className="pointer-events-auto bg-white shadow-lg border-gray-200 text-gray-700 hover:bg-gray-50 h-8 w-8 md:h-10 md:w-10 -ml-2 md:-ml-6"
+              onClick={prevSlideResponsive}
               disabled={currentIndex === 0}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
             <Button
               variant="outline"
               size="icon"
-              className="pointer-events-auto bg-white shadow-lg border-gray-200 text-gray-700 hover:bg-gray-50 -mr-6"
-              onClick={nextSlide}
-              disabled={currentIndex >= featuredPerfumes.length - 4}
+              className="pointer-events-auto bg-white shadow-lg border-gray-200 text-gray-700 hover:bg-gray-50 h-8 w-8 md:h-10 md:w-10 -mr-2 md:-mr-6"
+              onClick={nextSlideResponsive}
+              disabled={currentIndex >= maxIndex}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
             </Button>
           </div>
 
@@ -89,7 +110,7 @@ const FeaturedProducts = () => {
             <div 
               className="flex transition-transform duration-500 ease-out"
               style={{ 
-                transform: `translateX(-${currentIndex * 25}%)`,
+                transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
               }}
             >
               {featuredPerfumes.map((perfume, index) => (
@@ -157,8 +178,8 @@ const FeaturedProducts = () => {
           </div>
 
           {/* Mobile indicators */}
-          <div className="flex justify-center mt-6 md:mt-8 space-x-2 md:hidden">
-            {Array.from({ length: Math.max(1, featuredPerfumes.length - 3) }).map((_, index) => (
+          <div className="flex justify-center mt-6 md:mt-8 space-x-2">
+            {Array.from({ length: maxIndex + 1 }).map((_, index) => (
               <button
                 key={index}
                 className={`w-2 h-2 rounded-full transition-colors ${

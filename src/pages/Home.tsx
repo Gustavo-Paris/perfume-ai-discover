@@ -27,24 +27,24 @@ const Home = () => {
               <div className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
                 
                 
-                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-gray-900 leading-tight">
+                <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-gray-900 leading-tight">
                   Descubra o
                   <span className="block text-brand-gradient">Perfume Ideal</span>
                 </h1>
-                <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
+                <p className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8 leading-relaxed px-4 sm:px-0">
                   Uma curadoria personalizada com inteligência artificial para encontrar a fragrância perfeita para você
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <div className="relative">
-                    <Button asChild size="lg" className="w-full sm:w-auto bg-navy/70 hover:bg-navy/90 text-white rounded-full font-medium text-base px-6 md:px-8 py-3 md:py-4 transition-all duration-300">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center lg:justify-start px-4 sm:px-0">
+                  <div className="relative w-full sm:w-auto">
+                    <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 rounded-full font-medium text-sm md:text-base px-6 md:px-8 py-3 md:py-4 transition-all duration-300 shadow-lg hover:shadow-xl">
                       <Link to="/curadoria" className="flex items-center justify-center">
                         Começar Curadoria
-                        <Sparkles className="ml-2 h-[18px] w-[18px]" />
+                        <Sparkles className="ml-2 h-4 w-4 md:h-[18px] md:w-[18px]" />
                       </Link>
                     </Button>
                   </div>
-                  <Button asChild variant="outline" size="lg" className="w-full sm:w-auto btn-secondary text-base px-6 md:px-8 py-3 md:py-4 transition-all duration-300">
+                  <Button asChild variant="outline" size="lg" className="w-full sm:w-auto btn-secondary text-sm md:text-base px-6 md:px-8 py-3 md:py-4 transition-all duration-300">
                     <Link to="/catalogo" className="flex items-center justify-center">
                       Ver Catálogo
                     </Link>
@@ -68,25 +68,25 @@ const Home = () => {
             ease: "easeOut",
             delay: 0.2
           }}>
-              <div className="relative max-w-lg mx-auto">
+              <div className="relative max-w-lg mx-auto px-4 sm:px-0">
                 <div className="relative z-10">
-                  <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&h=700&fit=crop&crop=center&q=80" alt="Coleção de perfumes luxuosos" className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] object-cover rounded-2xl shadow-2xl" loading="eager" />
+                  <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&h=700&fit=crop&crop=center&q=80" alt="Coleção de perfumes luxuosos" className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] object-cover rounded-2xl shadow-2xl" loading="eager" />
                 </div>
                 
                 {/* Floating card */}
-                <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl px-4 md:px-6 py-3 md:py-4 shadow-xl">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 md:px-6 py-2 md:py-4 shadow-xl">
+                  <div className="flex items-center space-x-2 md:space-x-3">
+                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500 animate-pulse"></div>
                     <div>
-                      <p className="font-medium text-gray-900 text-sm md:text-base">IA Personalizada</p>
-                      <p className="text-xs md:text-sm text-gray-600">Recomendação inteligente</p>
+                      <p className="font-medium text-gray-900 text-xs md:text-base">IA Personalizada</p>
+                      <p className="text-[10px] md:text-sm text-gray-600">Recomendação inteligente</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Background decoration */}
-                <div className="absolute -top-4 -right-4 w-48 h-48 md:w-72 md:h-72 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full -z-10 opacity-60"></div>
-                <div className="absolute -bottom-8 -left-8 w-32 h-32 md:w-48 md:h-48 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full -z-10 opacity-60"></div>
+                <div className="absolute -top-4 -right-4 w-32 h-32 md:w-48 md:h-48 lg:w-72 lg:h-72 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full -z-10 opacity-60"></div>
+                <div className="absolute -bottom-4 md:-bottom-8 -left-4 md:-left-8 w-24 h-24 md:w-32 md:h-32 lg:w-48 lg:h-48 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full -z-10 opacity-60"></div>
               </div>
             </motion.div>
           </div>
@@ -193,17 +193,17 @@ const Home = () => {
       once: true
     }}>
         <div className="container mx-auto max-w-4xl">
-          <div className="bg-white rounded-2xl md:rounded-3xl p-8 md:p-12 shadow-2xl">
+          <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-12 shadow-2xl">
             <div className="text-center">
               <h2 className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-4 md:mb-6 text-gray-900">
                 Pronto para encontrar seu perfume ideal?
               </h2>
-              <p className="text-lg md:text-xl mb-6 md:mb-8 text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base md:text-lg lg:text-xl mb-6 md:mb-8 text-gray-600 max-w-2xl mx-auto leading-relaxed px-4 sm:px-0">
                 Nossa curadoria personalizada utiliza inteligência artificial para recomendar fragrâncias que combinam perfeitamente com seu estilo
               </p>
               
-              <div className="relative inline-block">
-                <Button asChild size="lg" className="w-full sm:w-auto bg-navy/70 hover:bg-navy/90 text-white rounded-full font-medium text-base md:text-lg px-8 md:px-10 py-3 md:py-4 transition-all duration-300">
+              <div className="relative inline-block w-full sm:w-auto">
+                <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 rounded-full font-medium text-sm md:text-base lg:text-lg px-6 md:px-8 lg:px-10 py-3 md:py-4 transition-all duration-300 shadow-lg hover:shadow-xl">
                   <Link to="/curadoria" className="flex items-center justify-center">
                     Iniciar Curadoria Gratuita
                     <Sparkles className="ml-2 h-4 w-4 md:h-5 md:w-5" />
