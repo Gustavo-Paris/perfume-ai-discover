@@ -4,19 +4,20 @@ export interface Perfume {
   brand: string;
   family: string;
   gender: 'masculino' | 'feminino' | 'unissex';
-  size_ml: number[];
+  size_ml?: number[]; // Optional for database compatibility
   price_full: number;
-  price_5ml: number;
-  price_10ml: number;
-  stock_full: number;
-  stock_5ml: number;
-  stock_10ml: number;
-  description: string;
-  image_url: string;
-  top_notes: string[];
-  heart_notes: string[];
-  base_notes: string[];
+  price_5ml?: number | null;
+  price_10ml?: number | null;
+  stock_full?: number; // Optional for database compatibility
+  stock_5ml?: number; // Optional for database compatibility
+  stock_10ml?: number; // Optional for database compatibility
+  description?: string | null;
+  image_url?: string | null;
+  top_notes?: string[] | null;
+  heart_notes?: string[] | null;
+  base_notes?: string[] | null;
   created_at: string;
+  category?: string | null;
 }
 
 export interface User {
@@ -83,6 +84,7 @@ export interface Address {
   state: string;
   cep: string;
   country: string;
+  is_default?: boolean; // Added this property
   created_at: string;
 }
 

@@ -68,7 +68,7 @@ const Checkout = () => {
       .insert({
         user_id: user.id,
         address_id: addressId,
-        status: 'draft'
+        status: 'draft' as const
       })
       .select()
       .single();
@@ -83,8 +83,8 @@ const Checkout = () => {
       return;
     }
 
-    setOrderDraft(data);
-    return data;
+    setOrderDraft(data as OrderDraft);
+    return data as OrderDraft;
   };
 
   const getShippingQuotes = async (orderDraftId: string) => {
@@ -140,7 +140,7 @@ const Checkout = () => {
         .update({
           shipping_service: shipping.service,
           shipping_cost: shipping.price,
-          status: 'quote_ready'
+          status: 'quote_ready' as const
         })
         .eq('id', orderDraft.id);
 

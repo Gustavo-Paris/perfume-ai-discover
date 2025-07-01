@@ -6,7 +6,7 @@ import { Perfume } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useCart } from '@/hooks/useCart';
+import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 
@@ -16,14 +16,14 @@ interface PerfumeCardProps {
 
 const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
 
   const handleQuickAdd = (e: React.MouseEvent, size: 5 | 10) => {
     e.stopPropagation();
-    addItem({
-      perfume,
-      size,
+    addToCart({
+      perfume_id: perfume.id,
+      size_ml: size,
       quantity: 1
     });
     
@@ -119,7 +119,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-display font-bold text-lg text-navy">
-                A partir de R$ {perfume.price_5ml.toFixed(2).replace('.', ',')}
+                A partir de R$ {(perfume.price_5ml || 0).toFixed(2).replace('.', ',')}
               </p>
             </div>
           </div>

@@ -69,7 +69,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const formattedItems: CartItem[] = cartItems?.map((item: any) => ({
-      perfume: item.perfumes,
+      perfume: {
+        ...item.perfumes,
+        size_ml: item.perfumes.size_ml || [],
+        stock_full: item.perfumes.stock_full || 0,
+        stock_5ml: item.perfumes.stock_5ml || 0,
+        stock_10ml: item.perfumes.stock_10ml || 0
+      } as Perfume,
       size: item.size_ml,
       quantity: item.quantity
     })) || [];
@@ -191,11 +197,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       item => item.perfume.id === perfumeId && item.size === sizeML
     );
 
+    const formattedPerfume: Perfume = {
+      ...perfume,
+      size_ml: perfume.size_ml || [],
+      stock_full: perfume.stock_full || 0,
+      stock_5ml: perfume.stock_5ml || 0,
+      stock_10ml: perfume.stock_10ml || 0
+    };
+
     if (existingItemIndex >= 0) {
       newItems[existingItemIndex].quantity += quantity;
     } else {
       newItems.push({
-        perfume: perfume as Perfume,
+        perfume: formattedPerfume,
         size: sizeML,
         quantity
       });
