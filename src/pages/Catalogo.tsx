@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -354,7 +353,7 @@ const Catalogo = () => {
                 ))}
               </div>
             )}
-          </main>
+          </motion.main>
         </div>
       </div>
     </div>
