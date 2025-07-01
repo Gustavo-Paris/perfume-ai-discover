@@ -99,6 +99,7 @@
   /* AI Halo effect for buttons */
   .ai-halo {
     @apply relative;
+    border-radius: inherit;
   }
   
   .ai-halo:before {
@@ -106,13 +107,14 @@
     position: absolute;
     inset: -2px;
     border-radius: inherit;
-    padding: 2px;
-    background: conic-gradient(from 0deg, #14B8FF, #7F5AF0, #EA4C89, #14B8FF);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: xor;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
+    background: conic-gradient(from 0deg, #14B8FF 0deg, #7F5AF0 120deg, #EA4C89 240deg, #14B8FF 360deg);
+    z-index: -1;
     animation: halo-spin 4s linear infinite;
+  }
+  
+  .ai-halo > * {
+    position: relative;
+    z-index: 1;
   }
   
   @keyframes halo-spin {
