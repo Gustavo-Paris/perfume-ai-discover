@@ -193,7 +193,7 @@ const Home = () => {
       once: true
     }}>
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="bg-white rounded-3xl p-12 shadow-2xl">
+          <div className="bg-white rounded-3xl p-12 shadow-2xl py-[50px] px-[50px]">
             <h2 className="font-display text-3xl md:text-4xl font-semibold mb-6 text-gray-900">
               Pronto para encontrar seu perfume ideal?
             </h2>
@@ -201,9 +201,9 @@ const Home = () => {
               Nossa curadoria personalizada utiliza inteligência artificial para recomendar fragrâncias que combinam perfeitamente com seu estilo
             </p>
             
-            <div className="ai-halo">
+            <div className="ai-halo rounded-3xl">
               <Button asChild size="lg" className="bg-gold text-navy rounded-full font-medium text-lg px-10 py-4 hover:bg-gold/90">
-                <Link to="/curadoria">
+                <Link to="/curadoria" className="py-0 px-[20px]">
                   Iniciar Curadoria Gratuita
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
