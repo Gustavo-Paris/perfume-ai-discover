@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Cpu, History, Zap, AtomIcon } from 'lucide-react';
+import { Sparkles, History, Zap, AtomIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -184,7 +184,7 @@ const Curadoria = () => {
               onClick={() => setShowHistory(false)}
               className="btn-secondary"
             >
-              <Cpu className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" />
               Voltar ao Sistema
             </Button>
           </motion.div>
@@ -221,7 +221,7 @@ const Curadoria = () => {
       <div className="min-h-screen bg-white py-12 relative overflow-hidden flex items-center justify-center">
         <div className="text-center relative z-10 max-w-2xl mx-auto px-4">
           <motion.div 
-            className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-8"
+            className="w-32 h-32 rounded-full bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-8"
             animate={{ 
               rotate: [0, 360],
               scale: [1, 1.1, 1]
@@ -231,10 +231,10 @@ const Curadoria = () => {
               scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
             }}
           >
-            <Cpu className="h-16 w-16 text-gray-600" />
+            <Sparkles className="h-16 w-16 text-white" />
           </motion.div>
           <motion.h2 
-            className="font-display text-4xl font-bold mb-6 text-gray-900"
+            className="font-display text-4xl font-bold mb-6 text-brand-gradient"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -268,7 +268,7 @@ const Curadoria = () => {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center justify-center space-x-3 mb-6">
-            <Cpu className="w-8 h-8 text-gray-600" />
+            <Sparkles className="w-8 h-8 text-brand-gradient" />
             <h1 className="font-display text-6xl md:text-7xl font-bold text-gray-900">
               Curadoria Inteligente
             </h1>
