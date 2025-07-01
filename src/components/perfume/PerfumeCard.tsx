@@ -33,6 +33,9 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     });
   };
 
+  // Use a high-quality perfume image from Unsplash as fallback
+  const imageUrl = perfume.image_url || `https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop&crop=center&q=80`;
+
   return (
     <TooltipProvider>
       <motion.div 
@@ -53,13 +56,9 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
         {/* Image Container */}
         <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-4 bg-navy/40">
           <img
-            src={perfume.image_url || '/placeholder.svg'}
+            src={imageUrl}
             alt={perfume.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/placeholder.svg';
-            }}
           />
           
           {/* Overlay Actions */}

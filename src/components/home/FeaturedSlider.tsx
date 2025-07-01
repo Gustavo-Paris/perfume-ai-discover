@@ -16,25 +16,25 @@ const featuredPerfumes: FeaturedPerfume[] = [
     id: 1,
     name: "Elegância Dourada",
     price: "89,90",
-    image: "/images/featured1.jpg"
+    image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&h=500&fit=crop&crop=center"
   },
   {
     id: 2,
     name: "Noite de Prata",
     price: "79,90",
-    image: "/images/featured2.jpg"
+    image: "https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=400&h=500&fit=crop&crop=center"
   },
   {
     id: 3,
     name: "Brisa Matinal",
     price: "69,90",
-    image: "/images/featured3.jpg"
+    image: "https://images.unsplash.com/photo-1588405748880-12d1d2a59d75?w=400&h=500&fit=crop&crop=center"
   },
   {
     id: 4,
     name: "Mistério Oriental",
     price: "99,90",
-    image: "/images/featured4.jpg"
+    image: "https://images.unsplash.com/photo-1551554781-c46200ea959d?w=400&h=500&fit=crop&crop=center"
   }
 ];
 
@@ -104,10 +104,6 @@ const FeaturedSlider = () => {
                       src={perfume.image}
                       alt={perfume.name}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder.svg';
-                      }}
                     />
                   </div>
                   

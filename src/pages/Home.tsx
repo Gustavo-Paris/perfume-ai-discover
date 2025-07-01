@@ -67,14 +67,10 @@ const Home = () => {
             >
               <div className="relative">
                 <img
-                  src="/images/hero-perfume.jpg"
+                  src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=550&h=700&fit=crop&crop=center"
                   alt="Frascos luxuosos"
                   className="w-full max-w-[550px] h-[700px] object-cover rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] mx-auto"
                   loading="eager"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder.svg';
-                  }}
                 />
                 
                 {/* Badge overlay - hidden on mobile */}
