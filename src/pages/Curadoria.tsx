@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Sparkles, History, Zap, AtomIcon } from 'lucide-react';
+import { Sparkles, History, Zap, AtomIcon, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,11 +90,10 @@ const Curadoria = () => {
       }
     } catch (error) {
       setIsAnalyzing(false);
-      toast({
-        title: "Erro na conversa",
-        description: "Houve um problema. Tente novamente.",
-        variant: "destructive"
-      });
+      console.error('Error sending message:', error);
+      
+      // Don't show toast for errors that are already handled in the error state
+      // The error will be displayed in the UI through the error state
     }
   };
 
@@ -139,28 +137,49 @@ const Curadoria = () => {
     }
   };
 
+  const handleRetry = () => {
+    handleReset();
+    toast({
+      title: "Sistema reiniciado",
+      description: "Você pode começar uma nova conversa agora.",
+    });
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-white py-12 relative overflow-hidden">
         <div className="container mx-auto px-4 max-w-2xl relative z-10">
           <Card className="glass border-red-500/50">
-            <CardContent className="p-6 text-center">
+            <CardContent className="p-8 text-center">
               <motion.div 
-                className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4"
+                className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6"
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                <Zap className="h-8 w-8 text-red-500" />
+                <Zap className="h-10 w-10 text-red-500" />
               </motion.div>
-              <p className="text-red-500 mb-4 text-lg font-display">Sistema Temporariamente Indisponível</p>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <Button 
-                onClick={handleReset}
-                className="btn-primary"
-              >
-                <AtomIcon className="mr-2 h-4 w-4" />
-                Reconectar Sistema
-              </Button>
+              
+              <h2 className="font-display text-2xl font-bold text-red-600 mb-4">
+                Oops! Algo deu errado
+              </h2>
+              
+              <p className="text-gray-600 mb-6 text-lg leading-relaxed">
+                {error}
+              </p>
+              
+              <div className="space-y-4">
+                <Button 
+                  onClick={handleRetry}
+                  className="btn-primary w-full"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Tentar Novamente
+                </Button>
+                
+                <p className="text-sm text-gray-500">
+                  Se o problema persistir, nossa equipe foi notificada e está trabalhando na solução.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

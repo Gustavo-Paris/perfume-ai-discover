@@ -14,6 +14,64 @@ const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Função para fazer retry com backoff exponencial
+async function retryWithBackoff(fn: () => Promise<any>, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      console.log(`Attempt ${attempt + 1} failed:`, error.message);
+      
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      // Backoff exponencial: 1s, 2s, 4s
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`Waiting ${delay}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+// Função para chamar OpenAI com retry
+async function callOpenAI(messages: any[], temperature = 0.8, maxTokens = 400) {
+  return await retryWithBackoff(async () => {
+    console.log('Calling OpenAI API...');
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        temperature,
+        messages,
+        max_tokens: maxTokens
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI API error ${response.status}:`, errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      } else if (response.status === 401) {
+        throw new Error('Invalid API key. Please check your OpenAI configuration.');
+      } else if (response.status >= 500) {
+        throw new Error('OpenAI service temporarily unavailable. Please try again.');
+      } else {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+    }
+
+    return await response.json();
+  }, 3, 2000); // 3 tentativas, começando com 2s de delay
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -22,24 +80,44 @@ serve(async (req) => {
   try {
     const { message, conversationHistory } = await req.json();
     
+    console.log('Processing conversational recommendation:', { 
+      message: message?.substring(0, 50) + '...', 
+      historyLength: conversationHistory?.length || 0 
+    });
+
     if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+      console.error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ 
+        error: 'Serviço de IA não configurado. Entre em contato com o suporte.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log('Processing conversational recommendation:', { message, historyLength: conversationHistory?.length });
+    // Get perfume catalog with error handling
+    let availablePerfumes = [];
+    try {
+      const { data: perfumes, error: perfumesError } = await supabase
+        .from('perfumes')
+        .select('*')
+        .limit(50); // Limitar para evitar payload muito grande
 
-    // Get perfume catalog
-    const { data: perfumes, error: perfumesError } = await supabase
-      .from('perfumes')
-      .select('*');
+      if (perfumesError) {
+        console.error('Error fetching perfumes:', perfumesError);
+        throw new Error('Erro ao buscar catálogo de perfumes');
+      }
 
-    if (perfumesError) {
-      throw new Error('Failed to fetch perfumes');
+      availablePerfumes = perfumes?.filter(p => 
+        (p.price_5ml && p.price_5ml > 0) || (p.price_10ml && p.price_10ml > 0)
+      ) || [];
+
+      console.log(`Loaded ${availablePerfumes.length} available perfumes`);
+    } catch (error) {
+      console.error('Failed to fetch perfumes:', error);
+      // Continue sem catálogo em caso de erro
+      availablePerfumes = [];
     }
-
-    const availablePerfumes = perfumes?.filter(p => 
-      (p.price_5ml && p.price_5ml > 0) || (p.price_10ml && p.price_10ml > 0)
-    ) || [];
 
     // Build conversation context
     const conversationContext = conversationHistory?.map((msg: any) => ({
@@ -88,7 +166,7 @@ APÓS AS RECOMENDAÇÕES:
 - Faça novas recomendações baseadas no feedback
 - Mantenha o tom consultivo e acolhedor
 
-CATÁLOGO DISPONÍVEL:
+${availablePerfumes.length > 0 ? `CATÁLOGO DISPONÍVEL:
 ${JSON.stringify(availablePerfumes.slice(0, 20).map(p => ({
   id: p.id,
   name: p.name,
@@ -99,7 +177,7 @@ ${JSON.stringify(availablePerfumes.slice(0, 20).map(p => ({
   top_notes: p.top_notes,
   heart_notes: p.heart_notes,
   base_notes: p.base_notes
-})), null, 2)}
+})), null, 2)}` : 'CATÁLOGO: Temporariamente indisponível, mas posso ajudar com recomendações gerais.'}
 
 REGRAS:
 - NUNCA mencione que é uma IA
@@ -129,29 +207,11 @@ REGRAS:
 
     console.log('Sending to OpenAI with messages:', messages.length);
 
-    // Call OpenAI
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        temperature: 0.8,
-        messages: messages,
-        max_tokens: 400
-      }),
-    });
-
-    if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
-    }
-
-    const openaiData = await openaiResponse.json();
+    // Call OpenAI with retry logic
+    const openaiData = await callOpenAI(messages);
     const aiResponse = openaiData.choices[0].message.content;
 
-    console.log('AI Response:', aiResponse);
+    console.log('AI Response received successfully');
 
     // Check if AI wants to make recommendations
     const shouldRecommend = aiResponse.toLowerCase().includes('deixe-me analisar') || 
@@ -162,9 +222,10 @@ REGRAS:
     let recommendations: string[] = [];
     let isComplete = false;
 
-    if (shouldRecommend) {
-      // Generate recommendations based on conversation
-      const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha apenas os 3 perfumes que mais precisamente combinam com o cliente.
+    if (shouldRecommend && availablePerfumes.length > 0) {
+      try {
+        // Generate recommendations based on conversation
+        const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha apenas os 3 perfumes que mais precisamente combinam com o cliente.
 
 Conversa completa:
 ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
@@ -191,25 +252,11 @@ CRITÉRIOS DE SELEÇÃO:
 
 Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: ["id1", "id2", "id3"]`;
 
-      const recResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          temperature: 0.2,
-          messages: [
-            { role: 'system', content: 'Você é um especialista em perfumaria que escolhe perfumes com máxima precisão baseado em conversas. Responda apenas com arrays JSON de IDs.' },
-            { role: 'user', content: recommendationPrompt }
-          ],
-          max_tokens: 150
-        }),
-      });
-
-      if (recResponse.ok) {
-        const recData = await recResponse.json();
+        const recData = await callOpenAI([
+          { role: 'system', content: 'Você é um especialista em perfumaria que escolhe perfumes com máxima precisão baseado em conversas. Responda apenas com arrays JSON de IDs.' },
+          { role: 'user', content: recommendationPrompt }
+        ], 0.2, 150);
+        
         const recContent = recData.choices[0].message.content.trim();
         
         try {
@@ -217,12 +264,16 @@ Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: 
           if (Array.isArray(parsedRecs)) {
             recommendations = parsedRecs.slice(0, 3);
             isComplete = true;
+            console.log('Recommendations generated:', recommendations);
           }
         } catch (e) {
           console.log('Failed to parse recommendations, using fallback');
           recommendations = availablePerfumes.slice(0, 3).map(p => p.id);
           isComplete = true;
         }
+      } catch (error) {
+        console.error('Error generating recommendations:', error);
+        // Continue without recommendations
       }
     }
 
@@ -232,7 +283,11 @@ Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: 
       recommendations: recommendations.length > 0 ? recommendations : undefined
     };
 
-    console.log('Conversation result:', result);
+    console.log('Conversation result:', { 
+      hasContent: !!result.content, 
+      isComplete: result.isComplete, 
+      hasRecommendations: !!result.recommendations 
+    });
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -240,13 +295,27 @@ Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: 
 
   } catch (error) {
     console.error('Error in conversational-recommend function:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Internal server error' 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    
+    // Determine error type and provide appropriate message
+    let errorMessage = 'Erro interno do servidor. Tente novamente.';
+    let statusCode = 500;
+    
+    if (error.message.includes('Rate limit exceeded')) {
+      errorMessage = 'Muitas solicitações. Aguarde um momento e tente novamente.';
+      statusCode = 429;
+    } else if (error.message.includes('Invalid API key')) {
+      errorMessage = 'Configuração da IA inválida. Entre em contato com o suporte.';
+      statusCode = 401;
+    } else if (error.message.includes('service temporarily unavailable')) {
+      errorMessage = 'Serviço de IA temporariamente indisponível. Tente novamente em alguns minutos.';
+      statusCode = 503;
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage 
+    }), {
+      status: statusCode,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
