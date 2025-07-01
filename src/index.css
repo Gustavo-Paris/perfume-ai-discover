@@ -96,47 +96,6 @@
     background-clip: text;
   }
 
-  /* AI Halo effect for CTA buttons */
-  .ai-halo {
-    position: relative;
-    z-index: 1;
-  }
-  
-  .ai-halo:before {
-    content: "";
-    position: absolute;
-    inset: -3px;
-    border-radius: inherit;
-    background: linear-gradient(90deg, #14B8FF, #7F5AF0, #EA4C89);
-    filter: blur(6px);
-    opacity: 0.9;
-    z-index: -1;
-    animation: halo 4s linear infinite;
-  }
-  
-  @keyframes halo {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  /* Chat wrapper with AI gradient border */
-  .chat-ai-border {
-    position: relative;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-  }
-  
-  .chat-ai-border:before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 2px;
-    background: linear-gradient(to right, #14B8FF, #7F5AF0, #EA4C89);
-    filter: blur(1px);
-    z-index: -1;
-  }
-  
   /* Modern gradient */
   .gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -197,7 +156,7 @@
   }
   
   .chat-ai {
-    @apply bg-gold/10 text-white rounded-2xl px-4 py-3 max-w-[85%] border border-gold/20;
+    @apply bg-gray-100 text-gray-800 rounded-2xl px-4 py-3 max-w-[85%] border border-gray-200;
   }
   
   /* Typing animation */
@@ -206,7 +165,7 @@
   }
   
   .typing-dot {
-    @apply w-2 h-2 bg-gold rounded-full animate-pulse;
+    @apply w-2 h-2 bg-gray-400 rounded-full animate-pulse;
     animation-delay: var(--delay, 0ms);
   }
   
@@ -216,23 +175,6 @@
   
   .typing-dot:nth-child(3) {
     --delay: 400ms;
-  }
-
-  /* Background colors */
-  .bg-navy {
-    background-color: #1a1f2e;
-  }
-  
-  .text-gold {
-    color: #f4d03f;
-  }
-  
-  .bg-gold {
-    background-color: #f4d03f;
-  }
-  
-  .glass-gold {
-    @apply bg-white/5 backdrop-blur-xl border border-gold/20;
   }
 
   /* Animation utilities */

@@ -141,19 +141,19 @@ const Curadoria = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+      <div className="min-h-screen bg-white py-12 relative overflow-hidden">
         <div className="container mx-auto px-4 max-w-2xl relative z-10">
-          <Card className="glass-gold border-red-500/50">
+          <Card className="glass border-red-500/50">
             <CardContent className="p-6 text-center">
               <motion.div 
                 className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4"
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                <Zap className="h-8 w-8 text-red-400" />
+                <Zap className="h-8 w-8 text-red-500" />
               </motion.div>
-              <p className="text-red-400 mb-4 text-lg font-display">Sistema Temporariamente Indisponível</p>
-              <p className="text-white/70 mb-6">{error}</p>
+              <p className="text-red-500 mb-4 text-lg font-display">Sistema Temporariamente Indisponível</p>
+              <p className="text-gray-600 mb-6">{error}</p>
               <Button 
                 onClick={handleReset}
                 className="btn-primary"
@@ -170,14 +170,14 @@ const Curadoria = () => {
 
   if (showHistory) {
     return (
-      <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+      <div className="min-h-screen bg-white py-12 relative overflow-hidden">
         <div className="container mx-auto px-4 max-w-4xl relative z-10">
           <motion.div 
             className="mb-8 flex items-center justify-between"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="font-display text-4xl font-bold text-gold">
+            <h1 className="font-display text-4xl font-bold text-gray-900">
               Histórico de Curadoria
             </h1>
             <Button 
@@ -189,7 +189,7 @@ const Curadoria = () => {
             </Button>
           </motion.div>
           
-          <Card className="glass-gold rounded-3xl">
+          <Card className="glass rounded-3xl">
             <CardContent className="p-8">
               <SessionHistory 
                 onLoadSession={handleLoadSession}
@@ -204,7 +204,7 @@ const Curadoria = () => {
 
   if (showResults) {
     return (
-      <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+      <div className="min-h-screen bg-white py-12 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <RecommendationResults 
             recommendedIds={recommendedIds}
@@ -218,10 +218,10 @@ const Curadoria = () => {
 
   if (isAnalyzing) {
     return (
-      <div className="min-h-screen bg-navy py-12 relative overflow-hidden flex items-center justify-center">
+      <div className="min-h-screen bg-white py-12 relative overflow-hidden flex items-center justify-center">
         <div className="text-center relative z-10 max-w-2xl mx-auto px-4">
           <motion.div 
-            className="w-32 h-32 rounded-full bg-gold/20 flex items-center justify-center mx-auto mb-8"
+            className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-8"
             animate={{ 
               rotate: [0, 360],
               scale: [1, 1.1, 1]
@@ -231,16 +231,16 @@ const Curadoria = () => {
               scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
             }}
           >
-            <Cpu className="h-16 w-16 text-gold" />
+            <Cpu className="h-16 w-16 text-gray-600" />
           </motion.div>
           <motion.h2 
-            className="font-display text-4xl font-bold mb-6 text-gold"
+            className="font-display text-4xl font-bold mb-6 text-gray-900"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
             Análise Inteligente
           </motion.h2>
-          <p className="text-xl text-white/80 max-w-xl mx-auto mb-8 leading-relaxed">
+          <p className="text-xl text-gray-600 max-w-xl mx-auto mb-8 leading-relaxed">
             Nossa inteligência artificial está processando suas preferências para descobrir as fragrâncias perfeitas
           </p>
           <div className="typing-dots justify-center mb-8">
@@ -248,8 +248,8 @@ const Curadoria = () => {
             <div className="typing-dot"></div>
             <div className="typing-dot"></div>
           </div>
-          <div className="glass-gold rounded-2xl p-6">
-            <div className="flex items-center justify-center space-x-2 text-gold/70">
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center justify-center space-x-2 text-gray-600">
               <span className="text-sm">Processando dados sensoriais...</span>
             </div>
           </div>
@@ -259,7 +259,7 @@ const Curadoria = () => {
   }
 
   return (
-    <div className="min-h-screen bg-navy py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-white py-12 relative overflow-hidden">
       <div className="container mx-auto px-4 max-w-7xl relative z-10">
         <motion.div 
           className="text-center mb-16 max-w-4xl mx-auto"
@@ -268,15 +268,15 @@ const Curadoria = () => {
           transition={{ duration: 0.6 }}
         >
           <div className="flex items-center justify-center space-x-3 mb-6">
-            <Cpu className="w-8 h-8 text-gold/80" />
-            <h1 className="font-display text-6xl md:text-7xl font-bold text-gold">
+            <Cpu className="w-8 h-8 text-gray-600" />
+            <h1 className="font-display text-6xl md:text-7xl font-bold text-gray-900">
               Curadoria Inteligente
             </h1>
           </div>
-          <p className="text-white/80 text-xl mb-2 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-600 text-xl mb-2 max-w-2xl mx-auto leading-relaxed">
             Tecnologia avançada para descoberta personalizada de fragrâncias
           </p>
-          <p className="text-white/60 text-lg max-w-xl mx-auto mb-8">
+          <p className="text-gray-500 text-lg max-w-xl mx-auto mb-8">
             Converse com nossa IA e descubra suas 3 fragrâncias ideais
           </p>
           
@@ -298,9 +298,9 @@ const Curadoria = () => {
               </Button>
               
               {currentSessionId && (
-                <div className="flex items-center space-x-2 glass-gold px-4 py-2 rounded-full">
-                  <div className="w-2 h-2 bg-gold rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-gold">Sistema Ativo</span>
+                <div className="flex items-center space-x-2 glass px-4 py-2 rounded-full">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-gray-700">Sistema Ativo</span>
                 </div>
               )}
             </motion.div>
@@ -313,7 +313,7 @@ const Curadoria = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="glass-gold rounded-3xl h-[75vh] md:h-[600px] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] chat-ai-border">
+          <Card className="glass rounded-3xl h-[75vh] md:h-[600px] overflow-hidden shadow-xl">
             <CardContent className="h-full p-0">
               <ConversationChat
                 messages={conversation.messages}
