@@ -98,28 +98,39 @@
 
   /* AI Halo effect for buttons */
   .ai-halo {
-    @apply relative;
-    border-radius: inherit;
+    @apply relative overflow-hidden;
   }
   
-  .ai-halo:before {
-    content: "";
+  .ai-halo::before {
+    content: '';
     position: absolute;
     inset: -2px;
+    background: conic-gradient(
+      from 0deg,
+      #14B8FF,
+      #7F5AF0,
+      #EA4C89,
+      #14B8FF
+    );
     border-radius: inherit;
-    background: conic-gradient(from 0deg, #14B8FF 0deg, #7F5AF0 120deg, #EA4C89 240deg, #14B8FF 360deg);
-    z-index: -1;
-    animation: halo-spin 4s linear infinite;
+    animation: rotate 3s linear infinite;
   }
   
-  .ai-halo > * {
-    position: relative;
-    z-index: 1;
+  .ai-halo::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: inherit;
+    border-radius: inherit;
   }
   
-  @keyframes halo-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   /* Modern gradient */
