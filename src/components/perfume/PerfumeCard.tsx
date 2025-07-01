@@ -39,7 +39,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   return (
     <TooltipProvider>
       <motion.div 
-        className="product-card group cursor-pointer"
+        className="glass rounded-2xl overflow-hidden group cursor-pointer hover:shadow-xl transition-all duration-300"
         onClick={() => navigate(`/perfume/${perfume.id}`)}
         whileHover={{ 
           scale: 1.03,
@@ -54,7 +54,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
         }}
       >
         {/* Image Container */}
-        <div className="relative aspect-[4/5] overflow-hidden rounded-lg mb-4 bg-navy/40">
+        <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
           <img
             src={imageUrl}
             alt={perfume.name}
@@ -67,18 +67,18 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
               <Button
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 bg-white/90 hover:bg-white text-navy"
+                className="h-8 w-8 bg-white/90 hover:bg-white text-navy border-0 shadow-lg"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsLiked(!isLiked);
                 }}
               >
-                <Heart className={`h-4 w-4 ${isLiked ? 'fill-neonC text-neonC' : ''}`} />
+                <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
               <Button
                 variant="secondary"
                 size="icon"
-                className="h-8 w-8 bg-white/90 hover:bg-white text-navy"
+                className="h-8 w-8 bg-white/90 hover:bg-white text-navy border-0 shadow-lg"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/perfume/${perfume.id}`);
@@ -94,10 +94,10 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             <Badge 
               variant="secondary" 
               className={`
-                font-body text-xs
-                ${perfume.gender === 'masculino' ? 'bg-neonB/20 text-neonB border-neonB/30' : ''}
-                ${perfume.gender === 'feminino' ? 'bg-neonC/20 text-neonC border-neonC/30' : ''}
-                ${perfume.gender === 'unissex' ? 'bg-neonA/20 text-neonA border-neonA/30' : ''}
+                font-display text-xs font-medium
+                ${perfume.gender === 'masculino' ? 'bg-blue-500/20 text-blue-700 border-blue-500/30' : ''}
+                ${perfume.gender === 'feminino' ? 'bg-pink-500/20 text-pink-700 border-pink-500/30' : ''}
+                ${perfume.gender === 'unissex' ? 'bg-purple-500/20 text-purple-700 border-purple-500/30' : ''}
               `}
             >
               {perfume.gender}
@@ -106,19 +106,19 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
         </div>
 
         {/* Content */}
-        <div className="space-y-3 p-4">
+        <div className="space-y-3 p-6">
           <div>
-            <p className="text-sm text-white/60 font-body">{perfume.brand}</p>
-            <h3 className="font-heading font-semibold text-lg leading-tight text-white">
+            <p className="text-sm text-gray-500 font-display font-medium">{perfume.brand}</p>
+            <h3 className="font-display font-bold text-lg leading-tight text-gray-900 mt-1">
               {perfume.name}
             </h3>
-            <p className="text-sm text-white/60 font-body">{perfume.family}</p>
+            <p className="text-sm text-gray-600 font-display mt-1">{perfume.family}</p>
           </div>
 
           {/* Price */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-bold text-lg text-gold">
+              <p className="font-display font-bold text-lg text-navy">
                 A partir de R$ {perfume.price_5ml.toFixed(2).replace('.', ',')}
               </p>
             </div>
@@ -131,7 +131,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 5)}
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
@@ -148,7 +148,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 10)}
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
