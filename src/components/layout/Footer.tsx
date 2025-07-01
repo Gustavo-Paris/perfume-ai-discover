@@ -1,25 +1,19 @@
-
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Youtube, Mail, Phone, MapPin } from 'lucide-react';
-
 const Footer = () => {
-  return (
-    <footer className="bg-navy text-white">
+  return <footer className="bg-navy text-white">
       <div className="container mx-auto px-4 py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="font-display font-bold text-2xl text-brand-gradient">
+              <h3 className="font-display font-bold text-2xl text-brand-gradient text-center">
                 Paris & Co
               </h3>
-              <p className="text-sm text-gray-300 font-display font-medium mt-1">Parfums</p>
+              <p className="text-sm text-gray-300 font-display font-medium mt-1 text-center">Parfums</p>
             </div>
-            <p className="text-gray-300 text-sm font-display">
-              Descubra o perfume ideal com nossa curadoria personalizada. 
-              A mais sofisticada seleção de fragrâncias francesas no Brasil.
-            </p>
+            <p className="text-gray-300 text-sm font-display">Descubra o perfume ideal com nossa curadoria personalizada. A mais sofisticada seleção de decants no Brasil.</p>
             <div className="flex justify-center space-x-4">
               <a href="#" className="text-gray-300 hover:text-white transition-colors">
                 <Instagram className="h-5 w-5" />
@@ -95,8 +89,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
