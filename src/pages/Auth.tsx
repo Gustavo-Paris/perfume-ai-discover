@@ -96,38 +96,38 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-gold-50 to-white">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-full gradient-gold flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center">
               <span className="text-white font-bold">P&C</span>
             </div>
             <div>
-              <h1 className="font-playfair font-bold text-2xl gradient-text">Paris & Co</h1>
-              <p className="text-sm text-muted-foreground">Parfums</p>
+              <h1 className="font-display font-bold text-2xl gradient-text">Paris & Co</h1>
+              <p className="text-sm text-gray-600">Parfums</p>
             </div>
           </Link>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Entrar</TabsTrigger>
-            <TabsTrigger value="signup">Cadastrar</TabsTrigger>
+            <TabsTrigger value="login" className="font-display">Entrar</TabsTrigger>
+            <TabsTrigger value="signup" className="font-display">Cadastrar</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
-            <Card>
+            <Card className="glass">
               <CardHeader>
-                <CardTitle>Entrar na sua conta</CardTitle>
-                <CardDescription>
+                <CardTitle className="font-display text-navy">Entrar na sua conta</CardTitle>
+                <CardDescription className="text-gray-600">
                   Entre com seu email e senha para acessar sua conta
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email" className="font-display text-gray-700">Email</Label>
                     <Input
                       id="login-email"
                       type="email"
@@ -135,10 +135,11 @@ const Auth = () => {
                       value={loginForm.email}
                       onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                       required
+                      className="font-display"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
+                    <Label htmlFor="login-password" className="font-display text-gray-700">Senha</Label>
                     <Input
                       id="login-password"
                       type="password"
@@ -146,9 +147,14 @@ const Auth = () => {
                       value={loginForm.password}
                       onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                       required
+                      className="font-display"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
+                    disabled={isLoading}
+                  >
                     {isLoading ? 'Entrando...' : 'Entrar'}
                   </Button>
                 </form>
@@ -157,17 +163,17 @@ const Auth = () => {
           </TabsContent>
 
           <TabsContent value="signup">
-            <Card>
+            <Card className="glass">
               <CardHeader>
-                <CardTitle>Criar conta</CardTitle>
-                <CardDescription>
+                <CardTitle className="font-display text-navy">Criar conta</CardTitle>
+                <CardDescription className="text-gray-600">
                   Cadastre-se para ter acesso completo à nossa loja
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nome</Label>
+                    <Label htmlFor="signup-name" className="font-display text-gray-700">Nome</Label>
                     <Input
                       id="signup-name"
                       type="text"
@@ -175,10 +181,11 @@ const Auth = () => {
                       value={signupForm.name}
                       onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
                       required
+                      className="font-display"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email" className="font-display text-gray-700">Email</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -186,10 +193,11 @@ const Auth = () => {
                       value={signupForm.email}
                       onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
                       required
+                      className="font-display"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
+                    <Label htmlFor="signup-password" className="font-display text-gray-700">Senha</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -198,10 +206,11 @@ const Auth = () => {
                       onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
                       required
                       minLength={6}
+                      className="font-display"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-confirm-password">Confirmar Senha</Label>
+                    <Label htmlFor="signup-confirm-password" className="font-display text-gray-700">Confirmar Senha</Label>
                     <Input
                       id="signup-confirm-password"
                       type="password"
@@ -210,9 +219,14 @@ const Auth = () => {
                       onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
                       required
                       minLength={6}
+                      className="font-display"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
+                    disabled={isLoading}
+                  >
                     {isLoading ? 'Cadastrando...' : 'Cadastrar'}
                   </Button>
                 </form>
@@ -222,7 +236,7 @@ const Auth = () => {
         </Tabs>
 
         <div className="text-center mt-6">
-          <Link to="/" className="text-sm text-muted-foreground hover:text-gold-600">
+          <Link to="/" className="text-sm text-gray-600 hover:text-navy font-display">
             ← Voltar para a loja
           </Link>
         </div>
