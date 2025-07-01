@@ -98,13 +98,13 @@
 
   /* AI Halo effect for buttons */
   .ai-halo {
-    @apply relative;
+    @apply relative inline-block;
   }
   
   .ai-halo::before {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: -1px;
     border-radius: inherit;
     padding: 1px;
     background: linear-gradient(90deg, #14B8FF, #7F5AF0, #EA4C89);
