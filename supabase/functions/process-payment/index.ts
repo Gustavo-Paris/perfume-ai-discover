@@ -106,40 +106,14 @@ serve(async (req) => {
     console.log('Public Key exists:', !!modoBankPublicKey);
 
     if (!modoBankSecretKey || !modoBankPublicKey) {
-      console.log('Missing Modo Bank credentials - using mock data');
-      
-      if (paymentMethod === 'pix') {
-        const mockPixResponse: PixResponse = {
-          qr_code: '00020126580014BR.GOV.BCB.PIX013662345678-1234-1234-1234-12345678901052040000530398654041.235802BR5925Perfumes Paris Co6009Sao Paulo62070503***6304ABCD',
-          qr_code_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
-        };
-
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            payment_method: 'pix',
-            ...mockPixResponse,
-            debug: { message: 'Credenciais do Modo Bank não configuradas - dados simulados' }
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } else {
-        const mockCardResponse: CardResponse = {
-          status: 'paid',
-          transaction_id: 'mock_txn_' + Date.now()
-        };
-
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            payment_method: 'credit_card',
-            ...mockCardResponse,
-            debug: { message: 'Credenciais do Modo Bank não configuradas - dados simulados' }
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      console.error('Missing Modo Bank credentials');
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Credenciais do Modo Bank não configuradas'
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Prepare payment data for Modo Bank
@@ -187,6 +161,8 @@ serve(async (req) => {
         pix_expiration_date: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
       };
 
+      console.log('Making PIX payment request to Modo Bank...');
+      
       const response = await fetch('https://api.pagar.me/core/v5/transactions', {
         method: 'POST',
         headers: {
@@ -197,10 +173,19 @@ serve(async (req) => {
       });
 
       const result = await response.json();
+      console.log('Modo Bank PIX Response Status:', response.status);
       console.log('Modo Bank PIX Response:', result);
 
       if (!response.ok) {
-        throw new Error(`Modo Bank API Error: ${result.message || 'Unknown error'}`);
+        console.error('Modo Bank PIX Error:', result);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: `Erro no Modo Bank: ${result.message || 'Erro desconhecido'}`,
+            details: result
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       return new Response(
@@ -237,6 +222,8 @@ serve(async (req) => {
         installments: installments || 1
       };
 
+      console.log('Making credit card payment request to Modo Bank...');
+
       const response = await fetch('https://api.pagar.me/core/v5/transactions', {
         method: 'POST',
         headers: {
@@ -247,10 +234,19 @@ serve(async (req) => {
       });
 
       const result = await response.json();
+      console.log('Modo Bank Card Response Status:', response.status);
       console.log('Modo Bank Card Response:', result);
 
       if (!response.ok) {
-        throw new Error(`Modo Bank API Error: ${result.message || 'Unknown error'}`);
+        console.error('Modo Bank Card Error:', result);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: `Erro no Modo Bank: ${result.message || 'Erro desconhecido'}`,
+            details: result
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       return new Response(
