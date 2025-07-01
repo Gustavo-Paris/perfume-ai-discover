@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -99,15 +98,12 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center">
-              <span className="text-white font-bold">P&C</span>
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-2xl gradient-text">Paris & Co</h1>
-              <p className="text-sm text-gray-600">Parfums</p>
-            </div>
+          <Link to="/" className="inline-flex justify-center">
+            <h1 className="font-display font-bold text-2xl text-brand-gradient">
+              Paris & Co
+            </h1>
           </Link>
+          <p className="text-sm text-gray-600 mt-1 font-display">Parfums</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
