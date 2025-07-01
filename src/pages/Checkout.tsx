@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Address, OrderDraft, ShippingQuote } from '@/types';
 import { AddressStep } from '@/components/checkout/AddressStep';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
+import { PaymentStep } from '@/components/checkout/PaymentStep';
+import { PixPayment } from '@/components/checkout/PixPayment';
 import { toast } from '@/hooks/use-toast';
 
 const Checkout = () => {
@@ -23,6 +25,7 @@ const Checkout = () => {
   const [orderDraft, setOrderDraft] = useState<OrderDraft | null>(null);
   const [shippingQuotes, setShippingQuotes] = useState<ShippingQuote[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingQuote | null>(null);
+  const [paymentData, setPaymentData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -147,16 +150,11 @@ const Checkout = () => {
       if (error) throw error;
 
       setSelectedShipping(shipping);
+      setCurrentStep(3); // Go to payment step
+      
       toast({
         title: "Sucesso!",
-        description: "Frete selecionado com sucesso.",
-      });
-
-      // Here we would proceed to payment step
-      // For now, just show success message
-      toast({
-        title: "Checkout configurado!",
-        description: "Endereço e frete foram configurados. Próximo passo seria o pagamento.",
+        description: "Frete selecionado. Agora escolha a forma de pagamento.",
       });
 
     } catch (error) {
@@ -169,6 +167,36 @@ const Checkout = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = (data: any) => {
+    setPaymentData(data);
+    
+    if (data.payment_method === 'pix') {
+      // Show PIX QR code if it's a PIX payment
+      setCurrentStep(4); // PIX display step
+    } else {
+      // Redirect to success page for credit card
+      const params = new URLSearchParams({
+        transaction_id: data.transaction_id,
+        payment_method: data.payment_method,
+        total: getTotalWithShipping().toFixed(2)
+      });
+      navigate(`/payment-success?${params.toString()}`);
+    }
+  };
+
+  const handlePixSuccess = () => {
+    const params = new URLSearchParams({
+      transaction_id: paymentData.transaction_id,
+      payment_method: paymentData.payment_method,
+      total: getTotalWithShipping().toFixed(2)
+    });
+    navigate(`/payment-success?${params.toString()}`);
+  };
+
+  const getTotalWithShipping = () => {
+    return getTotal() + (selectedShipping?.price || 0);
   };
 
   const steps = [
@@ -254,6 +282,25 @@ const Checkout = () => {
                 onBack={() => setCurrentStep(1)}
               />
             )}
+
+            {currentStep === 3 && orderDraft && (
+              <PaymentStep
+                onBack={() => setCurrentStep(2)}
+                onSuccess={handlePaymentSuccess}
+                orderDraftId={orderDraft.id}
+                totalAmount={getTotalWithShipping()}
+                loading={loading}
+              />
+            )}
+
+            {currentStep === 4 && paymentData?.payment_method === 'pix' && (
+              <PixPayment
+                qrCode={paymentData.qr_code}
+                qrCodeUrl={paymentData.qr_code_url}
+                expiresAt={paymentData.expires_at}
+                onSuccess={handlePixSuccess}
+              />
+            )}
           </div>
 
           {/* Order Summary */}
@@ -295,7 +342,7 @@ const Checkout = () => {
                   <div className="flex justify-between font-bold text-lg border-t pt-2">
                     <span>Total</span>
                     <span>
-                      R$ {(getTotal() + (selectedShipping?.price || 0)).toFixed(2).replace('.', ',')}
+                      R$ {getTotalWithShipping().toFixed(2).replace('.', ',')}
                     </span>
                   </div>
                 </div>

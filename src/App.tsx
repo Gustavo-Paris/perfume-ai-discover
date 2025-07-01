@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,8 @@ import Curadoria from "./pages/Curadoria";
 import Catalogo from "./pages/Catalogo";
 import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 import Auth from "./pages/Auth";
 import AdminPerfumes from "./pages/admin/AdminPerfumes";
 import AdminInventory from "./pages/admin/AdminInventory";
@@ -41,6 +42,8 @@ const App = () => (
                   <Route path="/catalogo" element={<Catalogo />} />
                   <Route path="/carrinho" element={<Carrinho />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="/payment-cancel" element={<PaymentCancel />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/perfume/:id" element={<PerfumeDetails />} />
                   <Route path="/admin/perfumes" element={<AdminPerfumes />} />
