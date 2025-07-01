@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Truck, HeartHandshake, Star, Cpu } from 'lucide-react';
+import { ArrowRight, Shield, Truck, HeartHandshake, Star, Cpu, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
