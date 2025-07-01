@@ -104,9 +104,9 @@
   .ai-halo::before {
     content: "";
     position: absolute;
-    inset: -1px;
+    inset: -2px;
     border-radius: inherit;
-    padding: 1px;
+    padding: 2px;
     background: linear-gradient(90deg, #14B8FF, #7F5AF0, #EA4C89);
     -webkit-mask:
        linear-gradient(#fff 0 0) content-box,
