@@ -1,97 +1,126 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Shield, Truck, HeartHandshake } from 'lucide-react';
+import { ArrowRight, Sparkles, Shield, Truck, HeartHandshake, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import FeaturedSlider from '@/components/home/FeaturedSlider';
-import FloatingShapes from '@/components/ui/FloatingShapes';
+import FeaturedProducts from '@/components/home/FeaturedProducts';
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-navy">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
-        {/* Floating Shapes Background */}
-        <div className="hidden md:block">
-          <FloatingShapes />
-        </div>
-        
-        {/* Content Grid */}
-        <div className="relative z-10 container mx-auto max-w-7xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <section className="relative py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
+        <div className="container mx-auto max-w-7xl">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Column - Text Content */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
+              className="order-2 lg:order-1"
             >
-              <h1 className="font-display font-bold text-5xl md:text-6xl text-gold mb-4">
-                Descubra o
-                <span className="block">Perfume Ideal</span>
-              </h1>
-              <p className="text-xl text-white/80 max-w-[500px] mb-8 font-sans font-medium">
-                Uma curadoria personalizada com inteligência artificial para encontrar a fragrância perfeita para você
-              </p>
-              
-              <div className="flex flex-col md:flex-row gap-6">
-                <Button 
-                  asChild 
-                  size="lg" 
-                  className="bg-gold text-navy rounded-full px-8 py-3 font-medium hover:translate-y-[1px] transition-all duration-200 shadow-[0_2px_6px_rgba(212,175,55,0.4)]"
-                >
-                  <Link to="/curadoria">
-                    Começar Curadoria
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  size="lg"
-                  className="outline-gold text-gold hover:bg-gold/10 rounded-full px-8 py-3"
-                >
-                  <Link to="/catalogo">
-                    Ver Catálogo
-                  </Link>
-                </Button>
+              <div className="max-w-xl">
+                <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 text-gray-900 leading-tight">
+                  Descubra o
+                  <span className="block gradient-text">Perfume Ideal</span>
+                </h1>
+                <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                  Uma curadoria personalizada com inteligência artificial para encontrar a fragrância perfeita para você
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    asChild 
+                    size="lg" 
+                    className="btn-primary text-base px-8 py-4"
+                  >
+                    <Link to="/curadoria">
+                      Começar Curadoria
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    size="lg"
+                    className="btn-secondary text-base px-8 py-4"
+                  >
+                    <Link to="/catalogo">
+                      Ver Catálogo
+                    </Link>
+                  </Button>
+                </div>
+
+                {/* Social Proof */}
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center">
+                      <div className="flex -space-x-2">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div
+                            key={i}
+                            className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 border-2 border-white"
+                          />
+                        ))}
+                      </div>
+                      <div className="ml-3">
+                        <div className="flex items-center">
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          ))}
+                        </div>
+                        <p className="text-sm text-gray-600">2.500+ clientes satisfeitos</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
             {/* Right Column - Hero Image */}
             <motion.div
-              className="relative"
+              className="order-1 lg:order-2"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
             >
               <div className="relative">
-                <img
-                  src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=550&h=700&fit=crop&crop=center"
-                  alt="Frascos luxuosos"
-                  className="w-full max-w-[550px] h-[700px] object-cover rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] mx-auto"
-                  loading="eager"
-                />
+                <div className="relative z-10">
+                  <img
+                    src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&h=700&fit=crop&crop=center&q=80"
+                    alt="Coleção de perfumes luxuosos"
+                    className="w-full max-w-[600px] h-[700px] object-cover rounded-2xl shadow-2xl mx-auto"
+                    loading="eager"
+                  />
+                </div>
                 
-                {/* Badge overlay - hidden on mobile */}
-                <div className="hidden md:block absolute bottom-6 right-6 backdrop-blur-md bg-navy/60 border border-gold/15 rounded-xl px-4 py-2 text-sm text-gold">
-                  <div className="flex gap-2 items-center">
-                    <div className="w-2 h-2 rounded-full bg-gold animate-pulse"></div>
-                    IA Personalizada
+                {/* Floating card */}
+                <div className="absolute bottom-8 left-8 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl px-6 py-4 shadow-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                    <div>
+                      <p className="font-medium text-gray-900">IA Personalizada</p>
+                      <p className="text-sm text-gray-600">Recomendação inteligente</p>
+                    </div>
                   </div>
                 </div>
+
+                {/* Background decoration */}
+                <div className="absolute -top-4 -right-4 w-72 h-72 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full -z-10 opacity-60"></div>
+                <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full -z-10 opacity-60"></div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Featured Perfumes Slider */}
-      <FeaturedSlider />
+      {/* Featured Products */}
+      <FeaturedProducts />
 
       {/* Features Section */}
       <motion.section 
-        className="py-20 px-4"
+        className="py-20 px-4 bg-white"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -99,66 +128,66 @@ const Home = () => {
       >
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <h2 className="font-display font-bold text-3xl md:text-4xl mb-4 text-gold">
+            <h2 className="font-display text-3xl md:text-4xl font-semibold mb-6 text-gray-900">
               Por que escolher a Paris & Co?
             </h2>
-            <p className="text-xl text-white/80 max-w-2xl mx-auto font-sans font-medium">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Oferecemos uma experiência única na descoberta de fragrâncias
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="glass text-center border-gold/20">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-full bg-gold flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="h-6 w-6 text-navy" />
+            <Card className="border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="h-8 w-8 text-purple-600" />
                 </div>
-                <h3 className="font-display font-semibold text-lg mb-2 text-gold">
+                <h3 className="font-semibold text-lg mb-3 text-gray-900">
                   Curadoria IA
                 </h3>
-                <p className="text-white/70 text-sm font-sans">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Inteligência artificial personalizada para encontrar sua fragrância ideal
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="glass text-center border-gold/20">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-full bg-gold flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-6 w-6 text-navy" />
+            <Card className="border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="font-display font-semibold text-lg mb-2 text-gold">
+                <h3 className="font-semibold text-lg mb-3 text-gray-900">
                   Garantia Amou ou Troca
                 </h3>
-                <p className="text-white/70 text-sm font-sans">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Até 7 dias para trocar se não se apaixonar pela fragrância
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="glass text-center border-gold/20">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-full bg-gold flex items-center justify-center mx-auto mb-4">
-                  <Truck className="h-6 w-6 text-navy" />
+            <Card className="border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center mx-auto mb-4">
+                  <Truck className="h-8 w-8 text-blue-600" />
                 </div>
-                <h3 className="font-display font-semibold text-lg mb-2 text-gold">
+                <h3 className="font-semibold text-lg mb-3 text-gray-900">
                   Frete Grátis
                 </h3>
-                <p className="text-white/70 text-sm font-sans">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Acima de R$ 299 ou para clientes Platinum
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="glass text-center border-gold/20">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 rounded-full bg-gold flex items-center justify-center mx-auto mb-4">
-                  <HeartHandshake className="h-6 w-6 text-navy" />
+            <Card className="border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center mx-auto mb-4">
+                  <HeartHandshake className="h-8 w-8 text-orange-600" />
                 </div>
-                <h3 className="font-display font-semibold text-lg mb-2 text-gold">
+                <h3 className="font-semibold text-lg mb-3 text-gray-900">
                   Programa Fidelidade
                 </h3>
-                <p className="text-white/70 text-sm font-sans">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Ganhe pontos a cada compra e troque por descontos
                 </p>
               </CardContent>
@@ -169,25 +198,25 @@ const Home = () => {
 
       {/* CTA Section */}
       <motion.section 
-        className="py-20 px-4"
+        className="py-20 px-4 bg-gradient-to-br from-gray-900 to-gray-800"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         viewport={{ once: true }}
       >
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="glass-gold rounded-3xl p-12 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-            <h2 className="font-display font-bold text-3xl md:text-4xl mb-6 text-gold">
+          <div className="bg-white rounded-3xl p-12 shadow-2xl">
+            <h2 className="font-display text-3xl md:text-4xl font-semibold mb-6 text-gray-900">
               Pronto para encontrar seu perfume ideal?
             </h2>
-            <p className="text-xl mb-8 text-white/80 max-w-2xl mx-auto font-sans font-medium">
+            <p className="text-xl mb-8 text-gray-600 max-w-2xl mx-auto leading-relaxed">
               Nossa curadoria personalizada utiliza inteligência artificial para recomendar fragrâncias que combinam perfeitamente com seu estilo
             </p>
             
             <Button 
               asChild 
               size="lg" 
-              className="btn-primary text-lg px-8 py-4"
+              className="btn-primary text-lg px-10 py-4"
             >
               <Link to="/curadoria">
                 Iniciar Curadoria Gratuita

@@ -20,10 +20,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				heading: ['Playfair Display', 'serif'],
-				body: ['Inter', 'sans-serif'],
-				display: ['Playfair Display', 'serif'],
-				sans: ['Inter', 'sans-serif'],
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+				display: ['Poppins', 'system-ui', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -60,10 +58,6 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				
-				// Brand Colors
-				navy: '#0B1D37',
-				gold: '#D4AF37',
-				
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -89,7 +83,7 @@ export default {
 					from: { height: 'var(--radix-accordion-content-height)' },
 					to: { height: '0' }
 				},
-				'fade-in-up': {
+				'fade-up': {
 					'0%': { 
 						opacity: '0', 
 						transform: 'translateY(20px)' 
@@ -98,30 +92,12 @@ export default {
 						opacity: '1', 
 						transform: 'translateY(0)' 
 					}
-				},
-				'ai-beam': {
-					'0%': { 
-						backgroundPosition: '0% 50%' 
-					},
-					'100%': { 
-						backgroundPosition: '100% 50%' 
-					}
-				},
-				'pulse-dots': {
-					'0%, 100%': { 
-						opacity: '0.4' 
-					},
-					'50%': { 
-						opacity: '1' 
-					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in-up': 'fade-in-up 0.12s ease-out',
-				'ai-beam': 'ai-beam 8s linear infinite',
-				'pulse-dots': 'pulse-dots 0.8s ease-in-out infinite',
+				'fade-up': 'fade-up 0.6s ease-out'
 			},
 		}
 	},
