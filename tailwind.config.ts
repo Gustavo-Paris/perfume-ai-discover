@@ -69,8 +69,7 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				
-				// Add custom colors
-				gold: '#f4d03f',
+				// Custom colors - removed gold, kept navy
 				navy: '#1a1f2e'
 			},
 			borderRadius: {
