@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
-import { Sparkles, History, Zap, Star, AtomIcon } from 'lucide-react';
+import { Cpu, History, Zap, AtomIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import ConversationChat from '@/components/curadoria/ConversationChat';
@@ -183,7 +184,7 @@ const Curadoria = () => {
               onClick={() => setShowHistory(false)}
               className="btn-secondary"
             >
-              <Star className="mr-2 h-4 w-4" />
+              <Cpu className="mr-2 h-4 w-4" />
               Voltar ao Sistema
             </Button>
           </motion.div>
@@ -230,7 +231,7 @@ const Curadoria = () => {
               scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
             }}
           >
-            <Sparkles className="h-16 w-16 text-gold" />
+            <Cpu className="h-16 w-16 text-gold" />
           </motion.div>
           <motion.h2 
             className="font-display text-4xl font-bold mb-6 text-gold"
@@ -266,9 +267,12 @@ const Curadoria = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="font-display text-6xl md:text-7xl font-bold mb-6 text-gold">
-            Curadoria Inteligente
-          </h1>
+          <div className="flex items-center justify-center space-x-3 mb-6">
+            <Cpu className="w-8 h-8 text-gold/80" />
+            <h1 className="font-display text-6xl md:text-7xl font-bold text-gold">
+              Curadoria Inteligente
+            </h1>
+          </div>
           <p className="text-white/80 text-xl mb-2 max-w-2xl mx-auto leading-relaxed">
             Tecnologia avançada para descoberta personalizada de fragrâncias
           </p>
@@ -304,12 +308,12 @@ const Curadoria = () => {
         </motion.div>
 
         <motion.div
-          className="max-w-4xl mx-auto"
+          className="max-w-full md:max-w-2xl mx-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="glass-gold rounded-3xl h-[700px] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+          <Card className="glass-gold rounded-3xl h-[75vh] md:h-[600px] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] chat-ai-border">
             <CardContent className="h-full p-0">
               <ConversationChat
                 messages={conversation.messages}

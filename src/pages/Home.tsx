@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Shield, Truck, HeartHandshake, Star } from 'lucide-react';
+import { ArrowRight, Shield, Truck, HeartHandshake, Star, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -10,9 +10,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="relative min-h-[calc(100vh-56px)] py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
         <div className="container mx-auto max-w-7xl">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Left Column - Text Content */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -21,25 +21,32 @@ const Home = () => {
               className="order-2 lg:order-1"
             >
               <div className="max-w-xl">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Cpu className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm text-gray-600 font-medium">Powered by AI</span>
+                </div>
+                
                 <h1 className="font-display text-5xl md:text-6xl font-bold mb-6 text-gray-900 leading-tight">
                   Descubra o
-                  <span className="block gradient-text">Perfume Ideal</span>
+                  <span className="block text-brand-gradient">Perfume Ideal</span>
                 </h1>
                 <p className="text-xl text-gray-600 mb-8 leading-relaxed">
                   Uma curadoria personalizada com inteligência artificial para encontrar a fragrância perfeita para você
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    className="btn-primary text-base px-8 py-4"
-                  >
-                    <Link to="/curadoria">
-                      Começar Curadoria
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                  </Button>
+                  <div className="ai-halo">
+                    <Button 
+                      asChild 
+                      size="lg" 
+                      className="bg-gold text-navy rounded-full font-medium text-base px-8 py-4 hover:bg-gold/90"
+                    >
+                      <Link to="/curadoria">
+                        Começar Curadoria
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Link>
+                    </Button>
+                  </div>
                   <Button 
                     asChild 
                     variant="outline" 
@@ -213,16 +220,18 @@ const Home = () => {
               Nossa curadoria personalizada utiliza inteligência artificial para recomendar fragrâncias que combinam perfeitamente com seu estilo
             </p>
             
-            <Button 
-              asChild 
-              size="lg" 
-              className="btn-primary text-lg px-10 py-4"
-            >
-              <Link to="/curadoria">
-                Iniciar Curadoria Gratuita
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+            <div className="ai-halo">
+              <Button 
+                asChild 
+                size="lg" 
+                className="bg-gold text-navy rounded-full font-medium text-lg px-10 py-4 hover:bg-gold/90"
+              >
+                <Link to="/curadoria">
+                  Iniciar Curadoria Gratuita
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </motion.section>

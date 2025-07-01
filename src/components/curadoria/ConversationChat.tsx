@@ -2,9 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Star, Send, RotateCcw } from 'lucide-react';
+import { Cpu, Send, RotateCcw } from 'lucide-react';
 import { ConversationMessage } from '@/types/conversation';
 
 interface ConversationChatProps {
@@ -55,7 +54,7 @@ const ConversationChat = ({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center space-x-3 p-6 border-b border-gold/10 bg-navy/70">
-        <Star className="h-5 w-5 text-gold" />
+        <Cpu className="h-5 w-5 text-gold/80" />
         <h3 className="font-display text-lg font-semibold text-gold">Curadoria IA</h3>
       </div>
 
@@ -64,7 +63,7 @@ const ConversationChat = ({
           {messages.length === 0 && (
             <div className="text-center py-12 animate-fade-in-up">
               <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center mx-auto mb-6">
-                <Star className="h-8 w-8 text-gold" />
+                <Cpu className="h-8 w-8 text-gold/80" />
               </div>
               <h3 className="font-display text-2xl font-semibold mb-4 text-gold">
                 Bem-vindo à Curadoria Inteligente
@@ -83,7 +82,7 @@ const ConversationChat = ({
             >
               <div className={`max-w-[85%] ${
                 message.role === 'user' 
-                  ? 'chat-user' 
+                  ? 'bg-blue-600 text-white rounded-2xl px-4 py-3' 
                   : 'chat-ai'
               }`}>
                 <p className="leading-relaxed whitespace-pre-wrap">
@@ -132,7 +131,7 @@ const ConversationChat = ({
               onKeyPress={handleKeyPress}
               placeholder="Digite sua mensagem..."
               disabled={loading}
-              className="bg-navy/50 border-gold/20 text-white placeholder:text-white/50 focus:ring-2 focus:ring-gold/30 focus:border-gold/40 rounded-xl"
+              className="bg-navy/50 border-gold/20 text-white placeholder:text-white/40 focus:ring-2 focus:ring-gold/30 focus:border-gold/40 focus:placeholder:text-white/40 rounded-xl"
             />
             <Button
               onClick={handleSend}
