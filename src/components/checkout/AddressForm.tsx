@@ -33,6 +33,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
+  const [isDefault, setIsDefault] = useState(false);
 
   const {
     register,
@@ -41,7 +42,10 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
     watch,
     formState: { errors }
   } = useForm<AddressFormData>({
-    resolver: zodResolver(addressSchema)
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      isDefault: false
+    }
   });
 
   const cep = watch('cep');
@@ -80,35 +84,59 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
   };
 
   const onSubmit = async (data: AddressFormData) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    console.log('Submitting address data:', data);
     setLoading(true);
+    
     try {
       // If this is set as default, remove default from other addresses
       if (data.isDefault) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('addresses')
           .update({ is_default: false })
           .eq('user_id', user.id);
+        
+        if (updateError) {
+          console.error('Error updating existing addresses:', updateError);
+        }
       }
 
-      const { error } = await supabase
-        .from('addresses')
-        .insert({
-          user_id: user.id,
-          name: data.name,
-          cep: data.cep.replace(/\D/g, ''),
-          street: data.street,
-          number: data.number,
-          complement: data.complement || null,
-          district: data.district,
-          city: data.city,
-          state: data.state,
-          country: 'Brasil',
-          is_default: data.isDefault
-        });
+      const addressData = {
+        user_id: user.id,
+        name: data.name,
+        cep: data.cep.replace(/\D/g, ''),
+        street: data.street,
+        number: data.number,
+        complement: data.complement || null,
+        district: data.district,
+        city: data.city,
+        state: data.state.toUpperCase(),
+        country: 'Brasil',
+        is_default: data.isDefault
+      };
 
-      if (error) throw error;
+      console.log('Inserting address:', addressData);
+
+      const { data: insertedAddress, error } = await supabase
+        .from('addresses')
+        .insert(addressData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Address saved successfully:', insertedAddress);
 
       toast({
         title: "Sucesso!",
@@ -120,11 +148,21 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
       console.error('Error saving address:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar o endereço.",
+        description: "Não foi possível salvar o endereço. Tente novamente.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    const formatted = value.replace(/(\d{5})(\d)/, '$1-$2');
+    setValue('cep', formatted);
+    
+    if (value.length === 8) {
+      searchCep(value);
     }
   };
 
@@ -136,6 +174,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
           id="name"
           {...register('name')}
           placeholder="Ex: Casa, Trabalho"
+          disabled={loading}
         />
         {errors.name && (
           <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
@@ -150,21 +189,14 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
             {...register('cep')}
             placeholder="00000-000"
             maxLength={9}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '');
-              const formatted = value.replace(/(\d{5})(\d)/, '$1-$2');
-              setValue('cep', formatted);
-              
-              if (value.length === 8) {
-                searchCep(value);
-              }
-            }}
+            onChange={handleCepChange}
+            disabled={loading}
           />
           <Button
             type="button"
             variant="outline"
             onClick={() => searchCep(cep)}
-            disabled={cepLoading}
+            disabled={cepLoading || loading}
             className="shrink-0"
           >
             {cepLoading ? 'Buscando...' : 'Buscar'}
@@ -182,6 +214,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
             id="street"
             {...register('street')}
             placeholder="Nome da rua"
+            disabled={loading}
           />
           {errors.street && (
             <p className="text-sm text-red-600 mt-1">{errors.street.message}</p>
@@ -194,6 +227,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
             id="number"
             {...register('number')}
             placeholder="123"
+            disabled={loading}
           />
           {errors.number && (
             <p className="text-sm text-red-600 mt-1">{errors.number.message}</p>
@@ -207,6 +241,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
           id="complement"
           {...register('complement')}
           placeholder="Apto, bloco, casa, etc."
+          disabled={loading}
         />
       </div>
 
@@ -216,6 +251,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
           id="district"
           {...register('district')}
           placeholder="Nome do bairro"
+          disabled={loading}
         />
         {errors.district && (
           <p className="text-sm text-red-600 mt-1">{errors.district.message}</p>
@@ -229,6 +265,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
             id="city"
             {...register('city')}
             placeholder="Nome da cidade"
+            disabled={loading}
           />
           {errors.city && (
             <p className="text-sm text-red-600 mt-1">{errors.city.message}</p>
@@ -243,6 +280,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
             placeholder="SP"
             maxLength={2}
             style={{ textTransform: 'uppercase' }}
+            disabled={loading}
           />
           {errors.state && (
             <p className="text-sm text-red-600 mt-1">{errors.state.message}</p>
@@ -253,7 +291,13 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
       <div className="flex items-center space-x-2">
         <Checkbox
           id="isDefault"
-          {...register('isDefault')}
+          checked={isDefault}
+          onCheckedChange={(checked) => {
+            const value = checked === true;
+            setIsDefault(value);
+            setValue('isDefault', value);
+          }}
+          disabled={loading}
         />
         <Label htmlFor="isDefault" className="text-sm">
           Definir como endereço padrão
