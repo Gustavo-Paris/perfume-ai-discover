@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const MELHOR_ENVIO_API = 'https://sandbox.melhorenvio.com.br/api/v2/me';
+const MELHOR_ENVIO_AUTH_URL = 'https://sandbox.melhorenvio.com.br/oauth/token';
 
 interface ShippingQuoteRequest {
   orderDraftId: string;
@@ -75,26 +76,28 @@ serve(async (req) => {
       );
     }
 
-    // Get Melhor Envio token
+    // Get Melhor Envio credentials
     const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_TOKEN');
-    console.log('=== MELHOR ENVIO DEBUG ===');
-    console.log('Token exists:', !!melhorEnvioToken);
-    console.log('Token length:', melhorEnvioToken?.length || 0);
-    console.log('Token first 20 chars:', melhorEnvioToken?.substring(0, 20) + '...');
-    console.log('API URL:', MELHOR_ENVIO_API);
+    const melhorEnvioClientId = Deno.env.get('MELHOR_ENVIO_CLIENT_ID');
+    const melhorEnvioClientSecret = Deno.env.get('MELHOR_ENVIO_CLIENT_SECRET');
     
-    if (!melhorEnvioToken) {
-      console.log('MELHOR_ENVIO_TOKEN not found - using mock data');
+    console.log('=== MELHOR ENVIO CREDENTIALS CHECK ===');
+    console.log('Token exists:', !!melhorEnvioToken);
+    console.log('Client ID exists:', !!melhorEnvioClientId);
+    console.log('Client Secret exists:', !!melhorEnvioClientSecret);
+    
+    if (!melhorEnvioToken || !melhorEnvioClientId || !melhorEnvioClientSecret) {
+      console.log('Missing Melhor Envio credentials - using mock data');
       
       const mockQuotes: ShippingQuote[] = [
         {
-          service: 'PAC (Mock - No Token)',
+          service: 'PAC (Credenciais Incompletas)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX (Mock - No Token)',
+          service: 'SEDEX (Credenciais Incompletas)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -102,13 +105,82 @@ serve(async (req) => {
       ];
 
       return new Response(
-        JSON.stringify({ quotes: mockQuotes }),
+        JSON.stringify({ 
+          quotes: mockQuotes,
+          debug: {
+            message: 'Credenciais incompletas do Melhor Envio',
+            missing: {
+              token: !melhorEnvioToken,
+              clientId: !melhorEnvioClientId,
+              clientSecret: !melhorEnvioClientSecret
+            }
+          }
+        }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
+
+    // Generate access token using client credentials
+    console.log('=== GENERATING ACCESS TOKEN ===');
+    
+    const tokenResponse = await fetch(MELHOR_ENVIO_AUTH_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Aplicação teste@exemplo.com'
+      },
+      body: JSON.stringify({
+        grant_type: 'client_credentials',
+        client_id: melhorEnvioClientId,
+        client_secret: melhorEnvioClientSecret,
+        scope: ''
+      })
+    });
+
+    console.log('Token response status:', tokenResponse.status);
+
+    if (!tokenResponse.ok) {
+      const tokenError = await tokenResponse.text();
+      console.error('Token generation failed:', tokenError);
+      
+      const fallbackQuotes: ShippingQuote[] = [
+        {
+          service: 'PAC (Erro na Autenticação)',
+          price: 15.90,
+          deadline: 8,
+          company: 'Correios'
+        },
+        {
+          service: 'SEDEX (Erro na Autenticação)',
+          price: 25.50,
+          deadline: 3,
+          company: 'Correios'
+        }
+      ];
+
+      return new Response(
+        JSON.stringify({ 
+          quotes: fallbackQuotes,
+          debug: {
+            error: `Token generation failed: ${tokenResponse.status}`,
+            message: tokenError
+          }
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const tokenData = await tokenResponse.json();
+    const accessToken = tokenData.access_token;
+    
+    console.log('Access token generated successfully');
 
     // Calculate package dimensions and weight
     const totalWeight = cartItems?.reduce((total, item) => {
@@ -140,72 +212,13 @@ serve(async (req) => {
 
     console.log('Shipping request payload:', JSON.stringify(shippingRequest, null, 2));
 
-    // Test token validity with a simple endpoint first
-    console.log('=== TESTING TOKEN VALIDITY ===');
-    const testResponse = await fetch(`${MELHOR_ENVIO_API}/shipment/services`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
-        'User-Agent': 'Aplicação teste@exemplo.com'
-      }
-    });
-
-    console.log('Token test response status:', testResponse.status);
-    if (!testResponse.ok) {
-      const testErrorText = await testResponse.text();
-      console.error('Token test failed:', testResponse.status, testErrorText);
-      
-      // Try to parse error details
-      let errorDetails;
-      try {
-        errorDetails = JSON.parse(testErrorText);
-        console.log('Parsed error details:', JSON.stringify(errorDetails, null, 2));
-      } catch (e) {
-        console.log('Could not parse error response as JSON');
-      }
-      
-      const fallbackQuotes: ShippingQuote[] = [
-        {
-          service: 'PAC (Token Invalid)',
-          price: 15.90,
-          deadline: 8,
-          company: 'Correios'
-        },
-        {
-          service: 'SEDEX (Token Invalid)',
-          price: 25.50,
-          deadline: 3,
-          company: 'Correios'
-        }
-      ];
-
-      return new Response(
-        JSON.stringify({ 
-          quotes: fallbackQuotes,
-          debug: {
-            error: `Token validation failed: ${testResponse.status}`,
-            message: testErrorText,
-            details: errorDetails
-          }
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    console.log('Token is valid, proceeding with shipping calculation');
-
     // Call Melhor Envio API for shipping calculation
     const response = await fetch(`${MELHOR_ENVIO_API}/shipment/calculate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'User-Agent': 'Aplicação teste@exemplo.com'
       },
       body: JSON.stringify(shippingRequest)
@@ -219,13 +232,13 @@ serve(async (req) => {
       
       const fallbackQuotes: ShippingQuote[] = [
         {
-          service: 'PAC (Calc Error)',
+          service: 'PAC (Erro no Cálculo)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX (Calc Error)',
+          service: 'SEDEX (Erro no Cálculo)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -285,13 +298,13 @@ serve(async (req) => {
       console.log('No valid quotes found, returning fallback data');
       const fallbackQuotes: ShippingQuote[] = [
         {
-          service: 'PAC (No Quotes)',
+          service: 'PAC (Sem Cotações)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX (No Quotes)',
+          service: 'SEDEX (Sem Cotações)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
