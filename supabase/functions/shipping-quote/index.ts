@@ -77,19 +77,21 @@ serve(async (req) => {
 
     // Get Melhor Envio token
     const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_TOKEN');
+    console.log('MELHOR_ENVIO_TOKEN exists:', !!melhorEnvioToken);
+    
     if (!melhorEnvioToken) {
-      console.error('MELHOR_ENVIO_TOKEN not found in environment');
+      console.log('MELHOR_ENVIO_TOKEN not found - using mock data');
       
       // Return mock data for demonstration
       const mockQuotes: ShippingQuote[] = [
         {
-          service: 'PAC',
+          service: 'PAC (Mock)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX',
+          service: 'SEDEX (Mock)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -136,7 +138,8 @@ serve(async (req) => {
       }
     };
 
-    console.log('Shipping request:', JSON.stringify(shippingRequest, null, 2));
+    console.log('Shipping request to Melhor Envio:', JSON.stringify(shippingRequest, null, 2));
+    console.log('Using token (first 10 chars):', melhorEnvioToken.substring(0, 10) + '...');
 
     // Call Melhor Envio API
     const response = await fetch(`${MELHOR_ENVIO_API}/shipment/calculate`, {
@@ -150,19 +153,22 @@ serve(async (req) => {
       body: JSON.stringify(shippingRequest)
     });
 
+    console.log('Melhor Envio API response status:', response.status);
+    
     if (!response.ok) {
-      console.error('Melhor Envio API error:', response.status, await response.text());
+      const errorText = await response.text();
+      console.error('Melhor Envio API error:', response.status, errorText);
       
       // Fallback to mock data if API fails
       const fallbackQuotes: ShippingQuote[] = [
         {
-          service: 'PAC',
+          service: 'PAC (API Error)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX',
+          service: 'SEDEX (API Error)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -170,7 +176,13 @@ serve(async (req) => {
       ];
 
       return new Response(
-        JSON.stringify({ quotes: fallbackQuotes }),
+        JSON.stringify({ 
+          quotes: fallbackQuotes,
+          debug: {
+            error: `API Error: ${response.status}`,
+            message: errorText
+          }
+        }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -179,13 +191,14 @@ serve(async (req) => {
     }
 
     const shippingData = await response.json();
-    console.log('Melhor Envio response:', JSON.stringify(shippingData, null, 2));
+    console.log('Melhor Envio response data:', JSON.stringify(shippingData, null, 2));
 
     // Format response to match our interface
     const quotes: ShippingQuote[] = [];
 
     if (Array.isArray(shippingData)) {
       shippingData.forEach((option: any) => {
+        console.log('Processing shipping option:', JSON.stringify(option, null, 2));
         if (option.price && option.delivery_time) {
           quotes.push({
             service: option.name || option.service_name || 'Serviço',
@@ -195,19 +208,39 @@ serve(async (req) => {
           });
         }
       });
+    } else if (shippingData && typeof shippingData === 'object') {
+      // Handle case where API returns a single object or different structure
+      console.log('Received non-array response, checking structure...');
+      
+      // Check if it has services property
+      if (shippingData.services && Array.isArray(shippingData.services)) {
+        shippingData.services.forEach((option: any) => {
+          if (option.price && option.delivery_time) {
+            quotes.push({
+              service: option.name || option.service_name || 'Serviço',
+              price: parseFloat(option.price),
+              deadline: parseInt(option.delivery_time),
+              company: option.company?.name || option.company || 'Transportadora'
+            });
+          }
+        });
+      }
     }
+
+    console.log('Processed quotes:', quotes);
 
     // If no quotes were returned, provide fallback
     if (quotes.length === 0) {
+      console.log('No valid quotes found, returning fallback data');
       const fallbackQuotes: ShippingQuote[] = [
         {
-          service: 'PAC',
+          service: 'PAC (No Quotes)',
           price: 15.90,
           deadline: 8,
           company: 'Correios'
         },
         {
-          service: 'SEDEX',
+          service: 'SEDEX (No Quotes)',
           price: 25.50,
           deadline: 3,
           company: 'Correios'
@@ -215,7 +248,13 @@ serve(async (req) => {
       ];
 
       return new Response(
-        JSON.stringify({ quotes: fallbackQuotes }),
+        JSON.stringify({ 
+          quotes: fallbackQuotes,
+          debug: {
+            originalResponse: shippingData,
+            message: 'No valid quotes found in API response'
+          }
+        }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
