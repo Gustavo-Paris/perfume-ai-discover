@@ -116,7 +116,7 @@ export const ShippingStep: React.FC<ShippingStepProps> = ({
                 size="lg"
                 className="px-8"
               >
-                Próxima Etapa
+                Continuar para Pagamento
               </Button>
             </div>
           )}
