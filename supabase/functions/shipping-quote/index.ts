@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting shipping quote function...')
+    
     const authHeader = req.headers.get('Authorization')!
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -21,17 +23,18 @@ serve(async (req) => {
     )
 
     const { orderDraftId } = await req.json()
+    console.log('Order draft ID received:', orderDraftId)
 
     if (!orderDraftId) {
+      console.log('Missing order draft ID')
       return new Response(
         JSON.stringify({ error: 'Order draft ID é obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('Processing shipping quote for order draft:', orderDraftId)
-
     // Get order draft with address data
+    console.log('Fetching order draft...')
     const { data: orderDraft, error: draftError } = await supabase
       .from('order_drafts')
       .select(`
@@ -41,15 +44,26 @@ serve(async (req) => {
       .eq('id', orderDraftId)
       .single()
 
-    if (draftError || !orderDraft) {
+    if (draftError) {
       console.error('Error fetching order draft:', draftError)
+      return new Response(
+        JSON.stringify({ error: 'Erro ao buscar rascunho de pedido' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!orderDraft) {
+      console.log('Order draft not found')
       return new Response(
         JSON.stringify({ error: 'Rascunho de pedido não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('Order draft found:', orderDraft.id)
+
     // Get cart items for the user
+    console.log('Fetching cart items for user:', orderDraft.user_id)
     const { data: cartItems, error: cartError } = await supabase
       .from('cart_items')
       .select(`
@@ -58,29 +72,45 @@ serve(async (req) => {
       `)
       .eq('user_id', orderDraft.user_id)
 
-    if (cartError || !cartItems || cartItems.length === 0) {
+    if (cartError) {
       console.error('Error fetching cart items:', cartError)
       return new Response(
-        JSON.stringify({ error: 'Itens do carrinho não encontrados' }),
+        JSON.stringify({ error: 'Erro ao buscar itens do carrinho' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!cartItems || cartItems.length === 0) {
+      console.log('No cart items found')
+      return new Response(
+        JSON.stringify({ error: 'Nenhum item no carrinho' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log('Cart items found:', cartItems.length)
 
     const address = orderDraft.addresses
     if (!address || !address.cep) {
+      console.log('Address not found or missing CEP')
       return new Response(
-        JSON.stringify({ error: 'Endereço não encontrado' }),
+        JSON.stringify({ error: 'Endereço ou CEP não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('Found address CEP:', address.cep)
-    console.log('Found cart items:', cartItems.length)
+    console.log('Address CEP:', address.cep)
 
     const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_TOKEN')
     if (!melhorEnvioToken) {
-      throw new Error('MELHOR_ENVIO_TOKEN not configured')
+      console.error('MELHOR_ENVIO_TOKEN not configured')
+      return new Response(
+        JSON.stringify({ error: 'Token do Melhor Envio não configurado' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
+
+    console.log('Melhor Envio token found')
 
     // Calculate total weight and dimensions from cart items
     let totalWeight = 0
@@ -143,18 +173,37 @@ serve(async (req) => {
       body: JSON.stringify(quotePayload)
     })
 
+    const responseText = await response.text()
+    console.log('Melhor Envio response status:', response.status)
+    console.log('Melhor Envio response:', responseText)
+
     if (!response.ok) {
-      const errorData = await response.text()
-      console.error('Melhor Envio API Error:', response.status, errorData)
-      throw new Error(`Melhor Envio API error: ${response.status} - ${errorData}`)
+      console.error('Melhor Envio API Error:', response.status, responseText)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Erro na API do Melhor Envio',
+          details: responseText 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const quotes = await response.json()
-    console.log('Received quotes from Melhor Envio:', quotes)
+    let quotes
+    try {
+      quotes = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('Error parsing response:', parseError)
+      return new Response(
+        JSON.stringify({ error: 'Erro ao processar resposta da API' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('Parsed quotes:', quotes)
     
     // Transform quotes to our format
     const formattedQuotes = quotes
-      .filter(quote => quote.error === null || quote.error === undefined)
+      .filter(quote => !quote.error)
       .map(quote => ({
         service: quote.name,
         company: quote.company.name,
@@ -172,9 +221,12 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in shipping-quote:', error)
+    console.error('Error in shipping-quote function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Erro interno do servidor',
+        message: error.message 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
