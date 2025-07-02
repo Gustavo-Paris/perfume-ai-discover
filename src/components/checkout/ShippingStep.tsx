@@ -8,6 +8,7 @@ interface ShippingStepProps {
   quotes: ShippingQuote[];
   selectedShipping: ShippingQuote | null;
   onShippingSelect: (shipping: ShippingQuote) => void;
+  onContinue: () => void;
   loading: boolean;
   onBack: () => void;
 }
@@ -16,6 +17,7 @@ export const ShippingStep: React.FC<ShippingStepProps> = ({
   quotes,
   selectedShipping,
   onShippingSelect,
+  onContinue,
   loading,
   onBack
 }) => {
@@ -104,6 +106,19 @@ export const ShippingStep: React.FC<ShippingStepProps> = ({
                 </p>
               </CardContent>
             </Card>
+          )}
+
+          {/* Continue Button */}
+          {selectedShipping && (
+            <div className="flex justify-end pt-4">
+              <Button 
+                onClick={onContinue}
+                size="lg"
+                className="px-8"
+              >
+                Próxima Etapa
+              </Button>
+            </div>
           )}
         </div>
       )}

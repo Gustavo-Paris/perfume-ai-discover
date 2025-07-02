@@ -150,35 +150,39 @@ const Checkout = () => {
     }
   };
 
-  const handleShippingSelect = async (shipping: ShippingQuote) => {
-    if (!orderDraft) return;
+  const handleShippingSelect = (shipping: ShippingQuote) => {
+    setSelectedShipping(shipping);
+    // Don't automatically proceed to payment anymore
+  };
+
+  const handleContinueToPayment = async () => {
+    if (!orderDraft || !selectedShipping) return;
 
     setLoading(true);
     try {
       const { error } = await supabase
         .from('order_drafts')
         .update({
-          shipping_service: shipping.service,
-          shipping_cost: shipping.price,
+          shipping_service: selectedShipping.service,
+          shipping_cost: selectedShipping.price,
           status: 'quote_ready' as const
         })
         .eq('id', orderDraft.id);
 
       if (error) throw error;
 
-      setSelectedShipping(shipping);
       setCurrentStep(3); // Go to payment step
       
       toast({
         title: "Sucesso!",
-        description: "Frete selecionado. Agora escolha a forma de pagamento.",
+        description: "Frete confirmado. Agora escolha a forma de pagamento.",
       });
 
     } catch (error) {
-      console.error('Error selecting shipping:', error);
+      console.error('Error confirming shipping:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível selecionar o frete.",
+        description: "Não foi possível confirmar o frete.",
         variant: "destructive",
       });
     } finally {
@@ -297,6 +301,7 @@ const Checkout = () => {
                 quotes={shippingQuotes}
                 selectedShipping={selectedShipping}
                 onShippingSelect={handleShippingSelect}
+                onContinue={handleContinueToPayment}
                 loading={loading}
                 onBack={() => setCurrentStep(1)}
               />
