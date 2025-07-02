@@ -6,16 +6,16 @@ export interface Order {
   total_amount: number;
   subtotal: number;
   shipping_cost: number;
-  status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  payment_method: 'pix' | 'credit_card';
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
+  status: string;
+  payment_method: string;
+  payment_status: string;
   transaction_id?: string;
   shipping_service?: string;
   shipping_deadline?: number;
   address_data: any;
   created_at: string;
   updated_at: string;
-  items?: OrderItem[];
+  order_items?: OrderItem[];
 }
 
 export interface OrderItem {
