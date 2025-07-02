@@ -16,6 +16,7 @@ export interface Order {
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
+  shipments?: Shipment[];
 }
 
 export interface OrderItem {
@@ -39,4 +40,19 @@ export interface CreateOrderData {
   orderDraftId: string;
   paymentData: any;
   cartItems: any[];
+}
+
+export interface Shipment {
+  id: string;
+  order_id: string;
+  melhor_envio_cart_id?: string;
+  melhor_envio_shipment_id?: string;
+  tracking_code?: string;
+  pdf_url?: string;
+  status: 'pending' | 'cart_added' | 'purchased' | 'label_printed' | 'shipped' | 'delivered';
+  service_name?: string;
+  service_price?: number;
+  estimated_delivery_days?: number;
+  created_at: string;
+  updated_at: string;
 }

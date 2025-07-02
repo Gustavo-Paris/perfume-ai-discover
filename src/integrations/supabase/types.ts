@@ -459,6 +459,59 @@ export type Database = {
           },
         ]
       }
+      shipments: {
+        Row: {
+          created_at: string
+          estimated_delivery_days: number | null
+          id: string
+          melhor_envio_cart_id: string | null
+          melhor_envio_shipment_id: string | null
+          order_id: string
+          pdf_url: string | null
+          service_name: string | null
+          service_price: number | null
+          status: string
+          tracking_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_delivery_days?: number | null
+          id?: string
+          melhor_envio_cart_id?: string | null
+          melhor_envio_shipment_id?: string | null
+          order_id: string
+          pdf_url?: string | null
+          service_name?: string | null
+          service_price?: number | null
+          status?: string
+          tracking_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estimated_delivery_days?: number | null
+          id?: string
+          melhor_envio_cart_id?: string | null
+          melhor_envio_shipment_id?: string | null
+          order_id?: string
+          pdf_url?: string | null
+          service_name?: string | null
+          service_price?: number | null
+          status?: string
+          tracking_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           change_ml: number
