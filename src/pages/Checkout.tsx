@@ -92,20 +92,38 @@ const Checkout = () => {
   const getShippingQuotes = async (orderDraftId: string) => {
     setLoading(true);
     try {
+      console.log('Getting shipping quotes for order draft:', orderDraftId);
+      
       const { data, error } = await supabase.functions.invoke('shipping-quote', {
         body: { orderDraftId }
       });
 
+      console.log('Shipping quote response:', data);
+      console.log('Shipping quote error:', error);
+
       if (error) throw error;
 
-      setShippingQuotes(data.quotes || []);
+      // Handle the response structure correctly
+      const quotes = data?.quotes || [];
+      console.log('Processed quotes:', quotes);
+      
+      setShippingQuotes(quotes);
+      
+      if (quotes.length === 0) {
+        toast({
+          title: "Aviso",
+          description: "Nenhuma opção de frete disponível para este endereço.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Error getting shipping quotes:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível calcular o frete.",
+        description: "Não foi possível calcular o frete. Tente novamente.",
         variant: "destructive",
       });
+      setShippingQuotes([]);
     } finally {
       setLoading(false);
     }
