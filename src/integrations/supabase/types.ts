@@ -241,6 +241,108 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          perfume_id: string
+          quantity: number
+          size_ml: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          perfume_id: string
+          quantity: number
+          size_ml: number
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          perfume_id?: string
+          quantity?: number
+          size_ml?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address_data: Json
+          created_at: string
+          id: string
+          order_number: string
+          payment_method: string
+          payment_status: string
+          shipping_cost: number
+          shipping_deadline: number | null
+          shipping_service: string | null
+          status: string
+          subtotal: number
+          total_amount: number
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_data: Json
+          created_at?: string
+          id?: string
+          order_number: string
+          payment_method: string
+          payment_status?: string
+          shipping_cost?: number
+          shipping_deadline?: number | null
+          shipping_service?: string | null
+          status?: string
+          subtotal: number
+          total_amount: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_data?: Json
+          created_at?: string
+          id?: string
+          order_number?: string
+          payment_method?: string
+          payment_status?: string
+          shipping_cost?: number
+          shipping_deadline?: number | null
+          shipping_service?: string | null
+          status?: string
+          subtotal?: number
+          total_amount?: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       perfumes: {
         Row: {
           base_notes: string[] | null
@@ -455,6 +557,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _user_id: string

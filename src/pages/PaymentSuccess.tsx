@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -13,9 +14,11 @@ const PaymentSuccess = () => {
   const { user } = useAuth();
   const { clearCart } = useCart();
   const [orderData, setOrderData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const transactionId = searchParams.get('transaction_id');
   const paymentMethod = searchParams.get('payment_method');
+  const orderDraftId = searchParams.get('order_draft_id');
 
   useEffect(() => {
     if (!user) {
@@ -23,17 +26,66 @@ const PaymentSuccess = () => {
       return;
     }
 
-    // Clear cart after successful payment
-    clearCart();
+    confirmOrder();
+  }, [user, navigate, transactionId, paymentMethod, orderDraftId]);
 
-    // You might want to fetch order details here based on transaction_id
-    setOrderData({
-      id: transactionId,
-      total: searchParams.get('total') || '0',
-      payment_method: paymentMethod,
-      status: 'paid'
-    });
-  }, [user, navigate, transactionId, paymentMethod, clearCart, searchParams]);
+  const confirmOrder = async () => {
+    if (!orderDraftId || !transactionId || !paymentMethod) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Confirm order through edge function
+      const { data, error } = await supabase.functions.invoke('confirm-order', {
+        body: {
+          orderDraftId,
+          paymentData: {
+            transaction_id: transactionId,
+            payment_method: paymentMethod,
+            status: 'paid'
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setOrderData(data.order);
+        // Clear cart after successful order confirmation
+        await clearCart();
+      } else {
+        throw new Error(data.error || 'Erro ao confirmar pedido');
+      }
+    } catch (error) {
+      console.error('Error confirming order:', error);
+      // Even if confirmation fails, still show success to user
+      // as payment was processed
+      setOrderData({
+        id: transactionId,
+        order_number: 'N/A',
+        status: 'paid',
+        total_amount: searchParams.get('total') || '0'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Package className="mx-auto h-12 w-12 text-blue-600 animate-pulse mb-4" />
+              <p className="text-gray-600">Confirmando seu pedido...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -43,7 +95,7 @@ const PaymentSuccess = () => {
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
           <CardTitle className="font-playfair text-2xl text-green-800">
-            Pagamento Confirmado!
+            Pedido Confirmado!
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 text-center">
@@ -56,7 +108,7 @@ const PaymentSuccess = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Pedido:</span>
-                    <span className="font-medium">#{orderData.id?.slice(-8) || 'N/A'}</span>
+                    <span className="font-medium">#{orderData.order_number}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Pagamento:</span>
@@ -66,7 +118,9 @@ const PaymentSuccess = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Total:</span>
-                    <span className="font-medium">R$ {orderData.total}</span>
+                    <span className="font-medium">
+                      R$ {Number(orderData.total_amount || 0).toFixed(2).replace('.', ',')}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CreditCard, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -74,7 +73,12 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
       if (error) throw error;
 
       if (data.success) {
-        onSuccess(data);
+        // Add orderDraftId to the payment data for order confirmation
+        const paymentDataWithDraft = {
+          ...data,
+          orderDraftId
+        };
+        onSuccess(paymentDataWithDraft);
       } else {
         throw new Error(data.error || 'Erro no processamento do pagamento');
       }

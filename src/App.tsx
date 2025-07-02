@@ -14,6 +14,7 @@ import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import Pedidos from "./pages/Pedidos";
 import Auth from "./pages/Auth";
 import AdminPerfumes from "./pages/admin/AdminPerfumes";
 import AdminInventory from "./pages/admin/AdminInventory";
@@ -44,6 +45,7 @@ const App = () => (
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/payment-cancel" element={<PaymentCancel />} />
+                  <Route path="/pedidos" element={<Pedidos />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/perfume/:id" element={<PerfumeDetails />} />
                   <Route path="/admin/perfumes" element={<AdminPerfumes />} />

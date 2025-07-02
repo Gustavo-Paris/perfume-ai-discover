@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Truck, CreditCard, Plus } from 'lucide-react';
@@ -180,6 +179,7 @@ const Checkout = () => {
       const params = new URLSearchParams({
         transaction_id: data.transaction_id,
         payment_method: data.payment_method,
+        order_draft_id: data.orderDraftId,
         total: getTotalWithShipping().toFixed(2)
       });
       navigate(`/payment-success?${params.toString()}`);
@@ -190,6 +190,7 @@ const Checkout = () => {
     const params = new URLSearchParams({
       transaction_id: paymentData.transaction_id,
       payment_method: paymentData.payment_method,
+      order_draft_id: paymentData.orderDraftId,
       total: getTotalWithShipping().toFixed(2)
     });
     navigate(`/payment-success?${params.toString()}`);
