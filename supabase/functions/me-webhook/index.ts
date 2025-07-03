@@ -40,6 +40,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Handle GET request for webhook validation/handshake
+  if (req.method === 'GET') {
+    return new Response('Webhook live', { status: 200 });
+  }
+
   try {
     // Initialize Supabase client
     const supabase = createClient(
@@ -58,28 +63,41 @@ serve(async (req) => {
 
     // Get request body and signature
     const body = await req.text();
-    const signature = req.headers.get('x-signature');
+    
+    // Only validate signature for POST requests
+    if (req.method === 'POST') {
+      const signature = req.headers.get('x-signature');
 
-    if (!signature) {
-      console.error('Missing x-signature header');
-      return new Response('Missing signature header', { 
+      if (!signature) {
+        console.error('Missing x-signature header');
+        return new Response('Missing signature header', { 
+          status: 400,
+          headers: corsHeaders 
+        });
+      }
+
+      // Validate signature
+      const isValid = await validateSignature(body, signature, webhookSecret);
+      if (!isValid) {
+        console.error('Invalid webhook signature');
+        return new Response('Invalid signature', { 
+          status: 401,
+          headers: corsHeaders 
+        });
+      }
+    }
+
+    // Parse webhook payload
+    let payload: WebhookPayload;
+    try {
+      payload = JSON.parse(body);
+    } catch (parseError) {
+      console.error('Invalid JSON payload:', parseError);
+      return new Response('Invalid JSON payload', { 
         status: 400,
         headers: corsHeaders 
       });
     }
-
-    // Validate signature
-    const isValid = await validateSignature(body, signature, webhookSecret);
-    if (!isValid) {
-      console.error('Invalid webhook signature');
-      return new Response('Invalid signature', { 
-        status: 401,
-        headers: corsHeaders 
-      });
-    }
-
-    // Parse webhook payload
-    const payload: WebhookPayload = JSON.parse(body);
     console.log('Received webhook:', JSON.stringify(payload, null, 2));
 
     const { event, data } = payload;
