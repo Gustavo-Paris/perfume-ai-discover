@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.conversational-recommend]
 verify_jwt = false
+
+[functions.me-webhook]
+verify_jwt = false
