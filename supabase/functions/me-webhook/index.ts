@@ -53,7 +53,7 @@ serve(async (req) => {
     );
 
     const webhookSecret = Deno.env.get('MELHOR_ENVIO_WEBHOOK_SECRET');
-    if (!webhookSecret) {
+    if (!webhookSecret && req.method === 'POST') {
       console.error('MELHOR_ENVIO_WEBHOOK_SECRET not configured');
       return new Response('Webhook secret not configured', { 
         status: 500,
