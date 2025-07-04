@@ -40,8 +40,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Handle GET request for webhook validation/handshake - simplified
+  // Handle GET request for webhook validation/handshake
   if (req.method === 'GET') {
+    console.log('GET request received for webhook validation');
+    
+    // Check if there's a challenge parameter (some webhook systems use this)
+    const url = new URL(req.url);
+    const challenge = url.searchParams.get('challenge');
+    
+    if (challenge) {
+      return new Response(challenge, { 
+        status: 200,
+        headers: corsHeaders 
+      });
+    }
+    
     return new Response('Webhook live', { 
       status: 200,
       headers: corsHeaders 
