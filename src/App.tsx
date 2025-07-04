@@ -22,6 +22,12 @@ import Auth from "./pages/Auth";
 import AdminPerfumes from "./pages/admin/AdminPerfumes";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminLots from "./pages/admin/AdminLots";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminStock from "./pages/admin/AdminStock";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminConfig from "./pages/admin/AdminConfig";
 import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
@@ -50,9 +56,19 @@ const AppContent = () => {
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/perfume/:id" element={<PerfumeDetails />} />
-          <Route path="/admin/perfumes" element={<AdminPerfumes />} />
-          <Route path="/admin/inventory" element={<AdminInventory />} />
-          <Route path="/admin/lots" element={<AdminLots />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="stock" element={<AdminStock />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="config" element={<AdminConfig />} />
+            {/* Legacy admin routes */}
+            <Route path="perfumes" element={<AdminPerfumes />} />
+            <Route path="inventory" element={<AdminInventory />} />
+            <Route path="lots" element={<AdminLots />} />
+          </Route>
           <Route path="/privacidade" element={<Privacidade />} />
           <Route path="/troca-devolucao" element={<TrocaDevolucao />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
