@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
+import { trackPurchase } from '@/utils/analytics';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -52,6 +53,25 @@ const PaymentSuccess = () => {
 
       if (data.success) {
         setOrderData(data.order);
+        
+        // Track purchase event
+        if (data.order && data.orderItems) {
+          const purchaseItems = data.orderItems.map((item: any) => ({
+            item_id: item.perfume_id,
+            item_name: item.perfumes?.name || 'Produto',
+            item_brand: item.perfumes?.brand || 'Marca',
+            item_variant: `${item.size_ml}ml`,
+            price: item.unit_price,
+            quantity: item.quantity
+          }));
+          
+          trackPurchase({
+            transaction_id: transactionId,
+            value: data.order.total_amount,
+            items: purchaseItems
+          });
+        }
+        
         // Clear cart after successful order confirmation
         await clearCart();
       } else {

@@ -14,6 +14,7 @@ import { PaymentStep } from '@/components/checkout/PaymentStep';
 import { PixPayment } from '@/components/checkout/PixPayment';
 import { PointsRedemption } from '@/components/checkout/PointsRedemption';
 import { toast } from '@/hooks/use-toast';
+import { trackBeginCheckout } from '@/utils/analytics';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -40,6 +41,20 @@ const Checkout = () => {
       navigate('/carrinho');
       return;
     }
+
+    // Track begin_checkout event when user starts checkout
+    const checkoutItems = items.map(item => ({
+      item_id: item.perfume.id,
+      item_name: item.perfume.name,
+      item_brand: item.perfume.brand,
+      item_variant: `${item.size}ml`,
+      price: item.size === 5 ? item.perfume.price_5ml || 0 : 
+             item.size === 10 ? item.perfume.price_10ml || 0 : 
+             item.perfume.price_full,
+      quantity: item.quantity
+    }));
+    
+    trackBeginCheckout(checkoutItems);
 
     loadAddresses();
   }, [user, items, navigate]);

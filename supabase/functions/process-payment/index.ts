@@ -197,6 +197,9 @@ serve(async (req) => {
 
         console.log('PIX created successfully:', pixData.id);
 
+        // Send server-side purchase event to GA4
+        await sendGA4PurchaseEvent(orderDraftId, pixData.id, totalAmount, cartItems);
+
         // Generate QR code URL
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixData.qr_code)}`;
 
@@ -255,6 +258,9 @@ serve(async (req) => {
 
       console.log('Credit card payment processed successfully (simulated)');
 
+      // Send server-side purchase event to GA4
+      await sendGA4PurchaseEvent(orderDraftId, mockCardResponse.transaction_id, totalAmount, cartItems);
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -283,3 +289,69 @@ serve(async (req) => {
     );
   }
 });
+
+// Function to send GA4 purchase event via Measurement Protocol
+async function sendGA4PurchaseEvent(
+  orderDraftId: string,
+  transactionId: string, 
+  totalAmount: number,
+  cartItems: any[]
+) {
+  try {
+    const ga4ApiSecret = Deno.env.get('GA4_API_SECRET');
+    const gaMeasurementId = Deno.env.get('GA_MEASUREMENT_ID');
+    
+    if (!ga4ApiSecret || !gaMeasurementId) {
+      console.log('GA4 credentials not configured, skipping server-side event');
+      return;
+    }
+
+    // Prepare purchase event data
+    const eventData = {
+      client_id: `server.${Date.now()}`, // Server-side client ID
+      events: [{
+        name: 'purchase',
+        params: {
+          transaction_id: transactionId,
+          value: totalAmount,
+          currency: 'BRL',
+          items: cartItems.map((item: any, index: number) => {
+            let price = item.perfumes.price_full;
+            if (item.size_ml === 5) price = item.perfumes.price_5ml || 0;
+            if (item.size_ml === 10) price = item.perfumes.price_10ml || 0;
+            
+            return {
+              item_id: item.perfumes.id,
+              item_name: item.perfumes.name,
+              item_brand: item.perfumes.brand,
+              item_variant: `${item.size_ml}ml`,
+              price: price,
+              quantity: item.quantity,
+              index: index
+            };
+          })
+        }
+      }]
+    };
+
+    // Send to GA4 Measurement Protocol
+    const response = await fetch(
+      `https://www.google-analytics.com/mp/collect?measurement_id=${gaMeasurementId}&api_secret=${ga4ApiSecret}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(eventData),
+      }
+    );
+
+    if (response.ok) {
+      console.log('GA4 purchase event sent successfully');
+    } else {
+      console.error('Failed to send GA4 purchase event:', response.status);
+    }
+  } catch (error) {
+    console.error('Error sending GA4 purchase event:', error);
+  }
+}

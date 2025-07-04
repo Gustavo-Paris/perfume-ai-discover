@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CartItem, CartItemDB, Perfume } from '@/types';
 import { useAuth } from './AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { trackAddToCart } from '@/utils/analytics';
 
 interface CartContextType {
   items: CartItem[];
@@ -125,11 +126,34 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addToCart = async (item: { perfume_id: string; size_ml: number; quantity: number }) => {
     setLoading(true);
     try {
+      // Get perfume data for analytics
+      const { data: perfume } = await supabase
+        .from('perfumes')
+        .select('*')
+        .eq('id', item.perfume_id)
+        .single();
+
       if (user) {
         await addToCartDB(item.perfume_id, item.size_ml, item.quantity);
         await loadFromDatabase();
       } else {
         await addToCartSession(item.perfume_id, item.size_ml, item.quantity);
+      }
+      
+      // Track add_to_cart event
+      if (perfume) {
+        const price = item.size_ml === 5 ? perfume.price_5ml : 
+                     item.size_ml === 10 ? perfume.price_10ml : 
+                     perfume.price_full;
+        
+        trackAddToCart({
+          item_id: perfume.id,
+          item_name: perfume.name,
+          item_brand: perfume.brand,
+          item_variant: `${item.size_ml}ml`,
+          price: price || 0,
+          quantity: item.quantity
+        });
       }
       
       toast({

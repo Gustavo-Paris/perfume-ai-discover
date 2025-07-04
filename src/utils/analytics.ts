@@ -32,6 +32,66 @@ export const trackEvent = (eventName: string, parameters?: Record<string, any>) 
   }
 };
 
+// E-commerce Events for GA4
+export const trackAddToCart = (item: {
+  item_id: string;
+  item_name: string;
+  item_brand: string;
+  item_variant: string;
+  price: number;
+  quantity: number;
+}) => {
+  trackEvent('add_to_cart', {
+    currency: 'BRL',
+    value: item.price * item.quantity,
+    items: [{
+      item_id: item.item_id,
+      item_name: item.item_name,
+      item_brand: item.item_brand,
+      item_variant: item.item_variant,
+      price: item.price,
+      quantity: item.quantity
+    }]
+  });
+};
+
+export const trackBeginCheckout = (items: Array<{
+  item_id: string;
+  item_name: string;
+  item_brand: string;
+  item_variant: string;
+  price: number;
+  quantity: number;
+}>) => {
+  const value = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  
+  trackEvent('begin_checkout', {
+    currency: 'BRL',
+    value,
+    items
+  });
+};
+
+export const trackPurchase = (transaction: {
+  transaction_id: string;
+  value: number;
+  items: Array<{
+    item_id: string;
+    item_name: string;
+    item_brand: string;
+    item_variant: string;
+    price: number;
+    quantity: number;
+  }>
+}) => {
+  trackEvent('purchase', {
+    transaction_id: transaction.transaction_id,
+    value: transaction.value,
+    currency: 'BRL',
+    items: transaction.items
+  });
+};
+
 export const trackOrderCompleted = (orderId: string, value: number, currency = 'BRL') => {
   trackEvent('order_completed', {
     transaction_id: orderId,
