@@ -1,7 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, UserCircle, Trash2, AlertTriangle } from 'lucide-react';
+import { User, LogOut, Settings, UserCircle, Trash2, AlertTriangle, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -30,6 +30,31 @@ const HeaderUserMenu = () => {
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .single();
+
+        setIsAdmin(!!data);
+      } catch (error) {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminRole();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -129,20 +154,15 @@ const HeaderUserMenu = () => {
             Programa de Fidelidade
           </DropdownMenuItem>
           
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem onClick={() => navigate('/admin/perfumes')}>
-            <Settings className="mr-2 h-4 w-4" />
-            Admin - Perfumes
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/admin/lots')}>
-            <Settings className="mr-2 h-4 w-4" />
-            Admin - Lotes
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/admin/inventory')}>
-            <Settings className="mr-2 h-4 w-4" />
-            Admin - Estoque
-          </DropdownMenuItem>
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/admin')}>
+                <Shield className="mr-2 h-4 w-4" />
+                Área de Administrador
+              </DropdownMenuItem>
+            </>
+          )}
           
           <DropdownMenuSeparator />
           

@@ -64,13 +64,13 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="flex w-full min-h-screen bg-background">
       <AdminSidebar 
         collapsed={sidebarCollapsed} 
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       
-      <div className={`flex-1 flex flex-col transition-all ${sidebarCollapsed ? 'ml-14' : 'ml-60'}`}>
+      <div className="flex-1 flex flex-col lg:ml-60">
         <header className="h-14 flex items-center border-b bg-background px-4 lg:px-6">
           <Button
             variant="ghost"
