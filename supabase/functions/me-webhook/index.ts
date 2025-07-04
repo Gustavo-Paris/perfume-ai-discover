@@ -76,11 +76,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // For POST requests, we need the webhook secret
     const webhookSecret = Deno.env.get('MELHOR_ENVIO_WEBHOOK_SECRET');
     if (!webhookSecret) {
-      console.error('MELHOR_ENVIO_WEBHOOK_SECRET not configured');
-      return new Response('Webhook secret not configured', { 
-        status: 500,
+      console.log('MELHOR_ENVIO_WEBHOOK_SECRET not configured - webhook validation pending');
+      return new Response('Webhook secret not configured yet - please complete webhook setup first', { 
+        status: 200, // Return 200 instead of 500 during setup
         headers: corsHeaders 
       });
     }
