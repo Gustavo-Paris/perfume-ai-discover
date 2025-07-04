@@ -59,7 +59,7 @@ const AdminOrders = () => {
         .from('orders')
         .select(`
           *,
-          profiles:user_id (name, email)
+          profiles!user_id (name, email)
         `)
         .order('created_at', { ascending: false });
 

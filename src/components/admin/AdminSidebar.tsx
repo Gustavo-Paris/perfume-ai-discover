@@ -17,6 +17,9 @@ const adminNavItems = [
   { title: 'Pedidos', url: '/admin/orders', icon: ShoppingBag },
   { title: 'Estoque', url: '/admin/stock', icon: Package },
   { title: 'Usuários', url: '/admin/users', icon: Users },
+  { title: 'Perfumes', url: '/admin/perfumes', icon: Package },
+  { title: 'Lotes', url: '/admin/lots', icon: Package },
+  { title: 'Inventário', url: '/admin/inventory', icon: Package },
   { title: 'Configurações', url: '/admin/config', icon: Settings },
 ];
 
@@ -55,8 +58,8 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
       )}
       
       <div className={cn(
-        "fixed lg:static left-0 top-0 z-40 h-full lg:h-auto transition-all duration-300",
-        "bg-background/80 lg:bg-background backdrop-blur lg:backdrop-blur-none border-r",
+        "fixed lg:static left-0 top-0 z-50 h-full lg:h-auto transition-all duration-300",
+        "bg-background border-r shadow-lg lg:shadow-none",
         collapsed ? "w-14 -translate-x-full lg:translate-x-0" : "w-60 translate-x-0",
         "lg:w-60 overflow-y-auto"
       )}>
