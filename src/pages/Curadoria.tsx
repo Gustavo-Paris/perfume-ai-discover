@@ -8,8 +8,11 @@ import ConversationChat from '@/components/curadoria/ConversationChat';
 import RecommendationResults from '@/components/curadoria/RecommendationResults';
 import SessionHistory from '@/components/curadoria/SessionHistory';
 import AIBeam from '@/components/ui/AIBeam';
+import ConsentBanner from '@/components/privacy/ConsentBanner';
 import { useConversationalRecommend } from '@/hooks/useConversationalRecommend';
 import { useConversationalSessions, ConversationalSession } from '@/hooks/useConversationalSessions';
+import { usePrivacyConsent } from '@/hooks/usePrivacyConsent';
+import { useRouteLogger } from '@/hooks/useAccessLog';
 import { supabase } from '@/integrations/supabase/client';
 
 const Curadoria = () => {
@@ -18,6 +21,10 @@ const Curadoria = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Privacy and logging hooks
+  const { hasConsent } = usePrivacyConsent('PRIVACY_CHAT');
+  useRouteLogger('/curadoria');
 
   const { 
     conversation, 
@@ -345,6 +352,9 @@ const Curadoria = () => {
           </Card>
         </motion.div>
       </div>
+      
+      {/* Consent Banner - only show if user hasn't given consent */}
+      {!hasConsent && <ConsentBanner />}
     </div>
   );
 };

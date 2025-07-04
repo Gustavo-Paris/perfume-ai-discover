@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.redeem-points]
 verify_jwt = false
+
+[functions.me-delete]
+verify_jwt = false

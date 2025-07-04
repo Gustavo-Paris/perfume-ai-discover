@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          route: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          route: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          route?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           cep: string
@@ -462,6 +489,36 @@ export type Database = {
           },
         ]
       }
+      privacy_consents: {
+        Row: {
+          consent_type: string
+          consented: boolean
+          created_at: string
+          expires_at: string | null
+          id: string
+          ip_address: unknown | null
+          user_id: string | null
+        }
+        Insert: {
+          consent_type: string
+          consented?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_id?: string | null
+        }
+        Update: {
+          consent_type?: string
+          consented?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -685,6 +742,10 @@ export type Database = {
         }
         Returns: string
       }
+      cleanup_old_access_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -693,12 +754,25 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: number
       }
+      hard_delete_user_data: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      log_user_access: {
+        Args: {
+          user_uuid: string
+          access_route: string
+          client_ip?: unknown
+          client_user_agent?: string
+        }
+        Returns: string
       }
     }
     Enums: {
