@@ -1,39 +1,74 @@
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Heart } from 'lucide-react';
+import { ShoppingBag, Heart, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import HeaderUserMenu from './HeaderUserMenu';
 import AlgoliaAutocomplete from '@/components/search/AlgoliaAutocomplete';
 
-const HeaderActions = () => {
+interface HeaderActionsProps {
+  isSearchOpen: boolean;
+  setIsSearchOpen: (open: boolean) => void;
+}
+
+const HeaderActions = ({ isSearchOpen, setIsSearchOpen }: HeaderActionsProps) => {
   const { items } = useCart();
   const navigate = useNavigate();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="hidden md:flex items-center space-x-4">
-      <div className="w-64">
-        <AlgoliaAutocomplete />
+    <>
+      <div className="hidden md:flex items-center space-x-3">
+        {/* Search Toggle */}
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setIsSearchOpen(!isSearchOpen)}
+          className="hover-scale"
+        >
+          {isSearchOpen ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <Search className="h-4 w-4" />
+          )}
+        </Button>
+        
+        {/* Wishlist */}
+        <Button variant="ghost" size="icon" className="hover-scale">
+          <Heart className="h-4 w-4" />
+        </Button>
+        
+        {/* Cart */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative hover-scale"
+          onClick={() => navigate('/carrinho')}
+        >
+          <ShoppingBag className="h-4 w-4" />
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center font-medium animate-scale-in">
+              {totalItems}
+            </span>
+          )}
+        </Button>
+        
+        {/* User Menu */}
+        <HeaderUserMenu />
       </div>
-      <Button variant="ghost" size="icon">
-        <Heart className="h-4 w-4" />
-      </Button>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="relative"
-        onClick={() => navigate('/carrinho')}
-      >
-        <ShoppingBag className="h-4 w-4" />
-        {totalItems > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-gold-500 text-xs text-white flex items-center justify-center">
-            {totalItems}
-          </span>
-        )}
-      </Button>
-      <HeaderUserMenu />
-    </div>
+
+      {/* Expandable Search Bar */}
+      {isSearchOpen && (
+        <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-lg animate-fade-in z-40">
+          <div className="container mx-auto px-4 py-4">
+            <div className="max-w-2xl mx-auto">
+              <AlgoliaAutocomplete />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
