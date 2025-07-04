@@ -30,48 +30,54 @@ import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const AppContent = () => {
   useAnalytics();
   useOrderTracking();
   
   return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/curadoria" element={<Curadoria />} />
+          <Route path="/fidelidade" element={<Fidelidade />} />
+          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/carrinho" element={<Carrinho />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
+          <Route path="/pedidos" element={<Pedidos />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/perfume/:id" element={<PerfumeDetails />} />
+          <Route path="/admin/perfumes" element={<AdminPerfumes />} />
+          <Route path="/admin/inventory" element={<AdminInventory />} />
+          <Route path="/admin/lots" element={<AdminLots />} />
+          <Route path="/privacidade" element={<Privacidade />} />
+          <Route path="/troca-devolucao" element={<TrocaDevolucao />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+const App = () => {
+  return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <ScrollToTop />
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/curadoria" element={<Curadoria />} />
-                  <Route path="/fidelidade" element={<Fidelidade />} />
-                  <Route path="/catalogo" element={<Catalogo />} />
-                  <Route path="/carrinho" element={<Carrinho />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
-                  <Route path="/payment-cancel" element={<PaymentCancel />} />
-                  <Route path="/pedidos" element={<Pedidos />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/perfume/:id" element={<PerfumeDetails />} />
-                  <Route path="/admin/perfumes" element={<AdminPerfumes />} />
-                  <Route path="/admin/inventory" element={<AdminInventory />} />
-                  <Route path="/admin/lots" element={<AdminLots />} />
-                  <Route path="/privacidade" element={<Privacidade />} />
-                  <Route path="/troca-devolucao" element={<TrocaDevolucao />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          </CartProvider>
-        </AuthProvider>
-      </BrowserRouter>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <CartProvider>
+              <ScrollToTop />
+              <AppContent />
+            </CartProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
