@@ -59,6 +59,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             src={imageUrl}
             alt={perfume.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
           />
           
           {/* Overlay Actions */}

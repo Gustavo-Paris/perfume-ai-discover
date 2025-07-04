@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async';
 import App from './App.tsx'
 import './index.css'
 import { initSentry } from './utils/sentry';
@@ -9,4 +10,8 @@ import { initGA4 } from './utils/analytics';
 initSentry(''); // Will be properly configured
 initGA4(''); // Will be properly configured
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <App />
+  </HelmetProvider>
+);

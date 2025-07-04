@@ -15,6 +15,7 @@ export const usePerfumes = () => {
       if (error) throw error;
       return data as DatabasePerfume[];
     },
+    staleTime: 60000, // 60 seconds cache
   });
 };
 

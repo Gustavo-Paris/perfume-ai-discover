@@ -13,6 +13,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCanReview, useUserReview } from '@/hooks/useReviews';
 import ReviewList from '@/components/reviews/ReviewList';
 import ReviewForm from '@/components/reviews/ReviewForm';
+import SEO from '@/components/SEO';
+import ProductSchema from '@/components/ProductSchema';
 
 const PerfumeDetails = () => {
   const { id } = useParams();
@@ -78,7 +80,22 @@ const PerfumeDetails = () => {
                       databasePerfume.price_5ml;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      <SEO 
+        title={`${databasePerfume.name} - ${databasePerfume.brand} | Perfumaria Online`}
+        description={databasePerfume.description || `${databasePerfume.name} de ${databasePerfume.brand}. ${databasePerfume.family}. Compre online com entrega rápida.`}
+        image={databasePerfume.image_url || '/placeholder.svg'}
+        url={`https://sua-perfumaria.com/perfume/${databasePerfume.id}`}
+        type="product"
+      />
+      {selectedSize && (
+        <ProductSchema 
+          perfume={databasePerfume}
+          currentPrice={currentPrice}
+          selectedSize={selectedSize}
+        />
+      )}
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
         {/* Back Button */}
         <Button 
@@ -254,7 +271,8 @@ const PerfumeDetails = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
