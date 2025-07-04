@@ -47,6 +47,53 @@ const AdminDashboard = () => {
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Handle different dashboard types
+  if (currentDashboard === 'financial') {
+    return <FinancialDashboard />;
+  }
+
+  if (currentDashboard === 'orders') {
+    return <OrdersDashboard />;
+  }
+
+  if (currentDashboard === 'inventory') {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard de Estoque</h2>
+            <p className="text-muted-foreground">Análise detalhada do inventário</p>
+          </div>
+          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
+        </div>
+        <div className="text-center p-12">
+          <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Dashboard de Estoque</h3>
+          <p className="text-muted-foreground">Em desenvolvimento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentDashboard === 'performance') {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard de Performance</h2>
+            <p className="text-muted-foreground">Métricas de desempenho</p>
+          </div>
+          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
+        </div>
+        <div className="text-center p-12">
+          <TrendingUp className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">Dashboard de Performance</h3>
+          <p className="text-muted-foreground">Em desenvolvimento...</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const fetchDashboardData = async () => {
