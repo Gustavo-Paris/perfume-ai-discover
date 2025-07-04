@@ -40,10 +40,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Handle GET request for webhook validation/handshake - do this FIRST
+  // Handle GET request for webhook validation/handshake - simplified
   if (req.method === 'GET') {
     return new Response('Webhook live', { 
       status: 200,
+      headers: corsHeaders 
+    });
+  }
+
+  // Only process POST requests beyond this point
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { 
+      status: 405,
       headers: corsHeaders 
     });
   }
@@ -56,7 +64,7 @@ serve(async (req) => {
     );
 
     const webhookSecret = Deno.env.get('MELHOR_ENVIO_WEBHOOK_SECRET');
-    if (!webhookSecret && req.method === 'POST') {
+    if (!webhookSecret) {
       console.error('MELHOR_ENVIO_WEBHOOK_SECRET not configured');
       return new Response('Webhook secret not configured', { 
         status: 500,
@@ -67,27 +75,24 @@ serve(async (req) => {
     // Get request body and signature
     const body = await req.text();
     
-    // Only validate signature for POST requests
-    if (req.method === 'POST') {
-      const signature = req.headers.get('x-signature');
+    const signature = req.headers.get('x-signature');
 
-      if (!signature) {
-        console.error('Missing x-signature header');
-        return new Response('Missing signature header', { 
-          status: 400,
-          headers: corsHeaders 
-        });
-      }
+    if (!signature) {
+      console.error('Missing x-signature header');
+      return new Response('Missing signature header', { 
+        status: 400,
+        headers: corsHeaders 
+      });
+    }
 
-      // Validate signature
-      const isValid = await validateSignature(body, signature, webhookSecret);
-      if (!isValid) {
-        console.error('Invalid webhook signature');
-        return new Response('Invalid signature', { 
-          status: 401,
-          headers: corsHeaders 
-        });
-      }
+    // Validate signature
+    const isValid = await validateSignature(body, signature, webhookSecret);
+    if (!isValid) {
+      console.error('Invalid webhook signature');
+      return new Response('Invalid signature', { 
+        status: 401,
+        headers: corsHeaders 
+      });
     }
 
     // Parse webhook payload
