@@ -71,7 +71,7 @@ export function AdminLayout() {
       />
       
       <div className="flex-1 flex flex-col lg:ml-60 relative z-10">
-        <header className="h-14 flex items-center border-b bg-background px-4 lg:px-6 relative z-20">
+        <header className="h-14 flex items-center border-b bg-background px-4 lg:px-6 sticky top-0 z-50 shadow-sm">
           <Button
             variant="ghost"
             size="icon"
