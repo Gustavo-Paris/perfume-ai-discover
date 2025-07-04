@@ -581,6 +581,47 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          perfume_id: string
+          rating: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          perfume_id: string
+          rating: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          perfume_id?: string
+          rating?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipments: {
         Row: {
           created_at: string
@@ -773,6 +814,10 @@ export type Database = {
           client_user_agent?: string
         }
         Returns: string
+      }
+      user_has_purchased_perfume: {
+        Args: { user_uuid: string; perfume_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {

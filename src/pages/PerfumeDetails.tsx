@@ -9,15 +9,24 @@ import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
 import { usePerfumes } from '@/hooks/usePerfumes';
 import { DatabasePerfume } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCanReview, useUserReview } from '@/hooks/useReviews';
+import ReviewList from '@/components/reviews/ReviewList';
+import ReviewForm from '@/components/reviews/ReviewForm';
 
 const PerfumeDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, loading: cartLoading } = useCart();
   const { data: databasePerfumes, isLoading } = usePerfumes();
+  const { user } = useAuth();
   const [selectedSize, setSelectedSize] = useState<5 | 10 | null>(5);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
+  
+  // Review hooks
+  const { data: canReview } = useCanReview(id || '');
+  const { data: userReview } = useUserReview(id || '');
 
   // Find perfume by id from database
   const databasePerfume = databasePerfumes?.find((p: DatabasePerfume) => p.id === id);
@@ -218,6 +227,30 @@ const PerfumeDetails = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12 space-y-8">
+          {/* Review Form - Only show if user is logged in and can review */}
+          {user && canReview && !userReview && (
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Avaliar Produto</h2>
+              <ReviewForm perfumeId={databasePerfume.id} />
+            </div>
+          )}
+
+          {/* Edit Review Form - Show if user has a pending review */}
+          {user && userReview && (
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Sua Avaliação</h2>
+              <ReviewForm perfumeId={databasePerfume.id} existingReview={userReview} />
+            </div>
+          )}
+
+          {/* Review List */}
+          <div>
+            <ReviewList perfumeId={databasePerfume.id} />
           </div>
         </div>
       </div>

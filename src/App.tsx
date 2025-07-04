@@ -28,6 +28,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminStock from "./pages/admin/AdminStock";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminConfig from "./pages/admin/AdminConfig";
+import AdminReviews from "./pages/admin/AdminReviews";
 import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
@@ -63,6 +64,7 @@ const AppContent = () => {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="stock" element={<AdminStock />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="reviews" element={<AdminReviews />} />
             <Route path="config" element={<AdminConfig />} />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />
