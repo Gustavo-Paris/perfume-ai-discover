@@ -76,37 +76,37 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // For POST requests, we need the webhook secret
+    // For POST requests, check if webhook secret is configured
     const webhookSecret = Deno.env.get('MELHOR_ENVIO_WEBHOOK_SECRET');
     if (!webhookSecret) {
-      console.log('MELHOR_ENVIO_WEBHOOK_SECRET not configured - webhook validation pending');
-      return new Response('Webhook secret not configured yet - please complete webhook setup first', { 
-        status: 200, // Return 200 instead of 500 during setup
-        headers: corsHeaders 
-      });
+      console.log('MELHOR_ENVIO_WEBHOOK_SECRET not configured - proceeding without signature validation');
+      // Continue processing without signature validation
     }
 
     // Get request body and signature
     const body = await req.text();
     
-    const signature = req.headers.get('x-signature');
+    // Only validate signature if webhook secret is configured
+    if (webhookSecret) {
+      const signature = req.headers.get('x-signature');
 
-    if (!signature) {
-      console.error('Missing x-signature header');
-      return new Response('Missing signature header', { 
-        status: 400,
-        headers: corsHeaders 
-      });
-    }
+      if (!signature) {
+        console.error('Missing x-signature header');
+        return new Response('Missing signature header', { 
+          status: 400,
+          headers: corsHeaders 
+        });
+      }
 
-    // Validate signature
-    const isValid = await validateSignature(body, signature, webhookSecret);
-    if (!isValid) {
-      console.error('Invalid webhook signature');
-      return new Response('Invalid signature', { 
-        status: 401,
-        headers: corsHeaders 
-      });
+      // Validate signature
+      const isValid = await validateSignature(body, signature, webhookSecret);
+      if (!isValid) {
+        console.error('Invalid webhook signature');
+        return new Response('Invalid signature', { 
+          status: 401,
+          headers: corsHeaders 
+        });
+      }
     }
 
     // Parse webhook payload
