@@ -25,7 +25,7 @@ interface Order {
   status: string;
   created_at: string;
   address_data: any;
-  profiles: {
+  profiles?: {
     name: string;
     email: string;
   } | null;
@@ -46,7 +46,7 @@ const AdminOrders = () => {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dateRange, setDateRange] = useState<{from?: Date; to?: Date} | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -72,11 +72,11 @@ const AdminOrders = () => {
         query = query.or(`order_number.ilike.%${searchTerm}%,profiles.name.ilike.%${searchTerm}%,profiles.email.ilike.%${searchTerm}%`);
       }
 
-      if (dateRange.from) {
+      if (dateRange?.from) {
         query = query.gte('created_at', dateRange.from.toISOString());
       }
 
-      if (dateRange.to) {
+      if (dateRange?.to) {
         query = query.lte('created_at', dateRange.to.toISOString());
       }
 
@@ -84,14 +84,13 @@ const AdminOrders = () => {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data, error, count } = await query
-        .range(from, to)
-        .select('*', { count: 'exact' });
+      const { data, error } = await query
+        .range(from, to);
 
       if (error) throw error;
 
-      setOrders(data || []);
-      setTotalPages(Math.ceil((count || 0) / pageSize));
+      setOrders(data as any || []);
+      setTotalPages(Math.ceil(data?.length || 0 / pageSize));
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -272,8 +271,8 @@ const AdminOrders = () => {
                   initialFocus
                   mode="range"
                   defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={setDateRange}
+                  selected={dateRange as any}
+                  onSelect={(range) => setDateRange(range as any)}
                   numberOfMonths={2}
                 />
               </PopoverContent>

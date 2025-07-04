@@ -162,10 +162,20 @@ const AdminStock = () => {
           description: "Perfume atualizado com sucesso.",
         });
       } else {
-        // Create new perfume
+        // Create new perfume - ensure required fields
+        const insertData = {
+          name: perfumeData.name || '',
+          brand: perfumeData.brand || '',
+          family: perfumeData.family || '',
+          gender: perfumeData.gender || 'unisex',
+          price_full: perfumeData.price_full || 0,
+          price_5ml: perfumeData.price_5ml,
+          price_10ml: perfumeData.price_10ml,
+        };
+
         const { error } = await supabase
           .from('perfumes')
-          .insert(perfumeData);
+          .insert(insertData);
 
         if (error) throw error;
 
@@ -204,10 +214,18 @@ const AdminStock = () => {
           description: "Lote atualizado com sucesso.",
         });
       } else {
-        // Create new lot
+        // Create new lot - ensure required fields
+        const insertData = {
+          perfume_id: lotData.perfume_id || '',
+          lot_code: lotData.lot_code || '',
+          warehouse_id: lotData.warehouse_id || '',
+          qty_ml: lotData.qty_ml || 0,
+          expiry_date: lotData.expiry_date,
+        };
+
         const { error } = await supabase
           .from('inventory_lots')
-          .insert(lotData);
+          .insert(insertData);
 
         if (error) throw error;
 
