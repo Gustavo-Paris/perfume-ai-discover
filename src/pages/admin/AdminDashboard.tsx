@@ -277,13 +277,7 @@ const AdminDashboard = () => {
             Visão geral completa do seu negócio em tempo real
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Eye className="h-4 w-4" />
-            Atualizado agora
-          </div>
-        </div>
+        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
       </div>
 
       {/* Stats Cards */}
