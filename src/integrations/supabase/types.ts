@@ -251,6 +251,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          read: boolean
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          read?: boolean
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          read?: boolean
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       order_drafts: {
         Row: {
           address_id: string | null
@@ -581,6 +611,44 @@ export type Database = {
           },
         ]
       }
+      reservations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          perfume_id: string
+          qty: number
+          size_ml: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          perfume_id: string
+          qty: number
+          size_ml: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          perfume_id?: string
+          qty?: number
+          size_ml?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           comment: string | null
@@ -783,6 +851,14 @@ export type Database = {
         }
         Returns: string
       }
+      check_low_stock_alerts: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      cleanup_expired_reservations: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_old_access_logs: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -790,6 +866,10 @@ export type Database = {
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_available_stock: {
+        Args: { perfume_uuid: string; size_ml_param: number }
+        Returns: number
       }
       get_user_points_balance: {
         Args: { user_uuid: string }
@@ -812,6 +892,16 @@ export type Database = {
           access_route: string
           client_ip?: unknown
           client_user_agent?: string
+        }
+        Returns: string
+      }
+      upsert_reservation: {
+        Args: {
+          perfume_uuid: string
+          size_ml_param: number
+          qty_param: number
+          user_uuid?: string
+          expires_minutes?: number
         }
         Returns: string
       }
