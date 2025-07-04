@@ -9,6 +9,7 @@ import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSe
 import FinancialDashboard from '@/components/admin/dashboards/FinancialDashboard';
 import OrdersDashboard from '@/components/admin/dashboards/OrdersDashboard';
 import InventoryDashboard from '@/components/admin/dashboards/InventoryDashboard';
+import PerformanceDashboard from '@/components/admin/dashboards/PerformanceDashboard';
 
 interface DashboardStats {
   ordersToday: number;
@@ -179,22 +180,7 @@ const AdminDashboard = () => {
   }
 
   if (currentDashboard === 'performance') {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard de Performance</h2>
-            <p className="text-muted-foreground">Métricas de desempenho</p>
-          </div>
-          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-        </div>
-        <div className="text-center p-12">
-          <TrendingUp className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Dashboard de Performance</h3>
-          <p className="text-muted-foreground">Em desenvolvimento...</p>
-        </div>
-      </div>
-    );
+    return <PerformanceDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
   }
 
   const StatCard = ({ title, value, icon: Icon, trend, subtitle, gradient }: {
