@@ -5,6 +5,9 @@ import { DollarSign, ShoppingCart, TrendingUp, Award, Users, Package, Eye, Arrow
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
+import FinancialDashboard from '@/components/admin/dashboards/FinancialDashboard';
+import OrdersDashboard from '@/components/admin/dashboards/OrdersDashboard';
 
 interface DashboardStats {
   ordersToday: number;
@@ -30,6 +33,7 @@ interface FunnelData {
 }
 
 const AdminDashboard = () => {
+  const [currentDashboard, setCurrentDashboard] = useState<DashboardType>('overview');
   const [stats, setStats] = useState<DashboardStats>({
     ordersToday: 0,
     revenue30d: 0,
@@ -112,30 +116,35 @@ const AdminDashboard = () => {
           ordersGrowth
         });
 
-        // Sales data for chart
-        const salesChartData: SalesData[] = [];
+        // Sales data for chart - OPTIMIZED: Single query instead of 30 individual queries
+        const { data: salesOrders } = await supabase
+          .from('orders')
+          .select('total_amount, created_at')
+          .eq('payment_status', 'paid')
+          .gte('created_at', thirtyDaysAgo);
+
+        // Group sales by day
+        const dailySales = new Map();
         for (let i = 29; i >= 0; i--) {
           const date = subDays(new Date(), i);
-          const dateStr = startOfDay(date).toISOString();
-          const nextDateStr = startOfDay(subDays(new Date(), i - 1)).toISOString();
-
-          const { data: dayOrders } = await supabase
-            .from('orders')
-            .select('total_amount')
-            .eq('payment_status', 'paid')
-            .gte('created_at', dateStr)
-            .lt('created_at', i === 0 ? new Date().toISOString() : nextDateStr);
-
-          const dayRevenue = dayOrders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
-
-          salesChartData.push({
+          const dateStr = format(date, 'yyyy-MM-dd');
+          dailySales.set(dateStr, {
             date: format(date, 'dd/MM', { locale: ptBR }),
-            sales: dayRevenue,
-            orders: dayOrders?.length || 0
+            sales: 0,
+            orders: 0
           });
         }
 
-        setSalesData(salesChartData);
+        salesOrders?.forEach(order => {
+          const dateStr = format(new Date(order.created_at), 'yyyy-MM-dd');
+          if (dailySales.has(dateStr)) {
+            const dayData = dailySales.get(dateStr);
+            dayData.sales += order.total_amount;
+            dayData.orders += 1;
+          }
+        });
+
+        setSalesData(Array.from(dailySales.values()));
 
         // Enhanced funnel data
         setFunnelData([
@@ -221,9 +230,12 @@ const AdminDashboard = () => {
             Visão geral completa do seu negócio em tempo real
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Eye className="h-4 w-4" />
-          Atualizado agora
+        <div className="flex items-center gap-4">
+          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Eye className="h-4 w-4" />
+            Atualizado agora
+          </div>
         </div>
       </div>
 

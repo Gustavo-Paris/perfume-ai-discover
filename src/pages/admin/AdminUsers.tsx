@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Search, Eye, Award, Plus, Minus } from 'lucide-react';
+import { Search, Eye, Award, Plus, Minus, Shield, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -20,6 +21,7 @@ interface User {
   points: number | null;
   tier: string | null;
   created_at: string | null;
+  isAdmin?: boolean;
   lastOrder?: {
     created_at: string;
     total_amount: number;
@@ -44,6 +46,8 @@ const AdminUsers = () => {
   const [pointsAdjustment, setPointsAdjustment] = useState(0);
   const [adjustmentReason, setAdjustmentReason] = useState('');
   const [isAdjustDialogOpen, setIsAdjustDialogOpen] = useState(false);
+  const [isAdminDialogOpen, setIsAdminDialogOpen] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
 
   const fetchUsers = async () => {
     try {
@@ -53,6 +57,14 @@ const AdminUsers = () => {
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
+
+      // Get admin roles
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      const adminUserIds = new Set(adminRoles?.map(role => role.user_id) || []);
 
       // Get last order for each user
       const usersWithOrders = await Promise.all(
@@ -68,6 +80,7 @@ const AdminUsers = () => {
 
           return {
             ...profile,
+            isAdmin: adminUserIds.has(profile.id),
             lastOrder: orderData
           };
         })
@@ -179,6 +192,39 @@ const AdminUsers = () => {
             Gerencie usuários e programa de fidelidade
           </p>
         </div>
+        <Dialog open={isAdminDialogOpen} onOpenChange={setIsAdminDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              Criar Admin
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Promover Usuário para Admin</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email do usuário</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newAdminEmail}
+                  onChange={(e) => setNewAdminEmail(e.target.value)}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsAdminDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateAdmin}>
+                  Promover para Admin
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>
@@ -204,9 +250,10 @@ const AdminUsers = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Pontos</TableHead>
                 <TableHead>Tier</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Último Pedido</TableHead>
                 <TableHead>Cadastro</TableHead>
-                <TableHead className="w-12">Ações</TableHead>
+                <TableHead className="w-24">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -222,6 +269,22 @@ const AdminUsers = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{user.tier || 'Silver'}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={user.isAdmin ? "default" : "outline"} className="gap-1">
+                        {user.isAdmin && <Shield className="h-3 w-3" />}
+                        {user.isAdmin ? 'Admin' : 'Cliente'}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleToggleAdmin(user.id, user.isAdmin || false)}
+                        className="h-6 px-2"
+                      >
+                        {user.isAdmin ? 'Remover' : 'Promover'}
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell>
                     {user.lastOrder ? (
