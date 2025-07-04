@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,26 +77,23 @@ export default function AdminCoupons() {
     if (!coupon.is_active) {
       return <Badge variant="secondary">Inativo</Badge>;
     }
-    return <Badge>Ativo</Badge>;
+    return <Badge variant="default">Ativo</Badge>;
   };
 
   if (isLoading) {
     return (
-      <AdminLayout>
-        <div className="p-6">
-          <div className="animate-pulse space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-24 bg-muted rounded"></div>
-            ))}
-          </div>
+      <div className="p-6">
+        <div className="animate-pulse space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 bg-muted rounded"></div>
+          ))}
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Cupons de Desconto</h1>
@@ -233,7 +229,6 @@ export default function AdminCoupons() {
             </Card>
           )}
         </div>
-      </div>
-    </AdminLayout>
+    </div>
   );
 }

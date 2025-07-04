@@ -29,6 +29,7 @@ import AdminStock from "./pages/admin/AdminStock";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminConfig from "./pages/admin/AdminConfig";
 import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminReviews from "./pages/admin/AdminReviews";
 import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
