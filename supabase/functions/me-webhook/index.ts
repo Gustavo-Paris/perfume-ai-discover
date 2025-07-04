@@ -40,9 +40,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Handle GET request for webhook validation/handshake
+  // Handle GET request for webhook validation/handshake - do this FIRST
   if (req.method === 'GET') {
-    return new Response('Webhook live', { status: 200 });
+    return new Response('Webhook live', { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   try {
