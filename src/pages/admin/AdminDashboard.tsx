@@ -8,6 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
 import FinancialDashboard from '@/components/admin/dashboards/FinancialDashboard';
 import OrdersDashboard from '@/components/admin/dashboards/OrdersDashboard';
+import InventoryDashboard from '@/components/admin/dashboards/InventoryDashboard';
 
 interface DashboardStats {
   ordersToday: number;
@@ -174,22 +175,7 @@ const AdminDashboard = () => {
   }
 
   if (currentDashboard === 'inventory') {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard de Estoque</h2>
-            <p className="text-muted-foreground">Análise detalhada do inventário</p>
-          </div>
-          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-        </div>
-        <div className="text-center p-12">
-          <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Dashboard de Estoque</h3>
-          <p className="text-muted-foreground">Em desenvolvimento...</p>
-        </div>
-      </div>
-    );
+    return <InventoryDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
   }
 
   if (currentDashboard === 'performance') {
