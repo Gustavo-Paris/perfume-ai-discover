@@ -182,6 +182,84 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          code: string
+          created_at: string
+          discount_amount: number
+          id: string
+          order_id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_amount: number
+          id?: string
+          order_id: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          order_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_code_fkey"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          current_uses: number
+          expires_at: string | null
+          is_active: boolean
+          max_uses: number | null
+          min_order_value: number | null
+          type: string
+          value: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_uses?: number
+          expires_at?: string | null
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_value?: number | null
+          type: string
+          value: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_uses?: number
+          expires_at?: string | null
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_value?: number | null
+          type?: string
+          value?: number
+        }
+        Relationships: []
+      }
       inventory_lots: {
         Row: {
           created_at: string | null
@@ -851,6 +929,10 @@ export type Database = {
         }
         Returns: string
       }
+      apply_coupon_to_order: {
+        Args: { coupon_code: string; order_uuid: string }
+        Returns: boolean
+      }
       check_low_stock_alerts: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -912,6 +994,10 @@ export type Database = {
       user_has_purchased_perfume: {
         Args: { user_uuid: string; perfume_uuid: string }
         Returns: boolean
+      }
+      validate_coupon: {
+        Args: { coupon_code: string; order_total: number; user_uuid: string }
+        Returns: Json
       }
     }
     Enums: {
