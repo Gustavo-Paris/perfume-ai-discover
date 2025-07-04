@@ -39,9 +39,9 @@ const App = () => {
       <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <CartProvider>
-          <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <CartProvider>
             <ScrollToTop />
             <div className="min-h-screen flex flex-col">
               <Header />
@@ -69,9 +69,9 @@ const App = () => {
               </main>
               <Footer />
             </div>
-          </BrowserRouter>
           </CartProvider>
         </AuthProvider>
+      </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
