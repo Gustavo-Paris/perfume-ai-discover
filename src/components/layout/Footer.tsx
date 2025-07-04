@@ -43,7 +43,7 @@ const Footer = () => {
             <h4 className="font-display font-semibold text-lg text-white">Atendimento</h4>
             <ul className="space-y-2">
               <li><Link to="/faq" className="text-gray-300 hover:text-white transition-colors font-display">FAQ</Link></li>
-              <li><Link to="/politica-troca" className="text-gray-300 hover:text-white transition-colors font-display">Política de Troca</Link></li>
+              <li><Link to="/troca-devolucao" className="text-gray-300 hover:text-white transition-colors font-display">Trocas & Devoluções</Link></li>
               <li><Link to="/fidelidade" className="text-gray-300 hover:text-white transition-colors font-display">Programa Fidelidade</Link></li>
               <li><Link to="/rastreamento" className="text-gray-300 hover:text-white transition-colors font-display">Rastreamento</Link></li>
             </ul>
@@ -80,10 +80,10 @@ const Footer = () => {
             </p>
             <div className="flex space-x-6 text-sm">
               <Link to="/privacidade" className="text-gray-300 hover:text-white transition-colors font-display">
-                Política de Privacidade
+                Privacidade
               </Link>
-              <Link to="/termos" className="text-gray-300 hover:text-white transition-colors font-display">
-                Termos de Uso
+              <Link to="/troca-devolucao" className="text-gray-300 hover:text-white transition-colors font-display">
+                Trocas & Devoluções
               </Link>
             </div>
           </div>
