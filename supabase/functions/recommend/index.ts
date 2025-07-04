@@ -2,6 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { captureException } from "https://deno.land/x/sentry@8.15.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,7 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+const sentryDsn = Deno.env.get('SENTRY_DSN');
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -173,6 +175,16 @@ Respond ONLY with a JSON array of perfume IDs sorted by best match (best match f
 
   } catch (error) {
     console.error('Error in recommend function:', error);
+    
+    // Capture exception with Sentry
+    if (sentryDsn) {
+      try {
+        captureException(error);
+      } catch (sentryError) {
+        console.error('Failed to capture exception with Sentry:', sentryError);
+      }
+    }
+    
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Internal server error' 
