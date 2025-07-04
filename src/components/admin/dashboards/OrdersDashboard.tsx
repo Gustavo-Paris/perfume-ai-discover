@@ -5,6 +5,7 @@ import { ShoppingCart, Clock, CheckCircle, XCircle, Package } from 'lucide-react
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
 
 interface OrderStats {
   totalOrders: number;
@@ -14,7 +15,10 @@ interface OrderStats {
   avgProcessingTime: number;
 }
 
-const OrdersDashboard = () => {
+const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
+  currentDashboard: DashboardType;
+  setCurrentDashboard: (dashboard: DashboardType) => void;
+}) => {
   const [stats, setStats] = useState<OrderStats>({
     totalOrders: 0,
     pendingOrders: 0,
@@ -136,9 +140,12 @@ const OrdersDashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard de Pedidos</h2>
-        <p className="text-muted-foreground">Análise detalhada do fluxo de pedidos</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard de Pedidos</h2>
+          <p className="text-muted-foreground">Análise detalhada do fluxo de pedidos</p>
+        </div>
+        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
       </div>
 
       {/* Order Stats */}

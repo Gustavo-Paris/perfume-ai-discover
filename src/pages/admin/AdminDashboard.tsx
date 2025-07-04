@@ -166,11 +166,11 @@ const AdminDashboard = () => {
 
   // Handle different dashboard types after hooks are declared
   if (currentDashboard === 'financial') {
-    return <FinancialDashboard />;
+    return <FinancialDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
   }
 
   if (currentDashboard === 'orders') {
-    return <OrdersDashboard />;
+    return <OrdersDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
   }
 
   if (currentDashboard === 'inventory') {

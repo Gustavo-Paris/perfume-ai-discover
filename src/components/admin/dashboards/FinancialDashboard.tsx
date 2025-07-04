@@ -5,6 +5,7 @@ import { DollarSign, TrendingUp, CreditCard, ArrowUpRight, ArrowDownRight } from
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
 
 interface FinancialStats {
   totalRevenue: number;
@@ -21,7 +22,10 @@ interface PaymentMethodData {
   color: string;
 }
 
-const FinancialDashboard = () => {
+const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
+  currentDashboard: DashboardType;
+  setCurrentDashboard: (dashboard: DashboardType) => void;
+}) => {
   const [stats, setStats] = useState<FinancialStats>({
     totalRevenue: 0,
     monthlyRevenue: 0,
@@ -166,9 +170,12 @@ const FinancialDashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard Financeiro</h2>
-        <p className="text-muted-foreground">Análise detalhada de receitas e pagamentos</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard Financeiro</h2>
+          <p className="text-muted-foreground">Análise detalhada de receitas e pagamentos</p>
+        </div>
+        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
       </div>
 
       {/* Financial Stats */}
