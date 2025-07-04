@@ -55,12 +55,10 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
+      // First get orders
       let query = supabase
         .from('orders')
-        .select(`
-          *,
-          profiles!user_id (name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       // Apply filters
@@ -69,7 +67,7 @@ const AdminOrders = () => {
       }
 
       if (searchTerm) {
-        query = query.or(`order_number.ilike.%${searchTerm}%,profiles.name.ilike.%${searchTerm}%,profiles.email.ilike.%${searchTerm}%`);
+        query = query.ilike('order_number', `%${searchTerm}%`);
       }
 
       if (dateRange?.from) {
@@ -84,13 +82,32 @@ const AdminOrders = () => {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      const { data, error } = await query
+      const { data: ordersData, error } = await query
         .range(from, to);
 
       if (error) throw error;
 
-      setOrders(data as any || []);
-      setTotalPages(Math.ceil(data?.length || 0 / pageSize));
+      // Get user profiles for the orders
+      if (ordersData && ordersData.length > 0) {
+        const userIds = [...new Set(ordersData.map(order => order.user_id))];
+        
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, name, email')
+          .in('id', userIds);
+
+        // Merge profiles with orders
+        const ordersWithProfiles = ordersData.map(order => ({
+          ...order,
+          profiles: profilesData?.find(profile => profile.id === order.user_id) || null
+        }));
+
+        setOrders(ordersWithProfiles);
+      } else {
+        setOrders([]);
+      }
+      
+      setTotalPages(Math.ceil(ordersData?.length || 0 / pageSize));
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({

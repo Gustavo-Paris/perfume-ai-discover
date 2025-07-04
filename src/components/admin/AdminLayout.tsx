@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function AdminLayout() {
   const { user } = useAuth();
@@ -70,7 +71,10 @@ export function AdminLayout() {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       
-      <div className="flex-1 flex flex-col lg:ml-60 relative z-10">
+      <div className={cn(
+        "flex-1 flex flex-col transition-all duration-300 relative z-10",
+        sidebarCollapsed ? "lg:ml-14" : "lg:ml-60"
+      )}>
         <header className="h-14 flex items-center border-b bg-background px-4 lg:px-6 sticky top-0 z-50 shadow-sm">
           <Button
             variant="ghost"
