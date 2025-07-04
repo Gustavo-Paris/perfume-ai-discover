@@ -9,6 +9,7 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/Home";
 import Curadoria from "./pages/Curadoria";
+import Fidelidade from "./pages/Fidelidade";
 import Catalogo from "./pages/Catalogo";
 import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
@@ -40,6 +41,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/curadoria" element={<Curadoria />} />
+                  <Route path="/fidelidade" element={<Fidelidade />} />
                   <Route path="/catalogo" element={<Catalogo />} />
                   <Route path="/carrinho" element={<Carrinho />} />
                   <Route path="/checkout" element={<Checkout />} />

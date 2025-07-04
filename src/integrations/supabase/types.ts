@@ -200,6 +200,30 @@ export type Database = {
           },
         ]
       }
+      loyalty_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          min_points: number
+          multiplier: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          min_points?: number
+          multiplier?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          min_points?: number
+          multiplier?: number
+          name?: string
+        }
+        Relationships: []
+      }
       order_drafts: {
         Row: {
           address_id: string | null
@@ -396,6 +420,47 @@ export type Database = {
           top_notes?: string[] | null
         }
         Relationships: []
+      }
+      points_transactions: {
+        Row: {
+          balance_after: number
+          created_at: string
+          delta: number
+          description: string | null
+          id: string
+          order_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          balance_after?: number
+          created_at?: string
+          delta: number
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          delta?: number
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "points_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -610,9 +675,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_points_transaction: {
+        Args: {
+          user_uuid: string
+          points_delta: number
+          transaction_source: string
+          transaction_description?: string
+          related_order_id?: string
+        }
+        Returns: string
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_points_balance: {
+        Args: { user_uuid: string }
+        Returns: number
       }
       has_role: {
         Args: {

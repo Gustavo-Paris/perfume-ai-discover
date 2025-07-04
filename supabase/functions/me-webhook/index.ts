@@ -209,28 +209,20 @@ serve(async (req) => {
           });
         }
 
-        // Add 20 loyalty points to user profile
-        const { data: profile, error: getProfileError } = await supabase
-          .from('profiles')
-          .select('points')
-          .eq('id', shipment.orders.user_id)
-          .single();
+        // Award delivery bonus points using the new function
+        const { error: pointsError } = await supabase
+          .rpc('add_points_transaction', {
+            user_uuid: shipment.orders.user_id,
+            points_delta: 20,
+            transaction_source: 'delivery_bonus',
+            transaction_description: 'Bônus por entrega do pedido #' + shipment.orders.id,
+            related_order_id: shipment.orders.id
+          });
 
-        if (getProfileError) {
-          console.error('Error getting user profile:', getProfileError);
+        if (pointsError) {
+          console.error('Error awarding delivery bonus points:', pointsError);
         } else {
-          const newPoints = (profile.points || 0) + 20;
-          
-          const { error: pointsError } = await supabase
-            .from('profiles')
-            .update({ points: newPoints })
-            .eq('id', shipment.orders.user_id);
-
-          if (pointsError) {
-            console.error('Error updating loyalty points:', pointsError);
-          } else {
-            console.log(`Added 20 loyalty points to user ${shipment.orders.user_id}. New total: ${newPoints}`);
-          }
+          console.log(`Added 20 delivery bonus points to user ${shipment.orders.user_id}`);
         }
 
         console.log('Delivery processed successfully');

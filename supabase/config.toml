@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.me-webhook]
 verify_jwt = false
+
+[functions.redeem-points]
+verify_jwt = false

@@ -12,6 +12,7 @@ import { AddressStep } from '@/components/checkout/AddressStep';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
 import { PixPayment } from '@/components/checkout/PixPayment';
+import { PointsRedemption } from '@/components/checkout/PointsRedemption';
 import { toast } from '@/hooks/use-toast';
 
 const Checkout = () => {
@@ -26,6 +27,8 @@ const Checkout = () => {
   const [selectedShipping, setSelectedShipping] = useState<ShippingQuote | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [pointsUsed, setPointsUsed] = useState(0);
+  const [pointsDiscount, setPointsDiscount] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -219,7 +222,12 @@ const Checkout = () => {
   };
 
   const getTotalWithShipping = () => {
-    return getTotal() + (selectedShipping?.price || 0);
+    return getTotal() + (selectedShipping?.price || 0) - pointsDiscount;
+  };
+
+  const handlePointsChange = (points: number, discount: number) => {
+    setPointsUsed(points);
+    setPointsDiscount(discount);
   };
 
   const steps = [
@@ -363,6 +371,13 @@ const Checkout = () => {
                     </div>
                   )}
                   
+                  {pointsDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Desconto pontos ({pointsUsed.toLocaleString('pt-BR')} pts)</span>
+                      <span>-R$ {pointsDiscount.toFixed(2).replace('.', ',')}</span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between font-bold text-lg border-t pt-2">
                     <span>Total</span>
                     <span>
@@ -372,6 +387,16 @@ const Checkout = () => {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Points Redemption */}
+            {currentStep >= 2 && (
+              <div className="mt-4">
+                <PointsRedemption
+                  subtotal={getTotal()}
+                  onPointsChange={handlePointsChange}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
