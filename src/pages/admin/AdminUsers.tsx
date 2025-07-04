@@ -156,6 +156,98 @@ const AdminUsers = () => {
     }
   };
 
+  const handleToggleAdmin = async (userId: string, isCurrentlyAdmin: boolean) => {
+    try {
+      if (isCurrentlyAdmin) {
+        // Remove admin role
+        const { error } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', userId)
+          .eq('role', 'admin');
+
+        if (error) throw error;
+
+        toast({
+          title: "Permissão removida",
+          description: "Usuário não é mais administrador.",
+        });
+      } else {
+        // Add admin role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role: 'admin'
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Permissão concedida",
+          description: "Usuário agora é administrador.",
+        });
+      }
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Error toggling admin role:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar permissões de administrador.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateAdmin = async () => {
+    if (!newAdminEmail.trim()) return;
+
+    try {
+      // Check if user exists
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', newAdminEmail.trim())
+        .single();
+
+      if (profileError) {
+        toast({
+          title: "Usuário não encontrado",
+          description: "Não existe usuário cadastrado com este email.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Add admin role
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: profileData.id,
+          role: 'admin'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin criado",
+        description: "Usuário promovido para administrador com sucesso.",
+      });
+
+      setIsAdminDialogOpen(false);
+      setNewAdminEmail('');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error creating admin:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar administrador.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
