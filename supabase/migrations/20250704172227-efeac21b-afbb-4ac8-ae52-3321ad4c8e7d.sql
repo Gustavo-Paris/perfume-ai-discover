@@ -196,6 +196,9 @@ BEGIN
       FROM public.user_roles ur
       WHERE ur.role = 'admin'::app_role;
       
+      -- Send email alert to admins
+      PERFORM public.trigger_email_notification('stock_alert', lot_record.id);
+      
       alert_count := alert_count + 1;
     END IF;
   END LOOP;

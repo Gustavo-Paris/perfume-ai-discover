@@ -80,6 +80,9 @@ BEGIN
       'Pontos ganhos por avaliação aprovada',
       NULL
     );
+    
+    -- Send email notification
+    PERFORM public.trigger_email_notification('review_approved', NEW.id);
   END IF;
   
   RETURN NEW;

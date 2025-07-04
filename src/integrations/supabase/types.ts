@@ -895,6 +895,10 @@ export type Database = {
         }
         Returns: string
       }
+      trigger_email_notification: {
+        Args: { notification_type: string; record_id: string }
+        Returns: undefined
+      }
       upsert_reservation: {
         Args: {
           perfume_uuid: string
