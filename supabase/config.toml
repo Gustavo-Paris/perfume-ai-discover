@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.me-delete]
 verify_jwt = false
+
+[functions.tasks/db-backup]
+verify_jwt = false
