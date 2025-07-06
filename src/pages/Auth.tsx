@@ -145,6 +145,19 @@ const Auth = () => {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted for password update');
+    console.log('Current session:', session);
+    console.log('Current user:', user);
+    
+    // Check if we have a valid session
+    if (!session || !user) {
+      console.error('No valid session for password update');
+      toast({
+        title: "Erro de sessão",
+        description: "Sessão inválida. Tente solicitar um novo link de recuperação.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (newPasswordForm.password !== newPasswordForm.confirmPassword) {
       console.log('Password mismatch error');
