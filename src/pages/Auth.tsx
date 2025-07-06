@@ -11,7 +11,8 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const {
     signIn,
-    signUp
+    signUp,
+    resetPassword
   } = useAuth();
   const {
     toast
@@ -26,6 +27,9 @@ const Auth = () => {
     email: '',
     password: '',
     confirmPassword: ''
+  });
+  const [resetForm, setResetForm] = useState({
+    email: ''
   });
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +88,26 @@ const Auth = () => {
     }
     setIsLoading(false);
   };
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const {
+      error
+    } = await resetPassword(resetForm.email);
+    if (error) {
+      toast({
+        title: "Erro ao solicitar nova senha",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha"
+      });
+    }
+    setIsLoading(false);
+  };
   return <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -96,9 +120,10 @@ const Auth = () => {
         </div>
 
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="login" className="font-display">Entrar</TabsTrigger>
             <TabsTrigger value="signup" className="font-display">Cadastrar</TabsTrigger>
+            <TabsTrigger value="reset" className="font-display">Esqueci</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
@@ -173,6 +198,43 @@ const Auth = () => {
                   </div>
                   <Button type="submit" className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" disabled={isLoading}>
                     {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reset">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="font-display text-navy">Recuperar Senha</CardTitle>
+                <CardDescription className="text-gray-600">
+                  Digite seu email para receber instruções de recuperação
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email" className="font-display text-gray-700">Email</Label>
+                    <Input 
+                      id="reset-email" 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={resetForm.email} 
+                      onChange={e => setResetForm({
+                        ...resetForm,
+                        email: e.target.value
+                      })} 
+                      required 
+                      className="font-display" 
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Enviando...' : 'Enviar Email de Recuperação'}
                   </Button>
                 </form>
               </CardContent>
