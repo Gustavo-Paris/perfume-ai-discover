@@ -93,8 +93,8 @@ export const performanceMonitor = {
       entries.forEach((entry: any) => {
         console.log('FID:', entry.processingStart - entry.startTime);
         
-        if (typeof gtag !== 'undefined') {
-          gtag('event', 'web_vitals', {
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'web_vitals', {
             name: 'FID',
             value: Math.round(entry.processingStart - entry.startTime),
             category: 'performance'
@@ -115,8 +115,8 @@ export const performanceMonitor = {
       
       console.log('CLS:', cumulativeLayoutShift);
       
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'web_vitals', {
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'web_vitals', {
           name: 'CLS',
           value: Math.round(cumulativeLayoutShift * 1000),
           category: 'performance'
