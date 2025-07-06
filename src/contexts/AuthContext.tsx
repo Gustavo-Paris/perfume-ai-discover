@@ -96,11 +96,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updatePassword = async (password: string) => {
-    const { error } = await supabase.auth.updateUser({
-      password: password
-    });
+    console.log('updatePassword called with password length:', password.length);
     
-    return { error };
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      
+      console.log('Supabase updateUser result:', { error });
+      return { error };
+    } catch (err) {
+      console.error('Exception in updatePassword:', err);
+      return { error: err };
+    }
   };
 
   const value = {

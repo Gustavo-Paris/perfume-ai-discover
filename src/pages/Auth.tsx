@@ -144,7 +144,10 @@ const Auth = () => {
   };
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted for password update');
+    
     if (newPasswordForm.password !== newPasswordForm.confirmPassword) {
+      console.log('Password mismatch error');
       toast({
         title: "Erro",
         description: "As senhas não coincidem",
@@ -153,6 +156,7 @@ const Auth = () => {
       return;
     }
     if (newPasswordForm.password.length < 6) {
+      console.log('Password too short error');
       toast({
         title: "Erro",
         description: "A senha deve ter pelo menos 6 caracteres",
@@ -160,23 +164,38 @@ const Auth = () => {
       });
       return;
     }
+    
+    console.log('Starting password update...');
     setIsLoading(true);
-    const {
-      error
-    } = await updatePassword(newPasswordForm.password);
-    if (error) {
+    
+    try {
+      const { error } = await updatePassword(newPasswordForm.password);
+      console.log('Password update result:', { error });
+      
+      if (error) {
+        console.error('Password update failed:', error);
+        toast({
+          title: "Erro ao alterar senha",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        console.log('Password updated successfully');
+        toast({
+          title: "Senha alterada com sucesso!",
+          description: "Você já pode usar sua nova senha"
+        });
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Unexpected error during password update:', err);
       toast({
-        title: "Erro ao alterar senha",
-        description: error.message,
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns instantes",
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "Senha alterada com sucesso!",
-        description: "Você já pode usar sua nova senha"
-      });
-      navigate('/');
     }
+    
     setIsLoading(false);
   };
   return <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
