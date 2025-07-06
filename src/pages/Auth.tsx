@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,10 +9,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const isRecovery = searchParams.get('type') === 'recovery';
   const {
     signIn,
     signUp,
-    resetPassword
+    resetPassword,
+    updatePassword
   } = useAuth();
   const {
     toast
@@ -30,6 +33,10 @@ const Auth = () => {
   });
   const [resetForm, setResetForm] = useState({
     email: ''
+  });
+  const [newPasswordForm, setNewPasswordForm] = useState({
+    password: '',
+    confirmPassword: ''
   });
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +115,43 @@ const Auth = () => {
     }
     setIsLoading(false);
   };
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPasswordForm.password !== newPasswordForm.confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (newPasswordForm.password.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A senha deve ter pelo menos 6 caracteres",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsLoading(true);
+    const {
+      error
+    } = await updatePassword(newPasswordForm.password);
+    if (error) {
+      toast({
+        title: "Erro ao alterar senha",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Senha alterada com sucesso!",
+        description: "Você já pode usar sua nova senha"
+      });
+      navigate('/');
+    }
+    setIsLoading(false);
+  };
   return <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -119,11 +163,12 @@ const Auth = () => {
           <p className="text-sm text-gray-600 mt-1 font-display font-medium my-0 text-center">Parfums</p>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue={isRecovery ? "new-password" : "login"} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="login" className="font-display">Entrar</TabsTrigger>
             <TabsTrigger value="signup" className="font-display">Cadastrar</TabsTrigger>
             <TabsTrigger value="reset" className="font-display">Esqueci</TabsTrigger>
+            <TabsTrigger value="new-password" className="font-display" disabled={!isRecovery}>Nova Senha</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
@@ -235,6 +280,60 @@ const Auth = () => {
                     disabled={isLoading}
                   >
                     {isLoading ? 'Enviando...' : 'Enviar Email de Recuperação'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="new-password">
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="font-display text-navy">Nova Senha</CardTitle>
+                <CardDescription className="text-gray-600">
+                  Digite sua nova senha
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdatePassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password" className="font-display text-gray-700">Nova Senha</Label>
+                    <Input 
+                      id="new-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={newPasswordForm.password} 
+                      onChange={e => setNewPasswordForm({
+                        ...newPasswordForm,
+                        password: e.target.value
+                      })} 
+                      required 
+                      minLength={6}
+                      className="font-display" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-new-password" className="font-display text-gray-700">Confirmar Nova Senha</Label>
+                    <Input 
+                      id="confirm-new-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={newPasswordForm.confirmPassword} 
+                      onChange={e => setNewPasswordForm({
+                        ...newPasswordForm,
+                        confirmPassword: e.target.value
+                      })} 
+                      required 
+                      minLength={6}
+                      className="font-display" 
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Atualizando...' : 'Alterar Senha'}
                   </Button>
                 </form>
               </CardContent>
