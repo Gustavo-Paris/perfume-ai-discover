@@ -28,15 +28,36 @@ const Auth = () => {
 
   // Detect password recovery flow
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    
-    if (type === 'recovery') {
-      console.log('Recovery type detected in URL');
-      setShowPasswordReset(true);
-      // Clear URL hash
-      window.history.replaceState(null, '', window.location.pathname);
-    }
+    const handleRecovery = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery') {
+        console.log('Recovery detected, showing password reset form');
+        setShowPasswordReset(true);
+        
+        // Force session establishment
+        setTimeout(async () => {
+          try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            console.log('Forced session check:', !!session, error);
+            
+            if (session) {
+              console.log('Session established successfully');
+            } else {
+              console.log('No session found, user needs new recovery link');
+            }
+          } catch (err) {
+            console.error('Session check error:', err);
+          }
+        }, 1000);
+        
+        // Clear URL hash
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+
+    handleRecovery();
   }, []);
 
   // Handle successful authentication for password reset
@@ -144,39 +165,9 @@ const Auth = () => {
   };
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted for password update');
-    
-    // Force session refresh if needed
-    if (!session || !user) {
-      console.log('No session, attempting to get current session...');
-      try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        console.log('Current session from Supabase:', !!currentSession, error);
-        
-        if (!currentSession) {
-          toast({
-            title: "Erro de sessão",
-            description: "Sessão inválida. Solicite um novo link de recuperação.",
-            variant: "destructive"
-          });
-          return;
-        }
-      } catch (err) {
-        console.error('Error getting session:', err);
-        toast({
-          title: "Erro de sessão",
-          description: "Não foi possível verificar a sessão. Tente novamente.",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
-    console.log('Current session:', session);
-    console.log('Current user:', user);
+    console.log('🔄 Password update initiated');
     
     if (newPasswordForm.password !== newPasswordForm.confirmPassword) {
-      console.log('Password mismatch error');
       toast({
         title: "Erro",
         description: "As senhas não coincidem",
@@ -184,8 +175,8 @@ const Auth = () => {
       });
       return;
     }
+    
     if (newPasswordForm.password.length < 6) {
-      console.log('Password too short error');
       toast({
         title: "Erro",
         description: "A senha deve ter pelo menos 6 caracteres",
@@ -194,22 +185,37 @@ const Auth = () => {
       return;
     }
     
-    console.log('Starting password update...');
     setIsLoading(true);
     
     try {
-      const { error } = await updatePassword(newPasswordForm.password);
-      console.log('Password update result:', { error });
+      console.log('🔐 Calling Supabase updateUser...');
+      
+      // Direct call to updateUser - let Supabase handle session validation
+      const { error } = await supabase.auth.updateUser({
+        password: newPasswordForm.password
+      });
+      
+      console.log('✅ UpdateUser result:', { error: !!error });
       
       if (error) {
-        console.error('Password update failed:', error);
-        toast({
-          title: "Erro ao alterar senha",
-          description: error.message,
-          variant: "destructive"
-        });
+        console.error('❌ Password update failed:', error.message);
+        
+        // Show specific error messages
+        if (error.message.includes('session')) {
+          toast({
+            title: "Sessão expirada",
+            description: "Solicite um novo link de recuperação de senha",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Erro ao alterar senha",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
       } else {
-        console.log('Password updated successfully');
+        console.log('🎉 Password updated successfully');
         toast({
           title: "Senha alterada com sucesso!",
           description: "Você já pode usar sua nova senha"
@@ -217,7 +223,7 @@ const Auth = () => {
         navigate('/');
       }
     } catch (err) {
-      console.error('Unexpected error during password update:', err);
+      console.error('❌ Unexpected error:', err);
       toast({
         title: "Erro inesperado",
         description: "Tente novamente em alguns instantes",
