@@ -33,25 +33,7 @@ const Auth = () => {
       const type = hashParams.get('type');
       
       if (type === 'recovery') {
-        console.log('Recovery detected, showing password reset form');
         setShowPasswordReset(true);
-        
-        // Force session establishment
-        setTimeout(async () => {
-          try {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            console.log('Forced session check:', !!session, error);
-            
-            if (session) {
-              console.log('Session established successfully');
-            } else {
-              console.log('No session found, user needs new recovery link');
-            }
-          } catch (err) {
-            console.error('Session check error:', err);
-          }
-        }, 1000);
-        
         // Clear URL hash
         window.history.replaceState(null, '', window.location.pathname);
       }
@@ -186,23 +168,44 @@ const Auth = () => {
     
     setIsLoading(true);
     
-    const { error } = await supabase.auth.updateUser({
-      password: newPasswordForm.password
-    });
-    
-    if (error) {
-      toast({
-        title: "Erro ao alterar senha",
-        description: error.message,
-        variant: "destructive"  
+    try {
+      // Verificar sessão atual diretamente com Supabase
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (!currentSession) {
+        toast({
+          title: "Sessão expirada",
+          description: "Solicite um novo link de recuperação de senha",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      const { error } = await supabase.auth.updateUser({
+        password: newPasswordForm.password
       });
-    } else {
+      
+      if (error) {
+        toast({
+          title: "Erro ao alterar senha",
+          description: error.message,
+          variant: "destructive"  
+        });
+      } else {
+        toast({
+          title: "Senha alterada!",
+          description: "Agora você pode fazer login com a nova senha"
+        });
+        setShowPasswordReset(false);
+        setNewPasswordForm({ password: '', confirmPassword: '' });
+      }
+    } catch (err) {
       toast({
-        title: "Senha alterada!",
-        description: "Agora você pode fazer login com a nova senha"
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns instantes",
+        variant: "destructive"
       });
-      setShowPasswordReset(false);
-      setNewPasswordForm({ password: '', confirmPassword: '' });
     }
     
     setIsLoading(false);

@@ -54,12 +54,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (hasRecoveryTokens) {
           console.log('🔄 Recovery tokens detected in URL');
-          // Let Supabase handle the tokens automatically
-          // The onAuthStateChange will catch the session when it's established
-          return;
+          // Wait a bit for Supabase to process the tokens
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        // Regular session check for normal page loads
+        // Get current session
         console.log('🔍 Checking for existing session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
