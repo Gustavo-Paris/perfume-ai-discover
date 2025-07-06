@@ -145,19 +145,35 @@ const Auth = () => {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Form submitted for password update');
+    
+    // Force session refresh if needed
+    if (!session || !user) {
+      console.log('No session, attempting to get current session...');
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        console.log('Current session from Supabase:', !!currentSession, error);
+        
+        if (!currentSession) {
+          toast({
+            title: "Erro de sessão",
+            description: "Sessão inválida. Solicite um novo link de recuperação.",
+            variant: "destructive"
+          });
+          return;
+        }
+      } catch (err) {
+        console.error('Error getting session:', err);
+        toast({
+          title: "Erro de sessão",
+          description: "Não foi possível verificar a sessão. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     console.log('Current session:', session);
     console.log('Current user:', user);
-    
-    // Check if we have a valid session
-    if (!session || !user) {
-      console.error('No valid session for password update');
-      toast({
-        title: "Erro de sessão",
-        description: "Sessão inválida. Tente solicitar um novo link de recuperação.",
-        variant: "destructive"
-      });
-      return;
-    }
     
     if (newPasswordForm.password !== newPasswordForm.confirmPassword) {
       console.log('Password mismatch error');
