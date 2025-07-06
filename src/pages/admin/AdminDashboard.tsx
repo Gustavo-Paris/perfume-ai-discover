@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Area, AreaChart } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, Award, Users, Package, Eye, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { DollarSign, ShoppingCart, TrendingUp, Award, Users, Package, Eye, ArrowUpRight, ArrowDownRight, Heart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
+import { useWishlistStats } from '@/hooks/useWishlist';
 import FinancialDashboard from '@/components/admin/dashboards/FinancialDashboard';
 import OrdersDashboard from '@/components/admin/dashboards/OrdersDashboard';
 import InventoryDashboard from '@/components/admin/dashboards/InventoryDashboard';
@@ -50,6 +51,9 @@ const AdminDashboard = () => {
   const [salesData, setSalesData] = useState<SalesData[]>([]);
   const [funnelData, setFunnelData] = useState<FunnelData[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Wishlist stats
+  const { data: wishlistStats } = useWishlistStats();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -301,7 +305,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-4">
         <StatCard
           title="Total Usuários"
           value={stats.totalUsers.toLocaleString()}
@@ -325,7 +329,48 @@ const AdminDashboard = () => {
           subtitle="Últimos 30 dias"
           gradient="from-amber-500 to-amber-600"
         />
+        
+        <StatCard
+          title="Lista de Desejos"
+          value={wishlistStats?.totalWishlistItems.toLocaleString() || '0'}
+          icon={Heart}
+          subtitle="Perfumes favoritos salvos"
+          gradient="from-red-500 to-red-600"
+        />
       </div>
+
+      {/* Wishlist Insights */}
+      {wishlistStats?.mostWished && wishlistStats.mostWished.length > 0 && (
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-gradient-to-r from-red-50 to-pink-50">
+            <CardTitle className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-red-500" />
+              Perfumes Mais Desejados
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {wishlistStats.mostWished.slice(0, 5).map((item, index) => (
+                <div key={item.perfume_id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-xs font-medium text-red-600">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium">{item.perfumes?.name}</p>
+                      <p className="text-sm text-muted-foreground">{item.perfumes?.brand}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Heart className="h-4 w-4 text-red-500 fill-current" />
+                    <span className="font-medium">{item.count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-3">

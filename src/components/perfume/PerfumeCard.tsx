@@ -19,7 +19,6 @@ interface PerfumeCardProps {
 }
 
 const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

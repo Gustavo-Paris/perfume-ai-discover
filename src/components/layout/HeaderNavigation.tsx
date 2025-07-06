@@ -4,9 +4,8 @@ import { Link } from 'react-router-dom';
 const navigation = [
   { name: 'Curadoria', href: '/curadoria' },
   { name: 'Catálogo', href: '/catalogo' },
+  { name: 'Favoritos', href: '/wishlist' },
   { name: 'Fidelidade', href: '/fidelidade' },
-  { name: 'Sobre', href: '/sobre' },
-  { name: 'Contato', href: '/contato' },
 ];
 
 const HeaderNavigation = () => {
