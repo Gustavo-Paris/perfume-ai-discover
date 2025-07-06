@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,18 +9,45 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const isRecovery = searchParams.get('type') === 'recovery';
   const {
     signIn,
     signUp,
     resetPassword,
-    updatePassword
+    updatePassword,
+    user,
+    session
   } = useAuth();
   const {
     toast
   } = useToast();
   const navigate = useNavigate();
+
+  // Detect password recovery flow
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    const type = hashParams.get('type');
+    
+    if (type === 'recovery' && accessToken && refreshToken) {
+      setShowPasswordReset(true);
+      // Clear URL hash
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
+  // Handle successful authentication for password reset
+  useEffect(() => {
+    if (session && showPasswordReset) {
+      toast({
+        title: "Agora você pode alterar sua senha",
+        description: "Digite sua nova senha abaixo"
+      });
+    }
+  }, [session, showPasswordReset, toast]);
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -163,12 +190,12 @@ const Auth = () => {
           <p className="text-sm text-gray-600 mt-1 font-display font-medium my-0 text-center">Parfums</p>
         </div>
 
-        <Tabs defaultValue={isRecovery ? "new-password" : "login"} className="w-full">
+        <Tabs defaultValue={showPasswordReset ? "new-password" : "login"} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="login" className="font-display">Entrar</TabsTrigger>
-            <TabsTrigger value="signup" className="font-display">Cadastrar</TabsTrigger>
-            <TabsTrigger value="reset" className="font-display">Esqueci</TabsTrigger>
-            <TabsTrigger value="new-password" className="font-display" disabled={!isRecovery}>Nova Senha</TabsTrigger>
+            <TabsTrigger value="login" className="font-display" disabled={showPasswordReset}>Entrar</TabsTrigger>
+            <TabsTrigger value="signup" className="font-display" disabled={showPasswordReset}>Cadastrar</TabsTrigger>
+            <TabsTrigger value="reset" className="font-display" disabled={showPasswordReset}>Esqueci</TabsTrigger>
+            <TabsTrigger value="new-password" className="font-display" disabled={!showPasswordReset}>Nova Senha</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
