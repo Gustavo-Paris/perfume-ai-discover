@@ -9,42 +9,59 @@ export const useReviews = (perfumeId: string, page: number = 1, limit: number = 
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      const { data, error, count } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('perfume_id', perfumeId)
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      // Fix N+1 query: Use separate queries but batch them
+      const [reviewsResult, profilesResult] = await Promise.all([
+        supabase
+          .from('reviews')
+          .select('*', { count: 'exact' })
+          .eq('perfume_id', perfumeId)
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false })
+          .range(from, to),
+        
+        // Get all user IDs first, then batch fetch profiles
+        supabase
+          .from('reviews')
+          .select('user_id')
+          .eq('perfume_id', perfumeId)
+          .eq('status', 'approved')
+          .range(from, to)
+      ]);
 
-      if (error) throw error;
+      if (reviewsResult.error) throw reviewsResult.error;
+      if (profilesResult.error) throw profilesResult.error;
 
-      // Get user data for each review
-      const reviews: Review[] = [];
-      if (data) {
-        for (const review of data) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, email')
-            .eq('id', review.user_id)
-            .single();
+      const reviews = reviewsResult.data || [];
+      const userIds = [...new Set(profilesResult.data?.map(r => r.user_id) || [])];
 
-          reviews.push({
-            ...review,
-            user: profile ? {
-              name: profile.name,
-              email: profile.email
-            } : undefined
-          } as Review);
-        }
-      }
+      // Batch fetch profiles for all users
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', userIds);
+
+      const profilesMap = (profiles || []).reduce((acc, profile) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Combine reviews with profiles
+      const reviewsWithProfiles: Review[] = reviews.map(review => ({
+        ...review,
+        user: profilesMap[review.user_id] ? {
+          name: profilesMap[review.user_id].name,
+          email: profilesMap[review.user_id].email
+        } : undefined
+      })) as Review[];
 
       return {
-        reviews,
-        total: count || 0,
-        hasMore: (count || 0) > to + 1
+        reviews: reviewsWithProfiles,
+        total: reviewsResult.count || 0,
+        hasMore: (reviewsResult.count || 0) > to + 1
       };
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
   });
 };
 
@@ -90,6 +107,8 @@ export const useReviewStats = (perfumeId: string) => {
         distribution
       } as ReviewStats;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 15 * 60 * 1000, // 15 minutes garbage collection
   });
 };
 

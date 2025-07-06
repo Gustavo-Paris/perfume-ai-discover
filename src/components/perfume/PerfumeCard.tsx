@@ -9,6 +9,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { LazyImage } from '@/components/ui/lazy-image';
+import { useQueryClient } from '@tanstack/react-query';
+import { prefetchRelatedData } from '@/utils/queryPrefetch';
 
 interface PerfumeCardProps {
   perfume: Perfume;
@@ -18,6 +21,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleQuickAdd = (e: React.MouseEvent, size: 5 | 10) => {
     e.stopPropagation();
@@ -33,6 +37,11 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     });
   };
 
+  // Prefetch perfume details on hover for better UX
+  const handleMouseEnter = () => {
+    prefetchRelatedData.perfumeDetails(queryClient, perfume.id);
+  };
+
   // Use a high-quality perfume image from Unsplash as fallback
   const imageUrl = perfume.image_url || `https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop&crop=center&q=80`;
 
@@ -41,6 +50,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
       <motion.div 
         className="glass rounded-2xl overflow-hidden group cursor-pointer hover:shadow-xl transition-all duration-300"
         onClick={() => navigate(`/perfume/${perfume.id}`)}
+        onMouseEnter={handleMouseEnter}
         whileHover={{ 
           scale: 1.03,
           y: -4
@@ -55,11 +65,10 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
       >
         {/* Image Container */}
         <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
-          <img
+          <LazyImage
             src={imageUrl}
             alt={perfume.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
           />
           
           {/* Overlay Actions */}

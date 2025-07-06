@@ -15,7 +15,9 @@ export const usePerfumes = () => {
       if (error) throw error;
       return data as DatabasePerfume[];
     },
-    staleTime: 60000, // 60 seconds cache
+    staleTime: 15 * 60 * 1000, // 15 minutes cache - perfumes don't change often
+    gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 };
 
