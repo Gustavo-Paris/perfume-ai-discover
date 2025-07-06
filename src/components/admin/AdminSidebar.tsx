@@ -8,7 +8,8 @@ import {
   Settings,
   Menu,
   X,
-  Tag
+  Tag,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,7 @@ const adminNavItems = [
   { title: 'Pedidos', url: '/admin/orders', icon: ShoppingBag },
   { title: 'Estoque', url: '/admin/stock', icon: Package },
   { title: 'Usuários', url: '/admin/users', icon: Users },
+  { title: 'Reviews', url: '/admin/reviews', icon: MessageSquare },
   { title: 'Cupons', url: '/admin/coupons', icon: Tag },
   { title: 'Perfumes', url: '/admin/perfumes', icon: Package },
   { title: 'Lotes', url: '/admin/lots', icon: Package },
