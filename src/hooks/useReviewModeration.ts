@@ -52,9 +52,9 @@ export const usePendingReviews = (page = 1, limit = 10) => {
       const reviews: ReviewWithModeration[] = (data || []).map(review => ({
         ...review,
         status: review.status as 'pending' | 'approved' | 'rejected',
-        user: review.profiles && typeof review.profiles === 'object' && 'name' in review.profiles ? {
-          name: review.profiles.name,
-          email: review.profiles.email
+        user: (review.profiles as any)?.name ? {
+          name: (review.profiles as any).name,
+          email: (review.profiles as any).email
         } : undefined,
         perfume: review.perfumes ? {
           name: review.perfumes.name,
@@ -235,9 +235,9 @@ export const useReviewsWithFilters = (filters: {
       const reviews: ReviewWithModeration[] = filteredData.map(review => ({
         ...review,
         status: review.status as 'pending' | 'approved' | 'rejected',
-        user: review.profiles && typeof review.profiles === 'object' && 'name' in review.profiles ? {
-          name: review.profiles.name,
-          email: review.profiles.email
+        user: (review.profiles as any)?.name ? {
+          name: (review.profiles as any).name,
+          email: (review.profiles as any).email
         } : undefined,
         perfume: review.perfumes ? {
           name: review.perfumes.name,
