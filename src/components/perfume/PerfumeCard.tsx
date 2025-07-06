@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Heart, Plus, Eye } from 'lucide-react';
+import { Plus, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Perfume } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { LazyImage } from '@/components/ui/lazy-image';
 import { useQueryClient } from '@tanstack/react-query';
 import { prefetchRelatedData } from '@/utils/queryPrefetch';
+import { WishlistButton } from '@/components/wishlist/WishlistButton';
 
 interface PerfumeCardProps {
   perfume: Perfume;
@@ -74,17 +75,12 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           {/* Overlay Actions */}
           <div className="absolute inset-0 bg-navy/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute top-4 right-4 space-y-2">
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-8 w-8 bg-white/90 hover:bg-white text-navy border-0 shadow-lg"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsLiked(!isLiked);
-                }}
-              >
-                <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-              </Button>
+              <WishlistButton 
+                perfumeId={perfume.id} 
+                variant="icon" 
+                size="sm"
+                className="bg-white/90 hover:bg-white shadow-lg"
+              />
               <Button
                 variant="secondary"
                 size="icon"

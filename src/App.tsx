@@ -32,6 +32,7 @@ import AdminConfig from "./pages/admin/AdminConfig";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminReviews from "./pages/admin/AdminReviews";
 import Notificacoes from "./pages/Notificacoes";
+import Wishlist from "./pages/Wishlist";
 import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
@@ -61,6 +62,7 @@ const AppContent = () => {
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/notificacoes" element={<Notificacoes />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/perfume/:id" element={<PerfumeDetails />} />
           
           {/* Admin Routes */}
