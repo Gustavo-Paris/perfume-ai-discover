@@ -36,7 +36,12 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen }: HeaderActionsProps) =>
         </Button>
         
         {/* Wishlist */}
-        <Button variant="ghost" size="icon" className="hover-scale">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="hover-scale"
+          onClick={() => navigate('/wishlist')}
+        >
           <Heart className="h-4 w-4" />
         </Button>
         
