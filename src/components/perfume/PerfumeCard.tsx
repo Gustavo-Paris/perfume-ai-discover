@@ -13,6 +13,8 @@ import { LazyImage } from '@/components/ui/lazy-image';
 import { useQueryClient } from '@tanstack/react-query';
 import { prefetchRelatedData } from '@/utils/queryPrefetch';
 import { WishlistButton } from '@/components/wishlist/WishlistButton';
+import { useActivePromotionByPerfume, calculatePromotionalPrice } from '@/hooks/usePromotions';
+import PromotionBadge from '@/components/promotions/PromotionBadge';
 
 interface PerfumeCardProps {
   perfume: Perfume;
@@ -22,6 +24,9 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Buscar promoção ativa para este perfume
+  const { data: activePromotion } = useActivePromotionByPerfume(perfume.id);
 
   const handleQuickAdd = (e: React.MouseEvent, size: 5 | 10) => {
     e.stopPropagation();
@@ -44,6 +49,47 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
 
   // Use a high-quality perfume image from Unsplash as fallback
   const imageUrl = perfume.image_url || `https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop&crop=center&q=80`;
+
+  // Calcular preços promocionais se houver promoção ativa
+  const getDisplayPrice = (size: 5 | 10) => {
+    const originalPrice = size === 5 ? perfume.price_5ml : perfume.price_10ml;
+    if (!originalPrice) return null;
+
+    if (activePromotion) {
+      const promotionalField = size === 5 ? 'promotional_price_5ml' : 'promotional_price_10ml';
+      const promotionalPrice = activePromotion[promotionalField];
+      
+      if (promotionalPrice) {
+        return {
+          original: originalPrice,
+          promotional: promotionalPrice,
+          hasDiscount: true
+        };
+      } else {
+        // Calcular baseado no desconto
+        const promotional = calculatePromotionalPrice(
+          originalPrice, 
+          activePromotion.discount_type as 'percent' | 'fixed', 
+          activePromotion.discount_value
+        );
+        return {
+          original: originalPrice,
+          promotional,
+          hasDiscount: true
+        };
+      }
+    }
+
+    return {
+      original: originalPrice,
+      promotional: originalPrice,
+      hasDiscount: false
+    };
+  };
+
+  const price5ml = getDisplayPrice(5);
+  const price10ml = getDisplayPrice(10);
+  const basePrice = price5ml?.promotional || perfume.price_5ml || 0;
 
   return (
     <TooltipProvider>
@@ -94,8 +140,25 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             </div>
           </div>
 
+          {/* Promotion Badge */}
+          {activePromotion && (
+            <div className="absolute top-4 left-4 z-10">
+              <PromotionBadge 
+                promotion={{
+                  id: activePromotion.id,
+                  title: activePromotion.title,
+                  discount_type: activePromotion.discount_type as 'percent' | 'fixed',
+                  discount_value: activePromotion.discount_value,
+                  ends_at: activePromotion.ends_at
+                }}
+                size="sm"
+                showTimer={true}
+              />
+            </div>
+          )}
+
           {/* Gender Badge */}
-          <div className="absolute top-4 left-4">
+          <div className={`absolute ${activePromotion ? 'bottom-4' : 'top-4'} left-4`}>
             <Badge 
               variant="secondary" 
               className={`
@@ -123,15 +186,26 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           {/* Price */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-display font-bold text-lg text-navy">
-                A partir de R$ {(perfume.price_5ml || 0).toFixed(2).replace('.', ',')}
-              </p>
+              {activePromotion && price5ml?.hasDiscount ? (
+                <div className="space-y-1">
+                  <p className="font-display font-bold text-lg text-red-600">
+                    A partir de R$ {basePrice.toFixed(2).replace('.', ',')}
+                  </p>
+                  <p className="text-sm text-gray-500 line-through">
+                    R$ {(perfume.price_5ml || 0).toFixed(2).replace('.', ',')}
+                  </p>
+                </div>
+              ) : (
+                <p className="font-display font-bold text-lg text-navy">
+                  A partir de R$ {basePrice.toFixed(2).replace('.', ',')}
+                </p>
+              )}
             </div>
           </div>
 
           {/* Quick Add Buttons */}
           <div className="flex gap-2">
-            {perfume.price_5ml && perfume.price_5ml > 0 && (
+            {price5ml && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
@@ -144,11 +218,22 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>R$ {perfume.price_5ml.toFixed(2).replace('.', ',')}</p>
+                  {price5ml.hasDiscount ? (
+                    <div className="text-center">
+                      <p className="text-red-600 font-bold">
+                        R$ {price5ml.promotional.toFixed(2).replace('.', ',')}
+                      </p>
+                      <p className="text-xs text-gray-500 line-through">
+                        R$ {price5ml.original.toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                  ) : (
+                    <p>R$ {price5ml.promotional.toFixed(2).replace('.', ',')}</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
             )}
-            {perfume.price_10ml && perfume.price_10ml > 0 && (
+            {price10ml && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
@@ -161,7 +246,18 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>R$ {perfume.price_10ml.toFixed(2).replace('.', ',')}</p>
+                  {price10ml.hasDiscount ? (
+                    <div className="text-center">
+                      <p className="text-red-600 font-bold">
+                        R$ {price10ml.promotional.toFixed(2).replace('.', ',')}
+                      </p>
+                      <p className="text-xs text-gray-500 line-through">
+                        R$ {price10ml.original.toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                  ) : (
+                    <p>R$ {price10ml.promotional.toFixed(2).replace('.', ',')}</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
             )}

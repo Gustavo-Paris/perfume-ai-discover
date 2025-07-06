@@ -654,6 +654,74 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          ends_at: string
+          id: string
+          is_active: boolean
+          original_price_10ml: number | null
+          original_price_5ml: number | null
+          original_price_full: number | null
+          perfume_id: string
+          promotional_price_10ml: number | null
+          promotional_price_5ml: number | null
+          promotional_price_full: number | null
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          ends_at: string
+          id?: string
+          is_active?: boolean
+          original_price_10ml?: number | null
+          original_price_5ml?: number | null
+          original_price_full?: number | null
+          perfume_id: string
+          promotional_price_10ml?: number | null
+          promotional_price_5ml?: number | null
+          promotional_price_full?: number | null
+          starts_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string
+          id?: string
+          is_active?: boolean
+          original_price_10ml?: number | null
+          original_price_5ml?: number | null
+          original_price_full?: number | null
+          perfume_id?: string
+          promotional_price_10ml?: number | null
+          promotional_price_5ml?: number | null
+          promotional_price_full?: number | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recommendation_sessions: {
         Row: {
           ai_provider_id: string
@@ -977,6 +1045,20 @@ export type Database = {
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_active_promotion: {
+        Args: { perfume_uuid: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          discount_type: string
+          discount_value: number
+          promotional_price_5ml: number
+          promotional_price_10ml: number
+          promotional_price_full: number
+          ends_at: string
+        }[]
       }
       get_available_stock: {
         Args: { perfume_uuid: string; size_ml_param: number }

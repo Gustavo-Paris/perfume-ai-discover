@@ -23,6 +23,8 @@ const NotificationItem = ({ notification, onClick, compact = false }: Notificati
         return <Star className={cn(iconClass, "text-yellow-600")} />;
       case 'stock_alert':
         return <AlertTriangle className={cn(iconClass, "text-orange-600")} />;
+      case 'wishlist_promotion':
+        return <Star className={cn(iconClass, "text-red-600")} />;
       case 'system':
         return <Bell className={cn(iconClass, "text-gray-600")} />;
       default:
@@ -38,6 +40,8 @@ const NotificationItem = ({ notification, onClick, compact = false }: Notificati
         return 'Avaliação';
       case 'stock_alert':
         return 'Estoque';
+      case 'wishlist_promotion':
+        return 'Promoção';
       case 'system':
         return 'Sistema';
       default:
