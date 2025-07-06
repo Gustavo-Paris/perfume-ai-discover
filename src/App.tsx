@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useUserAnalytics } from "@/hooks/useUserAnalytics";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
@@ -41,6 +42,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   useAnalytics();
+  useUserAnalytics();
   useOrderTracking();
   
   return (

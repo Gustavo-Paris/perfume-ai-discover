@@ -10,6 +10,7 @@ import FinancialDashboard from '@/components/admin/dashboards/FinancialDashboard
 import OrdersDashboard from '@/components/admin/dashboards/OrdersDashboard';
 import InventoryDashboard from '@/components/admin/dashboards/InventoryDashboard';
 import PerformanceDashboard from '@/components/admin/dashboards/PerformanceDashboard';
+import AnalyticsDashboard from '@/components/admin/dashboards/AnalyticsDashboard';
 
 interface DashboardStats {
   ordersToday: number;
@@ -181,6 +182,10 @@ const AdminDashboard = () => {
 
   if (currentDashboard === 'performance') {
     return <PerformanceDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
+  }
+
+  if (currentDashboard === 'analytics') {
+    return <AnalyticsDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
   }
 
   const StatCard = ({ title, value, icon: Icon, trend, subtitle, gradient }: {

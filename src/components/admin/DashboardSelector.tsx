@@ -1,7 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, DollarSign, Package, ShoppingCart, TrendingUp } from 'lucide-react';
+import { BarChart3, DollarSign, Package, ShoppingCart, TrendingUp, LineChart } from 'lucide-react';
 
-export type DashboardType = 'overview' | 'financial' | 'orders' | 'inventory' | 'performance';
+export type DashboardType = 'overview' | 'financial' | 'orders' | 'inventory' | 'performance' | 'analytics';
 
 interface DashboardSelectorProps {
   value: DashboardType;
@@ -14,6 +14,7 @@ const dashboards = [
   { value: 'orders' as const, label: 'Pedidos', icon: ShoppingCart },
   { value: 'inventory' as const, label: 'Estoque', icon: Package },
   { value: 'performance' as const, label: 'Performance', icon: TrendingUp },
+  { value: 'analytics' as const, label: 'Analytics', icon: LineChart },
 ];
 
 export function DashboardSelector({ value, onChange }: DashboardSelectorProps) {
