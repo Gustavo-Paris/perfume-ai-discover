@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,11 +29,10 @@ const Auth = () => {
   // Detect password recovery flow
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const refreshToken = hashParams.get('refresh_token');
     const type = hashParams.get('type');
     
-    if (type === 'recovery' && accessToken && refreshToken) {
+    if (type === 'recovery') {
+      console.log('Recovery type detected in URL');
       setShowPasswordReset(true);
       // Clear URL hash
       window.history.replaceState(null, '', window.location.pathname);

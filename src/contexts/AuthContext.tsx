@@ -32,28 +32,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event, session);
+        console.log('Auth event:', event, 'Session:', !!session);
         
         if (!mounted) return;
-        
-        if (event === 'PASSWORD_RECOVERY') {
-          console.log('Password recovery detected, session:', session);
-        }
         
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('Password recovery event detected');
+        }
+        
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed');
+        }
       }
     );
 
-    // Get initial session
+    // Then get initial session
     const initializeAuth = async () => {
       try {
+        // First check for recovery tokens in URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        
+        if (type === 'recovery' && accessToken && refreshToken) {
+          console.log('Recovery tokens found in URL, establishing session...');
+          
+          const { data: { session }, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (session && !error && mounted) {
+            console.log('Recovery session established successfully');
+            setSession(session);
+            setUser(session.user);
+            setLoading(false);
+            return;
+          } else {
+            console.error('Failed to establish recovery session:', error);
+          }
+        }
+        
+        // Fallback to regular session check
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Initial session:', session, 'Error:', error);
+        console.log('Regular session check:', !!session, error);
         
         if (mounted) {
           setSession(session);
@@ -61,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('Error initializing auth:', error);
         if (mounted) {
           setLoading(false);
         }
