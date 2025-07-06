@@ -30,6 +30,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminConfig from "./pages/admin/AdminConfig";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminReviews from "./pages/admin/AdminReviews";
+import Notificacoes from "./pages/Notificacoes";
 import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
@@ -57,6 +58,7 @@ const AppContent = () => {
           <Route path="/payment-cancel" element={<PaymentCancel />} />
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/perfume/:id" element={<PerfumeDetails />} />
           
           {/* Admin Routes */}

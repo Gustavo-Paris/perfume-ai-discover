@@ -5,6 +5,7 @@ import { ShoppingBag, Heart, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
 import HeaderUserMenu from './HeaderUserMenu';
+import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import AlgoliaAutocomplete from '@/components/search/AlgoliaAutocomplete';
 
 interface HeaderActionsProps {
@@ -38,6 +39,9 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen }: HeaderActionsProps) =>
         <Button variant="ghost" size="icon" className="hover-scale">
           <Heart className="h-4 w-4" />
         </Button>
+        
+        {/* Notifications */}
+        <NotificationDropdown />
         
         {/* Cart */}
         <Button 
