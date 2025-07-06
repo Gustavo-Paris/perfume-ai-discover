@@ -165,7 +165,6 @@ const Auth = () => {
   };
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🔄 Password update initiated');
     
     if (newPasswordForm.password !== newPasswordForm.confirmPassword) {
       toast({
@@ -178,7 +177,7 @@ const Auth = () => {
     
     if (newPasswordForm.password.length < 6) {
       toast({
-        title: "Erro",
+        title: "Erro", 
         description: "A senha deve ter pelo menos 6 caracteres",
         variant: "destructive"
       });
@@ -187,48 +186,23 @@ const Auth = () => {
     
     setIsLoading(true);
     
-    try {
-      console.log('🔐 Calling Supabase updateUser...');
-      
-      // Direct call to updateUser - let Supabase handle session validation
-      const { error } = await supabase.auth.updateUser({
-        password: newPasswordForm.password
-      });
-      
-      console.log('✅ UpdateUser result:', { error: !!error });
-      
-      if (error) {
-        console.error('❌ Password update failed:', error.message);
-        
-        // Show specific error messages
-        if (error.message.includes('session')) {
-          toast({
-            title: "Sessão expirada",
-            description: "Solicite um novo link de recuperação de senha",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Erro ao alterar senha",
-            description: error.message,
-            variant: "destructive"
-          });
-        }
-      } else {
-        console.log('🎉 Password updated successfully');
-        toast({
-          title: "Senha alterada com sucesso!",
-          description: "Você já pode usar sua nova senha"
-        });
-        navigate('/');
-      }
-    } catch (err) {
-      console.error('❌ Unexpected error:', err);
+    const { error } = await supabase.auth.updateUser({
+      password: newPasswordForm.password
+    });
+    
+    if (error) {
       toast({
-        title: "Erro inesperado",
-        description: "Tente novamente em alguns instantes",
-        variant: "destructive"
+        title: "Erro ao alterar senha",
+        description: error.message,
+        variant: "destructive"  
       });
+    } else {
+      toast({
+        title: "Senha alterada!",
+        description: "Agora você pode fazer login com a nova senha"
+      });
+      setShowPasswordReset(false);
+      setNewPasswordForm({ password: '', confirmPassword: '' });
     }
     
     setIsLoading(false);
