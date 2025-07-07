@@ -102,14 +102,11 @@ const AdvancedSearchBox = ({
     
     let searchTerm = suggestion.text;
     
-    // Se é uma sugestão de produto formatada como "Marca - Nome", 
-    // extrair apenas o nome ou fazer busca mais ampla
+    // Para sugestões de produto, usar apenas o nome do produto para busca mais precisa
     if (suggestion.type === 'product' && suggestion.text.includes(' - ')) {
       const parts = suggestion.text.split(' - ');
-      const brand = parts[0].trim();
-      const name = parts[1].trim();
-      // Buscar tanto pela marca quanto pelo nome
-      searchTerm = `${brand} ${name}`;
+      const name = parts[1].trim(); // Usar apenas o nome do produto
+      searchTerm = name;
     }
     
     console.log('🔍 Search term after processing:', searchTerm);
