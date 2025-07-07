@@ -226,6 +226,15 @@ const AdminConfig = () => {
       status: getSecretStatus('SENTRY_DSN'),
       required: false,
       category: 'analytics'
+    },
+    {
+      name: 'STRIPE_SECRET_KEY',
+      label: 'Stripe - Secret Key',
+      placeholder: 'sk_live_... ou sk_test_...',
+      description: 'Chave secreta para processar pagamentos via Stripe',
+      status: getSecretStatus('STRIPE_SECRET_KEY'),
+      required: true,
+      category: 'payment'
     }
   ];
 

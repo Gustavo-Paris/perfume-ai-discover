@@ -19,7 +19,8 @@ const SECRETS_TO_CHECK = [
   'ALGOLIA_ADMIN_KEY',
   'RESEND_API_KEY',
   'GA_MEASUREMENT_ID',
-  'SENTRY_DSN'
+  'SENTRY_DSN',
+  'STRIPE_SECRET_KEY'
 ];
 
 serve(async (req) => {
