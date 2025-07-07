@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
+import { CreditCard, QrCode, ArrowLeft, Loader2, Globe, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useCart } from '@/contexts/CartContext';
 
 interface PaymentStepProps {
   onBack: () => void;
@@ -17,8 +18,9 @@ interface PaymentStepProps {
 }
 
 export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, loading }: PaymentStepProps) => {
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card'>('pix');
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card' | 'stripe_card'>('pix');
   const [processing, setProcessing] = useState(false);
+  const { items } = useCart();
   const [cardData, setCardData] = useState({
     number: '',
     holder_name: '',
@@ -47,7 +49,57 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
     }
   };
 
+  const handleStripeCheckout = async () => {
+    setProcessing(true);
+    try {
+      // Prepare items for Stripe checkout
+      const checkoutItems = items.map(item => ({
+        perfume_id: item.perfume.id,
+        name: item.perfume.name,
+        brand: item.perfume.brand,
+        size_ml: item.size,
+        quantity: item.quantity,
+        unit_price: item.size === 5 ? item.perfume.price_5ml || 45 : 
+                   item.size === 10 ? item.perfume.price_10ml || 85 : 
+                   item.perfume.price_full || 320
+      }));
+
+      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
+        body: {
+          items: checkoutItems
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        // Open Stripe checkout in new tab (recommended)
+        window.open(data.checkout_url, '_blank');
+        
+        toast({
+          title: "Redirecionando...",
+          description: "Abrindo checkout do Stripe em nova aba.",
+        });
+      } else {
+        throw new Error(data.error || 'Erro ao criar checkout Stripe');
+      }
+    } catch (error) {
+      console.error('Stripe checkout error:', error);
+      toast({
+        title: "Erro no Checkout",
+        description: error instanceof Error ? error.message : "Não foi possível abrir o checkout. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleSubmit = async () => {
+    if (paymentMethod === 'stripe_card') {
+      return handleStripeCheckout();
+    }
+
     if (paymentMethod === 'credit_card') {
       if (!cardData.number || !cardData.holder_name || !cardData.exp_month || !cardData.exp_year || !cardData.cvv) {
         toast({
@@ -121,23 +173,42 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
           <Label className="text-base font-medium mb-4 block">Forma de Pagamento</Label>
           <RadioGroup
             value={paymentMethod}
-            onValueChange={(value: 'pix' | 'credit_card') => setPaymentMethod(value)}
+            onValueChange={(value: 'pix' | 'credit_card' | 'stripe_card') => setPaymentMethod(value)}
             className="space-y-3"
           >
+            {/* PIX Option */}
             <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
               <RadioGroupItem value="pix" id="pix" />
               <QrCode className="h-5 w-5 text-green-600" />
-              <div>
-                <Label htmlFor="pix" className="font-medium cursor-pointer">PIX</Label>
-                <p className="text-sm text-muted-foreground">Pagamento instantâneo</p>
+              <div className="flex-1">
+                <Label htmlFor="pix" className="font-medium cursor-pointer flex items-center">
+                  PIX <MapPin className="ml-2 h-4 w-4 text-green-600" />
+                </Label>
+                <p className="text-sm text-muted-foreground">Modo Bank • Pagamento instantâneo</p>
               </div>
             </div>
+
+            {/* Modo Bank Credit Card */}
             <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
               <RadioGroupItem value="credit_card" id="credit_card" />
               <CreditCard className="h-5 w-5 text-blue-600" />
-              <div>
-                <Label htmlFor="credit_card" className="font-medium cursor-pointer">Cartão de Crédito</Label>
-                <p className="text-sm text-muted-foreground">Parcelamento disponível</p>
+              <div className="flex-1">
+                <Label htmlFor="credit_card" className="font-medium cursor-pointer flex items-center">
+                  Cartão Nacional <MapPin className="ml-2 h-4 w-4 text-blue-600" />
+                </Label>
+                <p className="text-sm text-muted-foreground">Modo Bank • Parcelamento disponível</p>
+              </div>
+            </div>
+
+            {/* Stripe Credit Card */}
+            <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+              <RadioGroupItem value="stripe_card" id="stripe_card" />
+              <CreditCard className="h-5 w-5 text-purple-600" />
+              <div className="flex-1">
+                <Label htmlFor="stripe_card" className="font-medium cursor-pointer flex items-center">
+                  Cartão Internacional <Globe className="ml-2 h-4 w-4 text-purple-600" />
+                </Label>
+                <p className="text-sm text-muted-foreground">Stripe • Aceita cartões do mundo todo</p>
               </div>
             </div>
           </RadioGroup>
@@ -246,6 +317,11 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
             <>
               <QrCode className="mr-2 h-4 w-4" />
               Gerar PIX
+            </>
+          ) : paymentMethod === 'stripe_card' ? (
+            <>
+              <Globe className="mr-2 h-4 w-4" />
+              Pagar com Stripe
             </>
           ) : (
             <>

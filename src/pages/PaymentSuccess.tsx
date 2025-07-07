@@ -20,6 +20,8 @@ const PaymentSuccess = () => {
   const transactionId = searchParams.get('transaction_id');
   const paymentMethod = searchParams.get('payment_method');
   const orderDraftId = searchParams.get('order_draft_id');
+  const sessionId = searchParams.get('session_id'); // Stripe session ID
+  const provider = searchParams.get('provider'); // stripe or modo_bank
 
   useEffect(() => {
     if (!user) {
@@ -31,19 +33,39 @@ const PaymentSuccess = () => {
   }, [user, navigate, transactionId, paymentMethod, orderDraftId]);
 
   const confirmOrder = async () => {
-    if (!orderDraftId || !transactionId || !paymentMethod) {
+    // For Stripe, we need either sessionId or transactionId
+    const hasValidIds = sessionId || (orderDraftId && transactionId);
+    
+    if (!hasValidIds) {
       setLoading(false);
       return;
     }
 
     try {
-      // Confirm order through edge function
+      // For Stripe payments, use session_id to verify payment
+      if (provider === 'stripe' && sessionId) {
+        // For now, just show success - Stripe webhook will handle order confirmation
+        setOrderData({
+          id: sessionId,
+          order_number: `STRIPE-${sessionId.slice(-8)}`,
+          status: 'paid',
+          total_amount: searchParams.get('total') || '0',
+          payment_method: 'credit_card'
+        });
+        
+        // Clear cart for Stripe payments
+        await clearCart();
+        setLoading(false);
+        return;
+      }
+
+      // For Modo Bank payments, use existing flow
       const { data, error } = await supabase.functions.invoke('confirm-order', {
         body: {
           orderDraftId,
           paymentData: {
             transaction_id: transactionId,
-            payment_method: paymentMethod,
+            payment_method: paymentMethod || 'credit_card',
             status: 'paid'
           }
         }
@@ -133,7 +155,9 @@ const PaymentSuccess = () => {
                   <div className="flex justify-between">
                     <span>Pagamento:</span>
                     <span className="font-medium">
-                      {paymentMethod === 'pix' ? 'PIX' : 'Cartão de Crédito'}
+                      {paymentMethod === 'pix' ? 'PIX' : 
+                       provider === 'stripe' ? 'Cartão (Stripe)' : 
+                       'Cartão (Modo Bank)'}
                     </span>
                   </div>
                   <div className="flex justify-between">

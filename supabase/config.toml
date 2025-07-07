@@ -16,5 +16,8 @@ verify_jwt = false
 [functions.me-delete]
 verify_jwt = false
 
+[functions.create-stripe-checkout]
+verify_jwt = true
+
 [functions.tasks/db-backup]
 verify_jwt = false
