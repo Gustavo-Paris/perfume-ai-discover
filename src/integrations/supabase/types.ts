@@ -1098,6 +1098,120 @@ export type Database = {
           },
         ]
       }
+      stock_alert_configs: {
+        Row: {
+          alert_enabled: boolean | null
+          auto_reorder: boolean | null
+          avg_monthly_sales_ml: number | null
+          created_at: string | null
+          critical_threshold_ml: number | null
+          id: string
+          last_sales_calculation: string | null
+          low_threshold_ml: number | null
+          medium_threshold_ml: number | null
+          perfume_id: string | null
+          preferred_reorder_quantity: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          alert_enabled?: boolean | null
+          auto_reorder?: boolean | null
+          avg_monthly_sales_ml?: number | null
+          created_at?: string | null
+          critical_threshold_ml?: number | null
+          id?: string
+          last_sales_calculation?: string | null
+          low_threshold_ml?: number | null
+          medium_threshold_ml?: number | null
+          perfume_id?: string | null
+          preferred_reorder_quantity?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          alert_enabled?: boolean | null
+          auto_reorder?: boolean | null
+          avg_monthly_sales_ml?: number | null
+          created_at?: string | null
+          critical_threshold_ml?: number | null
+          id?: string
+          last_sales_calculation?: string | null
+          low_threshold_ml?: number | null
+          medium_threshold_ml?: number | null
+          perfume_id?: string | null
+          preferred_reorder_quantity?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alert_configs_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: true
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alert_configs_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: true
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_alert_history: {
+        Row: {
+          admin_notified: boolean | null
+          alert_type: string
+          auto_reorder_triggered: boolean | null
+          created_at: string | null
+          days_until_stockout: number | null
+          id: string
+          notification_sent: boolean | null
+          perfume_id: string | null
+          stock_ml_at_alert: number | null
+          threshold_triggered: number | null
+        }
+        Insert: {
+          admin_notified?: boolean | null
+          alert_type: string
+          auto_reorder_triggered?: boolean | null
+          created_at?: string | null
+          days_until_stockout?: number | null
+          id?: string
+          notification_sent?: boolean | null
+          perfume_id?: string | null
+          stock_ml_at_alert?: number | null
+          threshold_triggered?: number | null
+        }
+        Update: {
+          admin_notified?: boolean | null
+          alert_type?: string
+          auto_reorder_triggered?: boolean | null
+          created_at?: string | null
+          days_until_stockout?: number | null
+          id?: string
+          notification_sent?: boolean | null
+          perfume_id?: string | null
+          stock_ml_at_alert?: number | null
+          threshold_triggered?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alert_history_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alert_history_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           change_ml: number
@@ -1324,6 +1438,18 @@ export type Database = {
         Args: { perfume_a_id: string; perfume_b_id: string }
         Returns: number
       }
+      check_advanced_stock_alerts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          perfume_id: string
+          perfume_name: string
+          brand: string
+          current_stock_ml: number
+          alert_level: string
+          days_until_stockout: number
+          should_reorder: boolean
+        }[]
+      }
       check_low_stock_alerts: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1448,6 +1574,10 @@ export type Database = {
       trigger_email_notification: {
         Args: { notification_type: string; record_id: string }
         Returns: undefined
+      }
+      update_sales_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       upsert_reservation: {
         Args: {
