@@ -1923,6 +1923,10 @@ export type Database = {
           priority_score: number
         }[]
       }
+      generate_affiliate_code: {
+        Args: { user_name?: string }
+        Returns: string
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
