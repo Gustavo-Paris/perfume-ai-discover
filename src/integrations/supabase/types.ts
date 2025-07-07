@@ -147,6 +147,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cart_items_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
         ]
       }
       conversational_sessions: {
@@ -297,6 +304,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventory_lots_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventory_lots_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
@@ -444,6 +458,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
             referencedColumns: ["id"]
           },
         ]
@@ -720,6 +741,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "promotions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
         ]
       }
       recommendation_sessions: {
@@ -793,6 +821,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reservations_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reviews: {
@@ -832,6 +867,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
             referencedColumns: ["id"]
           },
         ]
@@ -935,6 +977,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "stock_movements_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -1009,11 +1058,43 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "wishlist_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      perfumes_with_stock: {
+        Row: {
+          base_notes: string[] | null
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          family: string | null
+          gender: string | null
+          heart_notes: string[] | null
+          id: string | null
+          image_url: string | null
+          last_stock_update: string | null
+          name: string | null
+          price_10ml: number | null
+          price_5ml: number | null
+          price_full: number | null
+          stock_10ml: number | null
+          stock_5ml: number | null
+          stock_full: number | null
+          stock_status: string | null
+          top_notes: string[] | null
+          total_stock_ml: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_points_transaction: {
@@ -1033,6 +1114,18 @@ export type Database = {
       check_low_stock_alerts: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      check_perfume_availability: {
+        Args: {
+          perfume_uuid: string
+          size_ml_param: number
+          quantity_requested?: number
+        }
+        Returns: {
+          available: boolean
+          max_quantity: number
+          stock_ml: number
+        }[]
       }
       cleanup_expired_reservations: {
         Args: Record<PropertyKey, never>
