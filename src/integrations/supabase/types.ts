@@ -305,13 +305,16 @@ export type Database = {
         Row: {
           abandoned_at: string | null
           abandonment_stage: string | null
+          checkout_started_at: string | null
           created_at: string | null
           device_type: string | null
           exit_page: string | null
+          first_product_added_at: string | null
           first_reminder_sent: string | null
           id: string
           items_count: number | null
           last_activity: string | null
+          payment_attempted_at: string | null
           recovery_discount_sent: string | null
           second_reminder_sent: string | null
           session_id: string | null
@@ -321,17 +324,22 @@ export type Database = {
           traffic_source: string | null
           user_agent: string | null
           user_id: string | null
+          utm_campaign: string | null
+          utm_source: string | null
         }
         Insert: {
           abandoned_at?: string | null
           abandonment_stage?: string | null
+          checkout_started_at?: string | null
           created_at?: string | null
           device_type?: string | null
           exit_page?: string | null
+          first_product_added_at?: string | null
           first_reminder_sent?: string | null
           id?: string
           items_count?: number | null
           last_activity?: string | null
+          payment_attempted_at?: string | null
           recovery_discount_sent?: string | null
           second_reminder_sent?: string | null
           session_id?: string | null
@@ -341,17 +349,22 @@ export type Database = {
           traffic_source?: string | null
           user_agent?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_source?: string | null
         }
         Update: {
           abandoned_at?: string | null
           abandonment_stage?: string | null
+          checkout_started_at?: string | null
           created_at?: string | null
           device_type?: string | null
           exit_page?: string | null
+          first_product_added_at?: string | null
           first_reminder_sent?: string | null
           id?: string
           items_count?: number | null
           last_activity?: string | null
+          payment_attempted_at?: string | null
           recovery_discount_sent?: string | null
           second_reminder_sent?: string | null
           session_id?: string | null
@@ -361,6 +374,8 @@ export type Database = {
           traffic_source?: string | null
           user_agent?: string | null
           user_id?: string | null
+          utm_campaign?: string | null
+          utm_source?: string | null
         }
         Relationships: []
       }
@@ -1300,36 +1315,77 @@ export type Database = {
           },
         ]
       }
+      review_helpfulness: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_helpful: boolean
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_helpful?: boolean
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_helpfulness_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           comment: string | null
           created_at: string
+          helpful_count: number | null
           id: string
+          images_urls: string[] | null
           perfume_id: string
           rating: number
           status: string
           updated_at: string
           user_id: string
+          verified_purchase: boolean | null
         }
         Insert: {
           comment?: string | null
           created_at?: string
+          helpful_count?: number | null
           id?: string
+          images_urls?: string[] | null
           perfume_id: string
           rating: number
           status?: string
           updated_at?: string
           user_id: string
+          verified_purchase?: boolean | null
         }
         Update: {
           comment?: string | null
           created_at?: string
+          helpful_count?: number | null
           id?: string
+          images_urls?: string[] | null
           perfume_id?: string
           rating?: number
           status?: string
           updated_at?: string
           user_id?: string
+          verified_purchase?: boolean | null
         }
         Relationships: [
           {
