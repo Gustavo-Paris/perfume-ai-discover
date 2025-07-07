@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Copy, ExternalLink, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { Copy, ExternalLink, TrendingUp, Users, DollarSign, UserPlus } from 'lucide-react';
 
 interface Affiliate {
   id: string;
@@ -34,6 +34,7 @@ interface AffiliateReferral {
 export default function AdminAffiliates() {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [referrals, setReferrals] = useState<AffiliateReferral[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -62,6 +63,20 @@ export default function AdminAffiliates() {
         })
       );
 
+      // Carregar todos os usuários que não são afiliados
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .order('name');
+
+      if (usersError) throw usersError;
+
+      // Filtrar usuários que já são afiliados
+      const affiliateUserIds = (affiliatesData || []).map(a => a.user_id);
+      const nonAffiliateUsers = (usersData || []).filter(user => 
+        !affiliateUserIds.includes(user.id)
+      );
+
       // Carregar referrals
       const { data: referralsData, error: referralsError } = await supabase
         .from('affiliate_referrals')
@@ -72,6 +87,7 @@ export default function AdminAffiliates() {
       if (referralsError) throw referralsError;
 
       setAffiliates(affiliatesWithProfiles);
+      setAllUsers(nonAffiliateUsers);
       setReferrals(referralsData || []);
     } catch (error) {
       console.error('Error loading affiliate data:', error);
@@ -145,6 +161,54 @@ export default function AdminAffiliates() {
       toast({
         title: "Erro",
         description: "Erro ao confirmar comissão",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addAffiliate = async (userId: string) => {
+    try {
+      // Buscar nome do usuário para gerar código
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      // Gerar código de afiliado
+      const { data: affiliateCode, error: codeError } = await supabase
+        .rpc('generate_affiliate_code', { 
+          user_name: userProfile?.name || undefined 
+        });
+
+      if (codeError) throw codeError;
+
+      // Criar registro de afiliado
+      const { data, error } = await supabase
+        .from('affiliates')
+        .insert({
+          user_id: userId,
+          affiliate_code: affiliateCode,
+          commission_rate: 0.05,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Afiliado adicionado com sucesso",
+      });
+
+      // Recarregar dados
+      loadData();
+    } catch (error) {
+      console.error('Error adding affiliate:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar afiliado",
         variant: "destructive",
       });
     }
@@ -239,6 +303,46 @@ export default function AdminAffiliates() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Adicionar Novo Afiliado */}
+      {allUsers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Adicionar Novo Afiliado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Selecione um usuário para dar permissão de afiliado:
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {allUsers.slice(0, 6).map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <div className="font-medium">{user.name || 'Sem nome'}</div>
+                      <div className="text-sm text-muted-foreground">{user.email}</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => addAffiliate(user.id)}
+                    >
+                      Adicionar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {allUsers.length > 6 && (
+                <p className="text-sm text-muted-foreground">
+                  E mais {allUsers.length - 6} usuários disponíveis...
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Lista de Afiliados */}
       <Card>

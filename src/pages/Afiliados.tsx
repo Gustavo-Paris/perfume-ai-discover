@@ -1,54 +1,25 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Share2, 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
-  Copy, 
-  CheckCircle, 
-  ExternalLink,
-  Calculator,
-  Gift,
-  Crown
-} from 'lucide-react';
+import { useAffiliates } from '@/hooks/useAffiliates';
+import { useAuth } from '@/contexts/AuthContext';
+import { Copy, ExternalLink, TrendingUp, DollarSign, Users, UserX, Crown, Share2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 
-interface AffiliateData {
-  id: string;
-  affiliate_code: string;
-  commission_rate: number;
-  status: string;
-  total_earnings: number;
-  total_referrals: number;
-  created_at: string;
-}
-
-interface AffiliateReferral {
-  id: string;
-  commission_amount: number;
-  status: string;
-  created_at: string;
-  confirmed_at: string | null;
-  orders?: {
-    order_number: string;
-    total_amount: number;
-  } | null;
-}
-
-const Afiliados = () => {
+export default function Afiliados() {
   const { user } = useAuth();
-  const [affiliateData, setAffiliateData] = useState<AffiliateData | null>(null);
-  const [referrals, setReferrals] = useState<AffiliateReferral[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isApplying, setIsApplying] = useState(false);
+  const {
+    affiliate,
+    referrals,
+    loading,
+    loadAffiliateData,
+    generateAffiliateLink
+  } = useAffiliates();
+
   const [copied, setCopied] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
 
@@ -56,97 +27,10 @@ const Afiliados = () => {
     if (user) {
       loadAffiliateData();
     }
-  }, [user]);
+  }, [user, loadAffiliateData]);
 
-  const loadAffiliateData = async () => {
-    try {
-      // Buscar dados do afiliado
-      const { data: affiliate, error: affiliateError } = await supabase
-        .from('affiliates')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (affiliateError && affiliateError.code !== 'PGRST116') {
-        throw affiliateError;
-      }
-
-      setAffiliateData(affiliate);
-
-      // Se for afiliado, buscar referências
-      if (affiliate) {
-        const { data: referralData, error: referralError } = await supabase
-          .from('affiliate_referrals')
-          .select(`
-            *,
-            orders:order_id (order_number, total_amount)
-          `)
-          .eq('affiliate_id', affiliate.id)
-          .order('created_at', { ascending: false });
-
-        if (referralError) {
-          console.error('Error loading referrals:', referralError);
-        } else {
-          setReferrals(referralData || []);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading affiliate data:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar dados do programa de afiliados",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyToProgram = async () => {
-    if (!user) return;
-
-    setIsApplying(true);
-    try {
-      // Gerar código de afiliado único
-      const { data: affiliateCode, error: codeError } = await supabase
-        .rpc('generate_affiliate_code', { user_name: user.user_metadata?.name });
-
-      if (codeError) throw codeError;
-
-      // Criar registro de afiliado
-      const { data, error } = await supabase
-        .from('affiliates')
-        .insert({
-          user_id: user.id,
-          affiliate_code: affiliateCode,
-          commission_rate: 0.05, // 5% padrão
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setAffiliateData(data);
-      toast({
-        title: "Parabéns! 🎉",
-        description: "Você agora faz parte do nosso programa de afiliados!",
-      });
-    } catch (error) {
-      console.error('Error applying to program:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao se inscrever no programa de afiliados",
-        variant: "destructive"
-      });
-    } finally {
-      setIsApplying(false);
-    }
-  };
-
-  const copyAffiliateLink = (path: string = '') => {
-    const baseUrl = window.location.origin;
-    const link = `${baseUrl}${path}?ref=${affiliateData?.affiliate_code}`;
+  const copyLink = (path: string = '') => {
+    const link = generateAffiliateLink(path);
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -174,128 +58,58 @@ const Afiliados = () => {
       path = '/' + path;
     }
 
-    copyAffiliateLink(path);
+    copyLink(path);
     setCustomUrl('');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Carregando...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Se não está logado
   if (!user) {
     return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <h1 className="text-3xl font-bold mb-4">Programa de Afiliados</h1>
-          <p className="text-muted-foreground mb-8">
-            Faça login para acessar o programa de afiliados
-          </p>
-          <Button onClick={() => window.location.href = '/auth'}>
-            Fazer Login
-          </Button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <UserX className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CardTitle>Acesso Restrito</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-muted-foreground mb-4">
+              Você precisa estar logado para acessar esta área.
+            </p>
+            <Button asChild>
+              <a href="/auth">Fazer Login</a>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Se não é afiliado ainda
-  if (!affiliateData) {
+  // Se está logado mas não é afiliado
+  if (!loading && !affiliate) {
     return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <motion.div 
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <Crown className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold">Programa de Afiliados</h1>
-            </div>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Ganhe dinheiro compartilhando os perfumes que você ama. 
-              Receba <strong className="text-primary">5% de comissão</strong> em cada venda!
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Crown className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CardTitle>Programa de Afiliados</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-muted-foreground mb-4">
+              Você não possui permissão de afiliado. Entre em contato conosco para mais informações sobre o programa de parceria.
             </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="text-center h-full">
-                <CardContent className="p-6">
-                  <DollarSign className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h3 className="font-bold text-lg mb-2">5% de Comissão</h3>
-                  <p className="text-muted-foreground">
-                    Ganhe 5% do valor de cada pedido feito através dos seus links
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="text-center h-full">
-                <CardContent className="p-6">
-                  <Share2 className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h3 className="font-bold text-lg mb-2">Fácil de Compartilhar</h3>
-                  <p className="text-muted-foreground">
-                    Links personalizados para redes sociais, blog ou onde quiser
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="text-center h-full">
-                <CardContent className="p-6">
-                  <TrendingUp className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h3 className="font-bold text-lg mb-2">Acompanhe Resultados</h3>
-                  <p className="text-muted-foreground">
-                    Dashboard completo para acompanhar suas vendas e ganhos
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-
-          <motion.div 
-            className="text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Button 
-              onClick={applyToProgram} 
-              disabled={isApplying}
-              size="lg"
-              className="px-8"
-            >
-              {isApplying ? 'Processando...' : 'Quero Ser Afiliado'}
+            <Button variant="outline" asChild>
+              <a href="/">Voltar ao Início</a>
             </Button>
-            <p className="text-sm text-muted-foreground mt-4">
-              Gratuito e sem compromisso. Comece a ganhar hoje mesmo!
-            </p>
-          </motion.div>
-        </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -311,7 +125,7 @@ const Afiliados = () => {
         >
           <h1 className="text-3xl font-bold mb-2">Dashboard de Afiliado</h1>
           <p className="text-muted-foreground">
-            Código: <Badge variant="secondary">{affiliateData.affiliate_code}</Badge>
+            Código: <Badge variant="secondary">{affiliate?.affiliate_code}</Badge>
           </p>
         </motion.div>
 
@@ -321,7 +135,7 @@ const Afiliados = () => {
             <CardContent className="p-6 text-center">
               <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-green-600">
-                R$ {affiliateData.total_earnings.toFixed(2)}
+                R$ {affiliate?.total_earnings?.toFixed(2) || '0.00'}
               </div>
               <p className="text-sm text-muted-foreground">Total Ganho</p>
             </CardContent>
@@ -331,7 +145,7 @@ const Afiliados = () => {
             <CardContent className="p-6 text-center">
               <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-blue-600">
-                {affiliateData.total_referrals}
+                {affiliate?.total_referrals || 0}
               </div>
               <p className="text-sm text-muted-foreground">Vendas Realizadas</p>
             </CardContent>
@@ -341,7 +155,7 @@ const Afiliados = () => {
             <CardContent className="p-6 text-center">
               <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-purple-600">
-                {(affiliateData.commission_rate * 100).toFixed(0)}%
+                {((affiliate?.commission_rate || 0) * 100).toFixed(0)}%
               </div>
               <p className="text-sm text-muted-foreground">Taxa de Comissão</p>
             </CardContent>
@@ -366,16 +180,16 @@ const Afiliados = () => {
                   <label className="text-sm font-medium">Link Principal</label>
                   <div className="flex gap-2">
                     <Input 
-                      value={`${window.location.origin}?ref=${affiliateData.affiliate_code}`}
+                      value={generateAffiliateLink()}
                       readOnly
                       className="flex-1"
                     />
                     <Button 
-                      onClick={() => copyAffiliateLink()}
+                      onClick={() => copyLink()}
                       variant="outline"
                       size="sm"
                     >
-                      {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                      <Copy className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -386,12 +200,12 @@ const Afiliados = () => {
                   <div className="grid gap-2">
                     <div className="flex gap-2">
                       <Input 
-                        value={`${window.location.origin}/catalogo?ref=${affiliateData.affiliate_code}`}
+                        value={generateAffiliateLink('/catalogo')}
                         readOnly
                         className="flex-1"
                       />
                       <Button 
-                        onClick={() => copyAffiliateLink('/catalogo')}
+                        onClick={() => copyLink('/catalogo')}
                         variant="outline"
                         size="sm"
                       >
@@ -400,12 +214,12 @@ const Afiliados = () => {
                     </div>
                     <div className="flex gap-2">
                       <Input 
-                        value={`${window.location.origin}/curadoria?ref=${affiliateData.affiliate_code}`}
+                        value={generateAffiliateLink('/curadoria')}
                         readOnly
                         className="flex-1"
                       />
                       <Button 
-                        onClick={() => copyAffiliateLink('/curadoria')}
+                        onClick={() => copyLink('/curadoria')}
                         variant="outline"
                         size="sm"
                       >
@@ -457,7 +271,7 @@ const Afiliados = () => {
                       >
                         <div>
                           <p className="font-medium">
-                            Pedido #{referral.orders?.order_number || 'N/A'}
+                            Pedido #{referral.order_id || 'N/A'}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(referral.created_at).toLocaleDateString('pt-BR')}
@@ -491,48 +305,51 @@ const Afiliados = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="font-medium flex items-center gap-2">
-                      <Calculator className="h-4 w-4" />
-                      Calculadora de Comissão
+                      <Share2 className="h-4 w-4" />
+                      Materiais de Marketing
                     </h3>
-                    <div className="p-4 border rounded-lg bg-muted/50">
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Exemplo de ganhos:
-                      </p>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>Venda de R$ 100:</span>
-                          <span className="font-medium">R$ 5,00</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Venda de R$ 500:</span>
-                          <span className="font-medium">R$ 25,00</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Venda de R$ 1.000:</span>
-                          <span className="font-medium">R$ 50,00</span>
-                        </div>
-                      </div>
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      <p>• Use hashtags relevantes: #perfumes #fragrancia #beleza</p>
+                      <p>• Compartilhe sua experiência pessoal com os produtos</p>
+                      <p>• Destaque ofertas e lançamentos</p>
+                      <p>• Crie conteúdo visual atrativo</p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="font-medium flex items-center gap-2">
-                      <Gift className="h-4 w-4" />
-                      Materiais de Divulgação
+                      <TrendingUp className="h-4 w-4" />
+                      Dicas de Sucesso
                     </h3>
-                    <div className="space-y-2">
-                      <Button variant="outline" className="w-full justify-start">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Imagens para Redes Sociais
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Textos Prontos
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Guia do Afiliado
-                      </Button>
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      <p>• Seja autêntico e transparente</p>
+                      <p>• Teste os produtos que recomenda</p>
+                      <p>• Engage com sua audiência</p>
+                      <p>• Monitore suas estatísticas regularmente</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h3 className="font-medium mb-4">Calculadora de Comissão</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Valor do Pedido (R$)</label>
+                      <Input 
+                        type="number" 
+                        placeholder="0,00"
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          const commission = value * (affiliate?.commission_rate || 0.05);
+                          // Você pode adicionar estado para mostrar o resultado
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Sua Comissão</label>
+                      <div className="p-3 bg-muted rounded-md text-lg font-medium">
+                        R$ 0,00
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -543,6 +360,4 @@ const Afiliados = () => {
       </div>
     </div>
   );
-};
-
-export default Afiliados;
+}
