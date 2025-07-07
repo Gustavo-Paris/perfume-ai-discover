@@ -150,7 +150,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Get perfume data for analytics
       const { data: perfume } = await supabase
         .from('perfumes')
-        .select('*')
+        .select('id, name, brand, price_5ml, price_10ml, price_full')
         .eq('id', item.perfume_id)
         .single();
 
@@ -198,11 +198,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check if item already exists
     const { data: existingItem } = await supabase
       .from('cart_items')
-      .select('*')
+      .select('id, user_id, perfume_id, size_ml, quantity, created_at')
       .eq('user_id', user?.id)
       .eq('perfume_id', perfumeId)
       .eq('size_ml', sizeML)
-      .single();
+      .maybeSingle();
 
     if (existingItem) {
       // Update quantity
@@ -231,7 +231,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Get perfume data
     const { data: perfume, error } = await supabase
       .from('perfumes')
-      .select('*')
+      .select('id, name, brand, family, gender, description, image_url, price_5ml, price_10ml, price_full, top_notes, heart_notes, base_notes, category, created_at')
       .eq('id', perfumeId)
       .single();
 

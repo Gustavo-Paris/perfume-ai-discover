@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Heart, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/hooks/useCart';
+import { useCart } from '@/contexts/CartContext';
 import HeaderUserMenu from './HeaderUserMenu';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import AlgoliaAutocomplete from '@/components/search/AlgoliaAutocomplete';

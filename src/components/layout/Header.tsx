@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/hooks/useCart';
+import { useCart } from '@/contexts/CartContext';
 import HeaderLogo from './HeaderLogo';
 import HeaderNavigation from './HeaderNavigation';
 import HeaderActions from './HeaderActions';
