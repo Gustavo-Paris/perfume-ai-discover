@@ -89,6 +89,90 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_referrals: {
+        Row: {
+          affiliate_id: string
+          commission_amount: number
+          confirmed_at: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          referred_user_id: string | null
+          status: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          commission_amount: number
+          confirmed_at?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          referred_user_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          commission_amount?: number
+          confirmed_at?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          referred_user_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates: {
+        Row: {
+          affiliate_code: string
+          commission_rate: number | null
+          created_at: string | null
+          id: string
+          status: string | null
+          total_earnings: number | null
+          total_referrals: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          affiliate_code: string
+          commission_rate?: number | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          affiliate_code?: string
+          commission_rate?: number | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_providers: {
         Row: {
           api_key_env: string
@@ -403,38 +487,103 @@ export type Database = {
           },
         ]
       }
+      coupon_user_usage: {
+        Row: {
+          coupon_code: string
+          first_used_at: string | null
+          id: string
+          last_used_at: string | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          coupon_code: string
+          first_used_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          coupon_code?: string
+          first_used_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_user_usage_coupon_code_fkey"
+            columns: ["coupon_code"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       coupons: {
         Row: {
+          applicable_categories: string[] | null
+          auto_apply: boolean | null
           code: string
+          coupon_category: string | null
           created_at: string
           current_uses: number
           expires_at: string | null
+          first_purchase_only: boolean | null
+          free_shipping: boolean | null
           is_active: boolean
           max_uses: number | null
+          maximum_discount_amount: number | null
           min_order_value: number | null
+          minimum_quantity: number | null
+          stackable: boolean | null
           type: string
+          usage_per_user: number | null
+          user_restrictions: Json | null
           value: number
         }
         Insert: {
+          applicable_categories?: string[] | null
+          auto_apply?: boolean | null
           code: string
+          coupon_category?: string | null
           created_at?: string
           current_uses?: number
           expires_at?: string | null
+          first_purchase_only?: boolean | null
+          free_shipping?: boolean | null
           is_active?: boolean
           max_uses?: number | null
+          maximum_discount_amount?: number | null
           min_order_value?: number | null
+          minimum_quantity?: number | null
+          stackable?: boolean | null
           type: string
+          usage_per_user?: number | null
+          user_restrictions?: Json | null
           value: number
         }
         Update: {
+          applicable_categories?: string[] | null
+          auto_apply?: boolean | null
           code?: string
+          coupon_category?: string | null
           created_at?: string
           current_uses?: number
           expires_at?: string | null
+          first_purchase_only?: boolean | null
+          free_shipping?: boolean | null
           is_active?: boolean
           max_uses?: number | null
+          maximum_discount_amount?: number | null
           min_order_value?: number | null
+          minimum_quantity?: number | null
+          stackable?: boolean | null
           type?: string
+          usage_per_user?: number | null
+          user_restrictions?: Json | null
           value?: number
         }
         Relationships: []
