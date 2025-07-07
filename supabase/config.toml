@@ -30,3 +30,9 @@ verify_jwt = false
 
 [functions.email-triggers]
 verify_jwt = false
+
+[functions.voice-to-text]
+verify_jwt = false
+
+[functions.search-analytics]
+verify_jwt = false
