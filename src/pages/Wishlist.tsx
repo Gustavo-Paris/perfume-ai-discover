@@ -1,30 +1,39 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingCart, Trash2, Filter, SortAsc } from 'lucide-react';
+import { Heart, ShoppingCart, Trash2, Filter, SortAsc, Plus, Eye } from 'lucide-react';
 import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/hooks/use-toast';
 import { LazyImage } from '@/components/ui/lazy-image';
 
 export default function Wishlist() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const { data: wishlistItems = [], isLoading } = useWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
   
   const [sortBy, setSortBy] = useState<'recent' | 'name' | 'brand' | 'price'>('recent');
-  const [filterBy, setFilterBy] = useState<'all' | 'masculine' | 'feminine' | 'unisex'>('all');
+  const [filterBy, setFilterBy] = useState<'all' | 'masculino' | 'feminino' | 'unissex'>('all');
 
   // Redirect to login if not authenticated
   if (!user) {
     navigate('/auth');
     return null;
   }
+
+  // Helper function to get the minimum price
+  const getMinPrice = (perfume: any) => {
+    const prices = [perfume.price_5ml, perfume.price_10ml].filter(Boolean);
+    return prices.length > 0 ? Math.min(...prices) : perfume.price_full;
+  };
 
   // Sort items
   const sortedItems = [...wishlistItems].sort((a, b) => {
@@ -34,27 +43,33 @@ export default function Wishlist() {
       case 'brand':
         return a.perfume.brand.localeCompare(b.perfume.brand);
       case 'price':
-        return a.perfume.price_full - b.perfume.price_full;
+        return getMinPrice(a.perfume) - getMinPrice(b.perfume);
       case 'recent':
       default:
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }
   });
 
-  // Filter items
+  // Filter items - corrigido para os valores corretos do banco
   const filteredItems = sortedItems.filter(item => {
     if (filterBy === 'all') return true;
-    return item.perfume.gender.toLowerCase().includes(filterBy);
+    return item.perfume.gender === filterBy;
   });
 
   const handleRemove = (perfumeId: string, perfumeName: string) => {
     removeFromWishlist.mutate(perfumeId);
   };
 
-  const handleAddToCart = (perfumeId: string) => {
+  const handleQuickAdd = (perfumeId: string, size: 5 | 10, perfumeName: string) => {
+    addToCart({
+      perfume_id: perfumeId,
+      size_ml: size,
+      quantity: 1
+    });
+    
     toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "Adicionar ao carrinho diretamente da wishlist será implementado em breve",
+      title: "Adicionado ao carrinho!",
+      description: `${perfumeName} ${size}ml foi adicionado ao seu carrinho.`,
     });
   };
 
@@ -111,9 +126,9 @@ export default function Wishlist() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="masculine">Masculinos</SelectItem>
-                <SelectItem value="feminine">Femininos</SelectItem>
-                <SelectItem value="unisex">Unissex</SelectItem>
+                <SelectItem value="masculino">Masculinos</SelectItem>
+                <SelectItem value="feminino">Femininos</SelectItem>
+                <SelectItem value="unissex">Unissex</SelectItem>
               </SelectContent>
             </Select>
 
@@ -197,33 +212,62 @@ export default function Wishlist() {
                     <span className="capitalize">{item.perfume.gender}</span>
                   </div>
 
-                  {/* Price */}
+                  {/* Price - mostrar menor preço disponível */}
                   <div className="space-y-1">
                     <div className="text-lg font-bold text-primary">
-                      R$ {item.perfume.price_full.toFixed(2)}
+                      A partir de R$ {getMinPrice(item.perfume).toFixed(2)}
                     </div>
-                    {item.perfume.price_5ml && (
-                      <div className="text-sm text-muted-foreground">
-                        5ml: R$ {item.perfume.price_5ml.toFixed(2)}
-                      </div>
-                    )}
+                    <div className="text-xs text-muted-foreground">
+                      {item.perfume.price_5ml && `5ml: R$ ${item.perfume.price_5ml.toFixed(2)}`}
+                      {item.perfume.price_5ml && item.perfume.price_10ml && ' • '}
+                      {item.perfume.price_10ml && `10ml: R$ ${item.perfume.price_10ml.toFixed(2)}`}
+                    </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button 
-                      className="flex-1"
-                      onClick={() => handleAddToCart(item.perfume.id)}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                    <Button variant="outline" asChild>
-                      <Link to={`/perfume/${item.perfume.id}`}>
-                        Ver Detalhes
-                      </Link>
-                    </Button>
-                  </div>
+                  {/* Actions - botões funcionais para adicionar ao carrinho */}
+                  <TooltipProvider>
+                    <div className="flex gap-2">
+                      {item.perfume.price_5ml && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              onClick={() => handleQuickAdd(item.perfume.id, 5, item.perfume.name)}
+                              className="flex-1"
+                              size="sm"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              5ml
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>R$ {item.perfume.price_5ml.toFixed(2)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {item.perfume.price_10ml && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              onClick={() => handleQuickAdd(item.perfume.id, 10, item.perfume.name)}
+                              className="flex-1"
+                              size="sm"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              10ml
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>R$ {item.perfume.price_10ml.toFixed(2)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/perfume/${item.perfume.id}`}>
+                          <Eye className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </TooltipProvider>
                 </div>
               </CardContent>
             </Card>
