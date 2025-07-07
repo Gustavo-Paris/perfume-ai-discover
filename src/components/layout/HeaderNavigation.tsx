@@ -5,6 +5,7 @@ const navigation = [
   { name: 'Curadoria', href: '/curadoria' },
   { name: 'Catálogo', href: '/catalogo' },
   { name: 'Fidelidade', href: '/fidelidade' },
+  { name: 'Afiliados', href: '/afiliados' },
 ];
 
 const HeaderNavigation = () => {

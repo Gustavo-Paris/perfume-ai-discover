@@ -33,6 +33,7 @@ import AdminConfig from "./pages/admin/AdminConfig";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminPromotions from "./pages/admin/AdminPromotions";
 import AdminReviews from "./pages/admin/AdminReviews";
+import AdminAffiliates from "./pages/admin/AdminAffiliates";
 import Notificacoes from "./pages/Notificacoes";
 import Wishlist from "./pages/Wishlist";
 import PerfumeDetails from "./pages/PerfumeDetails";
@@ -80,6 +81,7 @@ const AppContent = () => {
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="promotions" element={<AdminPromotions />} />
+            <Route path="affiliates" element={<AdminAffiliates />} />
             <Route path="config" element={<AdminConfig />} />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />

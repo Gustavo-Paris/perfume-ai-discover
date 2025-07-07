@@ -10,7 +10,8 @@ import {
   X,
   Tag,
   MessageSquare,
-  Percent
+  Percent,
+  UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ const adminNavItems = [
   { title: 'Reviews', url: '/admin/reviews', icon: MessageSquare },
   { title: 'Cupons', url: '/admin/coupons', icon: Tag },
   { title: 'Promoções', url: '/admin/promotions', icon: Percent },
+  { title: 'Afiliados', url: '/admin/affiliates', icon: UserPlus },
   { title: 'Perfumes', url: '/admin/perfumes', icon: Package },
   { title: 'Lotes', url: '/admin/lots', icon: Package },
   { title: 'Inventário', url: '/admin/inventory', icon: Package },
