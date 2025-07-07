@@ -1069,6 +1069,48 @@ export type Database = {
       }
     }
     Views: {
+      active_promotions: {
+        Row: {
+          created_at: string | null
+          current_price_10ml: number | null
+          current_price_5ml: number | null
+          current_price_full: number | null
+          description: string | null
+          discount_type: string | null
+          discount_value: number | null
+          ends_at: string | null
+          id: string | null
+          is_active: boolean | null
+          original_price_10ml: number | null
+          original_price_5ml: number | null
+          original_price_full: number | null
+          perfume_brand: string | null
+          perfume_id: string | null
+          perfume_name: string | null
+          promotional_price_10ml: number | null
+          promotional_price_5ml: number | null
+          promotional_price_full: number | null
+          starts_at: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfumes_with_stock: {
         Row: {
           base_notes: string[] | null
@@ -1151,6 +1193,21 @@ export type Database = {
           promotional_price_10ml: number
           promotional_price_full: number
           ends_at: string
+        }[]
+      }
+      get_active_promotion_optimized: {
+        Args: { perfume_uuid: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          discount_type: string
+          discount_value: number
+          promotional_price_5ml: number
+          promotional_price_10ml: number
+          promotional_price_full: number
+          ends_at: string
+          time_remaining: unknown
         }[]
       }
       get_available_stock: {
