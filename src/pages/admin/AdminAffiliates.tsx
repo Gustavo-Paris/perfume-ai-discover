@@ -43,6 +43,8 @@ export default function AdminAffiliates() {
 
   const loadData = async () => {
     try {
+      console.log('Loading affiliate data...');
+      
       // Carregar afiliados
       const { data: affiliatesData, error: affiliatesError } = await supabase
         .from('affiliates')
@@ -50,6 +52,7 @@ export default function AdminAffiliates() {
         .order('created_at', { ascending: false });
 
       if (affiliatesError) throw affiliatesError;
+      console.log('Affiliates loaded:', affiliatesData);
 
       // Buscar profiles separadamente
       const affiliatesWithProfiles = await Promise.all(
@@ -74,12 +77,14 @@ export default function AdminAffiliates() {
         .order('name');
 
       if (usersError) throw usersError;
+      console.log('All users:', usersData);
 
       // Filtrar usuários que já são afiliados
       const affiliateUserIds = (affiliatesData || []).map(a => a.user_id);
       const nonAffiliateUsers = (usersData || []).filter(user => 
         !affiliateUserIds.includes(user.id)
       );
+      console.log('Non-affiliate users:', nonAffiliateUsers);
 
       // Carregar referrals
       const { data: referralsData, error: referralsError } = await supabase
@@ -89,6 +94,7 @@ export default function AdminAffiliates() {
         .limit(50);
 
       if (referralsError) throw referralsError;
+      console.log('Referrals loaded:', referralsData);
 
       setAffiliates(affiliatesWithProfiles);
       setAllUsers(nonAffiliateUsers);
