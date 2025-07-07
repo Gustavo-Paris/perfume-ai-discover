@@ -55,7 +55,7 @@ const AdminConfig = () => {
   const checkSecretsStatus = async () => {
     setCheckingSecrets(true);
     try {
-      console.log('🔍 Calling check-secrets function...');
+      
       
       const { data, error } = await supabase.functions.invoke('check-secrets', {
         headers: {
@@ -63,7 +63,7 @@ const AdminConfig = () => {
         }
       });
       
-      console.log('🔍 Check secrets response:', { data, error });
+      
       
       if (error) {
         console.error('❌ Supabase function error:', error);

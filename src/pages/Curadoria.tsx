@@ -66,7 +66,7 @@ const Curadoria = () => {
             }
           }
         } catch (err) {
-          console.log('Error loading session recommendations:', err);
+          
         }
       }
     };

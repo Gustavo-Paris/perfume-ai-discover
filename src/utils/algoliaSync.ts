@@ -10,7 +10,7 @@ export const syncPerfumesToAlgolia = async () => {
       return false;
     }
     
-    console.log('Algolia sync result:', data);
+    
     return true;
   } catch (error) {
     console.error('Failed to sync to Algolia:', error);

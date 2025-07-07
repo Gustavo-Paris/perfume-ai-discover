@@ -93,7 +93,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
       return;
     }
 
-    console.log('Submitting address data:', data);
+    
     setLoading(true);
     
     try {
@@ -123,7 +123,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
         is_default: data.isDefault
       };
 
-      console.log('Inserting address:', addressData);
+      
 
       const { data: insertedAddress, error } = await supabase
         .from('addresses')
@@ -136,7 +136,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
         throw error;
       }
 
-      console.log('Address saved successfully:', insertedAddress);
+      
 
       toast({
         title: "Sucesso!",

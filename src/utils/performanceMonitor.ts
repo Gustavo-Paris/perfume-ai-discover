@@ -60,7 +60,7 @@ export const performanceMonitor = {
       const entries = list.getEntries();
       entries.forEach((entry) => {
         if (entry.name.includes(bundleName)) {
-          console.log(`Bundle ${bundleName} loaded in ${entry.duration.toFixed(2)}ms`);
+          
         }
       });
     });
@@ -76,7 +76,7 @@ export const performanceMonitor = {
     new PerformanceObserver((list) => {
       const entries = list.getEntries();
       const lastEntry = entries[entries.length - 1];
-      console.log('LCP:', lastEntry.startTime);
+      
       
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'web_vitals', {
@@ -91,7 +91,7 @@ export const performanceMonitor = {
     new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry: any) => {
-        console.log('FID:', entry.processingStart - entry.startTime);
+        
         
         if (typeof window !== 'undefined' && (window as any).gtag) {
           (window as any).gtag('event', 'web_vitals', {
@@ -113,7 +113,7 @@ export const performanceMonitor = {
         }
       });
       
-      console.log('CLS:', cumulativeLayoutShift);
+      
       
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'web_vitals', {

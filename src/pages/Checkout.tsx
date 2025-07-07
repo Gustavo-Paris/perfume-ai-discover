@@ -110,20 +110,18 @@ const Checkout = () => {
   const getShippingQuotes = async (orderDraftId: string) => {
     setLoading(true);
     try {
-      console.log('Getting shipping quotes for order draft:', orderDraftId);
+      
       
       const { data, error } = await supabase.functions.invoke('shipping-quote', {
         body: { orderDraftId }
       });
 
-      console.log('Shipping quote response:', data);
-      console.log('Shipping quote error:', error);
 
       if (error) throw error;
 
       // Handle the response structure correctly
       const quotes = data?.quotes || [];
-      console.log('Processed quotes:', quotes);
+      
       
       setShippingQuotes(quotes);
       

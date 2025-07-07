@@ -132,9 +132,9 @@ export const useAdvancedSearch = () => {
   }, [user]);
 
   const performSearch = useCallback(async (searchQuery: string, appliedFilters?: Partial<SearchFilters>) => {
-    console.log('🔍 performSearch called with:', searchQuery);
+    
     if (!searchQuery.trim()) {
-      console.log('🔍 Empty query, clearing results');
+      
       setResults([]);
       return;
     }
@@ -151,7 +151,7 @@ export const useAdvancedSearch = () => {
       // Se a busca contém " - " (formato marca - nome), buscar mais específico
       if (searchQuery.includes(' - ')) {
         const [brand, name] = searchQuery.split(' - ').map(s => s.trim());
-        console.log('🔍 Specific search - Brand:', brand, 'Name:', name);
+        
         
         // Busca específica: marca E nome devem corresponder
         query = query.ilike('brand', `%${brand}%`).ilike('name', `%${name}%`);
@@ -186,7 +186,7 @@ export const useAdvancedSearch = () => {
 
       if (error) throw error;
 
-      console.log('🔍 Search results:', data?.length || 0, 'items');
+      
       setResults(data || []);
       
       // Atualizar histórico de buscas

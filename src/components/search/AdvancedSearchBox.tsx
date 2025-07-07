@@ -53,7 +53,7 @@ const AdvancedSearchBox = ({
 
   // Notificar mudanças nos resultados
   useEffect(() => {
-    console.log('🔍 Results changed in AdvancedSearchBox:', results.length, 'items');
+    
     onResultsChange?.(results);
   }, [results, onResultsChange]);
 
@@ -98,12 +98,12 @@ const AdvancedSearchBox = ({
   };
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    console.log('🔍 Suggestion clicked:', suggestion);
+    
     
     // Usar o texto completo da sugestão - a busca inteligente vai lidar com ele
     const searchTerm = suggestion.text;
     
-    console.log('🔍 Search term:', searchTerm);
+    
     handleSearch(searchTerm);
     performSearch(searchTerm);
     setShowSuggestions(false);

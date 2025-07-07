@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simple auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔐 Auth event:', event, 'Has session:', !!session);
+        
         
         if (!mounted) return;
         
@@ -53,13 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const hasRecoveryTokens = hash.includes('access_token') && hash.includes('type=recovery');
         
         if (hasRecoveryTokens) {
-          console.log('🔄 Recovery tokens detected in URL');
+          
           // Wait a bit for Supabase to process the tokens
           await new Promise(resolve => setTimeout(resolve, 500));
         }
         
         // Get current session
-        console.log('🔍 Checking for existing session...');
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (mounted) {
-          console.log('✅ Initial session set:', !!session);
+          
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
@@ -133,14 +133,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updatePassword = async (password: string) => {
-    console.log('updatePassword called with password length:', password.length);
+    
     
     try {
       const { error } = await supabase.auth.updateUser({
         password: password
       });
       
-      console.log('Supabase updateUser result:', { error });
+      
       return { error };
     } catch (err) {
       console.error('Exception in updatePassword:', err);

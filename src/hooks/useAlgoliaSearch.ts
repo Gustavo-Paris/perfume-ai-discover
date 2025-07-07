@@ -21,7 +21,7 @@ export const useAlgoliaSearch = () => {
     try {
       setIsAvailable(true);
     } catch (error) {
-      console.log('Algolia not available:', error);
+      
       setIsAvailable(false);
     }
   }, []);
@@ -41,7 +41,7 @@ export const useAlgoliaSearch = () => {
       
       return data;
     } catch (error) {
-      console.log('Cache error:', error);
+      
       return null;
     }
   };
@@ -54,7 +54,7 @@ export const useAlgoliaSearch = () => {
       };
       sessionStorage.setItem(`algolia:${query}`, JSON.stringify(cacheData));
     } catch (error) {
-      console.log('Cache set error:', error);
+      
     }
   };
 
@@ -83,7 +83,6 @@ export const useAlgoliaSearch = () => {
       });
 
       if (error) {
-        console.log('Search error:', error);
         return [];
       }
 
@@ -91,7 +90,7 @@ export const useAlgoliaSearch = () => {
       setCachedResult(query, results);
       return results;
     } catch (error) {
-      console.log('Search error:', error);
+      
       return [];
     }
   }, [isAvailable]);
