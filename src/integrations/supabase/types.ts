@@ -156,6 +156,54 @@ export type Database = {
           },
         ]
       }
+      catalog_analytics: {
+        Row: {
+          created_at: string | null
+          filters_used: Json | null
+          id: string
+          items_clicked: number | null
+          page_type: string | null
+          referrer: string | null
+          results_count: number | null
+          search_term: string | null
+          session_id: string | null
+          sort_by: string | null
+          time_spent_seconds: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          filters_used?: Json | null
+          id?: string
+          items_clicked?: number | null
+          page_type?: string | null
+          referrer?: string | null
+          results_count?: number | null
+          search_term?: string | null
+          session_id?: string | null
+          sort_by?: string | null
+          time_spent_seconds?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          filters_used?: Json | null
+          id?: string
+          items_clicked?: number | null
+          page_type?: string | null
+          referrer?: string | null
+          results_count?: number | null
+          search_term?: string | null
+          session_id?: string | null
+          sort_by?: string | null
+          time_spent_seconds?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       conversational_sessions: {
         Row: {
           conversation_json: Json
@@ -522,6 +570,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      perfume_interactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          interaction_type: string
+          metadata: Json | null
+          perfume_id: string | null
+          position_in_list: number | null
+          session_id: string | null
+          source_page: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          interaction_type: string
+          metadata?: Json | null
+          perfume_id?: string | null
+          position_in_list?: number | null
+          session_id?: string | null
+          source_page?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          perfume_id?: string | null
+          position_in_list?: number | null
+          session_id?: string | null
+          source_page?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfume_interactions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfume_interactions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       perfumes: {
         Row: {
@@ -1228,6 +1327,16 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      log_perfume_interaction: {
+        Args: {
+          perfume_uuid: string
+          interaction_type_param: string
+          source_page_param?: string
+          position_param?: number
+          metadata_param?: Json
+        }
+        Returns: string
       }
       log_user_access: {
         Args: {
