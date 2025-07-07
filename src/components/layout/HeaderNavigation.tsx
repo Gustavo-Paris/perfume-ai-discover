@@ -1,5 +1,7 @@
 
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAffiliates } from '@/hooks/useAffiliates';
 
 const navigation = [
   { name: 'Curadoria', href: '/curadoria' },
@@ -8,6 +10,9 @@ const navigation = [
 ];
 
 const HeaderNavigation = () => {
+  const { user } = useAuth();
+  const { affiliate } = useAffiliates();
+
   return (
     <nav className="hidden md:flex items-center space-x-8">
       {navigation.map((item) => (
@@ -19,6 +24,14 @@ const HeaderNavigation = () => {
           {item.name}
         </Link>
       ))}
+      {user && affiliate && affiliate.status === 'active' && (
+        <Link
+          to="/afiliados"
+          className="navbar-link"
+        >
+          Afiliados
+        </Link>
+      )}
     </nav>
   );
 };

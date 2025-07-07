@@ -33,8 +33,15 @@ export const useAffiliates = () => {
 
   // Carregar dados do afiliado
   const loadAffiliateData = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('useAffiliates: No user, clearing data');
+      setAffiliate(null);
+      setReferrals([]);
+      setLoading(false);
+      return;
+    }
 
+    console.log('useAffiliates: Loading data for user:', user.id);
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -44,9 +51,11 @@ export const useAffiliates = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
+        console.error('useAffiliates: Error loading affiliate:', error);
         throw error;
       }
 
+      console.log('useAffiliates: Affiliate data:', data);
       setAffiliate(data);
 
       if (data) {
@@ -58,11 +67,16 @@ export const useAffiliates = () => {
           .order('created_at', { ascending: false });
 
         if (!referralError) {
+          console.log('useAffiliates: Referrals loaded:', referralData);
           setReferrals(referralData || []);
+        } else {
+          console.error('useAffiliates: Error loading referrals:', referralError);
         }
+      } else {
+        console.log('useAffiliates: User is not an affiliate');
       }
     } catch (error) {
-      console.error('Error loading affiliate data:', error);
+      console.error('useAffiliates: Error loading affiliate data:', error);
     } finally {
       setLoading(false);
     }

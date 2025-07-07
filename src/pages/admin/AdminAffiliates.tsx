@@ -143,18 +143,26 @@ export default function AdminAffiliates() {
   };
 
   const removeAffiliate = async (affiliateId: string) => {
+    console.log('removeAffiliate called with:', affiliateId);
+    
     if (!confirm('Tem certeza que deseja remover este afiliado? Esta ação não pode ser desfeita.')) {
+      console.log('User cancelled removal');
       return;
     }
 
+    console.log('Proceeding with affiliate removal...');
     try {
       const { error } = await supabase
         .from('affiliates')
         .delete()
         .eq('id', affiliateId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Affiliate removed successfully from database');
       setAffiliates(prev => prev.filter(affiliate => affiliate.id !== affiliateId));
 
       toast({
@@ -163,6 +171,7 @@ export default function AdminAffiliates() {
       });
 
       // Recarregar dados para atualizar lista de usuários disponíveis
+      console.log('Reloading data...');
       loadData();
     } catch (error) {
       console.error('Error removing affiliate:', error);
