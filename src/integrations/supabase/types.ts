@@ -2054,6 +2054,15 @@ export type Database = {
         Args: { coupon_code: string; order_total: number; user_uuid: string }
         Returns: Json
       }
+      validate_coupon_advanced: {
+        Args: {
+          coupon_code: string
+          order_total: number
+          user_uuid: string
+          cart_items?: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "customer"
