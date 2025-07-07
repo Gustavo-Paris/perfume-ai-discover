@@ -104,7 +104,7 @@ serve(async (req) => {
       }
     }
 
-    // Prepare line items for Stripe
+    // Prepare line items for Stripe using real perfume prices
     const lineItems = items.map(item => ({
       price_data: {
         currency: 'brl',
@@ -116,7 +116,7 @@ serve(async (req) => {
             size_ml: item.size_ml.toString(),
           }
         },
-        unit_amount: Math.round(item.unit_price * 100), // Convert to cents
+        unit_amount: Math.round(item.unit_price * 100), // Convert real price to cents
       },
       quantity: item.quantity,
     }));
