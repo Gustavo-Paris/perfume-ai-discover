@@ -21,3 +21,12 @@ verify_jwt = true
 
 [functions.tasks/db-backup]
 verify_jwt = false
+
+[functions.cart-recovery]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.email-triggers]
+verify_jwt = false
