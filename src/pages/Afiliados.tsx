@@ -124,9 +124,9 @@ export default function Afiliados() {
           animate={{ opacity: 1, y: 0 }}
         >
           <h1 className="text-3xl font-bold mb-2">Dashboard de Afiliado</h1>
-          <p className="text-muted-foreground">
+          <div className="text-muted-foreground">
             Código: <Badge variant="secondary">{affiliate?.affiliate_code}</Badge>
-          </p>
+          </div>
         </motion.div>
 
         {/* Estatísticas */}
