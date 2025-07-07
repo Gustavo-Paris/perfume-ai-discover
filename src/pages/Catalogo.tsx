@@ -31,6 +31,7 @@ const Catalogo = () => {
   // Use search results if available, otherwise show all perfumes
   const perfumesToShow = useMemo(() => {
     const baseResults = searchResults.length > 0 ? searchResults : databasePerfumes || [];
+    console.log('🔍 Catalogo perfumesToShow:', { searchResultsCount: searchResults.length, databaseCount: databasePerfumes?.length || 0, showingSearchResults: searchResults.length > 0 });
     
     return baseResults.map((dbPerfume: DatabasePerfume) => ({
       id: dbPerfume.id,

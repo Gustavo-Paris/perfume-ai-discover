@@ -53,6 +53,7 @@ const AdvancedSearchBox = ({
 
   // Notificar mudanças nos resultados
   useEffect(() => {
+    console.log('🔍 Results changed in AdvancedSearchBox:', results.length, 'items');
     onResultsChange?.(results);
   }, [results, onResultsChange]);
 
@@ -97,6 +98,7 @@ const AdvancedSearchBox = ({
   };
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
+    console.log('🔍 Suggestion clicked:', suggestion.text);
     handleSearch(suggestion.text);
     performSearch(suggestion.text);
     setShowSuggestions(false);

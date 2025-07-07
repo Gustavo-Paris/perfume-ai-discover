@@ -132,7 +132,9 @@ export const useAdvancedSearch = () => {
   }, [user]);
 
   const performSearch = useCallback(async (searchQuery: string, appliedFilters?: Partial<SearchFilters>) => {
+    console.log('🔍 performSearch called with:', searchQuery);
     if (!searchQuery.trim()) {
+      console.log('🔍 Empty query, clearing results');
       setResults([]);
       return;
     }
@@ -174,6 +176,7 @@ export const useAdvancedSearch = () => {
 
       if (error) throw error;
 
+      console.log('🔍 Search results:', data?.length || 0, 'items');
       setResults(data || []);
       
       // Atualizar histórico de buscas
