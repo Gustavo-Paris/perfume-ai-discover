@@ -55,13 +55,31 @@ const AdminConfig = () => {
   const checkSecretsStatus = async () => {
     setCheckingSecrets(true);
     try {
-      const { data, error } = await supabase.functions.invoke('check-secrets');
+      console.log('🔍 Calling check-secrets function...');
+      
+      const { data, error } = await supabase.functions.invoke('check-secrets', {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('🔍 Check secrets response:', { data, error });
       
       if (error) {
-        console.error('Error checking secrets:', error);
+        console.error('❌ Supabase function error:', error);
         toast({
           title: "Erro",
-          description: "Erro ao verificar status das chaves de API.",
+          description: `Erro ao verificar status das chaves: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.error) {
+        console.error('❌ Function returned error:', data);
+        toast({
+          title: "Erro",
+          description: `Erro na função: ${data.error}`,
           variant: "destructive",
         });
         return;
@@ -75,12 +93,19 @@ const AdminConfig = () => {
           title: "Status verificado",
           description: `${data.summary.configured}/${data.summary.total} chaves configuradas (${data.summary.percentage}%)`,
         });
+      } else {
+        console.warn('⚠️ No secrets data returned:', data);
+        toast({
+          title: "Aviso",
+          description: "Resposta inesperada da verificação de chaves.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Error checking secrets:', error);
+      console.error('❌ Exception in checkSecretsStatus:', error);
       toast({
         title: "Erro",
-        description: "Erro ao verificar status das chaves de API.",
+        description: `Erro na verificação: ${error.message}`,
         variant: "destructive",
       });
     } finally {

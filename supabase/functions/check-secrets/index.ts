@@ -28,10 +28,29 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Checking secrets status...');
+    console.log('=== Check Secrets Function Started ===');
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
+    // Adicionar verificação de autenticação
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.log('❌ No authorization header found');
+      return new Response(JSON.stringify({ 
+        error: 'Authorization required',
+        details: 'No authorization header provided'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    console.log('🔍 Checking secrets status...');
     
     // Verificar quais secrets estão configurados
     const secretsStatus: Record<string, 'configured' | 'missing'> = {};
+    
+    console.log(`Checking ${SECRETS_TO_CHECK.length} secrets...`);
     
     for (const secretName of SECRETS_TO_CHECK) {
       try {
@@ -40,10 +59,10 @@ serve(async (req) => {
         // Consideramos configurado se existe e não está vazio
         if (secretValue && secretValue.trim() !== '') {
           secretsStatus[secretName] = 'configured';
-          console.log(`✅ ${secretName}: configured`);
+          console.log(`✅ ${secretName}: configured (length: ${secretValue.length})`);
         } else {
           secretsStatus[secretName] = 'missing';
-          console.log(`❌ ${secretName}: missing`);
+          console.log(`❌ ${secretName}: missing or empty`);
         }
       } catch (error) {
         console.error(`Error checking ${secretName}:`, error);
@@ -73,11 +92,13 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in check-secrets function:', error);
+    console.error('❌ Error in check-secrets function:', error);
+    console.error('Error stack:', error.stack);
     
     return new Response(JSON.stringify({ 
       error: 'Erro ao verificar status dos secrets',
-      details: error.message 
+      details: error.message,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
