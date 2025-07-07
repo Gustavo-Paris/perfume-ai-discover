@@ -156,6 +156,125 @@ export type Database = {
           },
         ]
       }
+      cart_recovery_attempts: {
+        Row: {
+          cart_session_id: string | null
+          clicked_at: string | null
+          conversion_value: number | null
+          converted: boolean | null
+          discount_code: string | null
+          discount_offered: number | null
+          id: string
+          message: string | null
+          metadata: Json | null
+          opened_at: string | null
+          recovery_type: string
+          sent_at: string | null
+          subject: string | null
+        }
+        Insert: {
+          cart_session_id?: string | null
+          clicked_at?: string | null
+          conversion_value?: number | null
+          converted?: boolean | null
+          discount_code?: string | null
+          discount_offered?: number | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          opened_at?: string | null
+          recovery_type: string
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Update: {
+          cart_session_id?: string | null
+          clicked_at?: string | null
+          conversion_value?: number | null
+          converted?: boolean | null
+          discount_code?: string | null
+          discount_offered?: number | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          opened_at?: string | null
+          recovery_type?: string
+          sent_at?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_recovery_attempts_cart_session_id_fkey"
+            columns: ["cart_session_id"]
+            isOneToOne: false
+            referencedRelation: "cart_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cart_sessions: {
+        Row: {
+          abandoned_at: string | null
+          abandonment_stage: string | null
+          created_at: string | null
+          device_type: string | null
+          exit_page: string | null
+          first_reminder_sent: string | null
+          id: string
+          items_count: number | null
+          last_activity: string | null
+          recovery_discount_sent: string | null
+          second_reminder_sent: string | null
+          session_id: string | null
+          status: string | null
+          time_spent_minutes: number | null
+          total_value: number | null
+          traffic_source: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          abandoned_at?: string | null
+          abandonment_stage?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          exit_page?: string | null
+          first_reminder_sent?: string | null
+          id?: string
+          items_count?: number | null
+          last_activity?: string | null
+          recovery_discount_sent?: string | null
+          second_reminder_sent?: string | null
+          session_id?: string | null
+          status?: string | null
+          time_spent_minutes?: number | null
+          total_value?: number | null
+          traffic_source?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          abandoned_at?: string | null
+          abandonment_stage?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          exit_page?: string | null
+          first_reminder_sent?: string | null
+          id?: string
+          items_count?: number | null
+          last_activity?: string | null
+          recovery_discount_sent?: string | null
+          second_reminder_sent?: string | null
+          session_id?: string | null
+          status?: string | null
+          time_spent_minutes?: number | null
+          total_value?: number | null
+          traffic_source?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       catalog_analytics: {
         Row: {
           created_at: string | null
@@ -1474,6 +1593,30 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      create_cart_recovery_attempt: {
+        Args: {
+          cart_session_uuid: string
+          recovery_type_param: string
+          subject_param?: string
+          message_param?: string
+          discount_offered_param?: number
+          discount_code_param?: string
+        }
+        Returns: string
+      }
+      detect_abandoned_carts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cart_session_id: string
+          user_id: string
+          session_id: string
+          items_count: number
+          total_value: number
+          hours_since_abandonment: number
+          recommended_action: string
+          priority_score: number
+        }[]
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1570,6 +1713,10 @@ export type Database = {
           client_user_agent?: string
         }
         Returns: string
+      }
+      mark_cart_as_abandoned: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       trigger_email_notification: {
         Args: { notification_type: string; record_id: string }
