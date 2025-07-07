@@ -98,9 +98,23 @@ const AdvancedSearchBox = ({
   };
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    console.log('🔍 Suggestion clicked:', suggestion.text);
-    handleSearch(suggestion.text);
-    performSearch(suggestion.text);
+    console.log('🔍 Suggestion clicked:', suggestion);
+    
+    let searchTerm = suggestion.text;
+    
+    // Se é uma sugestão de produto formatada como "Marca - Nome", 
+    // extrair apenas o nome ou fazer busca mais ampla
+    if (suggestion.type === 'product' && suggestion.text.includes(' - ')) {
+      const parts = suggestion.text.split(' - ');
+      const brand = parts[0].trim();
+      const name = parts[1].trim();
+      // Buscar tanto pela marca quanto pelo nome
+      searchTerm = `${brand} ${name}`;
+    }
+    
+    console.log('🔍 Search term after processing:', searchTerm);
+    handleSearch(searchTerm);
+    performSearch(searchTerm);
     setShowSuggestions(false);
   };
 
