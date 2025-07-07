@@ -904,6 +904,36 @@ export type Database = {
           },
         ]
       }
+      popular_searches: {
+        Row: {
+          category: string | null
+          conversion_rate: number | null
+          created_at: string
+          id: string
+          last_searched: string | null
+          query: string
+          search_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          conversion_rate?: number | null
+          created_at?: string
+          id?: string
+          last_searched?: string | null
+          query: string
+          search_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          conversion_rate?: number | null
+          created_at?: string
+          id?: string
+          last_searched?: string | null
+          query?: string
+          search_count?: number | null
+        }
+        Relationships: []
+      }
       privacy_consents: {
         Row: {
           consent_type: string
@@ -1163,6 +1193,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      search_queries: {
+        Row: {
+          clicked_result_id: string | null
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          query: string
+          results_count: number | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_result_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          query: string
+          results_count?: number | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_result_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          query?: string
+          results_count?: number | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      search_suggestions: {
+        Row: {
+          created_at: string
+          id: string
+          related_id: string | null
+          score: number | null
+          suggestion_text: string
+          suggestion_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          related_id?: string | null
+          score?: number | null
+          suggestion_text: string
+          suggestion_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          related_id?: string | null
+          score?: number | null
+          suggestion_text?: string
+          suggestion_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       shipments: {
         Row: {
