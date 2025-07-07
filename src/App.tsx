@@ -41,6 +41,7 @@ import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import EmailPreferences from "./components/notifications/EmailPreferences";
 import Unsubscribe from "./pages/Unsubscribe";
+import Search from "./pages/Search";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,7 @@ const AppContent = () => {
           </Route>
           <Route path="/privacidade" element={<Privacidade />} />
           <Route path="/troca-devolucao" element={<TrocaDevolucao />} />
+          <Route path="/search" element={<Search />} />
           <Route path="/email-preferences" element={<EmailPreferences />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1791,6 +1791,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_search_count: {
+        Args: { search_query: string }
+        Returns: undefined
+      }
       log_perfume_interaction: {
         Args: {
           perfume_uuid: string

@@ -12,31 +12,37 @@ import { Card, CardContent } from '@/components/ui/card';
 import PerfumeCard from '@/components/perfume/PerfumeCard';
 import { usePerfumes } from '@/hooks/usePerfumes';
 import { DatabasePerfume } from '@/types';
+import AdvancedSearchBox from '@/components/search/AdvancedSearchBox';
+import DynamicFilters from '@/components/search/DynamicFilters';
+import { SearchFilters } from '@/hooks/useAdvancedSearch';
 
 const Catalogo = () => {
   const { data: databasePerfumes, isLoading } = usePerfumes();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [sortBy, setSortBy] = useState('name');
+  
+  // Maintain backwards compatibility with existing filter states
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedFamilies, setSelectedFamilies] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 1000]);
 
-  // Convert DatabasePerfume to Perfume format for compatibility
-  const perfumes = useMemo(() => {
-    if (!databasePerfumes) return [];
+  // Use search results if available, otherwise show all perfumes
+  const perfumesToShow = useMemo(() => {
+    const baseResults = searchResults.length > 0 ? searchResults : databasePerfumes || [];
     
-    return databasePerfumes.map((dbPerfume: DatabasePerfume) => ({
+    return baseResults.map((dbPerfume: DatabasePerfume) => ({
       id: dbPerfume.id,
       name: dbPerfume.name,
       brand: dbPerfume.brand,
       family: dbPerfume.family,
       gender: dbPerfume.gender,
-      size_ml: [50, 100], // Default sizes since this info isn't in database
+      size_ml: [50, 100],
       price_full: Number(dbPerfume.price_full),
       price_5ml: dbPerfume.price_5ml ? Number(dbPerfume.price_5ml) : 0,
       price_10ml: dbPerfume.price_10ml ? Number(dbPerfume.price_10ml) : 0,
-      stock_full: 10, // Default stock since this info isn't in database
+      stock_full: 10,
       stock_5ml: 50,
       stock_10ml: 30,
       description: dbPerfume.description || '',
@@ -46,21 +52,16 @@ const Catalogo = () => {
       base_notes: dbPerfume.base_notes,
       created_at: dbPerfume.created_at
     }));
-  }, [databasePerfumes]);
+  }, [searchResults, databasePerfumes]);
 
   // Get unique values for filters
-  const brands = [...new Set(perfumes.map(p => p.brand))];
-  const genders = [...new Set(perfumes.map(p => p.gender))];
-  const families = [...new Set(perfumes.map(p => p.family))];
+  const brands = [...new Set(perfumesToShow.map(p => p.brand))];
+  const genders = [...new Set(perfumesToShow.map(p => p.gender))];
+  const families = [...new Set(perfumesToShow.map(p => p.family))];
 
   // Filter and sort perfumes
   const filteredPerfumes = useMemo(() => {
-    let filtered = perfumes.filter(perfume => {
-      // Search filter
-      const matchesSearch = perfume.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           perfume.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           perfume.family.toLowerCase().includes(searchTerm.toLowerCase());
-
+    let filtered = perfumesToShow.filter(perfume => {
       // Brand filter
       const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(perfume.brand);
 
@@ -74,7 +75,7 @@ const Catalogo = () => {
       const referencePrice = perfume.price_5ml || perfume.price_full / 10; // Fallback calculation
       const matchesPrice = referencePrice >= priceRange[0] && referencePrice <= priceRange[1];
 
-      return matchesSearch && matchesBrand && matchesGender && matchesFamily && matchesPrice;
+      return matchesBrand && matchesGender && matchesFamily && matchesPrice;
     });
 
     // Sort
@@ -98,7 +99,7 @@ const Catalogo = () => {
     });
 
     return filtered;
-  }, [perfumes, searchTerm, sortBy, selectedBrands, selectedGenders, selectedFamilies, priceRange]);
+  }, [perfumesToShow, sortBy, selectedBrands, selectedGenders, selectedFamilies, priceRange]);
 
   const handleBrandChange = (brand: string, checked: boolean) => {
     if (checked) {
@@ -129,7 +130,7 @@ const Catalogo = () => {
     setSelectedGenders([]);
     setSelectedFamilies([]);
     setPriceRange([0, 1000]);
-    setSearchTerm('');
+    setSearchResults([]); // Clear search results to show all perfumes
   };
 
   if (isLoading) {
@@ -252,14 +253,13 @@ const Catalogo = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Buscar por nome, marca ou família..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white border-gray-300 text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/40 rounded-xl"
+          {/* Advanced Search */}
+          <div className="flex-1">
+            <AdvancedSearchBox
+              placeholder="Buscar perfumes, marcas ou notas..."
+              onResultsChange={setSearchResults}
+              onFiltersOpen={() => setShowAdvancedFilters(true)}
+              size="md"
             />
           </div>
 
