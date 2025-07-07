@@ -100,16 +100,10 @@ const AdvancedSearchBox = ({
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
     console.log('🔍 Suggestion clicked:', suggestion);
     
-    let searchTerm = suggestion.text;
+    // Usar o texto completo da sugestão - a busca inteligente vai lidar com ele
+    const searchTerm = suggestion.text;
     
-    // Para sugestões de produto, usar apenas o nome do produto para busca mais precisa
-    if (suggestion.type === 'product' && suggestion.text.includes(' - ')) {
-      const parts = suggestion.text.split(' - ');
-      const name = parts[1].trim(); // Usar apenas o nome do produto
-      searchTerm = name;
-    }
-    
-    console.log('🔍 Search term after processing:', searchTerm);
+    console.log('🔍 Search term:', searchTerm);
     handleSearch(searchTerm);
     performSearch(searchTerm);
     setShowSuggestions(false);

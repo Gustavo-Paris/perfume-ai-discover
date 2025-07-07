@@ -145,10 +145,28 @@ export const useAdvancedSearch = () => {
       // Log da busca
       await logSearchQuery(searchQuery);
 
+      // Busca inteligente: dividir o termo em palavras e buscar de forma flexível
+      const searchTerms = searchQuery.trim().split(/\s+/);
+      const searchConditions = [];
+      
+      // Para cada termo de busca, criar condições que busquem em name, brand e description
+      for (const term of searchTerms) {
+        searchConditions.push(`name.ilike.%${term}%`);
+        searchConditions.push(`brand.ilike.%${term}%`);
+        searchConditions.push(`description.ilike.%${term}%`);
+      }
+      
+      // Também buscar pela query completa
+      searchConditions.push(`name.ilike.%${searchQuery}%`);
+      searchConditions.push(`brand.ilike.%${searchQuery}%`);
+      searchConditions.push(`description.ilike.%${searchQuery}%`);
+      
+      console.log('🔍 Search conditions:', searchConditions);
+
       let query = supabase
         .from('perfumes_with_stock')
         .select('*')
-        .or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+        .or(searchConditions.join(','));
 
       // Aplicar filtros
       const currentFilters = { ...filters, ...appliedFilters };
