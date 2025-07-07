@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Mic, X, Filter, Clock, TrendingUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,19 @@ const AdvancedSearchBox = ({
   useEffect(() => {
     onResultsChange?.(results);
   }, [results, onResultsChange]);
+
+  // Auto-search com debounce
+  useEffect(() => {
+    if (query.trim().length >= 2) {
+      const timeoutId = setTimeout(() => {
+        performSearch(query);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else if (query.trim().length === 0) {
+      // Limpar resultados quando campo estiver vazio
+      performSearch('');
+    }
+  }, [query, performSearch]);
 
   // Fechar sugestões quando clicar fora
   useEffect(() => {
