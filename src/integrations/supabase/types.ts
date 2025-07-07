@@ -622,6 +622,74 @@ export type Database = {
           },
         ]
       }
+      perfume_similarities: {
+        Row: {
+          behavior_similarity: number | null
+          calculation_count: number | null
+          combined_score: number | null
+          created_at: string | null
+          id: string
+          last_calculated: string | null
+          notes_similarity: number | null
+          perfume_a_id: string | null
+          perfume_b_id: string | null
+          purchase_similarity: number | null
+        }
+        Insert: {
+          behavior_similarity?: number | null
+          calculation_count?: number | null
+          combined_score?: number | null
+          created_at?: string | null
+          id?: string
+          last_calculated?: string | null
+          notes_similarity?: number | null
+          perfume_a_id?: string | null
+          perfume_b_id?: string | null
+          purchase_similarity?: number | null
+        }
+        Update: {
+          behavior_similarity?: number | null
+          calculation_count?: number | null
+          combined_score?: number | null
+          created_at?: string | null
+          id?: string
+          last_calculated?: string | null
+          notes_similarity?: number | null
+          perfume_a_id?: string | null
+          perfume_b_id?: string | null
+          purchase_similarity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfume_similarities_perfume_a_id_fkey"
+            columns: ["perfume_a_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfume_similarities_perfume_a_id_fkey"
+            columns: ["perfume_a_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfume_similarities_perfume_b_id_fkey"
+            columns: ["perfume_b_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfume_similarities_perfume_b_id_fkey"
+            columns: ["perfume_b_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfumes: {
         Row: {
           base_notes: string[] | null
@@ -1252,6 +1320,10 @@ export type Database = {
         Args: { coupon_code: string; order_uuid: string }
         Returns: boolean
       }
+      calculate_notes_similarity: {
+        Args: { perfume_a_id: string; perfume_b_id: string }
+        Returns: number
+      }
       check_low_stock_alerts: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -1313,9 +1385,35 @@ export type Database = {
         Args: { perfume_uuid: string; size_ml_param: number }
         Returns: number
       }
+      get_perfume_recommendations: {
+        Args: { perfume_uuid: string; limit_count?: number; min_score?: number }
+        Returns: {
+          perfume_id: string
+          name: string
+          brand: string
+          image_url: string
+          price_5ml: number
+          price_full: number
+          similarity_score: number
+          recommendation_reason: string
+        }[]
+      }
       get_user_points_balance: {
         Args: { user_uuid: string }
         Returns: number
+      }
+      get_user_recommendations: {
+        Args: { user_uuid?: string; limit_count?: number }
+        Returns: {
+          perfume_id: string
+          name: string
+          brand: string
+          image_url: string
+          price_5ml: number
+          price_full: number
+          recommendation_score: number
+          recommendation_reason: string
+        }[]
       }
       hard_delete_user_data: {
         Args: { user_uuid: string }
