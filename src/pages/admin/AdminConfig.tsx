@@ -497,15 +497,15 @@ const AdminConfig = () => {
                 </div>
                 <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
                   <div className="text-2xl font-bold text-red-600">
-                    {Object.values(secretsStatus).filter(s => s === 'missing').length}
+                    {Object.values(secretsStatus).filter(s => s === 'missing' || s === 'unknown').length}
                   </div>
                   <div className="text-sm text-red-700">Faltando</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="text-2xl font-bold text-gray-600">
-                    {Object.values(secretsStatus).filter(s => s === 'unknown').length}
+                    {apiSecrets.length}
                   </div>
-                  <div className="text-sm text-gray-700">Desconhecidas</div>
+                  <div className="text-sm text-gray-700">Total</div>
                 </div>
               </div>
             </CardContent>
