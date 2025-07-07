@@ -89,6 +89,50 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_payments: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          payment_reference: string | null
+          referral_ids: string[]
+        }
+        Insert: {
+          affiliate_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method: string
+          payment_reference?: string | null
+          referral_ids: string[]
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_reference?: string | null
+          referral_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payments_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_referrals: {
         Row: {
           affiliate_id: string
@@ -97,6 +141,10 @@ export type Database = {
           created_at: string | null
           id: string
           order_id: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_notes: string | null
+          payment_reference: string | null
           referred_user_id: string | null
           status: string | null
         }
@@ -107,6 +155,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           order_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_notes?: string | null
+          payment_reference?: string | null
           referred_user_id?: string | null
           status?: string | null
         }
@@ -117,6 +169,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           order_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_notes?: string | null
+          payment_reference?: string | null
           referred_user_id?: string | null
           status?: string | null
         }

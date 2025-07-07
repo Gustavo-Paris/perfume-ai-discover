@@ -29,6 +29,10 @@ interface AffiliateReferral {
   status: string;
   created_at: string;
   confirmed_at: string;
+  paid_at?: string;
+  payment_method?: string;
+  payment_reference?: string;
+  payment_notes?: string;
 }
 
 export default function AdminAffiliates() {
@@ -193,6 +197,70 @@ export default function AdminAffiliates() {
       toast({
         title: "Erro",
         description: "Erro ao confirmar comissão",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markAsPaid = async (referralIds: string[], affiliateId: string, paymentMethod: string, paymentReference: string, notes?: string) => {
+    try {
+      // Calculate total amount
+      const totalAmount = referrals
+        .filter(r => referralIds.includes(r.id))
+        .reduce((sum, r) => sum + r.commission_amount, 0);
+
+      // Create payment record
+      const { error: paymentError } = await supabase
+        .from('affiliate_payments')
+        .insert({
+          affiliate_id: affiliateId,
+          amount: totalAmount,
+          payment_method: paymentMethod,
+          payment_reference: paymentReference,
+          notes: notes,
+          referral_ids: referralIds
+        });
+
+      if (paymentError) throw paymentError;
+
+      // Mark referrals as paid
+      const { error: referralError } = await supabase
+        .from('affiliate_referrals')
+        .update({
+          paid_at: new Date().toISOString(),
+          payment_method: paymentMethod,
+          payment_reference: paymentReference,
+          payment_notes: notes
+        })
+        .in('id', referralIds);
+
+      if (referralError) throw referralError;
+
+      // Update local state
+      setReferrals(prev => 
+        prev.map(referral => 
+          referralIds.includes(referral.id)
+            ? { 
+                ...referral, 
+                status: 'paid',
+                paid_at: new Date().toISOString(),
+                payment_method: paymentMethod,
+                payment_reference: paymentReference,
+                payment_notes: notes
+              }
+            : referral
+        )
+      );
+
+      toast({
+        title: "Sucesso",
+        description: `Pagamento de R$ ${totalAmount.toFixed(2)} registrado com sucesso`,
+      });
+    } catch (error) {
+      console.error('Error marking as paid:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao registrar pagamento",
         variant: "destructive",
       });
     }
@@ -483,6 +551,7 @@ export default function AdminAffiliates() {
                 <TableHead>Comissão</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Confirmado em</TableHead>
+                <TableHead>Pago em</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -494,8 +563,14 @@ export default function AdminAffiliates() {
                   </TableCell>
                   <TableCell>R$ {referral.commission_amount.toFixed(2)}</TableCell>
                   <TableCell>
-                    <Badge variant={referral.status === 'confirmed' ? 'default' : 'secondary'}>
-                      {referral.status}
+                    <Badge variant={
+                      referral.status === 'confirmed' ? 'default' : 
+                      referral.status === 'paid' ? 'secondary' : 
+                      'outline'
+                    }>
+                      {referral.status === 'paid' ? 'Pago' : 
+                       referral.status === 'confirmed' ? 'Confirmado' : 
+                       'Pendente'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -505,14 +580,37 @@ export default function AdminAffiliates() {
                     }
                   </TableCell>
                   <TableCell>
-                    {referral.status === 'pending' && (
-                      <Button
-                        size="sm"
-                        onClick={() => confirmCommission(referral.id)}
-                      >
-                        Confirmar
-                      </Button>
-                    )}
+                    {referral.paid_at 
+                      ? new Date(referral.paid_at).toLocaleDateString('pt-BR')
+                      : '-'
+                    }
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      {referral.status === 'pending' && (
+                        <Button
+                          size="sm"
+                          onClick={() => confirmCommission(referral.id)}
+                        >
+                          Confirmar
+                        </Button>
+                      )}
+                      {referral.status === 'confirmed' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const paymentMethod = prompt('Método de pagamento (ex: PIX, Transferência):');
+                            const paymentReference = prompt('Referência do pagamento (ex: ID transação):');
+                            if (paymentMethod && paymentReference) {
+                              markAsPaid([referral.id], referral.affiliate_id, paymentMethod, paymentReference);
+                            }
+                          }}
+                        >
+                          Marcar como Pago
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
