@@ -97,7 +97,8 @@ const AdvancedSearchBox = ({
   };
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
-    selectSuggestion(suggestion);
+    handleSearch(suggestion.text);
+    performSearch(suggestion.text);
     setShowSuggestions(false);
   };
 
