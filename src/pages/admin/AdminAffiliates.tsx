@@ -132,6 +132,38 @@ export default function AdminAffiliates() {
     }
   };
 
+  const removeAffiliate = async (affiliateId: string) => {
+    if (!confirm('Tem certeza que deseja remover este afiliado? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('affiliates')
+        .delete()
+        .eq('id', affiliateId);
+
+      if (error) throw error;
+
+      setAffiliates(prev => prev.filter(affiliate => affiliate.id !== affiliateId));
+
+      toast({
+        title: "Sucesso",
+        description: "Afiliado removido com sucesso",
+      });
+
+      // Recarregar dados para atualizar lista de usuários disponíveis
+      loadData();
+    } catch (error) {
+      console.error('Error removing affiliate:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover afiliado",
+        variant: "destructive",
+      });
+    }
+  };
+
   const confirmCommission = async (referralId: string) => {
     try {
       const { error } = await supabase
@@ -408,7 +440,7 @@ export default function AdminAffiliates() {
                       {affiliate.status === 'active' ? (
                         <Button
                           size="sm"
-                          variant="destructive"
+                          variant="outline"
                           onClick={() => updateAffiliateStatus(affiliate.id, 'inactive')}
                         >
                           Desativar
@@ -416,11 +448,19 @@ export default function AdminAffiliates() {
                       ) : (
                         <Button
                           size="sm"
+                          variant="outline"
                           onClick={() => updateAffiliateStatus(affiliate.id, 'active')}
                         >
                           Ativar
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => removeAffiliate(affiliate.id)}
+                      >
+                        Remover
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
