@@ -305,44 +305,50 @@ export default function AdminAffiliates() {
       </div>
 
       {/* Adicionar Novo Afiliado */}
-      {allUsers.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Adicionar Novo Afiliado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Selecione um usuário para dar permissão de afiliado:
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Adicionar Novo Afiliado
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Selecione um usuário para dar permissão de afiliado:
+            </p>
+            {allUsers.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">
+                Todos os usuários registrados já são afiliados ou não há usuários cadastrados.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {allUsers.slice(0, 6).map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{user.name || 'Sem nome'}</div>
-                      <div className="text-sm text-muted-foreground">{user.email}</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {allUsers.slice(0, 6).map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium">{user.name || 'Sem nome'}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => addAffiliate(user.id)}
+                      >
+                        Adicionar
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => addAffiliate(user.id)}
-                    >
-                      Adicionar
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              {allUsers.length > 6 && (
-                <p className="text-sm text-muted-foreground">
-                  E mais {allUsers.length - 6} usuários disponíveis...
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  ))}
+                </div>
+                {allUsers.length > 6 && (
+                  <p className="text-sm text-muted-foreground">
+                    E mais {allUsers.length - 6} usuários disponíveis...
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Lista de Afiliados */}
       <Card>
