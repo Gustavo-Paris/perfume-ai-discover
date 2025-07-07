@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Eye, EyeOff, Save, Key, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Settings, Eye, EyeOff, Save, Key, CheckCircle, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ConfigSettings {
   // Fidelidade
@@ -46,15 +47,59 @@ const AdminConfig = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [secretsStatus, setSecretsStatus] = useState<Record<string, 'configured' | 'missing' | 'unknown'>>({});
+  const [checkingSecrets, setCheckingSecrets] = useState(false);
+  const [lastSecretsCheck, setLastSecretsCheck] = useState<string | null>(null);
 
-  // API Secrets configuration
+  // Função para verificar status das chaves no Supabase
+  const checkSecretsStatus = async () => {
+    setCheckingSecrets(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-secrets');
+      
+      if (error) {
+        console.error('Error checking secrets:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar status das chaves de API.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.secrets) {
+        setSecretsStatus(data.secrets);
+        setLastSecretsCheck(data.lastChecked);
+        
+        toast({
+          title: "Status verificado",
+          description: `${data.summary.configured}/${data.summary.total} chaves configuradas (${data.summary.percentage}%)`,
+        });
+      }
+    } catch (error) {
+      console.error('Error checking secrets:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao verificar status das chaves de API.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckingSecrets(false);
+    }
+  };
+
+  // API Secrets configuration - agora usa o status real do Supabase
+  const getSecretStatus = (secretName: string): 'configured' | 'missing' | 'unknown' => {
+    return secretsStatus[secretName] || 'unknown';
+  };
+
   const apiSecrets: ApiSecret[] = [
     {
       name: 'MODO_BANK_PUBLIC_KEY',
       label: 'Modo Bank - Chave Pública',
       placeholder: 'pk_live_...',
       description: 'Chave pública para processar pagamentos via Modo Bank',
-      status: 'configured', // This would come from Supabase
+      status: getSecretStatus('MODO_BANK_PUBLIC_KEY'),
       required: true,
       category: 'payment'
     },
@@ -63,7 +108,7 @@ const AdminConfig = () => {
       label: 'Modo Bank - Chave Secreta',
       placeholder: 'sk_live_...',
       description: 'Chave secreta para processar pagamentos via Modo Bank',
-      status: 'configured',
+      status: getSecretStatus('MODO_BANK_SECRET_KEY'),
       required: true,
       category: 'payment'
     },
@@ -72,7 +117,25 @@ const AdminConfig = () => {
       label: 'Melhor Envio - Token',
       placeholder: 'Token do Melhor Envio',
       description: 'Token para calcular frete e gerar etiquetas',
-      status: 'configured',
+      status: getSecretStatus('MELHOR_ENVIO_TOKEN'),
+      required: true,
+      category: 'shipping'
+    },
+    {
+      name: 'MELHOR_ENVIO_CLIENT_ID',
+      label: 'Melhor Envio - Client ID',
+      placeholder: 'Client ID do Melhor Envio',
+      description: 'ID do cliente para integração com Melhor Envio',
+      status: getSecretStatus('MELHOR_ENVIO_CLIENT_ID'),
+      required: true,
+      category: 'shipping'
+    },
+    {
+      name: 'MELHOR_ENVIO_CLIENT_SECRET',
+      label: 'Melhor Envio - Client Secret',
+      placeholder: 'Client Secret do Melhor Envio',
+      description: 'Secret do cliente para integração com Melhor Envio',
+      status: getSecretStatus('MELHOR_ENVIO_CLIENT_SECRET'),
       required: true,
       category: 'shipping'
     },
@@ -81,7 +144,7 @@ const AdminConfig = () => {
       label: 'OpenAI - API Key',
       placeholder: 'sk-...',
       description: 'Chave para recomendações de perfumes com IA',
-      status: 'configured',
+      status: getSecretStatus('OPENAI_API_KEY'),
       required: false,
       category: 'ai'
     },
@@ -90,7 +153,7 @@ const AdminConfig = () => {
       label: 'Algolia - App ID',
       placeholder: 'XXXXXXXXXX',
       description: 'ID da aplicação Algolia para busca',
-      status: 'configured',
+      status: getSecretStatus('ALGOLIA_APP_ID'),
       required: false,
       category: 'ai'
     },
@@ -99,7 +162,7 @@ const AdminConfig = () => {
       label: 'Algolia - Search Key',
       placeholder: 'Chave de busca Algolia',
       description: 'Chave pública para busca no frontend',
-      status: 'configured',
+      status: getSecretStatus('ALGOLIA_SEARCH_KEY'),
       required: false,
       category: 'ai'
     },
@@ -108,7 +171,7 @@ const AdminConfig = () => {
       label: 'Algolia - Admin Key',
       placeholder: 'Chave admin Algolia',
       description: 'Chave admin para sincronizar produtos',
-      status: 'configured',
+      status: getSecretStatus('ALGOLIA_ADMIN_KEY'),
       required: false,
       category: 'ai'
     },
@@ -117,7 +180,7 @@ const AdminConfig = () => {
       label: 'Resend - API Key',
       placeholder: 're_...',
       description: 'Chave para envio de emails transacionais',
-      status: 'missing',
+      status: getSecretStatus('RESEND_API_KEY'),
       required: false,
       category: 'email'
     },
@@ -126,16 +189,7 @@ const AdminConfig = () => {
       label: 'Google Analytics - Measurement ID',
       placeholder: 'G-XXXXXXXXXX',
       description: 'ID para tracking do Google Analytics 4',
-      status: 'configured',
-      required: false,
-      category: 'analytics'
-    },
-    {
-      name: 'GA4_API_SECRET',
-      label: 'GA4 - API Secret',
-      placeholder: 'API Secret do GA4',
-      description: 'Secret para envio de eventos server-side',
-      status: 'missing',
+      status: getSecretStatus('GA_MEASUREMENT_ID'),
       required: false,
       category: 'analytics'
     },
@@ -144,7 +198,7 @@ const AdminConfig = () => {
       label: 'Sentry - DSN',
       placeholder: 'https://...',
       description: 'URL para monitoramento de erros',
-      status: 'configured',
+      status: getSecretStatus('SENTRY_DSN'),
       required: false,
       category: 'analytics'
     }
@@ -167,6 +221,9 @@ const AdminConfig = () => {
     };
 
     loadConfig();
+    
+    // Verificar status das chaves automaticamente
+    checkSecretsStatus();
   }, []);
 
   const handleSave = async () => {
@@ -370,6 +427,56 @@ const AdminConfig = () => {
         </TabsContent>
 
         <TabsContent value="secrets" className="space-y-6">
+          {/* Header com botão de verificação */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    Status das Chaves de API
+                  </CardTitle>
+                  {lastSecretsCheck && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Última verificação: {new Date(lastSecretsCheck).toLocaleString('pt-BR')}
+                    </p>
+                  )}
+                </div>
+                <Button 
+                  onClick={checkSecretsStatus} 
+                  disabled={checkingSecrets}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${checkingSecrets ? 'animate-spin' : ''}`} />
+                  {checkingSecrets ? 'Verificando...' : 'Verificar Status'}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-2xl font-bold text-green-600">
+                    {Object.values(secretsStatus).filter(s => s === 'configured').length}
+                  </div>
+                  <div className="text-sm text-green-700">Configuradas</div>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="text-2xl font-bold text-red-600">
+                    {Object.values(secretsStatus).filter(s => s === 'missing').length}
+                  </div>
+                  <div className="text-sm text-red-700">Faltando</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-2xl font-bold text-gray-600">
+                    {Object.values(secretsStatus).filter(s => s === 'unknown').length}
+                  </div>
+                  <div className="text-sm text-gray-700">Desconhecidas</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {Object.entries(groupedSecrets).map(([category, secrets]) => (
             <Card key={category}>
               <CardHeader>
@@ -403,13 +510,13 @@ const AdminConfig = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          toast({
-                            title: "Configurar Secret",
-                            description: `Use o Supabase Dashboard para configurar ${secret.name}`,
-                          });
+                          window.open(
+                            'https://supabase.com/dashboard/project/dd10df9e-f817-40ce-8443-912ed0720041/settings/functions',
+                            '_blank'
+                          );
                         }}
                       >
-                        Configurar
+                        Configurar no Supabase
                       </Button>
                     </div>
                   </div>
