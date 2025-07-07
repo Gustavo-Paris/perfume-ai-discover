@@ -60,17 +60,17 @@ export default function Wishlist() {
     removeFromWishlist.mutate(perfumeId);
   };
 
-  const handleQuickAdd = (perfumeId: string, size: 5 | 10, perfumeName: string) => {
-    addToCart({
-      perfume_id: perfumeId,
-      size_ml: size,
-      quantity: 1
-    });
-    
-    toast({
-      title: "Adicionado ao carrinho!",
-      description: `${perfumeName} ${size}ml foi adicionado ao seu carrinho.`,
-    });
+  const handleQuickAdd = async (perfumeId: string, size: 5 | 10, perfumeName: string) => {
+    try {
+      await addToCart({
+        perfume_id: perfumeId,
+        size_ml: size,
+        quantity: 1
+      });
+    } catch (error) {
+      // Erro já é tratado no contexto
+      console.error('Error adding to cart from wishlist:', error);
+    }
   };
 
   if (isLoading) {

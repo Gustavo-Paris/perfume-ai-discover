@@ -156,6 +156,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
       
+      // Toast só aparece após sucesso
       toast({
         title: "Item adicionado ao carrinho!",
         description: "O produto foi adicionado com sucesso.",
