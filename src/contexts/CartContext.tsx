@@ -59,8 +59,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: cartItems, error } = await supabase
       .from('cart_items')
       .select(`
-        *,
-        perfumes (*)
+        id,
+        user_id,
+        perfume_id,
+        size_ml,
+        quantity,
+        created_at,
+        perfumes (
+          id,
+          name,
+          brand,
+          family,
+          gender,
+          description,
+          image_url,
+          price_5ml,
+          price_10ml,
+          price_full,
+          top_notes,
+          heart_notes,
+          base_notes,
+          category,
+          created_at
+        )
       `)
       .eq('user_id', user?.id);
 
