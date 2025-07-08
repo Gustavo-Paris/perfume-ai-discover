@@ -18,6 +18,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from '@/hooks/use-toast';
 import { LazyImage } from '@/components/ui/lazy-image';
 import { CollectionManager } from '@/components/wishlist/CollectionManager';
+import { LoadingState, EmptyState } from '@/components/ui/loading-states';
+import { ProductCardSkeleton } from '@/components/ui/content-loader';
+import { ButtonLoading } from '@/components/ui/button-loading';
 
 export default function Wishlist() {
   const { user } = useAuth();
@@ -165,42 +168,49 @@ export default function Wishlist() {
     ? collections.find(c => c.id === selectedCollectionId)
     : null;
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1">
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-20 w-full" />
-              ))}
-            </div>
-          </div>
-          <div className="lg:col-span-3">
-            <div className="space-y-6">
-              <Skeleton className="h-8 w-48" />
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <Skeleton className="aspect-[4/5] w-full" />
-                    <CardContent className="p-4 space-y-3">
-                      <Skeleton className="h-4 w-1/3" />
-                      <Skeleton className="h-6 w-full" />
-                      <Skeleton className="h-4 w-2/3" />
-                    </CardContent>
-                  </Card>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <LoadingState
+        isLoading={isLoading}
+        isEmpty={currentItems.length === 0}
+        loadingComponent={
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-1">
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20 w-full" />
                 ))}
               </div>
             </div>
+            <div className="lg:col-span-3">
+              <div className="space-y-6">
+                <Skeleton className="h-8 w-48" />
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <ProductCardSkeleton key={i} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        }
+        emptyComponent={
+          <EmptyState
+            icon={<Heart className="h-16 w-16" />}
+            title={currentCollection ? 'Esta lista está vazia' : 'Sua lista de favoritos está vazia'}
+            description={
+              currentCollection 
+                ? 'Adicione perfumes a esta lista para organizar seus favoritos'
+                : 'Explore nosso catálogo e adicione perfumes aos seus favoritos clicando no ❤️'
+            }
+            action={{
+              label: "Explorar Perfumes",
+              onClick: () => navigate('/catalogo')
+            }}
+          />
+        }
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar - Listas */}
         <div className="lg:col-span-1">
           <CollectionManager 
@@ -237,10 +247,15 @@ export default function Wishlist() {
                     
                     <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
+                        <ButtonLoading 
+                          variant="outline" 
+                          size="sm"
+                          loading={moveToCollection.isPending}
+                          loadingText="Movendo..."
+                        >
                           <Move className="h-4 w-4 mr-2" />
                           Mover
-                        </Button>
+                        </ButtonLoading>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
@@ -322,26 +337,6 @@ export default function Wishlist() {
             </div>
           )}
 
-          {/* Empty State */}
-          {currentItems.length === 0 && (
-            <div className="text-center py-16">
-              <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-2xl font-semibold mb-2">
-                {currentCollection ? 'Esta lista está vazia' : 'Sua lista de favoritos está vazia'}
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                {currentCollection 
-                  ? 'Adicione perfumes a esta lista para organizar seus favoritos'
-                  : 'Explore nosso catálogo e adicione perfumes aos seus favoritos clicando no ❤️'
-                }
-              </p>
-              <Button asChild>
-                <Link to="/catalogo">
-                  Explorar Perfumes
-                </Link>
-              </Button>
-            </div>
-          )}
 
           {/* Wishlist Items */}
           {filteredItems.length > 0 && (
@@ -472,6 +467,7 @@ export default function Wishlist() {
           )}
         </div>
       </div>
+      </LoadingState>
     </div>
   );
 }

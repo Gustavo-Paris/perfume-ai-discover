@@ -15,6 +15,9 @@ import { DatabasePerfume } from '@/types';
 import AdvancedSearchBox from '@/components/search/AdvancedSearchBox';
 import DynamicFilters from '@/components/search/DynamicFilters';
 import { SearchFilters } from '@/hooks/useAdvancedSearch';
+import { LoadingState, EmptyState } from '@/components/ui/loading-states';
+import { ProductCardSkeleton } from '@/components/ui/content-loader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Catalogo = () => {
   const { data: databasePerfumes, isLoading } = usePerfumes();
@@ -31,7 +34,6 @@ const Catalogo = () => {
   // Use search results if available, otherwise show all perfumes
   const perfumesToShow = useMemo(() => {
     const baseResults = searchResults.length > 0 ? searchResults : databasePerfumes || [];
-    
     
     return baseResults.map((dbPerfume: DatabasePerfume) => ({
       id: dbPerfume.id,
@@ -134,18 +136,6 @@ const Catalogo = () => {
     setSearchResults([]); // Clear search results to show all perfumes
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-lg text-gray-600">Carregando perfumes...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const FilterContent = () => (
     <div className="space-y-6">
       {/* Brands */}
@@ -232,115 +222,149 @@ const Catalogo = () => {
   return (
     <div className="min-h-screen bg-white py-12">
       <div className="container mx-auto px-4 max-w-7xl">
-        {/* Header */}
-        <motion.div 
-          className="mb-12 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 className="font-display text-5xl md:text-6xl font-bold mb-4 text-gray-900">
-            Catálogo de <span className="text-brand-gradient">Fragrâncias</span>
-          </h1>
-          <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
-            Explore nossa coleção completa de perfumes premium selecionados
-          </p>
-        </motion.div>
-
-        {/* Search and Controls */}
-        <motion.div 
-          className="flex flex-col md:flex-row gap-4 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          {/* Advanced Search */}
-          <div className="flex-1">
-            <AdvancedSearchBox
-              placeholder="Buscar perfumes, marcas ou notas..."
-              onResultsChange={setSearchResults}
-              onFiltersOpen={() => setShowAdvancedFilters(true)}
-              size="md"
-            />
-          </div>
-
-          {/* Sort */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full md:w-48 bg-white border-gray-300 text-gray-800 focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/40 rounded-xl">
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent className="bg-white border-gray-200">
-              <SelectItem value="name">Nome A-Z</SelectItem>
-              <SelectItem value="brand">Marca A-Z</SelectItem>
-              <SelectItem value="price-low">Menor Preço</SelectItem>
-              <SelectItem value="price-high">Maior Preço</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Mobile Filters */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button className="md:hidden btn-secondary">
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                Filtros
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-80 bg-white">
-              <SheetHeader>
-                <SheetTitle className="font-display text-gray-900">Filtros</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6">
-                <FilterContent />
+        <LoadingState
+          isLoading={isLoading}
+          isEmpty={!isLoading && filteredPerfumes.length === 0}
+          loadingComponent={
+            <div className="space-y-8">
+              {/* Header Skeleton */}
+              <div className="text-center space-y-4">
+                <Skeleton className="h-16 w-96 mx-auto" />
+                <Skeleton className="h-6 w-128 mx-auto" />
               </div>
-            </SheetContent>
-          </Sheet>
-        </motion.div>
-
-        <div className="flex gap-8">
-          {/* Desktop Filters */}
-          <motion.aside 
-            className="hidden md:block w-64 shrink-0"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="glass rounded-2xl sticky top-24">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display font-semibold text-lg text-gray-900">Filtros</h2>
-                  <Filter className="h-4 w-4 text-gray-500" />
+              
+              {/* Search Controls Skeleton */}
+              <div className="flex gap-4">
+                <Skeleton className="h-12 flex-1" />
+                <Skeleton className="h-12 w-48" />
+              </div>
+              
+              <div className="flex gap-8">
+                {/* Sidebar Skeleton */}
+                <div className="hidden md:block w-64 space-y-4">
+                  <Skeleton className="h-96 w-full" />
                 </div>
-                <FilterContent />
-              </CardContent>
-            </Card>
-          </motion.aside>
+                
+                {/* Products Grid Skeleton */}
+                <div className="flex-1">
+                  <Skeleton className="h-6 w-48 mb-6" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <ProductCardSkeleton key={i} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+          emptyComponent={
+            <EmptyState
+              icon={<Search className="h-16 w-16" />}
+              title="Nenhum produto encontrado"
+              description="Tente ajustar os filtros ou buscar por outros termos"
+              action={{
+                label: "Limpar Filtros",
+                onClick: clearFilters
+              }}
+            />
+          }
+        >
+          {/* Header */}
+          <motion.div 
+            className="mb-12 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="font-display text-5xl md:text-6xl font-bold mb-4 text-gray-900">
+              Catálogo de <span className="text-brand-gradient">Fragrâncias</span>
+            </h1>
+            <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
+              Explore nossa coleção completa de perfumes premium selecionados
+            </p>
+          </motion.div>
 
-          {/* Products Grid */}
-          <motion.main 
-            className="flex-1"
+          {/* Search and Controls */}
+          <motion.div 
+            className="flex flex-col md:flex-row gap-4 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.3 }}
           >
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-gray-600 font-medium">
-                {filteredPerfumes.length} produto{filteredPerfumes.length !== 1 ? 's' : ''} encontrado{filteredPerfumes.length !== 1 ? 's' : ''}
-              </p>
+            {/* Advanced Search */}
+            <div className="flex-1">
+              <AdvancedSearchBox
+                placeholder="Buscar perfumes, marcas ou notas..."
+                onResultsChange={setSearchResults}
+                onFiltersOpen={() => setShowAdvancedFilters(true)}
+                size="md"
+              />
             </div>
 
-            {filteredPerfumes.length === 0 ? (
-              <Card className="glass rounded-2xl">
-                <CardContent className="text-center py-12">
-                  <h3 className="font-display font-semibold text-xl mb-2 text-gray-900">Nenhum produto encontrado</h3>
-                  <p className="text-gray-600 mb-6 text-lg">
-                    Tente ajustar os filtros ou buscar por outros termos
-                  </p>
-                  <Button onClick={clearFilters} className="btn-primary">
-                    Limpar Filtros
-                  </Button>
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-48 bg-white border-gray-300 text-gray-800 focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/40 rounded-xl">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="name">Nome A-Z</SelectItem>
+                <SelectItem value="brand">Marca A-Z</SelectItem>
+                <SelectItem value="price-low">Menor Preço</SelectItem>
+                <SelectItem value="price-high">Maior Preço</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Mobile Filters */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button className="md:hidden btn-secondary">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Filtros
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80 bg-white">
+                <SheetHeader>
+                  <SheetTitle className="font-display text-gray-900">Filtros</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <FilterContent />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </motion.div>
+
+          <div className="flex gap-8">
+            {/* Desktop Filters */}
+            <motion.aside 
+              className="hidden md:block w-64 shrink-0"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="glass rounded-2xl sticky top-24">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-display font-semibold text-lg text-gray-900">Filtros</h2>
+                    <Filter className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <FilterContent />
                 </CardContent>
               </Card>
-            ) : (
+            </motion.aside>
+
+            {/* Products Grid */}
+            <motion.main 
+              className="flex-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-gray-600 font-medium">
+                  {filteredPerfumes.length} produto{filteredPerfumes.length !== 1 ? 's' : ''} encontrado{filteredPerfumes.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredPerfumes.map((perfume, index) => (
                   <motion.div
@@ -353,9 +377,9 @@ const Catalogo = () => {
                   </motion.div>
                 ))}
               </div>
-            )}
-          </motion.main>
-        </div>
+            </motion.main>
+          </div>
+        </LoadingState>
       </div>
     </div>
   );
