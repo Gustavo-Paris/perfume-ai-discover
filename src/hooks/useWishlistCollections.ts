@@ -197,10 +197,12 @@ export const useMoveToCollection = () => {
       if (error) throw error;
       return { perfumeId, collectionId };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-      queryClient.invalidateQueries({ queryKey: ['wishlist-collections'] });
-      queryClient.invalidateQueries({ queryKey: ['collection-items'] });
+    onSuccess: async () => {
+      // Forçar refetch de todas as queries relacionadas
+      await queryClient.refetchQueries({ queryKey: ['wishlist'] });
+      await queryClient.refetchQueries({ queryKey: ['wishlist-collections'] });
+      await queryClient.refetchQueries({ queryKey: ['collection-items'] });
+      
       toast({
         title: "Item movido",
         description: "Perfume movido para a nova lista",
