@@ -38,7 +38,7 @@ export const useWishlistCollections = () => {
         .from('wishlist_collections')
         .select(`
           *,
-          wishlist(count)
+          wishlist!collection_id(count)
         `)
         .eq('user_id', user.id)
         .order('is_default', { ascending: false })

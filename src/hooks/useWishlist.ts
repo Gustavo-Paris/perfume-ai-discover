@@ -37,6 +37,7 @@ export const useWishlist = () => {
           user_id,
           perfume_id,
           created_at,
+          collection_id,
           perfumes:perfume_id (
             id,
             name,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Trash2, Filter, SortAsc, Plus, Eye, GitCompare, FolderOpen, Move, Share } from 'lucide-react';
 import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
@@ -41,8 +41,13 @@ export default function Wishlist() {
   const isLoading = selectedCollectionId ? collectionLoading : wishlistLoading;
 
   // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate('/auth');
     return null;
   }
 
@@ -196,7 +201,7 @@ export default function Wishlist() {
         {/* Main Content */}
         <div className="lg:col-span-3">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
               <Heart className="h-8 w-8 text-red-500 fill-current" />
               <div>
@@ -211,10 +216,10 @@ export default function Wishlist() {
             </div>
 
             {currentItems.length > 0 && (
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                 {/* Actions for selected items */}
                 {selectedItems.length > 0 && (
-                  <div className="flex items-center gap-2 mr-4">
+                  <div className="flex items-center gap-2 mb-2 lg:mb-0">
                     <Badge variant="secondary">
                       {selectedItems.length} selecionados
                     </Badge>
@@ -262,31 +267,33 @@ export default function Wishlist() {
                 )}
 
                 {/* Filters */}
-                <Select value={filterBy} onValueChange={(value: any) => setFilterBy(value)}>
-                  <SelectTrigger className="w-40">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="masculino">Masculinos</SelectItem>
-                    <SelectItem value="feminino">Femininos</SelectItem>
-                    <SelectItem value="unissex">Unissex</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2 flex-wrap lg:ml-auto">
+                  <Select value={filterBy} onValueChange={(value: any) => setFilterBy(value)}>
+                    <SelectTrigger className="w-40">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="masculino">Masculinos</SelectItem>
+                      <SelectItem value="feminino">Femininos</SelectItem>
+                      <SelectItem value="unissex">Unissex</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-40">
-                    <SortAsc className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="recent">Mais recentes</SelectItem>
-                    <SelectItem value="name">Nome A-Z</SelectItem>
-                    <SelectItem value="brand">Marca A-Z</SelectItem>
-                    <SelectItem value="price">Menor preço</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                    <SelectTrigger className="w-40">
+                      <SortAsc className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Mais recentes</SelectItem>
+                      <SelectItem value="name">Nome A-Z</SelectItem>
+                      <SelectItem value="brand">Marca A-Z</SelectItem>
+                      <SelectItem value="price">Menor preço</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
           </div>
