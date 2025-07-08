@@ -207,12 +207,12 @@ export function SmartComparison({ selectedItems = [], onSelectionChange }: Smart
 
       {/* Dialog para comparação personalizada */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl" aria-describedby="comparison-description">
           <DialogHeader>
             <DialogTitle>Criar Comparação Personalizada</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div id="comparison-description" className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
                 Selecione 2-4 perfumes para comparar

@@ -92,10 +92,13 @@ export function CollectionManager({ onSelectCollection, selectedCollectionId }: 
               Nova Lista
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent aria-describedby="collection-description">
             <DialogHeader>
               <DialogTitle>Criar Nova Lista</DialogTitle>
             </DialogHeader>
+            <div id="collection-description" className="sr-only">
+              Formulário para criar uma nova lista de favoritos personalizada
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name">Nome da Lista</Label>
@@ -252,10 +255,13 @@ export function CollectionManager({ onSelectCollection, selectedCollectionId }: 
 
       {/* Dialog de edição */}
       <Dialog open={!!editingCollection} onOpenChange={() => setEditingCollection(null)}>
-        <DialogContent>
+        <DialogContent aria-describedby="edit-collection-description">
           <DialogHeader>
             <DialogTitle>Editar Lista</DialogTitle>
           </DialogHeader>
+          <div id="edit-collection-description" className="sr-only">
+            Formulário para editar os detalhes da lista de favoritos
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="edit-name">Nome da Lista</Label>
