@@ -186,7 +186,8 @@ export const useMoveToCollection = () => {
       const { error } = await supabase
         .from('wishlist')
         .update({ collection_id: collectionId })
-        .eq('perfume_id', perfumeId);
+        .eq('perfume_id', perfumeId)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
       if (error) throw error;
       return { perfumeId, collectionId };
