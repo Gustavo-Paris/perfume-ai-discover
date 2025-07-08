@@ -21,6 +21,9 @@ import { CollectionManager } from '@/components/wishlist/CollectionManager';
 import { LoadingState, EmptyState } from '@/components/ui/loading-states';
 import { ProductCardSkeleton } from '@/components/ui/content-loader';
 import { ButtonLoading } from '@/components/ui/button-loading';
+import { WishlistInsights } from '@/components/wishlist/WishlistInsights';
+import { SmartComparison } from '@/components/wishlist/SmartComparison';
+import { WishlistTags } from '@/components/wishlist/WishlistTags';
 
 export default function Wishlist() {
   const { user } = useAuth();
@@ -37,6 +40,8 @@ export default function Wishlist() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'grid' | 'insights' | 'compare'>('grid');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Dados baseados na coleção selecionada
   const { data: collectionItems = [], isLoading: collectionLoading } = useCollectionItems(selectedCollectionId || undefined);
@@ -88,8 +93,47 @@ export default function Wishlist() {
 
   // Filter items
   const filteredItems = sortedItems.filter(item => {
-    if (filterBy === 'all') return true;
-    return item.perfume.gender === filterBy;
+    // Filter by gender
+    if (filterBy !== 'all' && item.perfume.gender !== filterBy) {
+      return false;
+    }
+    
+    // Filter by tags
+    if (selectedTags.length > 0) {
+      const perfume = item.perfume;
+      const minPrice = Math.min(...[perfume.price_5ml, perfume.price_10ml, perfume.price_full].filter(Boolean));
+      const allNotes = [...(perfume.top_notes || []), ...(perfume.heart_notes || []), ...(perfume.base_notes || [])];
+      
+      const matchesTags = selectedTags.every(tag => {
+        switch (tag) {
+          case perfume.family:
+          case perfume.gender:
+            return true;
+          case 'Econômico':
+            return minPrice <= 50;
+          case 'Intermediário':
+            return minPrice > 50 && minPrice <= 100;
+          case 'Premium':
+            return minPrice > 100;
+          case 'Marca de Luxo':
+            return ['Chanel', 'Dior', 'Tom Ford', 'Creed', 'Maison Margiela'].includes(perfume.brand);
+          case 'Verão':
+            return allNotes.some(note => ['Bergamota', 'Limão', 'Laranja', 'Hortelã', 'Eucalipto'].includes(note));
+          case 'Inverno':
+            return allNotes.some(note => ['Baunilha', 'Âmbar', 'Almíscar', 'Canela', 'Cravo'].includes(note));
+          default:
+            if (tag.startsWith('Com ')) {
+              const note = tag.replace('Com ', '');
+              return allNotes.includes(note);
+            }
+            return false;
+        }
+      });
+      
+      if (!matchesTags) return false;
+    }
+    
+    return true;
   });
 
   const handleRemove = (perfumeId: string, perfumeName: string) => {
@@ -211,16 +255,31 @@ export default function Wishlist() {
         }
       >
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar - Listas */}
-        <div className="lg:col-span-1">
+        {/* Sidebar - Listas e Filtros */}
+        <div className="lg:col-span-1 space-y-6">
           <CollectionManager 
             selectedCollectionId={selectedCollectionId}
             onSelectCollection={setSelectedCollectionId}
+          />
+          
+          <WishlistTags
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            allItems={currentItems}
           />
         </div>
 
         {/* Main Content */}
         <div className="lg:col-span-3">
+          {/* Tabs Navigation */}
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="mb-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="grid">Lista</TabsTrigger>
+              <TabsTrigger value="insights">Insights</TabsTrigger>
+              <TabsTrigger value="compare">Comparar</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="grid" className="space-y-6">
           {/* Header */}
           <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
@@ -465,8 +524,21 @@ export default function Wishlist() {
               </Button>
             </div>
           )}
+          </TabsContent>
+          
+          <TabsContent value="insights">
+            <WishlistInsights />
+          </TabsContent>
+          
+          <TabsContent value="compare">
+            <SmartComparison 
+              selectedItems={selectedItems}
+              onSelectionChange={setSelectedItems}
+            />
+          </TabsContent>
+          </Tabs>
         </div>
-      </div>
+        </div>
       </LoadingState>
     </div>
   );

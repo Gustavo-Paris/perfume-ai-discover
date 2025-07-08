@@ -19,6 +19,9 @@ export interface WishlistItem {
     price_10ml: number | null;
     family: string;
     gender: string;
+    top_notes?: string[];
+    heart_notes?: string[];
+    base_notes?: string[];
   };
 }
 
@@ -48,7 +51,10 @@ export const useWishlist = () => {
             price_5ml,
             price_10ml,
             family,
-            gender
+            gender,
+            top_notes,
+            heart_notes,
+            base_notes
           )
         `)
         .eq('user_id', user.id)
