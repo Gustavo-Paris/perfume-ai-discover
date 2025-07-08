@@ -16,7 +16,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp, resetPassword, user, session } = useAuth();
+  const { signIn, signUp, resetPassword, updatePassword, user, session } = useAuth();
 
   // Formulários
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -220,9 +220,7 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPasswordForm.password
-      });
+      const { error } = await updatePassword(newPasswordForm.password);
       
       if (error) {
         console.error('Update password error:', error);

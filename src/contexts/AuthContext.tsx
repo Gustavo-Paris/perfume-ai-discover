@@ -55,16 +55,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (hasRecoveryTokens) {
         console.log('🔄 Recovery tokens detected, processing...');
-        // Wait longer for Supabase to process the tokens
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Force refresh the session immediately from URL
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error('❌ Refresh error:', refreshError);
+        }
+        
+        // Wait for Supabase to fully process
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
       
-      // Get current session
+      // Get current session with retry logic
       console.log('📋 Getting session...');
-      const { data: { session }, error } = await supabase.auth.getSession();
+      let session = null;
+      let attempts = 0;
+      const maxAttempts = 3;
       
-      if (error) {
-        console.error('❌ Session check error:', error);
+      while (!session && attempts < maxAttempts) {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error(`❌ Session check error (attempt ${attempts + 1}):`, error);
+        } else {
+          session = data.session;
+        }
+        
+        if (!session && attempts < maxAttempts - 1) {
+          console.log(`⏳ Retrying session check in 1s... (attempt ${attempts + 1})`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        attempts++;
       }
       
       if (mounted) {
