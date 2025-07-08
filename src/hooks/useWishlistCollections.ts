@@ -195,6 +195,7 @@ export const useMoveToCollection = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
       queryClient.invalidateQueries({ queryKey: ['wishlist-collections'] });
+      queryClient.invalidateQueries({ queryKey: ['collection-items'] });
       toast({
         title: "Item movido",
         description: "Perfume movido para a nova lista",
