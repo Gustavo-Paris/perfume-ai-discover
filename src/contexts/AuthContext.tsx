@@ -45,42 +45,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Handle initial session and recovery tokens
-    const handleInitialAuth = async () => {
-      try {
-        // Check URL for recovery tokens FIRST
-        const hash = window.location.hash;
-        const hasRecoveryTokens = hash.includes('access_token') && hash.includes('type=recovery');
-        
-        if (hasRecoveryTokens) {
-          
-          // Wait a bit for Supabase to process the tokens
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-        
-        // Get current session
-        
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('❌ Session check error:', error);
-        }
-        
-        if (mounted) {
-          
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('❌ Auth initialization error:', error);
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-        }
+  // Handle initial session and recovery tokens
+  const handleInitialAuth = async () => {
+    try {
+      // Check URL for recovery tokens FIRST
+      const hash = window.location.hash;
+      const searchParams = new URLSearchParams(window.location.search);
+      const hasRecoveryTokens = hash.includes('access_token') && (hash.includes('type=recovery') || searchParams.get('type') === 'recovery');
+      
+      if (hasRecoveryTokens) {
+        console.log('🔄 Recovery tokens detected, processing...');
+        // Wait longer for Supabase to process the tokens
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
-    };
+      
+      // Get current session
+      console.log('📋 Getting session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('❌ Session check error:', error);
+      }
+      
+      if (mounted) {
+        console.log('✅ Session loaded:', !!session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('❌ Auth initialization error:', error);
+      if (mounted) {
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+      }
+    }
+  };
 
     handleInitialAuth();
 
