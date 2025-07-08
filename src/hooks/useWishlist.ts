@@ -8,6 +8,7 @@ export interface WishlistItem {
   user_id: string;
   perfume_id: string;
   created_at: string;
+  collection_id: string | null;
   perfume: {
     id: string;
     name: string;

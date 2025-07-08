@@ -37,7 +37,15 @@ export default function Wishlist() {
 
   // Dados baseados na coleção selecionada
   const { data: collectionItems = [], isLoading: collectionLoading } = useCollectionItems(selectedCollectionId || undefined);
-  const currentItems = selectedCollectionId ? collectionItems : wishlistItems;
+  
+  // Se nenhuma coleção está selecionada, mostrar itens da coleção padrão
+  const defaultCollection = collections.find(c => c.is_default);
+  const currentItems = selectedCollectionId 
+    ? collectionItems 
+    : defaultCollection 
+      ? (useCollectionItems(defaultCollection.id).data || [])
+      : wishlistItems; // usar todos os itens como fallback
+  
   const isLoading = selectedCollectionId ? collectionLoading : wishlistLoading;
 
   // Redirect to login if not authenticated
