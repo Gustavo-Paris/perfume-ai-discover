@@ -8,7 +8,7 @@ interface ButtonLoadingProps extends ButtonProps {
   loadingText?: string;
 }
 
-export const ButtonLoading = React.forwardRef<HTMLButtonElement, ButtonLoadingProps>(
+const ButtonLoading = React.forwardRef<HTMLButtonElement, ButtonLoadingProps>(
   ({ 
     loading = false, 
     loadingText, 
@@ -34,3 +34,5 @@ export const ButtonLoading = React.forwardRef<HTMLButtonElement, ButtonLoadingPr
 );
 
 ButtonLoading.displayName = "ButtonLoading";
+
+export { ButtonLoading };
