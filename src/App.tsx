@@ -46,6 +46,7 @@ import EmailPreferences from "./components/notifications/EmailPreferences";
 import Unsubscribe from "./pages/Unsubscribe";
 import Search from "./pages/Search";
 import Afiliados from "./pages/Afiliados";
+import ImageSearchDemo from "./pages/ImageSearchDemo";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const AppContent = () => {
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/comparacao/:id" element={<ComparisonPage />} />
+          <Route path="/busca-imagem" element={<ImageSearchDemo />} />
           <Route path="/perfume/:id" element={<PerfumeDetails />} />
           
           {/* Admin Routes */}

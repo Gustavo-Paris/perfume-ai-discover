@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, Mic, X, Filter, Clock, TrendingUp } from 'lucide-react';
+import { Search, Mic, X, Filter, Clock, TrendingUp, Camera } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useAdvancedSearch, SearchSuggestion } from '@/hooks/useAdvancedSearch';
 import { useVoiceSearch } from '@/hooks/useVoiceSearch';
+import { ImageSearch } from '@/components/search/ImageSearch';
 import { cn } from '@/lib/utils';
 
 interface AdvancedSearchBoxProps {
@@ -15,6 +16,7 @@ interface AdvancedSearchBoxProps {
   onFiltersOpen?: () => void;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  showImageSearch?: boolean;
 }
 
 const AdvancedSearchBox = ({ 
@@ -22,11 +24,13 @@ const AdvancedSearchBox = ({
   onResultsChange,
   onFiltersOpen,
   className,
-  size = 'md'
+  size = 'md',
+  showImageSearch = true
 }: AdvancedSearchBoxProps) => {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [isImageSearchOpen, setIsImageSearchOpen] = useState(false);
   
   const {
     query,
@@ -178,6 +182,19 @@ const AdvancedSearchBox = ({
             </Button>
           )}
           
+          {showImageSearch && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsImageSearchOpen(true)}
+              className="h-6 w-6 p-0 hover:bg-muted"
+              title="Buscar por imagem"
+            >
+              <Camera className="h-3 w-3" />
+            </Button>
+          )}
+          
           {isSupported && (
             <Button
               type="button"
@@ -325,6 +342,12 @@ const AdvancedSearchBox = ({
           </p>
         </div>
       )}
+      
+      {/* Modal de busca por imagem */}
+      <ImageSearch 
+        isOpen={isImageSearchOpen}
+        onClose={() => setIsImageSearchOpen(false)}
+      />
     </div>
   );
 };

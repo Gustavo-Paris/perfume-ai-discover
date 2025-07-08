@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search as SearchIcon, TrendingUp, Clock } from 'lucide-react';
+import { Search as SearchIcon, TrendingUp, Clock, Camera } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import AdvancedSearchBox from '@/components/search/AdvancedSearchBox';
 import DynamicFilters from '@/components/search/DynamicFilters';
 import PerfumeCard from '@/components/perfume/PerfumeCard';
@@ -91,6 +92,14 @@ const Search = () => {
           <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
             Encontre o perfume perfeito com nossa busca inteligente
           </p>
+          <div className="mt-6">
+            <Link to="/busca-imagem">
+              <Button variant="outline" className="gap-2">
+                <Camera className="h-4 w-4" />
+                Buscar por Imagem
+              </Button>
+            </Link>
+          </div>
         </motion.div>
 
         {/* Search Box */}
