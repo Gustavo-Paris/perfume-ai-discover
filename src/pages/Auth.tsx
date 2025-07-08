@@ -5,92 +5,113 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const isRecovery = searchParams.get('type') === 'recovery';
-  const {
-    signIn,
-    signUp,
-    resetPassword,
-    updatePassword,
-    user,
-    session
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const [activeTab, setActiveTab] = useState('login');
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { signIn, signUp, resetPassword, user, session } = useAuth();
 
-  // Detect password recovery flow
+  // Formulários
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [resetForm, setResetForm] = useState({ email: '' });
+  const [newPasswordForm, setNewPasswordForm] = useState({ password: '', confirmPassword: '' });
+
+  // Detectar fluxo de recuperação de senha
   useEffect(() => {
-    const handleRecovery = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const type = hashParams.get('type');
-      
-      if (type === 'recovery') {
-        setShowPasswordReset(true);
-        // Clear URL hash
-        window.history.replaceState(null, '', window.location.pathname);
-      }
-    };
-
-    handleRecovery();
-  }, []);
-
-  // Handle successful authentication for password reset
-  useEffect(() => {
-    if (session && showPasswordReset) {
-      toast({
-        title: "Agora você pode alterar sua senha",
-        description: "Digite sua nova senha abaixo"
-      });
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    const recoveryParam = searchParams.get('type');
+    
+    if (type === 'recovery' || recoveryParam === 'recovery') {
+      setActiveTab('new-password');
+      // Limpar hash da URL
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
-  }, [session, showPasswordReset, toast]);
-  const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: ''
-  });
-  const [signupForm, setSignupForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [resetForm, setResetForm] = useState({
-    email: ''
-  });
-  const [newPasswordForm, setNewPasswordForm] = useState({
-    password: '',
-    confirmPassword: ''
-  });
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  }, [searchParams]);
+
+  // Redirecionar usuários autenticados
+  useEffect(() => {
+    if (user && !window.location.hash.includes('recovery')) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  // Login com Google
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
-    const {
-      error
-    } = await signIn(loginForm.email, loginForm.password);
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: "Erro no login com Google",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
       toast({
         title: "Erro no login",
-        description: error.message === 'Invalid login credentials' ? 'Email ou senha incorretos' : error.message,
+        description: "Não foi possível fazer login com Google",
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta!"
-      });
-      navigate('/');
     }
     setIsLoading(false);
   };
+
+  // Login com email/senha
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signIn(loginForm.email, loginForm.password);
+      
+      if (error) {
+        toast({
+          title: "Erro no login",
+          description: error.message === 'Invalid login credentials' 
+            ? 'Email ou senha incorretos' 
+            : error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta!"
+        });
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Erro no login",
+        description: "Não foi possível fazer login",
+        variant: "destructive"
+      });
+    }
+    
+    setIsLoading(false);
+  };
+
+  // Cadastro
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (signupForm.password !== signupForm.confirmPassword) {
       toast({
         title: "Erro no cadastro",
@@ -99,6 +120,7 @@ const Auth = () => {
       });
       return;
     }
+    
     if (signupForm.password.length < 6) {
       toast({
         title: "Erro no cadastro",
@@ -107,44 +129,73 @@ const Auth = () => {
       });
       return;
     }
+    
     setIsLoading(true);
-    const {
-      error
-    } = await signUp(signupForm.email, signupForm.password, signupForm.name);
-    if (error) {
+    
+    try {
+      const { error } = await signUp(signupForm.email, signupForm.password, signupForm.name);
+      
+      if (error) {
+        toast({
+          title: "Erro no cadastro",
+          description: error.message === 'User already registered' 
+            ? 'Este email já está cadastrado' 
+            : error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Cadastro realizado!",
+          description: "Verifique seu email para confirmar a conta"
+        });
+        setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
       toast({
         title: "Erro no cadastro",
-        description: error.message === 'User already registered' ? 'Este email já está cadastrado' : error.message,
+        description: "Não foi possível criar a conta",
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "Cadastro realizado!",
-        description: "Verifique seu email para confirmar a conta"
-      });
     }
+    
     setIsLoading(false);
   };
+
+  // Recuperação de senha
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const {
-      error
-    } = await resetPassword(resetForm.email);
-    if (error) {
+    
+    try {
+      const { error } = await resetPassword(resetForm.email);
+      
+      if (error) {
+        toast({
+          title: "Erro ao solicitar nova senha",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Email enviado!",
+          description: "Verifique sua caixa de entrada para redefinir sua senha"
+        });
+        setResetForm({ email: '' });
+      }
+    } catch (error) {
+      console.error('Reset password error:', error);
       toast({
-        title: "Erro ao solicitar nova senha",
-        description: error.message,
+        title: "Erro na recuperação",
+        description: "Não foi possível enviar email de recuperação",
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para redefinir sua senha"
-      });
     }
+    
     setIsLoading(false);
   };
+
+  // Atualizar senha
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -159,7 +210,7 @@ const Auth = () => {
     
     if (newPasswordForm.password.length < 6) {
       toast({
-        title: "Erro", 
+        title: "Erro",
         description: "A senha deve ter pelo menos 6 caracteres",
         variant: "destructive"
       });
@@ -169,7 +220,6 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      // Verificar sessão atual diretamente com Supabase
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       
       if (!currentSession) {
@@ -178,6 +228,7 @@ const Auth = () => {
           description: "Solicite um novo link de recuperação de senha",
           variant: "destructive"
         });
+        setActiveTab('reset');
         setIsLoading(false);
         return;
       }
@@ -190,17 +241,19 @@ const Auth = () => {
         toast({
           title: "Erro ao alterar senha",
           description: error.message,
-          variant: "destructive"  
+          variant: "destructive"
         });
       } else {
         toast({
           title: "Senha alterada!",
-          description: "Agora você pode fazer login com a nova senha"
+          description: "Sua senha foi atualizada com sucesso"
         });
-        setShowPasswordReset(false);
         setNewPasswordForm({ password: '', confirmPassword: '' });
+        setActiveTab('login');
+        navigate('/');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Update password error:', error);
       toast({
         title: "Erro inesperado",
         description: "Tente novamente em alguns instantes",
@@ -210,7 +263,9 @@ const Auth = () => {
     
     setIsLoading(false);
   };
-  return <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex justify-center">
@@ -218,15 +273,21 @@ const Auth = () => {
               Paris & Co
             </h1>
           </Link>
-          <p className="text-sm text-gray-600 mt-1 font-display font-medium my-0 text-center">Parfums</p>
+          <p className="text-sm text-gray-600 mt-1 font-display font-medium">Parfums</p>
         </div>
 
-        <Tabs defaultValue={showPasswordReset ? "new-password" : "login"} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="login" className="font-display" disabled={showPasswordReset}>Entrar</TabsTrigger>
-            <TabsTrigger value="signup" className="font-display" disabled={showPasswordReset}>Cadastrar</TabsTrigger>
-            <TabsTrigger value="reset" className="font-display" disabled={showPasswordReset}>Esqueci</TabsTrigger>
-            <TabsTrigger value="new-password" className="font-display" disabled={!showPasswordReset}>Nova Senha</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className={`grid w-full ${activeTab === 'new-password' ? 'grid-cols-1' : 'grid-cols-3'}`}>
+            {activeTab !== 'new-password' && (
+              <>
+                <TabsTrigger value="login" className="font-display">Entrar</TabsTrigger>
+                <TabsTrigger value="signup" className="font-display">Cadastrar</TabsTrigger>
+                <TabsTrigger value="reset" className="font-display">Esqueci</TabsTrigger>
+              </>
+            )}
+            {activeTab === 'new-password' && (
+              <TabsTrigger value="new-password" className="font-display">Nova Senha</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="login">
@@ -237,23 +298,56 @@ const Auth = () => {
                   Entre com seu email e senha para acessar sua conta
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full font-display"
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Conectando...' : 'Entrar com Google'}
+                </Button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator className="w-full" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">ou continue com email</span>
+                  </div>
+                </div>
+
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email" className="font-display text-gray-700">Email</Label>
-                    <Input id="login-email" type="email" placeholder="seu@email.com" value={loginForm.email} onChange={e => setLoginForm({
-                    ...loginForm,
-                    email: e.target.value
-                  })} required className="font-display" />
+                    <Input 
+                      id="login-email" 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={loginForm.email} 
+                      onChange={e => setLoginForm({ ...loginForm, email: e.target.value })} 
+                      required 
+                      className="font-display" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password" className="font-display text-gray-700">Senha</Label>
-                    <Input id="login-password" type="password" placeholder="••••••••" value={loginForm.password} onChange={e => setLoginForm({
-                    ...loginForm,
-                    password: e.target.value
-                  })} required className="font-display" />
+                    <Input 
+                      id="login-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={loginForm.password} 
+                      onChange={e => setLoginForm({ ...loginForm, password: e.target.value })} 
+                      required 
+                      className="font-display" 
+                    />
                   </div>
-                  <Button type="submit" className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
+                    disabled={isLoading}
+                  >
                     {isLoading ? 'Entrando...' : 'Entrar'}
                   </Button>
                 </form>
@@ -269,37 +363,82 @@ const Auth = () => {
                   Cadastre-se para ter acesso completo à nossa loja
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full font-display"
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Conectando...' : 'Cadastrar com Google'}
+                </Button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator className="w-full" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">ou cadastre-se com email</span>
+                  </div>
+                </div>
+
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name" className="font-display text-gray-700">Nome</Label>
-                    <Input id="signup-name" type="text" placeholder="Seu nome" value={signupForm.name} onChange={e => setSignupForm({
-                    ...signupForm,
-                    name: e.target.value
-                  })} required className="font-display" />
+                    <Input 
+                      id="signup-name" 
+                      type="text" 
+                      placeholder="Seu nome" 
+                      value={signupForm.name} 
+                      onChange={e => setSignupForm({ ...signupForm, name: e.target.value })} 
+                      required 
+                      className="font-display" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email" className="font-display text-gray-700">Email</Label>
-                    <Input id="signup-email" type="email" placeholder="seu@email.com" value={signupForm.email} onChange={e => setSignupForm({
-                    ...signupForm,
-                    email: e.target.value
-                  })} required className="font-display" />
+                    <Input 
+                      id="signup-email" 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={signupForm.email} 
+                      onChange={e => setSignupForm({ ...signupForm, email: e.target.value })} 
+                      required 
+                      className="font-display" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password" className="font-display text-gray-700">Senha</Label>
-                    <Input id="signup-password" type="password" placeholder="••••••••" value={signupForm.password} onChange={e => setSignupForm({
-                    ...signupForm,
-                    password: e.target.value
-                  })} required minLength={6} className="font-display" />
+                    <Input 
+                      id="signup-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={signupForm.password} 
+                      onChange={e => setSignupForm({ ...signupForm, password: e.target.value })} 
+                      required 
+                      minLength={6} 
+                      className="font-display" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm-password" className="font-display text-gray-700">Confirmar Senha</Label>
-                    <Input id="signup-confirm-password" type="password" placeholder="••••••••" value={signupForm.confirmPassword} onChange={e => setSignupForm({
-                    ...signupForm,
-                    confirmPassword: e.target.value
-                  })} required minLength={6} className="font-display" />
+                    <Input 
+                      id="signup-confirm-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={signupForm.confirmPassword} 
+                      onChange={e => setSignupForm({ ...signupForm, confirmPassword: e.target.value })} 
+                      required 
+                      minLength={6} 
+                      className="font-display" 
+                    />
                   </div>
-                  <Button type="submit" className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
+                    disabled={isLoading}
+                  >
                     {isLoading ? 'Cadastrando...' : 'Cadastrar'}
                   </Button>
                 </form>
@@ -324,10 +463,7 @@ const Auth = () => {
                       type="email" 
                       placeholder="seu@email.com" 
                       value={resetForm.email} 
-                      onChange={e => setResetForm({
-                        ...resetForm,
-                        email: e.target.value
-                      })} 
+                      onChange={e => setResetForm({ ...resetForm, email: e.target.value })} 
                       required 
                       className="font-display" 
                     />
@@ -349,7 +485,7 @@ const Auth = () => {
               <CardHeader>
                 <CardTitle className="font-display text-navy">Nova Senha</CardTitle>
                 <CardDescription className="text-gray-600">
-                  Digite sua nova senha
+                  Digite sua nova senha para finalizar a recuperação
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -361,10 +497,7 @@ const Auth = () => {
                       type="password" 
                       placeholder="••••••••" 
                       value={newPasswordForm.password} 
-                      onChange={e => setNewPasswordForm({
-                        ...newPasswordForm,
-                        password: e.target.value
-                      })} 
+                      onChange={e => setNewPasswordForm({ ...newPasswordForm, password: e.target.value })} 
                       required 
                       minLength={6}
                       className="font-display" 
@@ -377,10 +510,7 @@ const Auth = () => {
                       type="password" 
                       placeholder="••••••••" 
                       value={newPasswordForm.confirmPassword} 
-                      onChange={e => setNewPasswordForm({
-                        ...newPasswordForm,
-                        confirmPassword: e.target.value
-                      })} 
+                      onChange={e => setNewPasswordForm({ ...newPasswordForm, confirmPassword: e.target.value })} 
                       required 
                       minLength={6}
                       className="font-display" 
@@ -405,6 +535,8 @@ const Auth = () => {
           </Link>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Auth;
