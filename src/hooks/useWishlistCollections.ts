@@ -52,6 +52,8 @@ export const useWishlistCollections = () => {
       })) as WishlistCollection[];
     },
     enabled: !!user,
+    staleTime: 0, // Always refetch from server
+    gcTime: 0, // Don't cache
   });
 };
 
@@ -183,11 +185,14 @@ export const useMoveToCollection = () => {
 
   return useMutation({
     mutationFn: async ({ perfumeId, collectionId }: { perfumeId: string; collectionId: string }) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
       const { error } = await supabase
         .from('wishlist')
         .update({ collection_id: collectionId })
         .eq('perfume_id', perfumeId)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('user_id', user.user.id);
 
       if (error) throw error;
       return { perfumeId, collectionId };
