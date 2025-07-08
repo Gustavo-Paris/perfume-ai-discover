@@ -36,6 +36,7 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
 import Notificacoes from "./pages/Notificacoes";
 import Wishlist from "./pages/Wishlist";
+import ComparisonPage from "./pages/ComparisonPage";
 import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
@@ -70,6 +71,7 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/comparacao/:id" element={<ComparisonPage />} />
           <Route path="/perfume/:id" element={<PerfumeDetails />} />
           
           {/* Admin Routes */}

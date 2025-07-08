@@ -915,6 +915,36 @@ export type Database = {
         }
         Relationships: []
       }
+      perfume_comparisons: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          perfume_ids: string[]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          perfume_ids: string[]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          perfume_ids?: string[]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       perfume_interactions: {
         Row: {
           created_at: string | null
@@ -1795,24 +1825,34 @@ export type Database = {
       }
       wishlist: {
         Row: {
+          collection_id: string | null
           created_at: string
           id: string
           perfume_id: string
           user_id: string
         }
         Insert: {
+          collection_id?: string | null
           created_at?: string
           id?: string
           perfume_id: string
           user_id: string
         }
         Update: {
+          collection_id?: string | null
           created_at?: string
           id?: string
           perfume_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "wishlist_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "wishlist_collections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "wishlist_perfume_id_fkey"
             columns: ["perfume_id"]
@@ -1828,6 +1868,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wishlist_collections: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
