@@ -34,22 +34,32 @@ export const useWishlistCollections = () => {
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      // Buscar coleções
+      const { data: collections, error } = await supabase
         .from('wishlist_collections')
-        .select(`
-          *,
-          wishlist!collection_id(count)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('is_default', { ascending: false })
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      return (data || []).map(collection => ({
-        ...collection,
-        items_count: collection.wishlist?.[0]?.count || 0
-      })) as WishlistCollection[];
+      // Buscar contagem de itens para cada coleção
+      const collectionsWithCount = await Promise.all(
+        (collections || []).map(async (collection) => {
+          const { count } = await supabase
+            .from('wishlist')
+            .select('*', { count: 'exact', head: true })
+            .eq('collection_id', collection.id);
+
+          return {
+            ...collection,
+            items_count: count || 0
+          };
+        })
+      );
+
+      return collectionsWithCount as WishlistCollection[];
     },
     enabled: !!user,
     staleTime: 0, // Always refetch from server
