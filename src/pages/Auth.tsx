@@ -26,16 +26,14 @@ const Auth = () => {
 
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
-    const recoveryParam = searchParams.get('type');
-    
-    if (type === 'recovery' || recoveryParam === 'recovery') {
-      setActiveTab('new-password');
-      // Limpar hash da URL
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
-  }, [searchParams]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setActiveTab('new-password');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Redirecionar usuários autenticados
   useEffect(() => {
@@ -235,6 +233,8 @@ const Auth = () => {
           description: "Sua senha foi atualizada com sucesso"
         });
         setNewPasswordForm({ password: '', confirmPassword: '' });
+        // Limpar URL após sucesso
+        window.history.replaceState(null, '', window.location.pathname);
         navigate('/');
       }
     } catch (error) {
