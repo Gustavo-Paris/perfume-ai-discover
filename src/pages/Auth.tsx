@@ -220,24 +220,12 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      
-      if (!currentSession) {
-        toast({
-          title: "Sessão expirada",
-          description: "Solicite um novo link de recuperação de senha",
-          variant: "destructive"
-        });
-        setActiveTab('reset');
-        setIsLoading(false);
-        return;
-      }
-      
       const { error } = await supabase.auth.updateUser({
         password: newPasswordForm.password
       });
       
       if (error) {
+        console.error('Update password error:', error);
         toast({
           title: "Erro ao alterar senha",
           description: error.message,
@@ -249,7 +237,6 @@ const Auth = () => {
           description: "Sua senha foi atualizada com sucesso"
         });
         setNewPasswordForm({ password: '', confirmPassword: '' });
-        setActiveTab('login');
         navigate('/');
       }
     } catch (error) {
