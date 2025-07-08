@@ -11,7 +11,8 @@ import {
   Tag,
   MessageSquare,
   Percent,
-  UserPlus
+  UserPlus,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ const adminNavItems = [
   { title: 'Cupons', url: '/admin/coupons', icon: Tag },
   { title: 'Promoções', url: '/admin/promotions', icon: Percent },
   { title: 'Afiliados', url: '/admin/affiliates', icon: UserPlus },
+  { title: 'Suporte', url: '/admin/support', icon: MessageCircle },
   { title: 'Perfumes', url: '/admin/perfumes', icon: Package },
   { title: 'Lotes', url: '/admin/lots', icon: Package },
   { title: 'Inventário', url: '/admin/inventory', icon: Package },

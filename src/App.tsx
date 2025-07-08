@@ -47,6 +47,8 @@ import Unsubscribe from "./pages/Unsubscribe";
 import Search from "./pages/Search";
 import Afiliados from "./pages/Afiliados";
 import ImageSearchDemo from "./pages/ImageSearchDemo";
+import AdminSupport from "./pages/admin/AdminSupport";
+import { SupportChat } from "./components/support/SupportChat";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +88,7 @@ const AppContent = () => {
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="promotions" element={<AdminPromotions />} />
             <Route path="affiliates" element={<AdminAffiliates />} />
+            <Route path="support" element={<AdminSupport />} />
             <Route path="config" element={<AdminConfig />} />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />
@@ -103,6 +106,7 @@ const AppContent = () => {
         </Routes>
       </main>
       <Footer />
+      <SupportChat />
     </div>
   );
 };

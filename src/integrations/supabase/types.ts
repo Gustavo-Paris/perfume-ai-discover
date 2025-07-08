@@ -1778,6 +1778,98 @@ export type Database = {
           },
         ]
       }
+      support_conversations: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          closed_at: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          priority: string
+          rating: number | null
+          session_id: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          closed_at?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          priority?: string
+          rating?: number | null
+          session_id?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          closed_at?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          priority?: string
+          rating?: number | null
+          session_id?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          attachments: Json | null
+          conversation_id: string
+          created_at: string
+          id: string
+          message: string
+          message_type: string
+          read_at: string | null
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          attachments?: Json | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message: string
+          message_type?: string
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          attachments?: Json | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          message_type?: string
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
