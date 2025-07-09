@@ -12,13 +12,16 @@ interface ConsentBannerProps {
 
 export default function ConsentBanner({ onAccept, onReject }: ConsentBannerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const { acceptConsent, rejectConsent, isRecording } = usePrivacyConsent('PRIVACY_CHAT');
+  const { acceptConsent, rejectConsent, isRecording, hasConsent } = usePrivacyConsent('PRIVACY_CHAT');
+  
+  // Se já tem consentimento, não mostrar o banner
+  if (hasConsent) {
+    return null;
+  }
 
   const handleAccept = async () => {
     try {
       await acceptConsent();
-      setIsVisible(false);
       onAccept?.();
     } catch (error) {
       console.error('Error accepting consent:', error);
@@ -28,16 +31,11 @@ export default function ConsentBanner({ onAccept, onReject }: ConsentBannerProps
   const handleReject = async () => {
     try {
       await rejectConsent();
-      setIsVisible(false);
       onReject?.();
     } catch (error) {
       console.error('Error rejecting consent:', error);
     }
   };
-
-  if (!isVisible) {
-    return null;
-  }
 
   return (
     <>
@@ -84,7 +82,7 @@ export default function ConsentBanner({ onAccept, onReject }: ConsentBannerProps
               </div>
               
               <Button
-                onClick={() => setIsVisible(false)}
+                onClick={() => handleReject()}
                 variant="ghost"
                 size="icon"
                 className="flex-shrink-0 h-8 w-8"

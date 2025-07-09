@@ -32,6 +32,7 @@ const Curadoria = () => {
     conversation, 
     sendMessage, 
     resetConversation, 
+    updateConversation,
     currentSessionId,
     loading, 
     error 
@@ -140,6 +141,14 @@ const Curadoria = () => {
     try {
       setShowHistory(false);
       
+      // Restaurar o estado da conversa completamente
+      updateConversation({
+        messages: session.conversation_json || [],
+        isComplete: session.session_status === 'completed',
+        userProfile: session.user_profile_data || {}
+      });
+      
+      // Se tem recomendações e está completa, mostrar resultados
       if (session.recommended_perfumes && session.session_status === 'completed') {
         setRecommendedIds(session.recommended_perfumes);
         setShowResults(true);

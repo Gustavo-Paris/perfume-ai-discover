@@ -84,6 +84,7 @@ export const useConversationalRecommend = () => {
     conversation,
     sendMessage,
     resetConversation,
+    updateConversation,
     getCurrentRecommendations,
     currentSessionId,
     loading: apiLoading || stateLoading,
