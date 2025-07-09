@@ -25,7 +25,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-const HeaderUserMenu = () => {
+interface HeaderUserMenuProps {
+  disabled?: boolean;
+}
+
+const HeaderUserMenu = ({ disabled = false }: HeaderUserMenuProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -115,8 +119,9 @@ const HeaderUserMenu = () => {
     return (
       <Button 
         onClick={() => navigate('/auth')} 
-        className="btn-primary"
+        className={`btn-primary ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
         size="sm"
+        disabled={disabled}
       >
         Entrar
       </Button>
@@ -127,11 +132,17 @@ const HeaderUserMenu = () => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="hover-scale">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`hover-scale ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+            disabled={disabled}
+          >
             <UserCircle className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        {!disabled && (
+          <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
@@ -181,6 +192,7 @@ const HeaderUserMenu = () => {
             Excluir Conta
           </DropdownMenuItem>
         </DropdownMenuContent>
+        )}
       </DropdownMenu>
 
       {/* Delete Account Confirmation Dialog */}

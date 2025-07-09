@@ -17,6 +17,10 @@ const Header = () => {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Detectar modo recuperação
+  const isRecovery = typeof window !== 'undefined' && 
+    window.location.hash.includes('type=recovery');
+
   // Close search when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
@@ -49,7 +53,7 @@ const Header = () => {
             
             {/* Actions */}
             <div className="flex-shrink-0" data-search-container>
-              <HeaderActions isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} />
+              <HeaderActions isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} disabled={isRecovery} />
             </div>
             
             {/* Mobile Actions */}

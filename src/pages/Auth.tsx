@@ -235,7 +235,7 @@ const Auth = () => {
         await supabase.auth.signOut();
         window.history.replaceState(null, '', window.location.pathname);
         setRecoveryMode(false);
-        navigate('/login');
+        navigate('/auth?tab=login');
       } else {
         toast({
           title: "Erro ao alterar senha",

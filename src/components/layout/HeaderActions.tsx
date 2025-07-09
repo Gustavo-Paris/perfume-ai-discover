@@ -11,9 +11,10 @@ import AlgoliaAutocomplete from '@/components/search/AlgoliaAutocomplete';
 interface HeaderActionsProps {
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
+  disabled?: boolean;
 }
 
-const HeaderActions = ({ isSearchOpen, setIsSearchOpen }: HeaderActionsProps) => {
+const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: HeaderActionsProps) => {
   const { items } = useCart();
   const navigate = useNavigate();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -64,7 +65,7 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen }: HeaderActionsProps) =>
         </Button>
         
         {/* User Menu */}
-        <HeaderUserMenu />
+        <HeaderUserMenu disabled={disabled} />
       </div>
 
       {/* Expandable Search Bar */}
