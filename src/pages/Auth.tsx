@@ -249,8 +249,8 @@ const Auth = () => {
         window.history.replaceState(null, '', window.location.pathname);
         setRecoveryMode(false);
         
-        console.log('➡️ Navigating to login...');
-        navigate('/auth?tab=login');
+        console.log('➡️ Switching to login tab...');
+        setActiveTab('login');
       } else {
         toast({
           title: "Erro ao alterar senha",
