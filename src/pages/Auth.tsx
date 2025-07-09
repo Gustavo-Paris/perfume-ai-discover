@@ -13,7 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
-  const [isRecovery, setIsRecovery] = useState(false);
+  const [recoveryToken, setRecoveryToken] = useState<string>('');
+  const [recoveryMode, setRecoveryMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -29,7 +30,17 @@ const Auth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        setIsRecovery(true);
+        // Capturar token de recuperação do hash da URL
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.substring(1));
+        const token = params.get('access_token');
+        
+        if (token) {
+          setRecoveryToken(token);
+        }
+        
+        setRecoveryMode(true);
+        supabase.auth.signOut(); // Limpar sessão atual
         setActiveTab('new-password');
       }
     });
@@ -39,10 +50,10 @@ const Auth = () => {
 
   // Redirecionar usuários autenticados
   useEffect(() => {
-    if (user && !isRecovery) {
+    if (user && !recoveryMode) {
       navigate('/');
     }
-  }, [user, navigate, isRecovery]);
+  }, [user, navigate, recoveryMode]);
 
   // Login com Google
   const handleGoogleLogin = async () => {
@@ -220,7 +231,10 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await updatePassword(newPasswordForm.password);
+      // Usar token de recuperação se disponível
+      const { error } = recoveryToken 
+        ? await supabase.auth.updateUser({ password: newPasswordForm.password })
+        : await updatePassword(newPasswordForm.password);
       
       if (error) {
         console.error('Update password error:', error);
@@ -234,8 +248,16 @@ const Auth = () => {
           title: "Senha alterada!",
           description: "Sua senha foi atualizada com sucesso"
         });
+        
+        // Se estiver em modo de recuperação, fazer login automático
+        if (recoveryMode && recoveryToken) {
+          // Fazer login automático com as credenciais existentes
+          const loginForm = resetForm; // Usa o email do formulário de reset
+          await signIn(loginForm.email, newPasswordForm.password);
+        }
+        
         setNewPasswordForm({ password: '', confirmPassword: '' });
-        setIsRecovery(false); // permite redirecionar
+        setRecoveryMode(false); // permite redirecionar
         // Limpar URL após sucesso
         window.history.replaceState(null, '', window.location.pathname);
         navigate('/');
