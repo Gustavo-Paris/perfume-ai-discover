@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
-  const [recoveryToken, setRecoveryToken] = useState<string>('');
+  
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -28,20 +28,23 @@ const Auth = () => {
 
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        // Capturar token de recuperação do hash da URL
-        const hash = window.location.hash;
-        const params = new URLSearchParams(hash.substring(1));
-        const token = params.get('access_token');
-        
-        if (token) {
-          setRecoveryToken(token);
-        }
-        
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+
+        // coloca UI em modo recuperação
         setRecoveryMode(true);
-        supabase.auth.signOut(); // Limpar sessão atual
         setActiveTab('new-password');
+
+        // encerra qualquer sessão anterior
+        await supabase.auth.signOut();
+
+        // recria sessão silenciosa para permitir updateUser
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token });
+        }
       }
     });
 
@@ -231,10 +234,7 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      // Usar token de recuperação se disponível
-      const { error } = recoveryToken 
-        ? await supabase.auth.updateUser({ password: newPasswordForm.password })
-        : await updatePassword(newPasswordForm.password);
+      const { error } = await supabase.auth.updateUser({ password: newPasswordForm.password });
       
       if (error) {
         console.error('Update password error:', error);
@@ -249,18 +249,10 @@ const Auth = () => {
           description: "Sua senha foi atualizada com sucesso"
         });
         
-        // Se estiver em modo de recuperação, fazer login automático
-        if (recoveryMode && recoveryToken) {
-          // Fazer login automático com as credenciais existentes
-          const loginForm = resetForm; // Usa o email do formulário de reset
-          await signIn(loginForm.email, newPasswordForm.password);
-        }
-        
         setNewPasswordForm({ password: '', confirmPassword: '' });
-        setRecoveryMode(false); // permite redirecionar
-        // Limpar URL após sucesso
+        setRecoveryMode(false);
         window.history.replaceState(null, '', window.location.pathname);
-        navigate('/');
+        navigate('/login');
       }
     } catch (error) {
       console.error('Update password error:', error);
