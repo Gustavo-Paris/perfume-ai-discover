@@ -29,7 +29,9 @@ const Auth = () => {
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      console.log('🔄 Auth event:', event);
       if (event === 'PASSWORD_RECOVERY') {
+        console.log('🔒 Entering recovery mode');
         setRecoveryMode(true);
         setActiveTab('new-password');
       }
@@ -38,9 +40,11 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Redirecionar usuários autenticados
+  // Redirecionar usuários autenticados (mas não durante recovery)
   useEffect(() => {
+    console.log('🧭 Navigation check - user:', !!user, 'recoveryMode:', recoveryMode);
     if (user && !recoveryMode) {
+      console.log('➡️ Redirecting to home');
       navigate('/');
     }
   }, [user, navigate, recoveryMode]);
@@ -226,15 +230,25 @@ const Auth = () => {
       });
       
       if (!error) {
+        console.log('✅ Password updated successfully');
         toast({
           title: "Senha alterada!",
           description: "Sua senha foi atualizada com sucesso"
         });
         
         setNewPasswordForm({ password: '', confirmPassword: '' });
+        
+        console.log('🚪 Signing out...');
         await supabase.auth.signOut();
+        
+        // Aguardar um pouco para garantir que o signOut seja processado
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log('🧹 Cleaning up...');
         window.history.replaceState(null, '', window.location.pathname);
         setRecoveryMode(false);
+        
+        console.log('➡️ Navigating to login...');
         navigate('/auth?tab=login');
       } else {
         toast({

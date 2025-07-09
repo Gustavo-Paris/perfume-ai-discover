@@ -20,6 +20,8 @@ const Header = () => {
   // Detectar modo recuperação
   const isRecovery = typeof window !== 'undefined' && 
     window.location.hash.includes('type=recovery');
+  
+  console.log('🔍 Recovery check - hash:', window.location?.hash, 'isRecovery:', isRecovery);
 
   // Close search when clicking outside
   useEffect(() => {
