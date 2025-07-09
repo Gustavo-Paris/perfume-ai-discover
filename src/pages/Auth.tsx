@@ -234,6 +234,9 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
+      const params = new URLSearchParams(window.location.hash.substring(1));
+      const access_token = params.get('access_token');
+
       const { error } = await supabase.auth.updateUser({ password: newPasswordForm.password });
       
       if (error) {
@@ -250,7 +253,7 @@ const Auth = () => {
         });
         
         setNewPasswordForm({ password: '', confirmPassword: '' });
-        setRecoveryMode(false);
+        await supabase.auth.signOut();
         window.history.replaceState(null, '', window.location.pathname);
         navigate('/login');
       }
