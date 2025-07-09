@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { Sparkles, MessageCircle } from 'lucide-react';
+import { Sparkles, MessageCircle, Package } from 'lucide-react';
 import PerfumeCard from '@/components/perfume/PerfumeCard';
 import { usePerfumes } from '@/hooks/usePerfumes';
 
@@ -8,9 +8,10 @@ interface RecommendationResultsProps {
   recommendedIds: string[];
   onStartOver: () => void;
   onContinueConversation: () => void;
+  onShowCombos: () => void;
 }
 
-const RecommendationResults = ({ recommendedIds, onStartOver, onContinueConversation }: RecommendationResultsProps) => {
+const RecommendationResults = ({ recommendedIds, onStartOver, onContinueConversation, onShowCombos }: RecommendationResultsProps) => {
   const { data: databasePerfumes } = usePerfumes();
 
   const recommendedPerfumes = databasePerfumes?.filter(p => 
@@ -71,20 +72,38 @@ const RecommendationResults = ({ recommendedIds, onStartOver, onContinueConversa
       </div>
 
       <div className="text-center space-y-6">
-        <div className="p-6 bg-gradient-to-r from-gold-50 to-amber-50 rounded-lg border border-gold-200">
-          <h3 className="font-playfair text-xl font-semibold mb-2 text-gold-700">
-            Não encontrou o que procurava?
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            Continue nossa conversa e vamos refinar ainda mais suas preferências
-          </p>
-          <Button 
-            onClick={onContinueConversation}
-            className="gradient-gold text-white hover:opacity-90 mr-4"
-          >
-            <MessageCircle className="mr-2 h-4 w-4" />
-            Continuar Conversa
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+            <h3 className="font-playfair text-xl font-semibold mb-2 text-blue-700">
+              💰 Combos Inteligentes
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Crie combinações personalizadas baseadas no seu orçamento
+            </p>
+            <Button 
+              onClick={onShowCombos}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 w-full"
+            >
+              <Package className="mr-2 h-4 w-4" />
+              Ver Combos por Orçamento
+            </Button>
+          </div>
+
+          <div className="p-6 bg-gradient-to-r from-gold-50 to-amber-50 rounded-lg border border-gold-200">
+            <h3 className="font-playfair text-xl font-semibold mb-2 text-gold-700">
+              💬 Não encontrou o ideal?
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Continue nossa conversa e vamos refinar ainda mais suas preferências
+            </p>
+            <Button 
+              onClick={onContinueConversation}
+              className="gradient-gold text-white hover:opacity-90 w-full"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Continuar Conversa
+            </Button>
+          </div>
         </div>
         
         <div className="space-x-4">

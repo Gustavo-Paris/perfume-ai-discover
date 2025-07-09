@@ -29,12 +29,13 @@ const ConversationChat = ({
       const timer = setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ 
           behavior: 'smooth',
-          block: 'end'
+          block: 'end',
+          inline: 'nearest'
         });
-      }, 100);
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [messages.length]);
+  }, [messages]);
 
   const handleSend = () => {
     if (inputMessage.trim() && !loading) {

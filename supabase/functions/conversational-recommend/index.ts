@@ -277,8 +277,9 @@ Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: 
       }
     }
 
+    // Se temos recomendações, não enviamos resposta de conversa adicional
     const result = {
-      content: aiResponse,
+      content: recommendations.length > 0 ? '' : aiResponse,
       isComplete,
       recommendations: recommendations.length > 0 ? recommendations : undefined
     };

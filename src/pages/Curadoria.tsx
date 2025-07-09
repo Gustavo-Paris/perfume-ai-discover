@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import ConversationChat from '@/components/curadoria/ConversationChat';
 import RecommendationResults from '@/components/curadoria/RecommendationResults';
+import SmartCombos from '@/components/curadoria/SmartCombos';
 import SessionHistory from '@/components/curadoria/SessionHistory';
 import AIBeam from '@/components/ui/AIBeam';
 import ConsentBanner from '@/components/privacy/ConsentBanner';
@@ -18,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 const Curadoria = () => {
   const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [showCombos, setShowCombos] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -108,6 +110,7 @@ const Curadoria = () => {
     resetConversation();
     setRecommendedIds([]);
     setShowResults(false);
+    setShowCombos(false);
     setIsAnalyzing(false);
   };
 
@@ -117,9 +120,20 @@ const Curadoria = () => {
 
   const handleContinueConversation = () => {
     setShowResults(false);
+    setShowCombos(false);
     setIsAnalyzing(false);
     const contextMessage = "O usuário viu as 3 recomendações mas gostaria de explorar outras opções. Continue a conversa perguntando o que não agradou nas sugestões anteriores para refinar ainda mais.";
     sendMessage(contextMessage);
+  };
+
+  const handleShowCombos = () => {
+    setShowResults(false);
+    setShowCombos(true);
+  };
+
+  const handleBackToResults = () => {
+    setShowCombos(false);
+    setShowResults(true);
   };
 
   const handleLoadSession = async (session: ConversationalSession) => {
@@ -228,6 +242,20 @@ const Curadoria = () => {
     );
   }
 
+  if (showCombos) {
+    return (
+      <div className="min-h-screen bg-white py-12 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <SmartCombos 
+            conversationHistory={conversation.messages}
+            recommendedPerfumes={recommendedIds}
+            onBackToResults={handleBackToResults}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (showResults) {
     return (
       <div className="min-h-screen bg-white py-12 relative overflow-hidden">
@@ -236,6 +264,7 @@ const Curadoria = () => {
             recommendedIds={recommendedIds}
             onStartOver={handleStartOver}
             onContinueConversation={handleContinueConversation}
+            onShowCombos={handleShowCombos}
           />
         </div>
       </div>
