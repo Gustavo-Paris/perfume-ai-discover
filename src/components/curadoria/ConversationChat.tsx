@@ -26,16 +26,19 @@ const ConversationChat = ({
 
   useEffect(() => {
     if (messages.length > 0) {
-      const timer = setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'end',
-          inline: 'nearest'
-        });
-      }, 300);
-      return () => clearTimeout(timer);
+      // Only scroll on new messages to avoid constant scrolling
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage) {
+        const timer = setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'nearest'
+          });
+        }, 100);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [messages]);
+  }, [messages.length]); // Changed to messages.length to avoid constant scrolling
 
   const handleSend = () => {
     if (inputMessage.trim() && !loading) {

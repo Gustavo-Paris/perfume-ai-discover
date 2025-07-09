@@ -37,24 +37,38 @@ export const useConversationalRecommend = () => {
 
       const response: StreamingResponse = await sendMessageToAPI(userMessage, updatedMessages);
 
-      const assistantMessage: ConversationMessage = {
-        role: 'assistant',
-        content: response.content,
-        timestamp: new Date()
-      };
+      if (!response.isComplete) {
+        const assistantMessage: ConversationMessage = {
+          role: 'assistant',
+          content: response.content,
+          timestamp: new Date()
+        };
 
-      const finalMessages = [...updatedMessages, assistantMessage];
+        const finalMessages = [...updatedMessages, assistantMessage];
 
-      updateConversation({
-        messages: finalMessages,
-        isComplete: response.isComplete
-      });
+        updateConversation({
+          messages: finalMessages,
+          isComplete: response.isComplete
+        });
 
-      await saveConversationToSession(
-        finalMessages, 
-        response.recommendations, 
-        response.isComplete
-      );
+        await saveConversationToSession(
+          finalMessages, 
+          response.recommendations, 
+          response.isComplete
+        );
+      } else {
+        // Se é completo, apenas atualiza o estado sem adicionar mensagem
+        updateConversation({
+          messages: updatedMessages,
+          isComplete: response.isComplete
+        });
+
+        await saveConversationToSession(
+          updatedMessages, 
+          response.recommendations, 
+          response.isComplete
+        );
+      }
 
       return response;
     } catch (err) {

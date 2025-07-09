@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { useCart } from '@/hooks/useCart';
 import { useComboRecommend, ComboRecommendation } from '@/hooks/useComboRecommend';
 import { ConversationMessage } from '@/types/conversation';
 import { toast } from '@/hooks/use-toast';
+import { useBudgetDetection } from '@/hooks/useBudgetDetection';
 
 interface SmartCombosProps {
   conversationHistory: ConversationMessage[];
@@ -21,10 +22,21 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
   const [showCombos, setShowCombos] = useState(false);
   const { addToCart } = useCart();
   const { generateCombos, loading, error, data } = useComboRecommend();
+  const { detectBudgetFromConversation } = useBudgetDetection();
 
-  const handleGenerateCombos = async () => {
-    const budgetValue = parseFloat(budget);
-    if (isNaN(budgetValue) || budgetValue <= 0) {
+  // Auto-detect budget from conversation
+  useEffect(() => {
+    const detectedBudget = detectBudgetFromConversation(conversationHistory);
+    if (detectedBudget) {
+      setBudget(detectedBudget.toString());
+      // Auto-generate combos if budget was detected
+      handleGenerateCombos(detectedBudget);
+    }
+  }, [conversationHistory]);
+
+  const handleGenerateCombos = async (budgetValue?: number) => {
+    const finalBudget = budgetValue || parseFloat(budget);
+    if (isNaN(finalBudget) || finalBudget <= 0) {
       toast({
         title: "Orçamento inválido",
         description: "Digite um valor válido para o orçamento",
@@ -34,7 +46,7 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
     }
 
     try {
-      await generateCombos(conversationHistory, budgetValue, recommendedPerfumes);
+      await generateCombos(conversationHistory, finalBudget, recommendedPerfumes);
       setShowCombos(true);
     } catch (error) {
       toast({
@@ -44,6 +56,7 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
       });
     }
   };
+
 
   const handleAddComboToCart = async (combo: ComboRecommendation) => {
     try {
@@ -254,7 +267,7 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
           </div>
 
           <Button 
-            onClick={handleGenerateCombos}
+            onClick={() => handleGenerateCombos()}
             disabled={loading || !budget || parseFloat(budget) < 50}
             className="w-full"
             size="lg"
