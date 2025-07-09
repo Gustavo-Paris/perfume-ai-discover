@@ -25,7 +25,7 @@ const HeaderNavigation = () => {
         <Link
           key={item.name}
           to={item.href}
-          className="navbar-link"
+          className="text-brand-primary hover:text-brand-primary/80 font-medium transition-colors duration-200"
         >
           {item.name}
         </Link>
@@ -33,7 +33,7 @@ const HeaderNavigation = () => {
       {user && affiliate && affiliate.status === 'active' && (
         <Link
           to="/afiliados"
-          className="navbar-link"
+          className="text-brand-primary hover:text-brand-primary/80 font-medium transition-colors duration-200"
         >
           Afiliados
         </Link>

@@ -61,7 +61,7 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className={`text-gray-700 hover:text-gray-900 hover-scale ${isRecoveryMode ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`text-brand-primary hover:text-brand-primary/80 hover-scale ${isRecoveryMode ? 'opacity-50 pointer-events-none' : ''}`}
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 disabled={isRecoveryMode}
               >
@@ -70,7 +70,7 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className={`relative text-gray-700 hover:text-gray-900 hover-scale ${isRecoveryMode ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`relative text-brand-primary hover:text-brand-primary/80 hover-scale ${isRecoveryMode ? 'opacity-50 pointer-events-none' : ''}`}
                 onClick={() => navigate('/carrinho')}
                 disabled={isRecoveryMode}
               >

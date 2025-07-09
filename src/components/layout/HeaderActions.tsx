@@ -31,7 +31,7 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: Head
           variant="ghost" 
           size="icon"
           onClick={() => setIsSearchOpen(!isSearchOpen)}
-          className={`hover-scale ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
+          className={`hover-scale text-brand-primary hover:text-brand-primary/80 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
           disabled={isDisabled}
         >
           {isSearchOpen ? (
@@ -45,7 +45,7 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: Head
         <Button 
           variant="ghost" 
           size="icon" 
-          className={`hover-scale ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
+          className={`hover-scale text-brand-primary hover:text-brand-primary/80 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
           onClick={() => navigate('/wishlist')}
           disabled={isDisabled}
         >
@@ -61,7 +61,7 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: Head
         <Button 
           variant="ghost" 
           size="icon" 
-          className={`relative hover-scale ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
+          className={`relative hover-scale text-brand-primary hover:text-brand-primary/80 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
           onClick={() => navigate('/carrinho')}
           disabled={isDisabled}
         >
