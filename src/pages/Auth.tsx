@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
+  const [isRecovery, setIsRecovery] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -28,6 +29,7 @@ const Auth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
+        setIsRecovery(true);
         setActiveTab('new-password');
       }
     });
@@ -37,10 +39,10 @@ const Auth = () => {
 
   // Redirecionar usuários autenticados
   useEffect(() => {
-    if (user && !window.location.hash.includes('recovery')) {
+    if (user && !isRecovery) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isRecovery]);
 
   // Login com Google
   const handleGoogleLogin = async () => {
@@ -233,6 +235,7 @@ const Auth = () => {
           description: "Sua senha foi atualizada com sucesso"
         });
         setNewPasswordForm({ password: '', confirmPassword: '' });
+        setIsRecovery(false); // permite redirecionar
         // Limpar URL após sucesso
         window.history.replaceState(null, '', window.location.pathname);
         navigate('/');
