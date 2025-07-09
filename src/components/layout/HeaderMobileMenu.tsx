@@ -5,6 +5,7 @@ import { Menu, User, Heart, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRecovery } from '@/contexts/RecoveryContext';
 
 const navigation = [
   { name: 'Curadoria', href: '/curadoria' },
@@ -16,11 +17,15 @@ const navigation = [
 interface HeaderMobileMenuProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
+  disabled?: boolean;
 }
 
-const HeaderMobileMenu = ({ isMenuOpen, setIsMenuOpen }: HeaderMobileMenuProps) => {
+const HeaderMobileMenu = ({ isMenuOpen, setIsMenuOpen, disabled = false }: HeaderMobileMenuProps) => {
   const { user, signOut } = useAuth();
+  const { isRecoveryMode } = useRecovery();
   const navigate = useNavigate();
+  
+  const isDisabled = disabled || isRecoveryMode;
 
   const handleSignOut = async () => {
     await signOut();
@@ -28,9 +33,14 @@ const HeaderMobileMenu = ({ isMenuOpen, setIsMenuOpen }: HeaderMobileMenuProps) 
   };
 
   return (
-    <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+    <Sheet open={isMenuOpen && !isDisabled} onOpenChange={setIsMenuOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className={isDisabled ? 'opacity-50 pointer-events-none' : ''}
+          disabled={isDisabled}
+        >
           <Menu className="h-4 w-4" />
         </Button>
       </SheetTrigger>

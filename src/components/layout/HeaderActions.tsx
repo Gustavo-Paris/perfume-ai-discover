@@ -7,6 +7,7 @@ import { useCart } from '@/contexts/CartContext';
 import HeaderUserMenu from './HeaderUserMenu';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import AlgoliaAutocomplete from '@/components/search/AlgoliaAutocomplete';
+import { useRecovery } from '@/contexts/RecoveryContext';
 
 interface HeaderActionsProps {
   isSearchOpen: boolean;
@@ -17,7 +18,10 @@ interface HeaderActionsProps {
 const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: HeaderActionsProps) => {
   const { items } = useCart();
   const navigate = useNavigate();
+  const { isRecoveryMode } = useRecovery();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const isDisabled = disabled || isRecoveryMode;
 
   return (
     <>
@@ -27,7 +31,8 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: Head
           variant="ghost" 
           size="icon"
           onClick={() => setIsSearchOpen(!isSearchOpen)}
-          className="hover-scale"
+          className={`hover-scale ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
+          disabled={isDisabled}
         >
           {isSearchOpen ? (
             <X className="h-4 w-4" />
@@ -40,21 +45,25 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: Head
         <Button 
           variant="ghost" 
           size="icon" 
-          className="hover-scale"
+          className={`hover-scale ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
           onClick={() => navigate('/wishlist')}
+          disabled={isDisabled}
         >
           <Heart className="h-4 w-4" />
         </Button>
         
         {/* Notifications */}
-        <NotificationDropdown />
+        <div className={isDisabled ? 'opacity-50 pointer-events-none' : ''}>
+          <NotificationDropdown />
+        </div>
         
         {/* Cart */}
         <Button 
           variant="ghost" 
           size="icon" 
-          className="relative hover-scale"
+          className={`relative hover-scale ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}
           onClick={() => navigate('/carrinho')}
+          disabled={isDisabled}
         >
           <ShoppingBag className="h-4 w-4" />
           {totalItems > 0 && (
@@ -65,11 +74,11 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: Head
         </Button>
         
         {/* User Menu */}
-        <HeaderUserMenu disabled={disabled} />
+        <HeaderUserMenu disabled={isDisabled} />
       </div>
 
       {/* Expandable Search Bar */}
-      {isSearchOpen && (
+      {isSearchOpen && !isDisabled && (
         <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-lg animate-fade-in z-40">
           <div className="container mx-auto px-4 py-4">
             <div className="max-w-2xl mx-auto">

@@ -61,16 +61,18 @@ const Header = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="text-gray-700 hover:text-gray-900 hover-scale"
+                className={`text-gray-700 hover:text-gray-900 hover-scale ${isRecoveryMode ? 'opacity-50 pointer-events-none' : ''}`}
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
+                disabled={isRecoveryMode}
               >
                 <Search className="h-4 w-4" />
               </Button>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="relative text-gray-700 hover:text-gray-900 hover-scale"
+                className={`relative text-gray-700 hover:text-gray-900 hover-scale ${isRecoveryMode ? 'opacity-50 pointer-events-none' : ''}`}
                 onClick={() => navigate('/carrinho')}
+                disabled={isRecoveryMode}
               >
                 <ShoppingBag className="h-4 w-4" />
                 {totalItems > 0 && (
@@ -79,14 +81,14 @@ const Header = () => {
                   </span>
                 )}
               </Button>
-              <HeaderMobileMenu isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+              <HeaderMobileMenu isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} disabled={isRecoveryMode} />
             </div>
           </div>
         </div>
       </header>
 
       {/* Search Overlay for Mobile */}
-      {isSearchOpen && (
+      {isSearchOpen && !isRecoveryMode && (
         <div className="md:hidden fixed inset-0 z-40 bg-black/20 backdrop-blur-sm animate-fade-in" onClick={() => setIsSearchOpen(false)}>
           <div className="bg-white p-4 m-4 rounded-lg shadow-xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="w-full">

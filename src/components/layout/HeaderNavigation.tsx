@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAffiliates } from '@/hooks/useAffiliates';
+import { useRecovery } from '@/contexts/RecoveryContext';
 
 const navigation = [
   { name: 'Curadoria', href: '/curadoria' },
@@ -12,6 +13,11 @@ const navigation = [
 const HeaderNavigation = () => {
   const { user } = useAuth();
   const { affiliate } = useAffiliates();
+  const { isRecoveryMode } = useRecovery();
+
+  if (isRecoveryMode) {
+    return null;
+  }
 
   return (
     <nav className="hidden md:flex items-center space-x-8">
