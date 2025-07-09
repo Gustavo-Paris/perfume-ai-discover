@@ -28,23 +28,10 @@ const Auth = () => {
 
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        const params = new URLSearchParams(window.location.hash.substring(1));
-        const access_token = params.get('access_token');
-        const refresh_token = params.get('refresh_token');
-
-        // coloca UI em modo recuperação
         setRecoveryMode(true);
         setActiveTab('new-password');
-
-        // encerra qualquer sessão anterior
-        await supabase.auth.signOut();
-
-        // recria sessão silenciosa para permitir updateUser
-        if (access_token && refresh_token) {
-          await supabase.auth.setSession({ access_token, refresh_token });
-        }
       }
     });
 
@@ -234,19 +221,11 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      const params = new URLSearchParams(window.location.hash.substring(1));
-      const access_token = params.get('access_token');
-
-      const { error } = await supabase.auth.updateUser({ password: newPasswordForm.password });
+      const { error } = await supabase.auth.updateUser({
+        password: newPasswordForm.password
+      });
       
-      if (error) {
-        console.error('Update password error:', error);
-        toast({
-          title: "Erro ao alterar senha",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
+      if (!error) {
         toast({
           title: "Senha alterada!",
           description: "Sua senha foi atualizada com sucesso"
@@ -255,7 +234,14 @@ const Auth = () => {
         setNewPasswordForm({ password: '', confirmPassword: '' });
         await supabase.auth.signOut();
         window.history.replaceState(null, '', window.location.pathname);
+        setRecoveryMode(false);
         navigate('/login');
+      } else {
+        toast({
+          title: "Erro ao alterar senha",
+          description: error.message,
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Update password error:', error);
