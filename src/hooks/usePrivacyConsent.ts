@@ -64,13 +64,25 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
   });
 
   const acceptConsent = async () => {
-    giveConsent(consentType);
-    await recordConsent.mutateAsync({ consented: true });
+    try {
+      giveConsent(consentType);
+      await recordConsent.mutateAsync({ consented: true });
+    } catch (error) {
+      console.error('Error accepting consent:', error);
+      // Still set cookie even if DB fails
+      giveConsent(consentType);
+    }
   };
 
   const rejectConsent = async () => {
-    revokeConsent(consentType);
-    await recordConsent.mutateAsync({ consented: false });
+    try {
+      revokeConsent(consentType);
+      await recordConsent.mutateAsync({ consented: false });
+    } catch (error) {
+      console.error('Error rejecting consent:', error);
+      // Still remove cookie even if DB fails
+      revokeConsent(consentType);
+    }
   };
 
   return {

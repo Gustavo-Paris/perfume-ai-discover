@@ -132,12 +132,12 @@ serve(async (req) => {
     console.log(`Working with ${perfumeDetails.length} perfumes for combo analysis`);
 
     // Generate smart combos based on conversation and budget
-    const comboPrompt = `Baseado na conversa e orçamento de R$ ${budget}, crie 3-5 combos inteligentes de perfumes.
+    const comboPrompt = `Você é um especialista em perfumaria que cria combos otimizados para USAR QUASE TODO O ORÇAMENTO.
 
-Conversa do usuário:
-${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
+ORÇAMENTO: R$ ${budget}
+CONVERSA: ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
 
-Perfumes disponíveis:
+PERFUMES DISPONÍVEIS:
 ${JSON.stringify(perfumeDetails.map(p => ({
       id: p.id,
       name: p.name,
@@ -150,12 +150,14 @@ ${JSON.stringify(perfumeDetails.map(p => ({
       description: p.description
     })), null, 2)}
 
-INSTRUÇÕES:
-1. Crie combos de 2-4 perfumes que se complementam
-2. Varie tamanhos (5ml, 10ml, 100ml) para otimizar o orçamento
-3. Total de cada combo deve ser ≤ R$ ${budget}
-4. Priorize diversidade olfativa dentro do gosto do usuário
-5. Considere ocasiões diferentes (dia/noite, trabalho/lazer)
+REGRAS CRÍTICAS:
+1. Use 85-98% do orçamento (máximo R$ 20 de sobra!)
+2. Se orçamento ≥ R$ 400: inclua pelo menos 1 frasco de 100ml
+3. Se orçamento R$ 200-399: foque em 10ml + alguns 5ml
+4. Se orçamento < R$ 200: use principalmente 5ml e 10ml
+5. Cada combo deve ter 2-4 perfumes complementares
+6. Varie intensidades e ocasiões de uso
+7. Crie 2-3 combos diferentes
 
 Responda APENAS com JSON:
 {
@@ -210,11 +212,12 @@ Responda APENAS com JSON:
           };
         }).filter((combo: any) => combo.items.length > 0 && combo.total <= budget);
 
+        const maxComboValue = enrichedCombos.length > 0 ? Math.max(...enrichedCombos.map(c => c.total)) : 0;
         console.log('Generated combos successfully:', enrichedCombos.length);
 
         return new Response(JSON.stringify({ 
           combos: enrichedCombos,
-          budget_used: budget
+          budget_used: maxComboValue
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -266,7 +269,7 @@ Responda APENAS com JSON:
 
       return new Response(JSON.stringify({ 
         combos: fallbackCombos,
-        budget_used: budget
+        budget_used: fallbackCombos.length > 0 ? fallbackCombos[0].total : 0
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

@@ -7,8 +7,10 @@ export const useBudgetDetection = () => {
       /(?:orçamento|budget|tenho|posso gastar|disposto a gastar|disponho|tenho disponível)\s*(?:de|é|até|no máximo)?\s*r?\$?\s*(\d+(?:\.\d{3})*(?:,\d{2})?)/i,
       /r?\$\s*(\d+(?:\.\d{3})*(?:,\d{2})?)/i,
       /(\d+(?:\.\d{3})*(?:,\d{2})?)\s*reais/i,
-      /até\s*(\d+)/i,
-      /máximo\s*(?:de)?\s*r?\$?\s*(\d+(?:\.\d{3})*(?:,\d{2})?)/i
+      /até\s*r?\$?\s*(\d+(?:\.\d{3})*(?:,\d{2})?)/i,
+      /máximo\s*(?:de)?\s*r?\$?\s*(\d+(?:\.\d{3})*(?:,\d{2})?)/i,
+      /investir\s*(?:até|no máximo)?\s*r?\$?\s*(\d+(?:\.\d{3})*(?:,\d{2})?)/i,
+      /(?:entre|de)\s*r?\$?\s*\d+\s*(?:a|até)\s*r?\$?\s*(\d+(?:\.\d{3})*(?:,\d{2})?)/i
     ];
 
     for (const pattern of patterns) {
