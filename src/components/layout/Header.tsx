@@ -8,20 +8,18 @@ import HeaderLogo from './HeaderLogo';
 import HeaderNavigation from './HeaderNavigation';
 import HeaderActions from './HeaderActions';
 import HeaderMobileMenu from './HeaderMobileMenu';
+import { useRecovery } from '@/contexts/RecoveryContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { items } = useCart();
   const navigate = useNavigate();
+  const { isRecoveryMode } = useRecovery();
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Detectar modo recuperação
-  const isRecovery = typeof window !== 'undefined' && 
-    window.location.hash.includes('type=recovery');
-  
-  console.log('🔍 Recovery check - hash:', window.location?.hash, 'isRecovery:', isRecovery);
+  console.log('🔍 Recovery check from context:', isRecoveryMode);
 
   // Close search when clicking outside
   useEffect(() => {
@@ -55,7 +53,7 @@ const Header = () => {
             
             {/* Actions */}
             <div className="flex-shrink-0" data-search-container>
-              <HeaderActions isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} disabled={isRecovery} />
+              <HeaderActions isSearchOpen={isSearchOpen} setIsSearchOpen={setIsSearchOpen} disabled={isRecoveryMode} />
             </div>
             
             {/* Mobile Actions */}

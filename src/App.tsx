@@ -9,6 +9,7 @@ import { useUserAnalytics } from "@/hooks/useUserAnalytics";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
+import { RecoveryProvider } from "./contexts/RecoveryContext";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/Home";
@@ -120,10 +121,12 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
-              <CartProvider>
-                <ScrollToTop />
-                <AppContent />
-              </CartProvider>
+              <RecoveryProvider>
+                <CartProvider>
+                  <ScrollToTop />
+                  <AppContent />
+                </CartProvider>
+              </RecoveryProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

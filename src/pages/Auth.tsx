@@ -8,13 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useRecovery } from '@/contexts/RecoveryContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
+  const { isRecoveryMode, setRecoveryMode } = useRecovery();
   
-  const [recoveryMode, setRecoveryMode] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -38,16 +39,16 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setRecoveryMode]);
 
   // Redirecionar usuários autenticados (mas não durante recovery)
   useEffect(() => {
-    console.log('🧭 Navigation check - user:', !!user, 'recoveryMode:', recoveryMode);
-    if (user && !recoveryMode) {
+    console.log('🧭 Navigation check - user:', !!user, 'recoveryMode:', isRecoveryMode);
+    if (user && !isRecoveryMode) {
       console.log('➡️ Redirecting to home');
       navigate('/');
     }
-  }, [user, navigate, recoveryMode]);
+  }, [user, navigate, isRecoveryMode]);
 
   // Login com Google
   const handleGoogleLogin = async () => {
