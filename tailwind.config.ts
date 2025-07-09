@@ -70,7 +70,10 @@ export default {
 				},
 				
 				// Custom colors - removed gold, kept navy
-				navy: '#1a1f2e'
+				navy: '#1a1f2e',
+				brand: {
+					primary: 'hsl(var(--brand-primary))'
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
