@@ -22,24 +22,19 @@ export const setCookie = (
   const {
     expires = COOKIE_EXPIRY_DAYS,
     path = '/',
-    secure = window.location.protocol === 'https:',
+    secure = false, // Simplified for development
     sameSite = 'lax'
   } = options;
 
   const date = new Date();
   date.setTime(date.getTime() + (expires * 24 * 60 * 60 * 1000));
   
-  let cookieString = `${name}=${encodeURIComponent(value)}`;
-  cookieString += `; expires=${date.toUTCString()}`;
-  cookieString += `; path=${path}`;
+  // Simplified cookie string
+  let cookieString = `${name}=${encodeURIComponent(value)}; expires=${date.toUTCString()}; path=${path}; samesite=${sameSite}`;
   
-  if (secure) {
-    cookieString += '; secure';
-  }
-  
-  cookieString += `; samesite=${sameSite}`;
-  
+  console.log('Setting cookie:', cookieString);
   document.cookie = cookieString;
+  console.log('Cookie set, document.cookie now:', document.cookie);
 };
 
 export const getCookie = (name: string): string | null => {
