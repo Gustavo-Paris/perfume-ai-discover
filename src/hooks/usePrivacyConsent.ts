@@ -78,14 +78,21 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
   const acceptConsent = async () => {
     try {
       console.log('Accepting consent...');
+      console.log('Before setting cookie, all cookies:', document.cookie);
       giveConsent(consentType);
-      console.log('Cookie set, checking hasConsent:', hasConsent(consentType));
+      console.log('After setting cookie, all cookies:', document.cookie);
+      
+      // Force immediate check
+      const cookieName = COOKIE_NAMES[consentType];
+      const directCookieCheck = document.cookie.split(';').find(c => c.trim().startsWith(`${cookieName}=`));
+      console.log('Direct cookie check:', directCookieCheck);
+      console.log('hasConsent check:', hasConsent(consentType));
+      
       setConsentState(true);
       await recordConsent.mutateAsync({ consented: true });
       console.log('Consent recorded successfully');
     } catch (error) {
       console.error('Error accepting consent:', error);
-      // Still set cookie even if DB fails
       giveConsent(consentType);
       setConsentState(true);
     }
@@ -94,14 +101,14 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
   const rejectConsent = async () => {
     try {
       console.log('Rejecting consent...');
+      console.log('Before removing cookie, all cookies:', document.cookie);
       revokeConsent(consentType);
-      console.log('Cookie removed, checking hasConsent:', hasConsent(consentType));
+      console.log('After removing cookie, all cookies:', document.cookie);
       setConsentState(false);
       await recordConsent.mutateAsync({ consented: false });
       console.log('Rejection recorded successfully');
     } catch (error) {
       console.error('Error rejecting consent:', error);
-      // Still remove cookie even if DB fails
       revokeConsent(consentType);
       setConsentState(false);
     }
