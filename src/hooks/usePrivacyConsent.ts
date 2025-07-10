@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { hasConsent, giveConsent, revokeConsent, COOKIE_NAMES } from '@/utils/privacy';
@@ -14,9 +15,20 @@ export interface PrivacyConsent {
 
 export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
   const queryClient = useQueryClient();
+  const [consentState, setConsentState] = useState(() => hasConsent(consentType));
 
-  // Check if user has given consent (cookie-based)
-  const hasLocalConsent = hasConsent(consentType);
+  // Re-check consent state periodically
+  useEffect(() => {
+    const checkConsent = () => {
+      const currentConsent = hasConsent(consentType);
+      setConsentState(currentConsent);
+    };
+    
+    checkConsent();
+    const interval = setInterval(checkConsent, 100);
+    
+    return () => clearInterval(interval);
+  }, [consentType]);
 
   // Mutation to record consent in database
   const recordConsent = useMutation({
@@ -86,7 +98,7 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
   };
 
   return {
-    hasConsent: hasLocalConsent,
+    hasConsent: consentState,
     consentHistory,
     acceptConsent,
     rejectConsent,
