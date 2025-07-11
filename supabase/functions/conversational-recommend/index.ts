@@ -152,10 +152,15 @@ PROCESSO DE DESCOBERTA:
    - IMPORTANTE: Pergunte sobre perfumes que já provou e gostou/não gostou
    - Personalidade e estilo
 3. APROFUNDAR: Faça perguntas específicas baseadas nas respostas
-4. ANÁLISE: Quando tiver informações SUFICIENTES (gênero, pelo menos 2 preferências e contexto de uso), diga "Perfeito! Deixe-me analisar suas preferências e encontrar os perfumes ideais para você..."
+4. ANÁLISE: Quando tiver informações SUFICIENTES (gênero, pelo menos 2 preferências e contexto de uso), diga "Perfeito! Deixe-me analisar suas preferências e encontrar os perfumes ideais para você..." e PARE.
+
+IMPORTANTE: NUNCA liste perfumes ou recomendações no texto da conversa. Apenas diga que vai analisar e parar.
 
 REGRAS CRÍTICAS:
 - NUNCA finalize a conversa sem ter informações ESSENCIAIS (gênero, preferências básicas, contexto)
+- NUNCA liste perfumes específicos ou numerados (1., 2., 3.) na conversa
+- NUNCA use formato markdown (**texto**) para mencionar perfumes
+- NUNCA diga "aqui estão" ou "vou recomendar" seguido de lista
 - Se o usuário perguntar sobre continuar de onde parou, responda de forma natural e continue o processo
 - Mantenha conversas fluidas e personalizadas
 - SEMPRE retorne EXATAMENTE 3 recomendações (nunca menos, nunca mais)
@@ -218,18 +223,38 @@ REGRAS:
 
     console.log('AI Response received successfully');
 
-    // Check if AI wants to make recommendations
+    // Check if AI wants to make recommendations - more comprehensive detection
     const shouldRecommend = aiResponse.toLowerCase().includes('deixe-me analisar') || 
                            aiResponse.toLowerCase().includes('analisar suas preferências') ||
                            aiResponse.toLowerCase().includes('encontrar os perfumes ideais') ||
+                           aiResponse.toLowerCase().includes('vou recomendar') ||
+                           aiResponse.toLowerCase().includes('aqui estão') ||
+                           aiResponse.toLowerCase().includes('sugestões que') ||
+                           aiResponse.toLowerCase().includes('**') || // Detects markdown formatting for perfume names
                            (conversationHistory.length >= 10 && !isContinuation);
 
     let recommendations: string[] = [];
     let isComplete = false;
 
-    // If should recommend, first send transition message
+    // If AI is making recommendations in text format, convert to transition message
     if (shouldRecommend && availablePerfumes.length > 0) {
-      // Return transition message first
+      // If AI already generated recommendations in text, send transition instead
+      const hasTextRecommendations = aiResponse.includes('**') || 
+                                    aiResponse.includes('1.') || 
+                                    aiResponse.includes('2.') || 
+                                    aiResponse.includes('3.');
+      
+      if (hasTextRecommendations) {
+        return new Response(JSON.stringify({
+          content: "Perfeito! Deixe-me analisar suas preferências e encontrar os perfumes ideais para você...",
+          isComplete: false,
+          needsRecommendations: true
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // If it's just a transition message, return it
       if (aiResponse.toLowerCase().includes('deixe-me analisar') || 
           aiResponse.toLowerCase().includes('analisar suas preferências')) {
         return new Response(JSON.stringify({
