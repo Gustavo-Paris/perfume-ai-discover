@@ -243,13 +243,23 @@ REGRAS:
     }
 
     // Check if this is a follow-up request for actual recommendations
-    const isRecommendationRequest = aiResponse === '' || 
+    const isRecommendationRequest = message === 'gerar recomendações' || 
                                    conversationHistory.some(msg => 
                                      msg.content?.toLowerCase().includes('gerar recomendações') ||
                                      msg.content?.toLowerCase().includes('fazer recomendações')
                                    );
 
-    if (isRecommendationRequest && availablePerfumes.length > 0) {
+    // Also check if conversation seems complete and should recommend
+    const conversationSeemsComplete = conversationHistory.length >= 8 && 
+                                      !isContinuation &&
+                                      !shouldRecommend &&
+                                      (aiResponse.toLowerCase().includes('que você acha') ||
+                                      aiResponse.toLowerCase().includes('chamou sua atenção') ||
+                                      aiResponse.toLowerCase().includes('gostou das opções') ||
+                                      aiResponse.toLowerCase().includes('te abraçar') ||
+                                      aiResponse.toLowerCase().includes('algo mais que você gostaria'));
+
+    if ((isRecommendationRequest || conversationSeemsComplete) && availablePerfumes.length > 0) {
       try {
         // Generate recommendations based on conversation
         const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha entre 3 a 5 perfumes que mais precisamente combinam com o cliente.
