@@ -27,10 +27,12 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
   // Auto-detect budget from conversation and generate combos immediately
   useEffect(() => {
     const detectedBudget = detectBudgetFromConversation(conversationHistory);
-    if (detectedBudget && !showCombos) {
+    if (detectedBudget && !showCombos && detectedBudget >= 50) {
       setBudget(detectedBudget.toString());
       // Auto-generate combos if budget was detected
-      handleGenerateCombos(detectedBudget);
+      setTimeout(() => {
+        handleGenerateCombos(detectedBudget);
+      }, 500);
     }
   }, [conversationHistory, showCombos]);
 

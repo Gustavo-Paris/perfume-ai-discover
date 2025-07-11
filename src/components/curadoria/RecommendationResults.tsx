@@ -30,14 +30,24 @@ const RecommendationResults = ({ recommendedIds, onStartOver, onContinueConversa
           <Sparkles className="h-8 w-8 text-white" />
         </div>
         <h2 className="font-playfair text-3xl font-bold mb-4">
-          Suas 3 Recomendações Precisas
+          {sortedPerfumes.length === 1 
+            ? 'Sua Recomendação Personalizada' 
+            : `Suas ${sortedPerfumes.length} Recomendações Personalizadas`}
         </h2>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Com base em nossa conversa detalhada, selecionei estas fragrâncias que combinam perfeitamente com seu perfil
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <div className={`grid gap-8 max-w-6xl mx-auto ${
+        sortedPerfumes.length === 1 
+          ? 'grid-cols-1 max-w-md' 
+          : sortedPerfumes.length === 2 
+          ? 'grid-cols-1 md:grid-cols-2 max-w-3xl' 
+          : sortedPerfumes.length <= 3
+          ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-5xl'
+          : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+      }`}>
         {sortedPerfumes.map((perfume, index) => {
           const perfumeForCard = {
             id: perfume.id,

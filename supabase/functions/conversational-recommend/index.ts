@@ -227,10 +227,32 @@ REGRAS:
     let recommendations: string[] = [];
     let isComplete = false;
 
+    // If should recommend, first send transition message
     if (shouldRecommend && availablePerfumes.length > 0) {
+      // Return transition message first
+      if (aiResponse.toLowerCase().includes('deixe-me analisar') || 
+          aiResponse.toLowerCase().includes('analisar suas preferências')) {
+        return new Response(JSON.stringify({
+          content: aiResponse,
+          isComplete: false,
+          needsRecommendations: true
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Check if this is a follow-up request for actual recommendations
+    const isRecommendationRequest = aiResponse === '' || 
+                                   conversationHistory.some(msg => 
+                                     msg.content?.toLowerCase().includes('gerar recomendações') ||
+                                     msg.content?.toLowerCase().includes('fazer recomendações')
+                                   );
+
+    if (isRecommendationRequest && availablePerfumes.length > 0) {
       try {
         // Generate recommendations based on conversation
-        const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha apenas os 3 perfumes que mais precisamente combinam com o cliente.
+        const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha entre 3 a 5 perfumes que mais precisamente combinam com o cliente.
 
 Conversa completa:
 ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
@@ -254,8 +276,9 @@ CRITÉRIOS DE SELEÇÃO:
 - Considere experiências passadas mencionadas
 - Priorize qualidade da combinação sobre quantidade
 - Ordene do mais adequado para o menos adequado
+- Retorne entre 3 a 5 perfumes (idealmente 3-4, mas pode ser até 5 se houver múltiplas opções excelentes)
 
-Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: ["id1", "id2", "id3"]`;
+Responda APENAS com um array JSON de 3-5 IDs dos perfumes mais precisos. Exemplo: ["id1", "id2", "id3"] ou ["id1", "id2", "id3", "id4", "id5"]`;
 
         const recData = await callOpenAI([
           { role: 'system', content: 'Você é um especialista em perfumaria que escolhe perfumes com máxima precisão baseado em conversas. Responda apenas com arrays JSON de IDs.' },
@@ -267,7 +290,7 @@ Responda APENAS com um array JSON de 3 IDs dos perfumes mais precisos. Exemplo: 
         try {
           const parsedRecs = JSON.parse(recContent);
           if (Array.isArray(parsedRecs)) {
-            recommendations = parsedRecs.slice(0, 3);
+            recommendations = parsedRecs.slice(0, 5); // Allow up to 5 recommendations
             isComplete = true;
             console.log('Recommendations generated:', recommendations);
           }

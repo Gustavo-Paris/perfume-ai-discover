@@ -37,6 +37,40 @@ export const useConversationalRecommend = () => {
 
       const response: StreamingResponse = await sendMessageToAPI(userMessage, updatedMessages);
 
+      // Check if this is a transition message that needs recommendations
+      if (response.needsRecommendations) {
+        const assistantMessage: ConversationMessage = {
+          role: 'assistant',
+          content: response.content,
+          timestamp: new Date()
+        };
+
+        const messagesWithTransition = [...updatedMessages, assistantMessage];
+        updateConversation({ messages: messagesWithTransition });
+
+        // Wait 3 seconds for user to read transition message
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Now request actual recommendations
+        const recommendationsResponse = await sendMessageToAPI('gerar recomendações', messagesWithTransition);
+        
+        updateConversation({
+          messages: messagesWithTransition,
+          isComplete: recommendationsResponse.isComplete
+        });
+
+        await saveConversationToSession(
+          messagesWithTransition, 
+          recommendationsResponse.recommendations, 
+          recommendationsResponse.isComplete
+        );
+
+        return {
+          ...recommendationsResponse,
+          content: response.content // Keep the transition message
+        };
+      }
+
       if (!response.isComplete) {
         const assistantMessage: ConversationMessage = {
           role: 'assistant',

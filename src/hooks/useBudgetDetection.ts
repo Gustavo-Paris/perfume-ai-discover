@@ -28,19 +28,20 @@ export const useBudgetDetection = () => {
   }, []);
 
   const detectBudgetFromConversation = useCallback((messages: any[]): number | null => {
-    // Check the last few messages for budget mentions
-    const recentMessages = messages.slice(-6); // Last 6 messages
+    // Check all messages for budget mentions, prioritizing recent ones
+    const allMessages = [...messages].reverse(); // Start from most recent
     
-    for (let i = recentMessages.length - 1; i >= 0; i--) {
-      const message = recentMessages[i];
+    for (const message of allMessages) {
       if (message.role === 'user') {
         const budget = extractBudget(message.content);
-        if (budget) {
+        if (budget && budget >= 50) { // Only return valid budgets
+          console.log('Budget detected from conversation:', budget);
           return budget;
         }
       }
     }
 
+    console.log('No budget detected in conversation');
     return null;
   }, [extractBudget]);
 

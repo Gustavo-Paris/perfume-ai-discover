@@ -23,4 +23,5 @@ export interface StreamingResponse {
   content: string;
   isComplete: boolean;
   recommendations?: string[];
+  needsRecommendations?: boolean;
 }

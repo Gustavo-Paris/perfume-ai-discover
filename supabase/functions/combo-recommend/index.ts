@@ -137,8 +137,8 @@ serve(async (req) => {
 ORÇAMENTO: R$ ${budget}
 CONVERSA: ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
 
-PERFUMES DISPONÍVEIS:
-${JSON.stringify(perfumeDetails.map(p => ({
+PERFUMES DISPONÍVEIS (${perfumeDetails.length} opções):
+${JSON.stringify(perfumeDetails.slice(0, 15).map(p => ({
       id: p.id,
       name: p.name,
       brand: p.brand,
@@ -146,8 +146,7 @@ ${JSON.stringify(perfumeDetails.map(p => ({
       gender: p.gender,
       price_5ml: p.price_5ml,
       price_10ml: p.price_10ml,
-      price_full: p.price_full,
-      description: p.description
+      price_full: p.price_full
     })), null, 2)}
 
 REGRAS CRÍTICAS:
@@ -159,7 +158,7 @@ REGRAS CRÍTICAS:
 6. Varie intensidades e ocasiões de uso
 7. Crie 2-3 combos diferentes
 
-Responda APENAS com JSON:
+IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
 {
   "combos": [
     {
@@ -176,41 +175,62 @@ Responda APENAS com JSON:
   ]
 }`;
 
+    console.log('Calling OpenAI for combo generation...');
+    
     const comboData = await callOpenAI([
       { 
         role: 'system', 
-        content: 'Você é um especialista em curadoria de perfumes que cria combos inteligentes baseados em conversas e orçamento. Responda apenas com JSON válido.' 
+        content: 'Você é um especialista em curadoria de perfumes que cria combos inteligentes baseados em conversas e orçamento. Responda APENAS com JSON válido, sem texto adicional.' 
       },
       { role: 'user', content: comboPrompt }
-    ], 0.3, 800);
+    ], 0.3, 1000);
     
-    const comboContent = comboData.choices[0].message.content.trim();
+    let comboContent = comboData.choices[0].message.content.trim();
+    console.log('Raw AI response:', comboContent.substring(0, 200) + '...');
+    
+    // Clean up response - remove markdown code blocks if present
+    comboContent = comboContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    
+    // Find JSON content between first { and last }
+    const firstBrace = comboContent.indexOf('{');
+    const lastBrace = comboContent.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1 && firstBrace < lastBrace) {
+      comboContent = comboContent.substring(firstBrace, lastBrace + 1);
+    }
+    
+    console.log('Cleaned content for parsing:', comboContent.substring(0, 200) + '...');
     
     try {
       const parsedCombos = JSON.parse(comboContent);
+      console.log('Successfully parsed combos JSON');
       
       if (parsedCombos.combos && Array.isArray(parsedCombos.combos)) {
         // Validate and enrich combos with full perfume data
         const enrichedCombos = parsedCombos.combos.map((combo: any) => {
-          const enrichedItems = combo.items.map((item: any) => {
+          const enrichedItems = combo.items?.map((item: any) => {
             const perfume = perfumeDetails.find(p => p.id === item.perfume_id);
+            if (!perfume) {
+              console.log(`Perfume not found for ID: ${item.perfume_id}`);
+              return null;
+            }
             return {
               ...item,
-              perfume: perfume ? {
+              perfume: {
                 id: perfume.id,
                 name: perfume.name,
                 brand: perfume.brand,
                 image_url: perfume.image_url
-              } : null
+              }
             };
-          }).filter((item: any) => item.perfume); // Remove items without perfume data
+          }).filter(Boolean) || []; // Remove items without perfume data
           
           return {
             ...combo,
             items: enrichedItems,
-            total: enrichedItems.reduce((sum: number, item: any) => sum + item.price, 0)
+            total: enrichedItems.reduce((sum: number, item: any) => sum + (item.price || 0), 0)
           };
-        }).filter((combo: any) => combo.items.length > 0 && combo.total <= budget);
+        }).filter((combo: any) => combo.items.length >= 2 && combo.total <= budget);
 
         const maxComboValue = enrichedCombos.length > 0 ? Math.max(...enrichedCombos.map(c => c.total)) : 0;
         console.log('Generated combos successfully:', enrichedCombos.length);
@@ -222,24 +242,30 @@ Responda APENAS com JSON:
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } else {
+        console.error('Invalid combo structure - missing combos array');
         throw new Error('Invalid combo structure from AI');
       }
     } catch (parseError) {
       console.error('Failed to parse combo JSON:', parseError);
+      console.error('Content that failed to parse:', comboContent);
       
       // Fallback: create simple combos based on available perfumes
+      console.log('Creating fallback combos...');
       const fallbackCombos = [];
-      const sortedPerfumes = perfumeDetails
-        .filter(p => p.price_5ml && p.price_5ml <= budget)
-        .sort((a, b) => (a.price_5ml || 0) - (b.price_5ml || 0));
+      
+      // Get perfumes within budget for 5ml
+      const affordablePerfumes = perfumeDetails
+        .filter(p => p.price_5ml && p.price_5ml > 0 && p.price_5ml <= budget * 0.6)
+        .sort((a, b) => (a.price_5ml || 0) - (b.price_5ml || 0))
+        .slice(0, 6);
 
-      if (sortedPerfumes.length >= 2) {
+      if (affordablePerfumes.length >= 2) {
         let currentTotal = 0;
         const items = [];
         
-        for (const perfume of sortedPerfumes.slice(0, 3)) {
+        for (const perfume of affordablePerfumes.slice(0, 3)) {
           const price = perfume.price_5ml || 0;
-          if (currentTotal + price <= budget) {
+          if (currentTotal + price <= budget * 0.9) {
             items.push({
               perfume_id: perfume.id,
               size_ml: 5,
@@ -259,13 +285,15 @@ Responda APENAS com JSON:
           fallbackCombos.push({
             id: 'fallback1',
             name: 'Combo Descoberta',
-            description: 'Seleção diversificada para explorar novos aromas',
+            description: 'Seleção diversificada para explorar novos aromas baseada em suas preferências',
             items: items,
             total: currentTotal,
             occasions: ['versatil']
           });
         }
       }
+
+      console.log('Generated fallback combos:', fallbackCombos.length);
 
       return new Response(JSON.stringify({ 
         combos: fallbackCombos,
