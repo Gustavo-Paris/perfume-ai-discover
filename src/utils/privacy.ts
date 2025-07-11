@@ -19,22 +19,21 @@ export const setCookie = (
   value: string, 
   options: CookieOptions = {}
 ): void => {
-  const {
-    expires = COOKIE_EXPIRY_DAYS,
-    path = '/',
-    secure = false, // Simplified for development
-    sameSite = 'lax'
-  } = options;
-
-  const date = new Date();
-  date.setTime(date.getTime() + (expires * 24 * 60 * 60 * 1000));
+  console.log('setCookie called with:', { name, value, options });
+  console.log('Current location:', window.location.href);
+  console.log('Is secure context:', window.isSecureContext);
   
-  // Simplified cookie string
-  let cookieString = `${name}=${encodeURIComponent(value)}; expires=${date.toUTCString()}; path=${path}; samesite=${sameSite}`;
+  // Try the simplest possible cookie first
+  const simpleCookie = `${name}=${value}`;
+  console.log('Trying simple cookie:', simpleCookie);
+  document.cookie = simpleCookie;
+  console.log('After simple cookie, document.cookie:', document.cookie);
   
-  console.log('Setting cookie:', cookieString);
-  document.cookie = cookieString;
-  console.log('Cookie set, document.cookie now:', document.cookie);
+  // If that doesn't work, try with path
+  const cookieWithPath = `${name}=${value}; path=/`;
+  console.log('Trying cookie with path:', cookieWithPath);
+  document.cookie = cookieWithPath;
+  console.log('After cookie with path, document.cookie:', document.cookie);
 };
 
 export const getCookie = (name: string): string | null => {
