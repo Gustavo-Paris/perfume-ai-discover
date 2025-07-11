@@ -37,25 +37,17 @@ export const setCookie = (
 };
 
 export const getCookie = (name: string): string | null => {
-  console.log('getCookie called for:', name);
-  console.log('All cookies at read time:', document.cookie);
-  
   const nameEQ = name + "=";
   const ca = document.cookie.split(';');
-  
-  console.log('Cookie array:', ca);
   
   for (let i = 0; i < ca.length; i++) {
     let c = ca[i];
     while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-    console.log(`Checking cookie ${i}:`, c, 'starts with', nameEQ, '?', c.indexOf(nameEQ) === 0);
     if (c.indexOf(nameEQ) === 0) {
       const value = decodeURIComponent(c.substring(nameEQ.length, c.length));
-      console.log('Found cookie value:', value);
       return value;
     }
   }
-  console.log('Cookie not found');
   return null;
 };
 
