@@ -20,23 +20,33 @@ export const setCookie = (
   options: CookieOptions = {}
 ): void => {
   console.log('setCookie called with:', { name, value, options });
-  console.log('Current location:', window.location.href);
-  console.log('Is secure context:', window.isSecureContext);
   
-  // Try the simplest possible cookie first
-  const simpleCookie = `${name}=${value}`;
-  console.log('Trying simple cookie:', simpleCookie);
+  // Primeiro tenta definir o cookie
+  const simpleCookie = `${name}=${value}; path=/; SameSite=Lax`;
   document.cookie = simpleCookie;
-  console.log('After simple cookie, document.cookie:', document.cookie);
   
-  // If that doesn't work, try with path
-  const cookieWithPath = `${name}=${value}; path=/`;
-  console.log('Trying cookie with path:', cookieWithPath);
-  document.cookie = cookieWithPath;
-  console.log('After cookie with path, document.cookie:', document.cookie);
+  // Verifica se funcionou
+  const testRead = document.cookie.split(';').find(c => c.trim().startsWith(`${name}=`));
+  
+  if (!testRead) {
+    // Se cookies não funcionam, usa localStorage como fallback
+    console.log('Cookies não funcionam, usando localStorage');
+    try {
+      localStorage.setItem(`cookie_${name}`, JSON.stringify({
+        value,
+        expires: Date.now() + (COOKIE_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
+      }));
+      console.log('Salvo no localStorage:', `cookie_${name}`);
+    } catch (error) {
+      console.error('Erro ao salvar no localStorage:', error);
+    }
+  } else {
+    console.log('Cookie definido com sucesso');
+  }
 };
 
 export const getCookie = (name: string): string | null => {
+  // Primeiro tenta buscar no cookie
   const nameEQ = name + "=";
   const ca = document.cookie.split(';');
   
@@ -48,6 +58,25 @@ export const getCookie = (name: string): string | null => {
       return value;
     }
   }
+  
+  // Se não encontrou no cookie, verifica localStorage
+  try {
+    const localStorageKey = `cookie_${name}`;
+    const stored = localStorage.getItem(localStorageKey);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Verifica se não expirou
+      if (parsed.expires > Date.now()) {
+        return parsed.value;
+      } else {
+        // Remove se expirou
+        localStorage.removeItem(localStorageKey);
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao ler localStorage:', error);
+  }
+  
   return null;
 };
 
