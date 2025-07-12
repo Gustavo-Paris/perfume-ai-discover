@@ -245,6 +245,7 @@ REGRAS:
                                     aiResponse.includes('3.');
       
       if (hasTextRecommendations) {
+        console.log('Converting text recommendations to transition message');
         return new Response(JSON.stringify({
           content: "Perfeito! Deixe-me analisar suas preferências e encontrar os perfumes ideais para você...",
           isComplete: false,
@@ -254,13 +255,53 @@ REGRAS:
         });
       }
       
-      // If it's just a transition message, return it
+      // If it's just a transition message, proceed to generate recommendations
       if (aiResponse.toLowerCase().includes('deixe-me analisar') || 
           aiResponse.toLowerCase().includes('analisar suas preferências')) {
+        console.log('Transition message detected, generating recommendations immediately');
+        
+        // Generate recommendations using AI
+        try {
+          const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
+          
+          const recommendationMessages = [
+            { role: 'system', content: 'Você é um especialista em perfumaria. Com base no perfil do usuário, recomende EXATAMENTE 3 perfumes da lista fornecida. Responda APENAS com um JSON array de IDs dos perfumes recomendados, exemplo: ["id1", "id2", "id3"]' },
+            { role: 'user', content: `Perfil do usuário baseado na conversa: ${userProfile}\n\nPerfumes disponíveis: ${JSON.stringify(availablePerfumes.map(p => ({ id: p.id, name: p.name, brand: p.brand, description: p.description })))}\n\nRetorne APENAS os IDs dos 3 perfumes mais adequados em formato JSON array.` }
+          ];
+
+          const recommendationData = await callOpenAI(recommendationMessages);
+          const recommendationResponse = recommendationData.choices[0].message.content.trim();
+          
+          // Parse recommendations
+          let parsedRecommendations = [];
+          try {
+            parsedRecommendations = JSON.parse(recommendationResponse);
+          } catch (parseError) {
+            // If parsing fails, try to extract IDs from text
+            const matches = recommendationResponse.match(/"([^"]+)"/g);
+            if (matches) {
+              parsedRecommendations = matches.map(match => match.replace(/"/g, ''));
+            }
+          }
+
+          if (parsedRecommendations.length > 0) {
+            recommendations = parsedRecommendations.slice(0, 3);
+            isComplete = true;
+          }
+        } catch (error) {
+          console.error('Error generating recommendations:', error);
+          // Fallback to random recommendations
+          recommendations = availablePerfumes
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3)
+            .map(p => p.id);
+          isComplete = true;
+        }
+
         return new Response(JSON.stringify({
           content: aiResponse,
-          isComplete: false,
-          needsRecommendations: true
+          isComplete: true,
+          recommendations: recommendations
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
