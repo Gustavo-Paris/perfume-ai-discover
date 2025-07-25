@@ -1,7 +1,5 @@
 
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useAffiliates } from '@/hooks/useAffiliates';
 import { useRecovery } from '@/contexts/RecoveryContext';
 
 const navigation = [
@@ -11,8 +9,6 @@ const navigation = [
 ];
 
 const HeaderNavigation = () => {
-  const { user } = useAuth();
-  const { affiliate } = useAffiliates();
   const { isRecoveryMode } = useRecovery();
 
   if (isRecoveryMode) {
@@ -30,14 +26,6 @@ const HeaderNavigation = () => {
           {item.name}
         </Link>
       ))}
-      {user && affiliate && affiliate.status === 'active' && (
-        <Link
-          to="/afiliados"
-          className="text-brand-primary hover:text-brand-primary/80 font-medium transition-colors duration-200"
-        >
-          Afiliados
-        </Link>
-      )}
     </nav>
   );
 };

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, UserCircle, Trash2, AlertTriangle, Shield } from 'lucide-react';
+import { User, LogOut, Settings, UserCircle, Trash2, AlertTriangle, Shield, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAffiliates } from '@/hooks/useAffiliates';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -31,6 +32,7 @@ interface HeaderUserMenuProps {
 
 const HeaderUserMenu = ({ disabled = false }: HeaderUserMenuProps) => {
   const { user, signOut } = useAuth();
+  const { affiliate } = useAffiliates();
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -164,6 +166,13 @@ const HeaderUserMenu = ({ disabled = false }: HeaderUserMenuProps) => {
             <Settings className="mr-2 h-4 w-4" />
             Programa de Fidelidade
           </DropdownMenuItem>
+          
+          {user && affiliate && affiliate.status === 'active' && (
+            <DropdownMenuItem onClick={() => navigate('/afiliados')}>
+              <Users className="mr-2 h-4 w-4" />
+              Programa de Afiliados
+            </DropdownMenuItem>
+          )}
           
           {isAdmin && (
             <>
