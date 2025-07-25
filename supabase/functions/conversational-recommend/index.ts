@@ -129,10 +129,10 @@ serve(async (req) => {
     const isContinuation = message.includes('viu as 3 recomendações') || 
                           message.includes('Continue a conversa');
 
-    // System prompt for conversational curation
+// System prompt for conversational curation
     const systemPrompt = `Você é um especialista em perfumaria brasileiro que faz curadoria personalizada através de conversas naturais e fluidas.
 
-SEU OBJETIVO: Descobrir as preferências do cliente através de uma conversa envolvente e recomendar os 3 perfumes mais precisos para ele.
+SEU OBJETIVO: Descobrir as preferências do cliente através de uma conversa envolvente e recomendar entre 1 a 5 perfumes ideais baseados nas suas necessidades.
 
 ESTILO DE CONVERSA:
 - Seja caloroso, acolhedor e genuinamente interessado
@@ -145,26 +145,24 @@ PROCESSO DE DESCOBERTA:
 2. EXPLORAR GRADUALMENTE (PERGUNTAS ESSENCIAIS):
    - Gênero da pessoa que vai usar (masculino/feminino/unissex)
    - Faixa etária aproximada (jovem, adulto, maduro)
-   - Orçamento disponível para investir (R$ 50-200, R$ 200-500, mais de R$ 500)
    - Ocasiões de uso (trabalho, festa, dia a dia, especiais)
    - Preferências de intensidade (suave, moderado, marcante)
    - Famílias olfativas que gosta/não gosta
    - IMPORTANTE: Pergunte sobre perfumes que já provou e gostou/não gostou
    - Personalidade e estilo
 3. APROFUNDAR: Faça perguntas específicas baseadas nas respostas
-4. ANÁLISE: Quando tiver informações SUFICIENTES (gênero, pelo menos 2 preferências e contexto de uso), diga "Perfeito! Deixe-me analisar suas preferências e encontrar os perfumes ideais para você..." e PARE.
+4. ANÁLISE: Quando tiver informações SUFICIENTES (gênero, pelo menos 2 preferências e contexto de uso), diga EXATAMENTE: "Perfeito! Com base em tudo que me contou, vou agora fazer uma análise completa das suas preferências e buscar as melhores opções no nosso catálogo. Isso levará apenas alguns instantes..." e PARE.
 
 IMPORTANTE: NUNCA liste perfumes ou recomendações no texto da conversa. Apenas diga que vai analisar e parar.
 
 REGRAS CRÍTICAS:
+- NUNCA pergunte sobre orçamento - isso será tratado nos combos inteligentes
 - NUNCA finalize a conversa sem ter informações ESSENCIAIS (gênero, preferências básicas, contexto)
 - NUNCA liste perfumes específicos ou numerados (1., 2., 3.) na conversa
 - NUNCA use formato markdown (**texto**) para mencionar perfumes
 - NUNCA diga "aqui estão" ou "vou recomendar" seguido de lista
 - Se o usuário perguntar sobre continuar de onde parou, responda de forma natural e continue o processo
 - Mantenha conversas fluidas e personalizadas
-- SEMPRE retorne EXATAMENTE 3 recomendações (nunca menos, nunca mais)
-- Se não conseguir 3 perfumes únicos, expanda critérios mas mantenha 3 diferentes
 - Baseie recomendações nas informações coletadas
 - Use nomes de perfumes reais do banco de dados
 - Seja prestativo e educativo sobre fragrâncias
@@ -224,9 +222,11 @@ REGRAS:
     console.log('AI Response received successfully');
 
     // Check if AI wants to make recommendations - more comprehensive detection
-    const shouldRecommend = aiResponse.toLowerCase().includes('deixe-me analisar') || 
+    const shouldRecommend = aiResponse.toLowerCase().includes('vou agora fazer uma análise completa') || 
+                           aiResponse.toLowerCase().includes('deixe-me analisar') || 
                            aiResponse.toLowerCase().includes('analisar suas preferências') ||
                            aiResponse.toLowerCase().includes('encontrar os perfumes ideais') ||
+                           aiResponse.toLowerCase().includes('buscar as melhores opções') ||
                            aiResponse.toLowerCase().includes('vou recomendar') ||
                            aiResponse.toLowerCase().includes('aqui estão') ||
                            aiResponse.toLowerCase().includes('sugestões que') ||
@@ -247,7 +247,7 @@ REGRAS:
       if (hasTextRecommendations) {
         console.log('Converting text recommendations to transition message');
         return new Response(JSON.stringify({
-          content: "Perfeito! Deixe-me analisar suas preferências e encontrar os perfumes ideais para você...",
+          content: "Perfeito! Com base em tudo que me contou, vou agora fazer uma análise completa das suas preferências e buscar as melhores opções no nosso catálogo. Isso levará apenas alguns instantes...",
           isComplete: false,
           needsRecommendations: true
         }), {
@@ -256,8 +256,10 @@ REGRAS:
       }
       
       // If it's just a transition message, proceed to generate recommendations
-      if (aiResponse.toLowerCase().includes('deixe-me analisar') || 
-          aiResponse.toLowerCase().includes('analisar suas preferências')) {
+      if (aiResponse.toLowerCase().includes('vou agora fazer uma análise completa') ||
+          aiResponse.toLowerCase().includes('deixe-me analisar') || 
+          aiResponse.toLowerCase().includes('analisar suas preferências') ||
+          aiResponse.toLowerCase().includes('buscar as melhores opções')) {
         console.log('Transition message detected, generating recommendations immediately');
         
         // Generate recommendations using AI
@@ -265,8 +267,8 @@ REGRAS:
           const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
           
           const recommendationMessages = [
-            { role: 'system', content: 'Você é um especialista em perfumaria. Com base no perfil do usuário, recomende EXATAMENTE 3 perfumes da lista fornecida. Responda APENAS com um JSON array de IDs dos perfumes recomendados, exemplo: ["id1", "id2", "id3"]' },
-            { role: 'user', content: `Perfil do usuário baseado na conversa: ${userProfile}\n\nPerfumes disponíveis: ${JSON.stringify(availablePerfumes.map(p => ({ id: p.id, name: p.name, brand: p.brand, description: p.description })))}\n\nRetorne APENAS os IDs dos 3 perfumes mais adequados em formato JSON array.` }
+            { role: 'system', content: 'Você é um especialista em perfumaria. Com base no perfil do usuário, recomende entre 1 a 5 perfumes da lista fornecida, priorizando qualidade das combinações sobre quantidade. Responda APENAS com um JSON array de IDs dos perfumes recomendados, exemplo: ["id1", "id2"] ou ["id1", "id2", "id3", "id4"]' },
+            { role: 'user', content: `Perfil do usuário baseado na conversa: ${userProfile}\n\nPerfumes disponíveis: ${JSON.stringify(availablePerfumes.map(p => ({ id: p.id, name: p.name, brand: p.brand, description: p.description, family: p.family, gender: p.gender })))}\n\nAnalise cuidadosamente o perfil e retorne APENAS os IDs dos perfumes mais adequados (1-5 perfumes) em formato JSON array. Priorize precisão sobre quantidade.` }
           ];
 
           const recommendationData = await callOpenAI(recommendationMessages);
@@ -285,15 +287,25 @@ REGRAS:
           }
 
           if (parsedRecommendations.length > 0) {
-            recommendations = parsedRecommendations.slice(0, 3);
+            recommendations = parsedRecommendations.slice(0, 5); // Allow up to 5 recommendations
             isComplete = true;
           }
         } catch (error) {
           console.error('Error generating recommendations:', error);
-          // Fallback to random recommendations
-          recommendations = availablePerfumes
+          // Fallback to smart recommendations based on conversation
+          const genderMatch = userProfile.toLowerCase().includes('masculino') ? 'masculino' : 
+                             userProfile.toLowerCase().includes('feminino') ? 'feminino' : null;
+          
+          let filteredPerfumes = availablePerfumes;
+          if (genderMatch) {
+            filteredPerfumes = availablePerfumes.filter(p => 
+              p.gender === genderMatch || p.gender === 'unissex'
+            );
+          }
+          
+          recommendations = filteredPerfumes
             .sort(() => Math.random() - 0.5)
-            .slice(0, 3)
+            .slice(0, Math.min(3, filteredPerfumes.length))
             .map(p => p.id);
           isComplete = true;
         }
@@ -328,7 +340,7 @@ REGRAS:
     if ((isRecommendationRequest || conversationSeemsComplete) && availablePerfumes.length > 0) {
       try {
         // Generate recommendations based on conversation
-        const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha entre 3 a 5 perfumes que mais precisamente combinam com o cliente.
+        const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha entre 1 a 5 perfumes que mais precisamente combinam com o cliente.
 
 Conversa completa:
 ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
@@ -351,10 +363,12 @@ CRITÉRIOS DE SELEÇÃO:
 - Máxima precisão baseada nas preferências reveladas
 - Considere experiências passadas mencionadas
 - Priorize qualidade da combinação sobre quantidade
+- Se o perfil é muito específico, pode retornar apenas 1-2 perfumes perfeitos
+- Se há múltiplas preferências válidas, pode retornar até 5 opções
 - Ordene do mais adequado para o menos adequado
-- Retorne entre 3 a 5 perfumes (idealmente 3-4, mas pode ser até 5 se houver múltiplas opções excelentes)
+- QUALIDADE > QUANTIDADE sempre
 
-Responda APENAS com um array JSON de 3-5 IDs dos perfumes mais precisos. Exemplo: ["id1", "id2", "id3"] ou ["id1", "id2", "id3", "id4", "id5"]`;
+Responda APENAS com um array JSON de 1-5 IDs dos perfumes mais precisos. Exemplo: ["id1"] ou ["id1", "id2", "id3"]`;
 
         const recData = await callOpenAI([
           { role: 'system', content: 'Você é um especialista em perfumaria que escolhe perfumes com máxima precisão baseado em conversas. Responda apenas com arrays JSON de IDs.' },
@@ -371,8 +385,20 @@ Responda APENAS com um array JSON de 3-5 IDs dos perfumes mais precisos. Exemplo
             console.log('Recommendations generated:', recommendations);
           }
         } catch (e) {
-          console.log('Failed to parse recommendations, using fallback');
-          recommendations = availablePerfumes.slice(0, 3).map(p => p.id);
+          console.log('Failed to parse recommendations, using smart fallback');
+          // Smart fallback based on conversation
+          const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
+          const genderMatch = userProfile.toLowerCase().includes('masculino') ? 'masculino' : 
+                             userProfile.toLowerCase().includes('feminino') ? 'feminino' : null;
+          
+          let filteredPerfumes = availablePerfumes;
+          if (genderMatch) {
+            filteredPerfumes = availablePerfumes.filter(p => 
+              p.gender === genderMatch || p.gender === 'unissex'
+            );
+          }
+          
+          recommendations = filteredPerfumes.slice(0, Math.min(3, filteredPerfumes.length)).map(p => p.id);
           isComplete = true;
         }
       } catch (error) {

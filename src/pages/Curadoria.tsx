@@ -8,6 +8,7 @@ import ConversationChat from '@/components/curadoria/ConversationChat';
 import RecommendationResults from '@/components/curadoria/RecommendationResults';
 import SmartCombos from '@/components/curadoria/SmartCombos';
 import SessionHistory from '@/components/curadoria/SessionHistory';
+import LoadingTransition from '@/components/curadoria/LoadingTransition';
 import AIBeam from '@/components/ui/AIBeam';
 import ConsentBanner from '@/components/privacy/ConsentBanner';
 import { useConversationalRecommend } from '@/hooks/useConversationalRecommend';
@@ -35,7 +36,9 @@ const Curadoria = () => {
     updateConversation,
     currentSessionId,
     loading, 
-    error 
+    error,
+    showLoadingTransition,
+    setShowLoadingTransition
   } = useConversationalRecommend();
 
   const { getSession } = useConversationalSessions();
@@ -79,27 +82,13 @@ const Curadoria = () => {
 
   const handleSendMessage = async (message: string) => {
     try {
-      const isAnalysisMessage = message.toLowerCase().includes('deixe-me analisar') || 
-                                message.toLowerCase().includes('analisar suas preferências') ||
-                                message.toLowerCase().includes('encontrar os perfumes ideais');
-      
-      if (isAnalysisMessage) {
-        setIsAnalyzing(true);
-      }
-
       const response = await sendMessage(message);
       
       if (response.isComplete && response.recommendations) {
-        setTimeout(() => {
-          setRecommendedIds(response.recommendations);
-          setShowResults(true);
-          setIsAnalyzing(false);
-        }, 2000);
-      } else {
-        setIsAnalyzing(false);
+        setRecommendedIds(response.recommendations);
+        setShowResults(true);
       }
     } catch (error) {
-      setIsAnalyzing(false);
       console.error('Error sending message:', error);
       
       // Don't show toast for errors that are already handled in the error state
@@ -113,6 +102,7 @@ const Curadoria = () => {
     setShowResults(false);
     setShowCombos(false);
     setIsAnalyzing(false);
+    setShowLoadingTransition(false);
   };
 
   const handleStartOver = () => {
@@ -123,7 +113,8 @@ const Curadoria = () => {
     setShowResults(false);
     setShowCombos(false);
     setIsAnalyzing(false);
-    const contextMessage = "O usuário viu as 3 recomendações mas gostaria de explorar outras opções. Continue a conversa perguntando o que não agradou nas sugestões anteriores para refinar ainda mais.";
+    setShowLoadingTransition(false);
+    const contextMessage = "O usuário viu as recomendações mas gostaria de explorar outras opções. Continue a conversa perguntando o que não agradou nas sugestões anteriores para refinar ainda mais.";
     sendMessage(contextMessage);
   };
 
@@ -212,6 +203,22 @@ const Curadoria = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading transition when analysis is in progress
+  if (showLoadingTransition) {
+    return (
+      <div className="min-h-screen bg-white py-12 relative overflow-hidden flex items-center justify-center">
+        <div className="container mx-auto px-4 relative z-10">
+          <LoadingTransition 
+            onComplete={() => {
+              setShowLoadingTransition(false);
+              setShowResults(true);
+            }}
+          />
         </div>
       </div>
     );

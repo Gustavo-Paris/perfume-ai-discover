@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { ConversationMessage, StreamingResponse } from '@/types/conversation';
 import { useConversation } from './useConversation';
 import { useConversationState } from './useConversationState';
@@ -14,6 +14,7 @@ export const useConversationalRecommend = () => {
     saveConversationToSession,
     loading: stateLoading 
   } = useConversationState();
+  const [showLoadingTransition, setShowLoadingTransition] = useState(false);
 
   const sendMessage = useCallback(async (userMessage: string) => {
     setError(null);
@@ -48,8 +49,11 @@ export const useConversationalRecommend = () => {
         const messagesWithTransition = [...updatedMessages, assistantMessage];
         updateConversation({ messages: messagesWithTransition });
 
-        // Wait 3 seconds for user to read transition message
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Show loading transition
+        setShowLoadingTransition(true);
+
+        // Wait for transition effect to complete
+        await new Promise(resolve => setTimeout(resolve, 4000));
 
         // Now request actual recommendations
         const recommendationsResponse = await sendMessageToAPI('gerar recomendações', messagesWithTransition);
@@ -122,6 +126,8 @@ export const useConversationalRecommend = () => {
     getCurrentRecommendations,
     currentSessionId,
     loading: apiLoading || stateLoading,
-    error
+    error,
+    showLoadingTransition,
+    setShowLoadingTransition
   };
 };

@@ -24,17 +24,8 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
   const { generateCombos, loading, error, data } = useComboRecommend();
   const { detectBudgetFromConversation } = useBudgetDetection();
 
-  // Auto-detect budget from conversation and generate combos immediately
-  useEffect(() => {
-    const detectedBudget = detectBudgetFromConversation(conversationHistory);
-    if (detectedBudget && !showCombos && detectedBudget >= 50) {
-      setBudget(detectedBudget.toString());
-      // Auto-generate combos if budget was detected
-      setTimeout(() => {
-        handleGenerateCombos(detectedBudget);
-      }, 500);
-    }
-  }, [conversationHistory, showCombos]);
+  // Remove auto-detection since budget is no longer asked in conversation
+  // Budget will be input directly by user in this screen
 
   const handleGenerateCombos = async (budgetValue?: number) => {
     const finalBudget = budgetValue || parseFloat(budget);
@@ -228,10 +219,7 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
           Combos Inteligentes
         </h2>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          {detectBudgetFromConversation(conversationHistory) ? 
-            'Parece que você não mencionou seu orçamento na conversa. Vamos definir um valor:' :
-            'Vamos criar combos personalizados baseados no seu orçamento e preferências'
-          }
+          Vamos criar combos personalizados baseados no seu orçamento e nas preferências descobertas na conversa
         </p>
       </div>
 
