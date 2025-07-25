@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -76,7 +77,7 @@ export default function Afiliados() {
               Você precisa estar logado para acessar esta área.
             </p>
             <Button asChild>
-              <a href="/auth">Fazer Login</a>
+              <Link to="/auth">Fazer Login</Link>
             </Button>
           </CardContent>
         </Card>
@@ -98,7 +99,7 @@ export default function Afiliados() {
               Você não possui permissão de afiliado. Entre em contato conosco para mais informações sobre o programa de parceria.
             </p>
             <Button variant="outline" asChild>
-              <a href="/">Voltar ao Início</a>
+              <Link to="/">Voltar ao Início</Link>
             </Button>
           </CardContent>
         </Card>

@@ -5,7 +5,15 @@ export default function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // Garantir que o scroll seja feito no próximo frame
+    // para que funcione corretamente em todas as situações
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'instant'
+      });
+    });
   }, [pathname]);
 
   return null;
