@@ -17,7 +17,7 @@ import {
   Heart,
   ChevronDown,
   ChevronRight,
-  Store,
+  ShoppingCart,
   Megaphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
   },
   {
     title: 'Catálogo & Marketing',
-    icon: Store,
+    icon: ShoppingCart,
     defaultOpen: false,
     items: [
       { title: 'Perfumes', url: '/admin/perfumes', icon: Package },
