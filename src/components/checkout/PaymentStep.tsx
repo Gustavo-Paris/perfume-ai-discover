@@ -66,7 +66,8 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
 
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
         body: {
-          items: checkoutItems
+          items: checkoutItems,
+          order_draft_id: orderDraftId
         }
       });
 

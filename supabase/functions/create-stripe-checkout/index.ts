@@ -19,6 +19,7 @@ interface CheckoutItem {
 interface CheckoutRequest {
   items: CheckoutItem[];
   user_email?: string;
+  order_draft_id?: string;
 }
 
 const logStep = (step: string, details?: any) => {
@@ -71,8 +72,8 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { items, user_email }: CheckoutRequest = await req.json();
-    logStep("Checkout request parsed", { itemCount: items.length });
+    const { items, user_email, order_draft_id }: CheckoutRequest = await req.json();
+    logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_draft_id });
 
     if (!items || items.length === 0) {
       throw new Error('Nenhum item no carrinho');
@@ -129,6 +130,8 @@ serve(async (req) => {
 
     // Get origin for redirect URLs
     const origin = req.headers.get('origin') || 'https://localhost:5173';
+    const successUrl = `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&provider=stripe${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
+    const cancelUrl = `${origin}/payment-cancel?provider=stripe`;
     
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -136,8 +139,8 @@ serve(async (req) => {
       customer_email: customerId ? undefined : customerEmail,
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&provider=stripe`,
-      cancel_url: `${origin}/payment-cancel?provider=stripe`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       payment_method_types: ['card'],
       billing_address_collection: 'required',
       shipping_address_collection: {
