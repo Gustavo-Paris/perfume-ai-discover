@@ -85,6 +85,49 @@ serve(async (req) => {
     const shippingCost = orderDraft.shipping_cost || 0;
     const totalAmount = subtotal + shippingCost;
 
+    // Pre-check inventory availability (FIFO across lots)
+    const requiredMlByPerfume: Record<string, number> = {};
+    for (const item of cartItems as any[]) {
+      const unitMl = item.size_ml === 5 ? 5 : item.size_ml === 10 ? 10 : 50;
+      requiredMlByPerfume[item.perfume_id] = (requiredMlByPerfume[item.perfume_id] || 0) + unitMl * item.quantity;
+    }
+    const perfumeIds = Object.keys(requiredMlByPerfume);
+    let lotsByPerfume: Record<string, { id: string; qty_ml: number }[]> = {};
+    if (perfumeIds.length > 0) {
+      const { data: lots, error: lotsError } = await supabase
+        .from('inventory_lots')
+        .select('id, perfume_id, qty_ml, created_at')
+        .in('perfume_id', perfumeIds)
+        .order('created_at', { ascending: true });
+      if (lotsError) {
+        console.error('Error fetching inventory lots:', lotsError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to check inventory' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const availableByPerfume: Record<string, number> = {};
+      for (const lot of lots || []) {
+        availableByPerfume[lot.perfume_id] = (availableByPerfume[lot.perfume_id] || 0) + (lot.qty_ml || 0);
+      }
+      for (const pid of perfumeIds) {
+        const required = requiredMlByPerfume[pid] || 0;
+        const available = availableByPerfume[pid] || 0;
+        if (available < required) {
+          console.warn('Insufficient stock for perfume', pid, 'required', required, 'available', available);
+          return new Response(
+            JSON.stringify({ error: 'Estoque insuficiente para um ou mais itens do carrinho' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+      // Group lots by perfume for later deduction
+      for (const lot of lots || []) {
+        if (!lotsByPerfume[lot.perfume_id]) lotsByPerfume[lot.perfume_id] = [];
+        lotsByPerfume[lot.perfume_id].push({ id: lot.id, qty_ml: lot.qty_ml });
+      }
+    }
+
     // Create confirmed order
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -141,6 +184,45 @@ serve(async (req) => {
         JSON.stringify({ error: 'Failed to create order items' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Deduct inventory (FIFO) and record stock movements
+    for (const perfumeId of Object.keys(requiredMlByPerfume)) {
+      let remaining = requiredMlByPerfume[perfumeId] || 0;
+      const lots = (lotsByPerfume[perfumeId] || []).slice();
+      for (const lot of lots) {
+        if (remaining <= 0) break;
+        const availableQty = Math.max(0, lot.qty_ml || 0);
+        const consume = Math.min(remaining, availableQty);
+        if (consume > 0) {
+          const newQty = availableQty - consume;
+          const { error: updateError } = await supabase
+            .from('inventory_lots')
+            .update({ qty_ml: newQty })
+            .eq('id', lot.id);
+          if (updateError) {
+            console.error('Error updating lot qty:', lot.id, updateError);
+            return new Response(
+              JSON.stringify({ error: 'Falha ao atualizar estoque' }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          const { error: movementError } = await supabase
+            .from('stock_movements')
+            .insert({
+              perfume_id: perfumeId,
+              lot_id: lot.id,
+              change_ml: -consume,
+              movement_type: 'sale',
+              related_order_id: order.id,
+              notes: `Baixa de estoque - Pedido ${order.order_number || order.id}`
+            });
+          if (movementError) {
+            console.error('Error inserting stock movement:', movementError);
+          }
+          remaining -= consume;
+        }
+      }
     }
 
     // Clear user's cart
