@@ -141,7 +141,7 @@ serve(async (req) => {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'pix'],
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: ['BR'],
@@ -156,7 +156,7 @@ serve(async (req) => {
       metadata: {
         user_id: user?.id || 'guest',
         user_email: customerEmail,
-        checkout_type: 'stripe_card',
+        checkout_type: 'stripe_checkout',
       }
     });
 

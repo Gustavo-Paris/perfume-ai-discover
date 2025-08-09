@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import Stripe from "https://esm.sh/stripe@14.21.0";
 
 interface ConfirmOrderRequest {
   orderDraftId: string;
@@ -128,6 +129,49 @@ serve(async (req) => {
       }
     }
 
+    // Verify payment with Stripe if transaction_id is a Checkout Session
+    const txnId = paymentData.transaction_id;
+    let verifiedStatus: string = paymentData.status;
+    let verifiedMethod: 'pix' | 'credit_card' = paymentData.payment_method;
+
+    try {
+      if (txnId && txnId.startsWith('cs_')) {
+        const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
+        if (!stripeKey) {
+          console.warn('STRIPE_SECRET_KEY not set. Skipping Stripe verification.');
+        } else {
+          const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+          const session = await stripe.checkout.sessions.retrieve(txnId);
+
+          if (session.payment_status !== 'paid') {
+            return new Response(
+              JSON.stringify({ error: 'Pagamento não confirmado pelo Stripe' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          verifiedStatus = 'paid';
+          let usedMethod: 'pix' | 'credit_card' = 'credit_card';
+          try {
+            const piId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
+            if (piId) {
+              const pi = await stripe.paymentIntents.retrieve(piId);
+              const charge = (pi.charges?.data && pi.charges.data[0]) || null;
+              const pmType = charge?.payment_method_details?.type as string | undefined;
+              if (pmType === 'pix') usedMethod = 'pix';
+            } else if (Array.isArray(session.payment_method_types) && session.payment_method_types.includes('pix')) {
+              usedMethod = 'pix';
+            }
+          } catch (e) {
+            console.warn('Não foi possível determinar o método de pagamento Stripe. Assumindo cartão.', e?.message || e);
+          }
+          verifiedMethod = usedMethod;
+        }
+      }
+    } catch (e) {
+      console.error('Erro na verificação com Stripe', e);
+    }
+
     // Create confirmed order
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -136,10 +180,10 @@ serve(async (req) => {
         total_amount: totalAmount,
         subtotal: subtotal,
         shipping_cost: shippingCost,
-        status: paymentData.status === 'paid' ? 'paid' : 'pending',
-        payment_method: paymentData.payment_method,
-        payment_status: paymentData.status === 'paid' ? 'paid' : 'pending',
-        transaction_id: paymentData.transaction_id,
+        status: verifiedStatus === 'paid' ? 'paid' : 'pending',
+        payment_method: verifiedMethod,
+        payment_status: verifiedStatus === 'paid' ? 'paid' : 'pending',
+        transaction_id: txnId,
         shipping_service: orderDraft.shipping_service,
         address_data: orderDraft.addresses
       })

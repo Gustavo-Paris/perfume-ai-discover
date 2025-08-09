@@ -209,7 +209,7 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
                 <Label htmlFor="stripe_card" className="font-medium cursor-pointer flex items-center">
                   Cartão Internacional <Globe className="ml-2 h-4 w-4 text-purple-600" />
                 </Label>
-                <p className="text-sm text-muted-foreground">Stripe • Aceita cartões do mundo todo</p>
+                <p className="text-sm text-muted-foreground">Stripe • Cartão internacional e PIX</p>
               </div>
             </div>
           </RadioGroup>
@@ -322,7 +322,7 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
           ) : paymentMethod === 'stripe_card' ? (
             <>
               <Globe className="mr-2 h-4 w-4" />
-              Pagar com Stripe
+              Pagar com Stripe (Cartão/PIX)
             </>
           ) : (
             <>
