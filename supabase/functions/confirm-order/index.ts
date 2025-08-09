@@ -172,6 +172,33 @@ serve(async (req) => {
       console.error('Erro na verificação com Stripe', e);
     }
 
+    // Idempotency: if an order with this transaction already exists, return it
+    if (txnId) {
+      const { data: existingOrder } = await supabase
+        .from('orders')
+        .select('id, order_number, status, total_amount, payment_method')
+        .eq('transaction_id', txnId)
+        .maybeSingle();
+
+      if (existingOrder) {
+        console.log('Existing order found for transaction, returning without duplicating:', existingOrder.id);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            order: {
+              id: existingOrder.id,
+              order_number: existingOrder.order_number,
+              status: existingOrder.status,
+              total_amount: existingOrder.total_amount,
+              payment_method: existingOrder.payment_method
+            }
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    
     // Create confirmed order
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -303,7 +330,8 @@ serve(async (req) => {
           id: order.id,
           order_number: order.order_number,
           status: order.status,
-          total_amount: order.total_amount
+          total_amount: order.total_amount,
+          payment_method: order.payment_method
         }
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

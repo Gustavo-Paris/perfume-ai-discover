@@ -123,9 +123,13 @@ const PaymentSuccess = () => {
                   <div className="flex justify-between">
                     <span>Pagamento:</span>
                     <span className="font-medium">
-                      {paymentMethod === 'pix' ? 'PIX' : 
-                       provider === 'stripe' ? 'Cartão (Stripe)' : 
-                       'Cartão (Modo Bank)'}
+                      {orderData?.payment_method === 'pix'
+                        ? 'PIX'
+                        : provider === 'stripe'
+                          ? 'Cartão (Stripe)'
+                          : paymentMethod === 'pix'
+                            ? 'PIX'
+                            : 'Cartão (Modo Bank)'}
                     </span>
                   </div>
                   <div className="flex justify-between">
