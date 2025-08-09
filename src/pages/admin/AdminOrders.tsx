@@ -15,6 +15,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Order as OrderFull } from '@/types/order';
+import { OrderDetailsModal } from '@/components/orders/OrderDetailsModal';
 
 interface Order {
   id: string;
@@ -51,6 +53,10 @@ const AdminOrders = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const pageSize = 20;
+
+  const [detailOrder, setDetailOrder] = useState<OrderFull | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -197,6 +203,56 @@ const AdminOrders = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const openDetails = async (orderId: string) => {
+    setDetailsOpen(true);
+    setLoadingDetails(true);
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items(*, perfumes(id, name, brand, image_url)),
+        shipments(*)
+      `)
+      .eq('id', orderId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Erro ao carregar detalhes do pedido:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os detalhes do pedido.',
+        variant: 'destructive',
+      });
+      setLoadingDetails(false);
+      return;
+    }
+
+    if (!data) {
+      toast({ title: 'Pedido não encontrado', description: 'Tente novamente mais tarde.' });
+      setLoadingDetails(false);
+      return;
+    }
+
+    const mappedItems = (data.order_items || []).map((oi: any) => ({
+      ...oi,
+      perfume: oi.perfumes ? {
+        id: oi.perfumes.id,
+        name: oi.perfumes.name,
+        brand: oi.perfumes.brand,
+        image_url: oi.perfumes.image_url,
+      } : undefined,
+    }));
+
+    const fullOrder: OrderFull = { ...data, order_items: mappedItems, shipments: data.shipments || [] } as OrderFull;
+    setDetailOrder(fullOrder);
+    setLoadingDetails(false);
+  };
+
+  const closeDetails = () => {
+    setDetailsOpen(false);
+    setDetailOrder(null);
   };
 
   if (loading && orders.length === 0) {
@@ -376,7 +432,7 @@ const AdminOrders = () => {
                     {format(new Date(order.created_at), 'dd/MM/yy HH:mm', { locale: ptBR })}
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="ghost">
+                    <Button size="sm" variant="ghost" onClick={() => openDetails(order.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -410,6 +466,10 @@ const AdminOrders = () => {
             Próxima
           </Button>
         </div>
+      )}
+
+      {detailsOpen && detailOrder && (
+        <OrderDetailsModal order={detailOrder} isOpen={detailsOpen} onClose={closeDetails} />
       )}
     </div>
   );
