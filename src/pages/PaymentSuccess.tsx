@@ -30,42 +30,24 @@ const PaymentSuccess = () => {
     }
 
     confirmOrder();
-  }, [user, navigate, transactionId, paymentMethod, orderDraftId]);
+  }, [user, navigate, transactionId, paymentMethod, orderDraftId, sessionId, provider]);
 
   const confirmOrder = async () => {
-    // For Stripe, we need either sessionId or transactionId
-    const hasValidIds = sessionId || (orderDraftId && transactionId);
-    
-    if (!hasValidIds) {
+    const paymentTxnId = sessionId || transactionId;
+    const hasValid = orderDraftId && paymentTxnId;
+
+    if (!hasValid) {
       setLoading(false);
       return;
     }
 
     try {
-      // For Stripe payments, use session_id to verify payment
-      if (provider === 'stripe' && sessionId) {
-        // For now, just show success - Stripe webhook will handle order confirmation
-        setOrderData({
-          id: sessionId,
-          order_number: `STRIPE-${sessionId.slice(-8)}`,
-          status: 'paid',
-          total_amount: searchParams.get('total') || '0',
-          payment_method: 'credit_card'
-        });
-        
-        // Clear cart for Stripe payments
-        await clearCart();
-        setLoading(false);
-        return;
-      }
-
-      // For Modo Bank payments, use existing flow
       const { data, error } = await supabase.functions.invoke('confirm-order', {
         body: {
           orderDraftId,
           paymentData: {
-            transaction_id: transactionId,
-            payment_method: paymentMethod || 'credit_card',
+            transaction_id: paymentTxnId,
+            payment_method: provider === 'stripe' ? 'credit_card' : (paymentMethod || 'credit_card'),
             status: 'paid'
           }
         }
@@ -73,38 +55,24 @@ const PaymentSuccess = () => {
 
       if (error) throw error;
 
-      if (data.success) {
+      if (data?.success && data.order) {
         setOrderData(data.order);
-        
-        // Track purchase event
-        if (data.order && data.orderItems) {
-          const purchaseItems = data.orderItems.map((item: any) => ({
-            item_id: item.perfume_id,
-            item_name: item.perfumes?.name || 'Produto',
-            item_brand: item.perfumes?.brand || 'Marca',
-            item_variant: `${item.size_ml}ml`,
-            price: item.unit_price,
-            quantity: item.quantity
-          }));
-          
-          trackPurchase({
-            transaction_id: transactionId,
-            value: data.order.total_amount,
-            items: purchaseItems
-          });
-        }
-        
-        // Clear cart after successful order confirmation
+
+        // Minimal purchase tracking
+        trackPurchase({
+          transaction_id: paymentTxnId || undefined,
+          value: data.order.total_amount,
+          items: []
+        });
+
         await clearCart();
       } else {
-        throw new Error(data.error || 'Erro ao confirmar pedido');
+        throw new Error(data?.error || 'Erro ao confirmar pedido');
       }
     } catch (error) {
       console.error('Error confirming order:', error);
-      // Even if confirmation fails, still show success to user
-      // as payment was processed
       setOrderData({
-        id: transactionId,
+        id: paymentTxnId,
         order_number: 'N/A',
         status: 'paid',
         total_amount: searchParams.get('total') || '0'
