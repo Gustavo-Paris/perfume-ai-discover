@@ -225,6 +225,15 @@ serve(async (req) => {
       }
     }
 
+    // Clear reservations for this user (if any)
+    const { error: clearReservationsError } = await supabase
+      .from('reservations')
+      .delete()
+      .eq('user_id', orderDraft.user_id);
+    if (clearReservationsError) {
+      console.error('Error clearing reservations:', clearReservationsError);
+    }
+
     // Clear user's cart
     const { error: clearCartError } = await supabase
       .from('cart_items')

@@ -204,11 +204,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .eq('size_ml', sizeML)
       .maybeSingle();
 
+    const targetQty = (existingItem?.quantity || 0) + quantity;
+
+    // Reserve stock before persisting cart (only for authenticated users)
+    if (user) {
+      const { error: reserveError } = await supabase.rpc('upsert_reservation', {
+        perfume_uuid: perfumeId,
+        size_ml_param: sizeML,
+        qty_param: targetQty,
+        user_uuid: user.id,
+      });
+      if (reserveError) {
+        throw reserveError;
+      }
+    }
+
     if (existingItem) {
       // Update quantity
       const { error } = await supabase
         .from('cart_items')
-        .update({ quantity: existingItem.quantity + quantity })
+        .update({ quantity: targetQty })
         .eq('id', existingItem.id);
 
       if (error) throw error;
@@ -220,7 +235,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           user_id: user?.id,
           perfume_id: perfumeId,
           size_ml: sizeML,
-          quantity
+          quantity: targetQty
         });
 
       if (error) throw error;
@@ -276,6 +291,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       if (user) {
+        // Reserve stock to the new target quantity first
+        const { error: reserveError } = await supabase.rpc('upsert_reservation', {
+          perfume_uuid: perfumeId,
+          size_ml_param: sizeML,
+          qty_param: quantity,
+          user_uuid: user.id,
+        });
+        if (reserveError) {
+          throw reserveError;
+        }
         const { error } = await supabase
           .from('cart_items')
           .update({ quantity })
@@ -318,6 +343,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('size_ml', sizeML);
 
         if (error) throw error;
+
+        // Remove reservation for this item
+        await supabase
+          .from('reservations')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('perfume_id', perfumeId)
+          .eq('size_ml', sizeML);
+
         await loadFromDatabase();
       } else {
         const newItems = items.filter(
@@ -348,6 +382,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('user_id', user.id);
 
         if (error) throw error;
+
+        // Clear all reservations for this user
+        await supabase
+          .from('reservations')
+          .delete()
+          .eq('user_id', user.id);
       } else {
         sessionStorage.removeItem('paris-co-guest-cart');
       }
