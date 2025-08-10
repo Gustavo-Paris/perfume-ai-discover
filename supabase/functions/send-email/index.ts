@@ -374,6 +374,24 @@ const templates = {
   }
 };
 
+// Extend templates with support notifications used by helpdesk
+Object.assign(templates as any, {
+  support_notification: {
+    subject: '{{subject}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #111827; font-size: 22px;">{{title}}</h1>
+        <p style="color: #374151; white-space: pre-line;">{{message}}</p>
+        <div style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-top: 16px;">
+          <p style="margin: 0; color: #6b7280;"><strong>Assunto:</strong> {{subjectText}}</p>
+          <p style="margin: 0; color: #6b7280;"><strong>Categoria:</strong> {{category}}</p>
+          <p style="margin: 0; color: #6b7280;"><strong>Prioridade:</strong> {{priority}}</p>
+        </div>
+      </div>
+    `
+  }
+});
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

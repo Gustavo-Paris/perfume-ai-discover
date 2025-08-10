@@ -21,6 +21,9 @@ export default function AdminSupport() {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved'>('all');
+  const [macros, setMacros] = useState<{ id: string; title: string; content: string; category?: string }[]>([]);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
 
   // Carregar conversas
   const loadConversations = async () => {
@@ -67,6 +70,19 @@ export default function AdminSupport() {
       console.error('Error loading messages:', error);
     }
   };
+
+  // Carregar macros de resposta rápida
+  useEffect(() => {
+    const fetchMacros = async () => {
+      const { data } = await supabase
+        .from('support_macros')
+        .select('id, title, content, category')
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false });
+      setMacros((data as any) || []);
+    };
+    fetchMacros();
+  }, []);
 
   // Enviar mensagem como agente
   const sendMessage = async () => {
@@ -140,6 +156,41 @@ export default function AdminSupport() {
         description: "Não foi possível atualizar o status.",
         variant: "destructive",
       });
+    }
+  };
+
+  const assignToMe = async () => {
+    if (!selectedConversation || !user) return;
+    try {
+      setIsAssigning(true);
+      const nextStatus = selectedConversation.status === 'open' ? 'in_progress' : selectedConversation.status;
+      await supabase
+        .from('support_conversations')
+        .update({ assigned_to: user.id, status: nextStatus })
+        .eq('id', selectedConversation.id);
+      setSelectedConversation(prev => prev ? { ...prev, assigned_to: user.id, status: nextStatus as any } : prev);
+      toast({ title: 'Atribuída a você', description: 'Você assumiu esta conversa.' });
+    } catch (e) {
+      toast({ title: 'Erro', description: 'Não foi possível atribuir a conversa.', variant: 'destructive' });
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const updateConversationPriority = async (priority: 'low' | 'medium' | 'high' | 'urgent') => {
+    if (!selectedConversation) return;
+    try {
+      setIsUpdatingPriority(true);
+      await supabase
+        .from('support_conversations')
+        .update({ priority })
+        .eq('id', selectedConversation.id);
+      setSelectedConversation(prev => prev ? { ...prev, priority } as any : prev);
+      toast({ title: 'Prioridade atualizada', description: `Prioridade definida como ${priority}.` });
+    } catch (e) {
+      toast({ title: 'Erro', description: 'Não foi possível atualizar a prioridade.', variant: 'destructive' });
+    } finally {
+      setIsUpdatingPriority(false);
     }
   };
 
@@ -302,7 +353,30 @@ export default function AdminSupport() {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    <Button
+                      variant="secondary"
+                      onClick={assignToMe}
+                      disabled={isAssigning || selectedConversation.assigned_to === user?.id}
+                    >
+                      {selectedConversation.assigned_to === user?.id ? 'Atribuída a você' : 'Atribuir a mim'}
+                    </Button>
+
+                    <Select
+                      value={selectedConversation.priority}
+                      onValueChange={(v: any) => updateConversationPriority(v)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Prioridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Baixa</SelectItem>
+                        <SelectItem value="medium">Média</SelectItem>
+                        <SelectItem value="high">Alta</SelectItem>
+                        <SelectItem value="urgent">Urgente</SelectItem>
+                      </SelectContent>
+                    </Select>
+
                     <Select
                       value={selectedConversation.status}
                       onValueChange={updateConversationStatus}
@@ -355,6 +429,25 @@ export default function AdminSupport() {
                 {/* Input */}
                 {selectedConversation.status !== 'closed' && (
                   <div className="p-4 border-t">
+                    {/* Macro picker */}
+                    {macros.length > 0 && (
+                      <div className="mb-2 flex gap-2 items-center">
+                        <Select onValueChange={(id) => {
+                          const m = macros.find((mm) => mm.id === id);
+                          if (m) setNewMessage((prev) => (prev ? prev + '\n\n' : '') + m.content);
+                        }}>
+                          <SelectTrigger className="w-64">
+                            <SelectValue placeholder="Inserir macro de resposta" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {macros.map((m) => (
+                              <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
                     <div className="flex gap-2">
                       <Textarea
                         value={newMessage}

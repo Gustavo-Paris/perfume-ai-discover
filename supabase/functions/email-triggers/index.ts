@@ -39,6 +39,12 @@ const handler = async (req: Request): Promise<Response> => {
       case 'stock_alert':
         await handleStockAlert(supabase, payload);
         break;
+      case 'support_new_conversation':
+        await handleSupportNewConversation(supabase, payload);
+        break;
+      case 'support_new_message':
+        await handleSupportNewMessage(supabase, payload);
+        break;
       default:
         throw new Error(`Unknown trigger type: ${type}`);
     }
@@ -232,6 +238,161 @@ async function handleStockAlert(supabase: any, lotId: string) {
         warehouseName: lot.warehouses.name
       }
     });
+  }
+}
+
+async function handleSupportNewConversation(supabase: any, conversationId: string) {
+  const { data: conv } = await supabase
+    .from('support_conversations')
+    .select('*')
+    .eq('id', conversationId)
+    .maybeSingle();
+
+  if (!conv) return;
+
+  // Fetch customer profile email (if logged-in user)
+  let customer: any = null;
+  if (conv.user_id) {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('name, email')
+      .eq('id', conv.user_id)
+      .maybeSingle();
+    customer = prof;
+  }
+
+  // Determine admin recipients: assigned agent or all admins
+  let adminEmails: string[] = [];
+  if (conv.assigned_to) {
+    const { data: assignProf } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', conv.assigned_to)
+      .maybeSingle();
+    if (assignProf?.email) adminEmails.push(assignProf.email);
+  } else {
+    const { data: adminRoles } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+    const adminIds = (adminRoles || []).map((r: any) => r.user_id);
+    if (adminIds.length) {
+      const { data: adminProfiles } = await supabase
+        .from('profiles')
+        .select('email')
+        .in('id', adminIds);
+      adminEmails = (adminProfiles || []).map((p: any) => p.email).filter(Boolean);
+    }
+  }
+
+  for (const to of adminEmails) {
+    await sendEmailViaFunction({
+      to,
+      template: 'support_notification',
+      data: {
+        subject: `Nova conversa de suporte – ${conv.subject || conv.id}`,
+        title: 'Nova conversa de suporte',
+        message: 'Um cliente iniciou uma nova conversa de suporte.',
+        subjectText: conv.subject || '-',
+        category: conv.category || '-',
+        priority: conv.priority || 'medium'
+      }
+    });
+  }
+
+  if (customer?.email) {
+    await sendEmailViaFunction({
+      to: customer.email,
+      template: 'support_notification',
+      data: {
+        subject: 'Recebemos sua solicitação de suporte',
+        title: 'Atendimento iniciado',
+        message: 'Obrigado por entrar em contato. Nossa equipe responderá em breve.',
+        subjectText: conv.subject || '-',
+        category: conv.category || '-',
+        priority: conv.priority || 'medium'
+      }
+    });
+  }
+}
+
+async function handleSupportNewMessage(supabase: any, messageId: string) {
+  const { data: msg } = await supabase
+    .from('support_messages')
+    .select('*')
+    .eq('id', messageId)
+    .maybeSingle();
+  if (!msg) return;
+
+  const { data: conv } = await supabase
+    .from('support_conversations')
+    .select('*')
+    .eq('id', msg.conversation_id)
+    .maybeSingle();
+  if (!conv) return;
+
+  if (msg.sender_type === 'user') {
+    // Notify admins/assignee
+    let adminEmails: string[] = [];
+    if (conv.assigned_to) {
+      const { data: assignProf } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', conv.assigned_to)
+        .maybeSingle();
+      if (assignProf?.email) adminEmails.push(assignProf.email);
+    } else {
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      const adminIds = (adminRoles || []).map((r: any) => r.user_id);
+      if (adminIds.length) {
+        const { data: adminProfiles } = await supabase
+          .from('profiles')
+          .select('email')
+          .in('id', adminIds);
+        adminEmails = (adminProfiles || []).map((p: any) => p.email).filter(Boolean);
+      }
+    }
+
+    for (const to of adminEmails) {
+      await sendEmailViaFunction({
+        to,
+        template: 'support_notification',
+        data: {
+          subject: `Nova mensagem do cliente – ${conv.subject || conv.id}`,
+          title: 'Nova mensagem do cliente',
+          message: msg.message,
+          subjectText: conv.subject || '-',
+          category: conv.category || '-',
+          priority: conv.priority || 'medium'
+        }
+      });
+    }
+  } else if (msg.sender_type === 'agent') {
+    // Notify customer if logged in
+    if (conv.user_id) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('email, name')
+        .eq('id', conv.user_id)
+        .maybeSingle();
+      if (prof?.email) {
+        await sendEmailViaFunction({
+          to: prof.email,
+          template: 'support_notification',
+          data: {
+            subject: 'Nova resposta da nossa equipe',
+            title: 'Você recebeu uma resposta',
+            message: msg.message,
+            subjectText: conv.subject || '-',
+            category: conv.category || '-',
+            priority: conv.priority || 'medium'
+          }
+        });
+      }
+    }
   }
 }
 
