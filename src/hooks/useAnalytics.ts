@@ -7,22 +7,15 @@ export const useAnalytics = () => {
   useEffect(() => {
     const initializeAnalytics = async () => {
       try {
-        // Get Sentry DSN from Supabase secrets
-        const { data: sentryData } = await supabase.functions.invoke('secrets', {
-          body: { name: 'SENTRY_DSN' }
-        });
+        // Fetch public analytics config from edge function
+        const { data } = await supabase.functions.invoke('public-analytics-config');
 
-        // Get GA Measurement ID from Supabase secrets  
-        const { data: gaData } = await supabase.functions.invoke('secrets', {
-          body: { name: 'GA_MEASUREMENT_ID' }
-        });
-
-        if (sentryData?.value) {
-          initSentry(sentryData.value);
+        if (data?.sentryDsn) {
+          initSentry(data.sentryDsn);
         }
 
-        if (gaData?.value) {
-          initGA4(gaData.value);
+        if (data?.gaMeasurementId) {
+          initGA4(data.gaMeasurementId);
         }
       } catch (error) {
         console.warn('Failed to initialize analytics:', error);
