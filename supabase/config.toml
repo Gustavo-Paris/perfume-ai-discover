@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.public-analytics-config]
 verify_jwt = false
+
+[functions.password-pwned-check]
+verify_jwt = false

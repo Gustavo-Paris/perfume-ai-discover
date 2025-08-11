@@ -6,11 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useRecovery } from '@/contexts/RecoveryContext';
 import { supabase } from '@/integrations/supabase/client';
-
+import { getPasswordStrength, checkPasswordPwned } from '@/utils/password';
+import { Sentry } from '@/utils/sentry';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -26,6 +28,12 @@ const Auth = () => {
   const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [resetForm, setResetForm] = useState({ email: '' });
   const [newPasswordForm, setNewPasswordForm] = useState({ password: '', confirmPassword: '' });
+
+  // Password strength and pwned checks
+  const [signupStrength, setSignupStrength] = useState(() => getPasswordStrength(''));
+  const [signupPwned, setSignupPwned] = useState<{ checked: boolean; pwned: boolean; count: number | null }>({ checked: false, pwned: false, count: null });
+  const [newPassStrength, setNewPassStrength] = useState(() => getPasswordStrength(''));
+  const [newPassPwned, setNewPassPwned] = useState<{ checked: boolean; pwned: boolean; count: number | null }>({ checked: false, pwned: false, count: null });
 
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
@@ -126,13 +134,28 @@ const Auth = () => {
       });
       return;
     }
-    
-    if (signupForm.password.length < 6) {
+
+    // Strength check
+    const strength = getPasswordStrength(signupForm.password);
+    if (strength.score < 50) {
       toast({
-        title: "Erro no cadastro",
-        description: "A senha deve ter pelo menos 6 caracteres",
+        title: "Senha fraca",
+        description: "Use ao menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos.",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Pwned check
+    const pwned = await checkPasswordPwned(signupForm.password);
+    if (pwned.pwned) {
+      Sentry.addBreadcrumb({ category: 'auth', level: 'warning', message: 'Pwned password blocked on signup' });
+      toast({
+        title: "Senha insegura",
+        description: `Esta senha apareceu em ${pwned.count?.toLocaleString?.() ?? pwned.count} vazamentos. Escolha outra senha.`,
+        variant: "destructive"
+      });
+      setSignupPwned({ checked: true, ...pwned });
       return;
     }
     
@@ -142,6 +165,7 @@ const Auth = () => {
       const { error } = await signUp(signupForm.email, signupForm.password, signupForm.name);
       
       if (error) {
+        Sentry.addBreadcrumb({ category: 'auth', level: 'error', message: `Signup error: ${error.message}` });
         toast({
           title: "Erro no cadastro",
           description: error.message === 'User already registered' 
@@ -155,9 +179,12 @@ const Auth = () => {
           description: "Verifique seu email para confirmar a conta"
         });
         setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
+        setSignupStrength(getPasswordStrength(''));
+        setSignupPwned({ checked: false, pwned: false, count: null });
       }
     } catch (error) {
       console.error('Signup error:', error);
+      Sentry.addBreadcrumb({ category: 'auth', level: 'error', message: 'Unexpected signup error' });
       toast({
         title: "Erro no cadastro",
         description: "Não foi possível criar a conta",
@@ -222,6 +249,30 @@ const Auth = () => {
       });
       return;
     }
+
+    // Strength check
+    const strength = getPasswordStrength(newPasswordForm.password);
+    if (strength.score < 50) {
+      toast({
+        title: "Senha fraca",
+        description: "Use ao menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Pwned check
+    const pwned = await checkPasswordPwned(newPasswordForm.password);
+    if (pwned.pwned) {
+      Sentry.addBreadcrumb({ category: 'auth', level: 'warning', message: 'Pwned password blocked on reset' });
+      toast({
+        title: "Senha insegura",
+        description: `Esta senha apareceu em ${pwned.count?.toLocaleString?.() ?? pwned.count} vazamentos. Escolha outra senha.`,
+        variant: "destructive"
+      });
+      setNewPassPwned({ checked: true, ...pwned });
+      return;
+    }
     
     setIsLoading(true);
     
@@ -238,6 +289,8 @@ const Auth = () => {
         });
         
         setNewPasswordForm({ password: '', confirmPassword: '' });
+        setNewPassStrength(getPasswordStrength(''));
+        setNewPassPwned({ checked: false, pwned: false, count: null });
         
         console.log('🚪 Signing out...');
         await supabase.auth.signOut();
@@ -252,6 +305,7 @@ const Auth = () => {
         console.log('➡️ Switching to login tab...');
         setActiveTab('login');
       } else {
+        Sentry.addBreadcrumb({ category: 'auth', level: 'error', message: `Update password error: ${error.message}` });
         toast({
           title: "Erro ao alterar senha",
           description: error.message,
@@ -260,6 +314,7 @@ const Auth = () => {
       }
     } catch (error) {
       console.error('Update password error:', error);
+      Sentry.addBreadcrumb({ category: 'auth', level: 'error', message: 'Unexpected update password error' });
       toast({
         title: "Erro inesperado",
         description: "Tente novamente em alguns instantes",
@@ -421,11 +476,28 @@ const Auth = () => {
                       type="password" 
                       placeholder="••••••••" 
                       value={signupForm.password} 
-                      onChange={e => setSignupForm({ ...signupForm, password: e.target.value })} 
+                      onChange={e => {
+                        setSignupForm({ ...signupForm, password: e.target.value });
+                        setSignupStrength(getPasswordStrength(e.target.value));
+                        setSignupPwned({ checked: false, pwned: false, count: null });
+                      }} 
+                      onBlur={async () => {
+                        if (signupForm.password) {
+                          const res = await checkPasswordPwned(signupForm.password);
+                          setSignupPwned({ checked: true, ...res });
+                        }
+                      }}
                       required 
                       minLength={6} 
                       className="font-display" 
                     />
+                    <div className="space-y-1">
+                      <Progress value={signupStrength.score} />
+                      <p className="text-xs text-muted-foreground">Força: {signupStrength.label}</p>
+                      {signupPwned.checked && signupPwned.pwned && (
+                        <p className="text-xs text-destructive">Esta senha apareceu em {signupPwned.count?.toLocaleString?.() ?? signupPwned.count} vazamentos. Escolha outra.</p>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm-password" className="font-display text-gray-700">Confirmar Senha</Label>
@@ -443,7 +515,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
-                    disabled={isLoading}
+                    disabled={isLoading || signupStrength.score < 50 || (signupPwned.checked && signupPwned.pwned)}
                   >
                     {isLoading ? 'Cadastrando...' : 'Cadastrar'}
                   </Button>
@@ -503,11 +575,28 @@ const Auth = () => {
                       type="password" 
                       placeholder="••••••••" 
                       value={newPasswordForm.password} 
-                      onChange={e => setNewPasswordForm({ ...newPasswordForm, password: e.target.value })} 
+                      onChange={e => {
+                        setNewPasswordForm({ ...newPasswordForm, password: e.target.value });
+                        setNewPassStrength(getPasswordStrength(e.target.value));
+                        setNewPassPwned({ checked: false, pwned: false, count: null });
+                      }} 
+                      onBlur={async () => {
+                        if (newPasswordForm.password) {
+                          const res = await checkPasswordPwned(newPasswordForm.password);
+                          setNewPassPwned({ checked: true, ...res });
+                        }
+                      }}
                       required 
                       minLength={6}
                       className="font-display" 
                     />
+                    <div className="space-y-1">
+                      <Progress value={newPassStrength.score} />
+                      <p className="text-xs text-muted-foreground">Força: {newPassStrength.label}</p>
+                      {newPassPwned.checked && newPassPwned.pwned && (
+                        <p className="text-xs text-destructive">Esta senha apareceu em {newPassPwned.count?.toLocaleString?.() ?? newPassPwned.count} vazamentos. Escolha outra.</p>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-new-password" className="font-display text-gray-700">Confirmar Nova Senha</Label>
@@ -525,7 +614,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
-                    disabled={isLoading}
+                    disabled={isLoading || newPassStrength.score < 50 || (newPassPwned.checked && newPassPwned.pwned)}
                   >
                     {isLoading ? 'Atualizando...' : 'Alterar Senha'}
                   </Button>
