@@ -112,29 +112,126 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, name?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: name || email
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: name || email
+          }
         }
+      });
+
+      if (error) {
+        // Log security event for failed signup
+        await supabase.rpc('log_security_event', {
+          user_uuid: null,
+          event_type_param: 'signup_failed',
+          event_description_param: `Failed signup attempt for ${email}: ${error.message}`,
+          risk_level_param: 'low',
+          metadata_param: { email, error_message: error.message }
+        });
+        
+        throw error;
       }
-    });
-    
-    return { error };
+      
+      // Log security event for successful signup
+      await supabase.rpc('log_security_event', {
+        user_uuid: data.user?.id,
+        event_type_param: 'signup_success',
+        event_description_param: `New user registered: ${email}`,
+        risk_level_param: 'low',
+        metadata_param: { email, name }
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      return { error };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    return { error };
+    try {
+      // Check rate limiting before attempting login
+      const { data: rateLimitCheck } = await supabase.rpc('check_rate_limit', {
+        email_param: email
+      });
+      
+      const rateLimit = rateLimitCheck as any;
+      if (rateLimit?.blocked) {
+        const error = new Error(rateLimit.reason);
+        
+        // Log blocked attempt
+        await supabase.rpc('log_login_attempt', {
+          email_param: email,
+          attempt_type_param: 'blocked',
+          metadata_param: { blocked_reason: rateLimit.reason }
+        });
+        
+        // Log security event
+        await supabase.rpc('log_security_event', {
+          user_uuid: null,
+          event_type_param: 'login_blocked',
+          event_description_param: `Login blocked for ${email}: ${rateLimit.reason}`,
+          risk_level_param: 'high',
+          metadata_param: { email, rate_limit_data: rateLimit }
+        });
+        
+        throw error;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        // Log failed attempt
+        await supabase.rpc('log_login_attempt', {
+          email_param: email,
+          attempt_type_param: 'failed',
+          metadata_param: { error_message: error.message }
+        });
+        
+        // Log security event for suspicious activity
+        const riskLevel = error.message.includes('Invalid login credentials') ? 'medium' : 'low';
+        await supabase.rpc('log_security_event', {
+          user_uuid: null,
+          event_type_param: 'login_failed',
+          event_description_param: `Failed login attempt for ${email}: ${error.message}`,
+          risk_level_param: riskLevel,
+          metadata_param: { email, error_message: error.message }
+        });
+        
+        throw error;
+      }
+      
+      // Log successful attempt
+      await supabase.rpc('log_login_attempt', {
+        email_param: email,
+        attempt_type_param: 'success',
+        metadata_param: { user_id: data.user?.id }
+      });
+      
+      // Log security event for successful login
+      await supabase.rpc('log_security_event', {
+        user_uuid: data.user?.id,
+        event_type_param: 'login_success',
+        event_description_param: `Successful login for ${email}`,
+        risk_level_param: 'low',
+        metadata_param: { email }
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      return { error };
+    }
   };
 
   const signOut = async () => {

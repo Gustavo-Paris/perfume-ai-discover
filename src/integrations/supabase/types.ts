@@ -711,6 +711,36 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempt_type: string
+          created_at: string
+          email: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          attempt_type: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          attempt_type?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       loyalty_tiers: {
         Row: {
           created_at: string
@@ -1556,6 +1586,42 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          created_at: string
+          event_description: string
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          risk_level: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_description: string
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          risk_level?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_description?: string
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          risk_level?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shipments: {
         Row: {
           created_at: string
@@ -2145,6 +2211,15 @@ export type Database = {
           stock_ml: number
         }[]
       }
+      check_rate_limit: {
+        Args: {
+          email_param: string
+          ip_param?: unknown
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: Json
+      }
       cleanup_expired_reservations: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -2263,12 +2338,34 @@ export type Database = {
         Args: { search_query: string }
         Returns: undefined
       }
+      log_login_attempt: {
+        Args: {
+          email_param: string
+          attempt_type_param: string
+          ip_param?: unknown
+          user_agent_param?: string
+          metadata_param?: Json
+        }
+        Returns: string
+      }
       log_perfume_interaction: {
         Args: {
           perfume_uuid: string
           interaction_type_param: string
           source_page_param?: string
           position_param?: number
+          metadata_param?: Json
+        }
+        Returns: string
+      }
+      log_security_event: {
+        Args: {
+          user_uuid: string
+          event_type_param: string
+          event_description_param: string
+          ip_address_param?: unknown
+          user_agent_param?: string
+          risk_level_param?: string
           metadata_param?: Json
         }
         Returns: string
