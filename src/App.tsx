@@ -7,6 +7,7 @@ import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useUserAnalytics } from "@/hooks/useUserAnalytics";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
+import { usePageView } from "@/hooks/usePageView";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { RecoveryProvider } from "./contexts/RecoveryContext";
@@ -58,6 +59,7 @@ const AppContent = () => {
   useAnalytics();
   useUserAnalytics();
   useOrderTracking();
+  usePageView();
   
   return (
     <div className="min-h-screen flex flex-col">
