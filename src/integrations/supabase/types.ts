@@ -945,6 +945,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_events: {
+        Row: {
+          amount: number | null
+          charge_id: string | null
+          created_at: string
+          currency: string | null
+          event_id: string
+          id: string
+          order_id: string | null
+          payment_intent_id: string | null
+          raw_event: Json
+          status: string | null
+          transaction_id: string | null
+          type: string
+        }
+        Insert: {
+          amount?: number | null
+          charge_id?: string | null
+          created_at?: string
+          currency?: string | null
+          event_id: string
+          id?: string
+          order_id?: string | null
+          payment_intent_id?: string | null
+          raw_event: Json
+          status?: string | null
+          transaction_id?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number | null
+          charge_id?: string | null
+          created_at?: string
+          currency?: string | null
+          event_id?: string
+          id?: string
+          order_id?: string | null
+          payment_intent_id?: string | null
+          raw_event?: Json
+          status?: string | null
+          transaction_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfume_comparisons: {
         Row: {
           created_at: string
