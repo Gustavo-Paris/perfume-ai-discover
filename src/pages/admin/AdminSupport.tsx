@@ -24,6 +24,8 @@ export default function AdminSupport() {
   const [macros, setMacros] = useState<{ id: string; title: string; content: string; category?: string }[]>([]);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
+  const [admins, setAdmins] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   // Carregar conversas
   const loadConversations = async () => {
@@ -83,6 +85,45 @@ export default function AdminSupport() {
     };
     fetchMacros();
   }, []);
+
+  // Carregar lista de administradores para transferência
+  const fetchAdmins = async () => {
+    try {
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      const adminIds = (roles || []).map((r: any) => r.user_id);
+      if (adminIds.length === 0) { setAdmins([]); return; }
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', adminIds);
+      setAdmins((profiles as any) || []);
+    } catch (e) {
+      console.error('Error loading admins', e);
+    }
+  };
+
+  useEffect(() => { fetchAdmins(); }, []);
+
+  const transferToAdmin = async (adminId: string) => {
+    if (!selectedConversation) return;
+    try {
+      setIsTransferring(true);
+      const nextStatus = selectedConversation.status === 'open' ? 'in_progress' : selectedConversation.status;
+      await supabase
+        .from('support_conversations')
+        .update({ assigned_to: adminId, status: nextStatus })
+        .eq('id', selectedConversation.id);
+      setSelectedConversation(prev => prev ? { ...prev, assigned_to: adminId, status: nextStatus as any } : prev);
+      toast({ title: 'Transferida', description: 'Conversa transferida para o atendente selecionado.' });
+    } catch (e) {
+      toast({ title: 'Erro', description: 'Não foi possível transferir a conversa.', variant: 'destructive' });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
 
   // Enviar mensagem como agente
   const sendMessage = async () => {
@@ -353,45 +394,58 @@ export default function AdminSupport() {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2 flex-wrap justify-end">
-                    <Button
-                      variant="secondary"
-                      onClick={assignToMe}
-                      disabled={isAssigning || selectedConversation.assigned_to === user?.id}
-                    >
-                      {selectedConversation.assigned_to === user?.id ? 'Atribuída a você' : 'Atribuir a mim'}
-                    </Button>
+                    <div className="flex gap-2 flex-wrap justify-end">
+                      <Button
+                        variant="secondary"
+                        onClick={assignToMe}
+                        disabled={isAssigning || selectedConversation.assigned_to === user?.id}
+                      >
+                        {selectedConversation.assigned_to === user?.id ? 'Atribuída a você' : 'Atribuir a mim'}
+                      </Button>
 
-                    <Select
-                      value={selectedConversation.priority}
-                      onValueChange={(v: any) => updateConversationPriority(v)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Prioridade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Baixa</SelectItem>
-                        <SelectItem value="medium">Média</SelectItem>
-                        <SelectItem value="high">Alta</SelectItem>
-                        <SelectItem value="urgent">Urgente</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <Select onValueChange={(id) => transferToAdmin(id)}>
+                        <SelectTrigger className="w-56" disabled={isTransferring}>
+                          <SelectValue placeholder="Transferir para..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {admins.map((a) => (
+                            <SelectItem key={a.id} value={a.id} disabled={a.id === selectedConversation.assigned_to}>
+                              {a.name || a.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                    <Select
-                      value={selectedConversation.status}
-                      onValueChange={updateConversationStatus}
-                    >
-                      <SelectTrigger className="w-36">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open">Aberta</SelectItem>
-                        <SelectItem value="in_progress">Em andamento</SelectItem>
-                        <SelectItem value="resolved">Resolvida</SelectItem>
-                        <SelectItem value="closed">Fechada</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <Select
+                        value={selectedConversation.priority}
+                        onValueChange={(v: any) => updateConversationPriority(v)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Prioridade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Baixa</SelectItem>
+                          <SelectItem value="medium">Média</SelectItem>
+                          <SelectItem value="high">Alta</SelectItem>
+                          <SelectItem value="urgent">Urgente</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Select
+                        value={selectedConversation.status}
+                        onValueChange={updateConversationStatus}
+                      >
+                        <SelectTrigger className="w-36">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Aberta</SelectItem>
+                          <SelectItem value="in_progress">Em andamento</SelectItem>
+                          <SelectItem value="resolved">Resolvida</SelectItem>
+                          <SelectItem value="closed">Fechada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                 </div>
               </CardHeader>
 

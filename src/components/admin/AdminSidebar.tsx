@@ -69,6 +69,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
       { title: 'Reviews', url: '/admin/reviews', icon: MessageSquare },
       { title: 'Afiliados', url: '/admin/affiliates', icon: UserPlus },
       { title: 'Suporte', url: '/admin/support', icon: MessageCircle },
+      { title: 'Macros de Suporte', url: '/admin/support/macros', icon: Megaphone },
     ]
   },
   { title: 'Configurações', url: '/admin/config', icon: Settings },
