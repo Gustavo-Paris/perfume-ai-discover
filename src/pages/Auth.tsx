@@ -137,10 +137,10 @@ const Auth = () => {
 
     // Strength check
     const strength = getPasswordStrength(signupForm.password);
-    if (strength.score < 50) {
+    if (strength.score < 60) {
       toast({
-        title: "Senha fraca",
-        description: "Use ao menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos.",
+        title: "Senha muito fraca",
+        description: "Use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos especiais.",
         variant: "destructive"
       });
       return;
@@ -252,10 +252,10 @@ const Auth = () => {
 
     // Strength check
     const strength = getPasswordStrength(newPasswordForm.password);
-    if (strength.score < 50) {
+    if (strength.score < 60) {
       toast({
-        title: "Senha fraca",
-        description: "Use ao menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos.",
+        title: "Senha muito fraca",
+        description: "Use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos especiais.",
         variant: "destructive"
       });
       return;
@@ -492,10 +492,10 @@ const Auth = () => {
                       className="font-display" 
                     />
                     <div className="space-y-1">
-                      <Progress value={signupStrength.score} />
-                      <p className="text-xs text-muted-foreground">Força: {signupStrength.label}</p>
+                      <Progress value={signupStrength.score} className={signupStrength.score >= 60 ? "progress-strong" : "progress-weak"} />
+                      <p className="text-xs text-muted-foreground">Força da senha: {signupStrength.label} ({signupStrength.score}/100)</p>
                       {signupPwned.checked && signupPwned.pwned && (
-                        <p className="text-xs text-destructive">Esta senha apareceu em {signupPwned.count?.toLocaleString?.() ?? signupPwned.count} vazamentos. Escolha outra.</p>
+                        <p className="text-xs text-destructive">⚠️ Esta senha foi vazada em {signupPwned.count?.toLocaleString?.() ?? signupPwned.count} ataques. Use outra senha.</p>
                       )}
                     </div>
                   </div>
@@ -515,7 +515,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
-                    disabled={isLoading || signupStrength.score < 50 || (signupPwned.checked && signupPwned.pwned)}
+                    disabled={isLoading || signupStrength.score < 60 || (signupPwned.checked && signupPwned.pwned)}
                   >
                     {isLoading ? 'Cadastrando...' : 'Cadastrar'}
                   </Button>
@@ -591,10 +591,10 @@ const Auth = () => {
                       className="font-display" 
                     />
                     <div className="space-y-1">
-                      <Progress value={newPassStrength.score} />
-                      <p className="text-xs text-muted-foreground">Força: {newPassStrength.label}</p>
+                      <Progress value={newPassStrength.score} className={newPassStrength.score >= 60 ? "progress-strong" : "progress-weak"} />
+                      <p className="text-xs text-muted-foreground">Força da senha: {newPassStrength.label} ({newPassStrength.score}/100)</p>
                       {newPassPwned.checked && newPassPwned.pwned && (
-                        <p className="text-xs text-destructive">Esta senha apareceu em {newPassPwned.count?.toLocaleString?.() ?? newPassPwned.count} vazamentos. Escolha outra.</p>
+                        <p className="text-xs text-destructive">⚠️ Esta senha foi vazada em {newPassPwned.count?.toLocaleString?.() ?? newPassPwned.count} ataques. Use outra senha.</p>
                       )}
                     </div>
                   </div>
@@ -614,7 +614,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
-                    disabled={isLoading || newPassStrength.score < 50 || (newPassPwned.checked && newPassPwned.pwned)}
+                    disabled={isLoading || newPassStrength.score < 60 || (newPassPwned.checked && newPassPwned.pwned)}
                   >
                     {isLoading ? 'Atualizando...' : 'Alterar Senha'}
                   </Button>

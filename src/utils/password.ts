@@ -11,11 +11,11 @@ export const sha1Hex = async (input: string): Promise<string> => {
 
 export type PasswordStrength = {
   score: number; // 0-100
-  label: 'Fraca' | 'Média' | 'Forte';
+  label: 'Muito Fraca' | 'Fraca' | 'Média' | 'Forte' | 'Muito Forte';
 };
 
 export const getPasswordStrength = (password: string): PasswordStrength => {
-  if (!password) return { score: 0, label: 'Fraca' };
+  if (!password) return { score: 0, label: 'Muito Fraca' };
   let score = 0;
 
   const length = password.length;
@@ -30,9 +30,11 @@ export const getPasswordStrength = (password: string): PasswordStrength => {
 
   score = Math.min(100, score);
 
-  let label: PasswordStrength['label'] = 'Fraca';
-  if (score >= 70) label = 'Forte';
+  let label: PasswordStrength['label'] = 'Muito Fraca';
+  if (score >= 80) label = 'Muito Forte';
+  else if (score >= 60) label = 'Forte';
   else if (score >= 40) label = 'Média';
+  else if (score >= 20) label = 'Fraca';
 
   return { score, label };
 };
