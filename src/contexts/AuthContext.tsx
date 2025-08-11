@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-
+import { getPasswordStrength, checkPasswordPwned } from '@/utils/password';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -251,21 +251,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updatePassword = async (password: string) => {
-    
-    
     try {
+      // 1) Check strength
+      const strength = getPasswordStrength(password);
+      if (strength.score < 60) {
+        return { error: new Error('Senha fraca. Use pelo menos 8 caracteres com maiúsculas, números e símbolos.') };
+      }
+
+      // 2) Check if password is pwned
+      const pwned = await checkPasswordPwned(password);
+      if (pwned.pwned) {
+        const countText = pwned.count ? ` (${pwned.count} vazamentos conhecidos)` : '';
+        return { error: new Error(`Esta senha apareceu em vazamentos${countText}. Por favor, escolha outra.`) };
+      }
+
+      // 3) Proceed to update in Supabase
       const { error } = await supabase.auth.updateUser({
-        password: password
+        password,
       });
-      
-      
+
       return { error };
     } catch (err) {
       console.error('Exception in updatePassword:', err);
       return { error: err };
     }
   };
-
   const value = {
     user,
     session,
