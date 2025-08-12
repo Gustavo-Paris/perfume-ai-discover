@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -151,12 +152,14 @@ serve(async (req) => {
           user_id: user?.id || 'guest',
           user_email: customerEmail,
           item_count: items.length.toString(),
+          ...(order_draft_id ? { order_draft_id } : {}),
         }
       },
       metadata: {
         user_id: user?.id || 'guest',
         user_email: customerEmail,
         checkout_type: 'stripe_checkout',
+        ...(order_draft_id ? { order_draft_id } : {}),
       }
     });
 
@@ -166,7 +169,8 @@ serve(async (req) => {
     });
 
     // Optionally create order draft in Supabase for tracking
-    if (user?.id) {
+    // Avoid duplicate orders when we already have an order_draft_id (webhook/confirm-order will finalize it)
+    if (user?.id && !order_draft_id) {
       try {
         const supabaseService = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',

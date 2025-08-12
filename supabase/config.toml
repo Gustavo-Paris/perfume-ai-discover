@@ -1,3 +1,4 @@
+
 project_id = "vjlfwmwhvxlicykqetnk"
 
 [functions.recommend]
@@ -43,4 +44,12 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.password-pwned-check]
+verify_jwt = false
+
+# New: expose the webhook publicly (Stripe won't send JWT)
+[functions.stripe-webhook]
+verify_jwt = false
+
+# Allow webhook to call confirm-order without JWT
+[functions.confirm-order]
 verify_jwt = false
