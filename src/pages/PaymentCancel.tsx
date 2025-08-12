@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 const PaymentCancel = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const provider = searchParams.get('provider');
+  const paymentMethod = searchParams.get('payment_method');
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -23,16 +23,11 @@ const PaymentCancel = () => {
         <CardContent className="space-y-6 text-center">
           <div className="space-y-2">
             <p className="text-muted-foreground">
-              Seu pagamento {provider === 'stripe' ? 'no Stripe ' : ''}foi cancelado ou não foi processado com sucesso.
+              Seu pagamento foi cancelado ou não foi processado com sucesso.
             </p>
             <p className="text-sm text-muted-foreground">
               Não se preocupe, nenhuma cobrança será realizada e seus itens continuam no carrinho.
             </p>
-            {provider === 'stripe' && (
-              <p className="text-sm text-blue-600">
-                💡 Dica: Você pode tentar outras opções de pagamento como PIX ou cartão nacional.
-              </p>
-            )}
           </div>
 
           <div className="space-y-3">

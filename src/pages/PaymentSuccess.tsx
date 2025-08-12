@@ -20,8 +20,7 @@ const PaymentSuccess = () => {
   const transactionId = searchParams.get('transaction_id');
   const paymentMethod = searchParams.get('payment_method');
   const orderDraftId = searchParams.get('order_draft_id');
-  const sessionId = searchParams.get('session_id'); // Stripe session ID
-  const provider = searchParams.get('provider'); // stripe or modo_bank
+  const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     if (!user) {
@@ -30,7 +29,7 @@ const PaymentSuccess = () => {
     }
 
     confirmOrder();
-  }, [user, navigate, transactionId, paymentMethod, orderDraftId, sessionId, provider]);
+  }, [user, navigate, transactionId, paymentMethod, orderDraftId, sessionId]);
 
   const confirmOrder = async () => {
     const paymentTxnId = sessionId || transactionId;
@@ -47,7 +46,7 @@ const PaymentSuccess = () => {
           orderDraftId,
           paymentData: {
             transaction_id: paymentTxnId,
-            payment_method: provider === 'stripe' ? 'credit_card' : (paymentMethod || 'credit_card'),
+            payment_method: paymentMethod === 'pix' ? 'pix' : 'credit_card',
             status: 'paid'
           }
         }
@@ -123,13 +122,7 @@ const PaymentSuccess = () => {
                   <div className="flex justify-between">
                     <span>Pagamento:</span>
                     <span className="font-medium">
-                      {orderData?.payment_method === 'pix'
-                        ? 'PIX'
-                        : provider === 'stripe'
-                          ? 'Cartão (Stripe)'
-                          : paymentMethod === 'pix'
-                            ? 'PIX'
-                            : 'Cartão (Modo Bank)'}
+                      {(orderData?.payment_method || paymentMethod) === 'pix' ? 'PIX' : 'Cartão de Crédito'}
                     </span>
                   </div>
                   <div className="flex justify-between">
