@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
+import { CreditCard, QrCode, ArrowLeft, Loader2, MapPin, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
+// Keep icons referenced to avoid runtime issues during HMR
+void [MapPin, Globe];
 
 interface PaymentStepProps {
   onBack: () => void;
