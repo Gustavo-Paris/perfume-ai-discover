@@ -21,6 +21,7 @@ interface CheckoutRequest {
   items: CheckoutItem[];
   user_email?: string;
   order_draft_id?: string;
+  payment_method?: 'pix' | 'card';
 }
 
 const logStep = (step: string, details?: any) => {
@@ -72,9 +73,10 @@ serve(async (req) => {
       logStep("No authentication - guest checkout");
     }
 
-    // Parse request body
-    const { items, user_email, order_draft_id }: CheckoutRequest = await req.json();
-    logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_draft_id });
+// Parse request body
+const { items, user_email, order_draft_id, payment_method }: CheckoutRequest = await req.json();
+const method: 'pix' | 'card' = payment_method === 'pix' ? 'pix' : 'card';
+logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_draft_id, method });
 
     if (!items || items.length === 0) {
       throw new Error('Nenhum item no carrinho');
@@ -129,10 +131,10 @@ serve(async (req) => {
     const totalAmount = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
     logStep("Total amount calculated", { total: totalAmount, currency: 'BRL' });
 
-    // Get origin for redirect URLs
-    const origin = req.headers.get('origin') || 'https://localhost:5173';
-    const successUrl = `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&provider=stripe${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
-    const cancelUrl = `${origin}/payment-cancel?provider=stripe`;
+// Get origin for redirect URLs
+const origin = req.headers.get('origin') || 'https://localhost:5173';
+const successUrl = `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
+const cancelUrl = `${origin}/payment-cancel?payment_method=${method}`;
     
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -142,7 +144,7 @@ serve(async (req) => {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      payment_method_types: ['card', 'pix'],
+      payment_method_types: method === 'pix' ? ['pix'] : ['card'],
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: ['BR'],
@@ -152,6 +154,7 @@ serve(async (req) => {
           user_id: user?.id || 'guest',
           user_email: customerEmail,
           item_count: items.length.toString(),
+          selected_payment_method: method,
           ...(order_draft_id ? { order_draft_id } : {}),
         }
       },
@@ -159,6 +162,7 @@ serve(async (req) => {
         user_id: user?.id || 'guest',
         user_email: customerEmail,
         checkout_type: 'stripe_checkout',
+        selected_payment_method: method,
         ...(order_draft_id ? { order_draft_id } : {}),
       }
     });
@@ -182,7 +186,7 @@ serve(async (req) => {
           user_id: user.id,
           stripe_session_id: session.id,
           total_amount: totalAmount,
-          payment_method: 'credit_card',
+          payment_method: method === 'pix' ? 'pix' : 'credit_card',
           payment_status: 'pending',
           status: 'pending',
           subtotal: totalAmount,
