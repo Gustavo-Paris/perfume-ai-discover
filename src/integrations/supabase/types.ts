@@ -900,12 +900,14 @@ export type Database = {
           created_at: string
           id: string
           order_number: string
+          payment_intent_id: string | null
           payment_method: string
           payment_status: string
           shipping_cost: number
           shipping_deadline: number | null
           shipping_service: string | null
           status: string
+          stripe_session_id: string | null
           subtotal: number
           total_amount: number
           transaction_id: string | null
@@ -917,12 +919,14 @@ export type Database = {
           created_at?: string
           id?: string
           order_number: string
+          payment_intent_id?: string | null
           payment_method: string
           payment_status?: string
           shipping_cost?: number
           shipping_deadline?: number | null
           shipping_service?: string | null
           status?: string
+          stripe_session_id?: string | null
           subtotal: number
           total_amount: number
           transaction_id?: string | null
@@ -934,12 +938,14 @@ export type Database = {
           created_at?: string
           id?: string
           order_number?: string
+          payment_intent_id?: string | null
           payment_method?: string
           payment_status?: string
           shipping_cost?: number
           shipping_deadline?: number | null
           shipping_service?: string | null
           status?: string
+          stripe_session_id?: string | null
           subtotal?: number
           total_amount?: number
           transaction_id?: string | null
