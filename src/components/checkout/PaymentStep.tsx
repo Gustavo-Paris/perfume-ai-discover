@@ -50,10 +50,8 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
       if (error) throw error;
 
       if (data?.success && data?.checkout_url) {
-        window.open(data.checkout_url, '_blank');
-        toast({ title: 'Redirecionando...', description: 'Abrindo checkout de pagamento em nova aba.' });
-        // Opcional: notificar passo seguinte, quem finalizará é a página de sucesso
-        onSuccess({ redirected: true, orderDraftId });
+        window.location.href = data.checkout_url;
+        toast({ title: 'Redirecionando...', description: 'Indo para o pagamento com segurança.' });
       } else {
         throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
       }

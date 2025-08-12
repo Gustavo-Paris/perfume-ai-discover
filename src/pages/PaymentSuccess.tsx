@@ -15,6 +15,9 @@ const PaymentSuccess = () => {
   const { user } = useAuth();
   const { clearCart } = useCart();
   const [orderData, setOrderData] = useState<any>(null);
+  const [status, setStatus] = useState<'verifying' | 'pending' | 'success' | 'error'>('verifying');
+  const [attempts, setAttempts] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const transactionId = searchParams.get('transaction_id');
@@ -31,11 +34,13 @@ const PaymentSuccess = () => {
     confirmOrder();
   }, [user, navigate, transactionId, paymentMethod, orderDraftId, sessionId]);
 
-  const confirmOrder = async () => {
+  const confirmOrder = async (silent = false) => {
     const paymentTxnId = sessionId || transactionId;
     const hasValid = orderDraftId && paymentTxnId;
 
     if (!hasValid) {
+      setErrorMessage('Dados de pagamento ausentes.');
+      setStatus('error');
       setLoading(false);
       return;
     }
@@ -47,7 +52,6 @@ const PaymentSuccess = () => {
           paymentData: {
             transaction_id: paymentTxnId,
             payment_method: paymentMethod === 'pix' ? 'pix' : 'credit_card',
-            status: 'paid'
           }
         }
       });
@@ -55,30 +59,56 @@ const PaymentSuccess = () => {
       if (error) throw error;
 
       if (data?.success && data.order) {
+        const paid = (data.order.payment_status || data.order.status) === 'paid';
         setOrderData(data.order);
 
-        // Minimal purchase tracking
-        trackPurchase({
-          transaction_id: paymentTxnId || undefined,
-          value: data.order.total_amount,
-          items: []
-        });
-
-        await clearCart();
+        if (paid) {
+          // Track purchase only when really paid
+          trackPurchase({
+            transaction_id: paymentTxnId || undefined,
+            value: data.order.total_amount,
+            items: []
+          });
+          await clearCart();
+          setStatus('success');
+        } else {
+          setStatus('pending');
+        }
       } else {
         throw new Error(data?.error || 'Erro ao confirmar pedido');
       }
     } catch (error) {
       console.error('Error confirming order:', error);
-      setOrderData({
-        id: paymentTxnId,
-        order_number: 'N/A',
-        status: 'paid',
-        total_amount: searchParams.get('total') || '0'
-      });
+      if (sessionId) {
+        // Provavelmente ainda processando no Stripe
+        setStatus('pending');
+      } else {
+        setStatus('error');
+        setErrorMessage('Não foi possível confirmar o pagamento.');
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (status !== 'pending') return;
+    const id = setInterval(() => {
+      setAttempts((a) => a + 1);
+      confirmOrder(true);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [status]);
+
+  useEffect(() => {
+    if (status === 'pending' && attempts >= 24) {
+      setStatus('error');
+      setErrorMessage('Tempo esgotado para confirmação do pagamento.');
+    }
+  }, [attempts, status]);
+
+  const handleManualRefresh = () => {
+    confirmOrder(true);
   };
 
   if (loading) {
@@ -89,6 +119,84 @@ const PaymentSuccess = () => {
             <div className="text-center">
               <Package className="mx-auto h-12 w-12 text-blue-600 animate-pulse mb-4" />
               <p className="text-gray-600">Confirmando seu pedido...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === 'pending') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+              <Package className="h-8 w-8 text-yellow-600 animate-pulse" />
+            </div>
+            <CardTitle className="font-playfair text-2xl text-yellow-800">
+              Aguardando confirmação do pagamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Estamos verificando seu pagamento. Isso pode levar alguns instantes.
+              {(paymentMethod === 'pix') ? ' No PIX, a confirmação pode levar alguns minutos.' : ''}
+            </p>
+            {orderData && (
+              <div className="p-4 bg-gray-50 rounded-lg text-left">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Pedido:</span>
+                    <span className="font-medium">#{orderData.order_number || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Total:</span>
+                    <span className="font-medium">
+                      R$ {Number(orderData.total_amount || 0).toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <Button onClick={handleManualRefresh} className="w-full">
+                Atualizar agora
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/')} className="w-full">
+                Voltar à loja
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+              <Package className="h-8 w-8 text-red-600" />
+            </div>
+            <CardTitle className="font-playfair text-2xl text-red-800">
+              Não foi possível confirmar o pagamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              {errorMessage || 'Tente novamente em instantes ou retorne ao checkout.'}
+            </p>
+            <div className="space-y-3">
+              <Button onClick={() => navigate('/checkout')} className="w-full">
+                Tentar novamente
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/carrinho')} className="w-full">
+                Voltar ao carrinho
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -167,6 +275,7 @@ const PaymentSuccess = () => {
       </Card>
     </div>
   );
+
 };
 
 export default PaymentSuccess;

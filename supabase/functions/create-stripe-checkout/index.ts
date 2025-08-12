@@ -134,7 +134,7 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
 // Get origin for redirect URLs
 const origin = req.headers.get('origin') || 'https://localhost:5173';
 const successUrl = `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
-const cancelUrl = `${origin}/payment-cancel?payment_method=${method}`;
+const cancelUrl = `${origin}/payment-cancel?payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
     
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
