@@ -31,6 +31,15 @@ const PaymentSuccess = () => {
       return;
     }
 
+    // Ensure required params are present
+    const paymentTxnId = sessionId || transactionId;
+    if (!orderDraftId || !paymentTxnId) {
+      setErrorMessage('Dados de pagamento ausentes.');
+      setStatus('error');
+      setLoading(false);
+      return;
+    }
+
     confirmOrder();
   }, [user, navigate, transactionId, paymentMethod, orderDraftId, sessionId]);
 
@@ -110,6 +119,13 @@ const PaymentSuccess = () => {
   const handleManualRefresh = () => {
     confirmOrder(true);
   };
+
+  useEffect(() => {
+    if (status === 'error' && errorMessage === 'Dados de pagamento ausentes.') {
+      const t = setTimeout(() => navigate('/checkout'), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [status, errorMessage, navigate]);
 
   if (loading) {
     return (

@@ -11,7 +11,7 @@ import { Address, OrderDraft, ShippingQuote } from '@/types';
 import { AddressStep } from '@/components/checkout/AddressStep';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
-import { PixPayment } from '@/components/checkout/PixPayment';
+
 import { PointsRedemption } from '@/components/checkout/PointsRedemption';
 import { toast } from '@/hooks/use-toast';
 import { trackBeginCheckout } from '@/utils/analytics';
@@ -26,7 +26,7 @@ const Checkout = () => {
   const [orderDraft, setOrderDraft] = useState<OrderDraft | null>(null);
   const [shippingQuotes, setShippingQuotes] = useState<ShippingQuote[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingQuote | null>(null);
-  const [paymentData, setPaymentData] = useState<any>(null);
+  
   const [loading, setLoading] = useState(false);
   const [pointsUsed, setPointsUsed] = useState(0);
   const [pointsDiscount, setPointsDiscount] = useState(0);
@@ -206,33 +206,7 @@ const Checkout = () => {
     }
   };
 
-  const handlePaymentSuccess = (data: any) => {
-    setPaymentData(data);
-    
-    if (data.payment_method === 'pix') {
-      // Show PIX QR code if it's a PIX payment
-      setCurrentStep(4); // PIX display step
-    } else {
-      // Redirect to success page for credit card
-      const params = new URLSearchParams({
-        transaction_id: data.transaction_id,
-        payment_method: data.payment_method,
-        order_draft_id: data.orderDraftId,
-        total: getTotalWithShipping().toFixed(2)
-      });
-      navigate(`/payment-success?${params.toString()}`);
-    }
-  };
 
-  const handlePixSuccess = () => {
-    const params = new URLSearchParams({
-      transaction_id: paymentData.transaction_id,
-      payment_method: paymentData.payment_method,
-      order_draft_id: paymentData.orderDraftId,
-      total: getTotalWithShipping().toFixed(2)
-    });
-    navigate(`/payment-success?${params.toString()}`);
-  };
 
   const getTotalWithShipping = () => {
     return getTotal() + (selectedShipping?.price || 0) - pointsDiscount;
@@ -331,21 +305,13 @@ const Checkout = () => {
             {currentStep === 3 && orderDraft && (
               <PaymentStep
                 onBack={() => setCurrentStep(2)}
-                onSuccess={handlePaymentSuccess}
+                onSuccess={() => {}}
                 orderDraftId={orderDraft.id}
                 totalAmount={getTotalWithShipping()}
                 loading={loading}
               />
             )}
 
-            {currentStep === 4 && paymentData?.payment_method === 'pix' && (
-              <PixPayment
-                qrCode={paymentData.qr_code}
-                qrCodeUrl={paymentData.qr_code_url}
-                expiresAt={paymentData.expires_at}
-                onSuccess={handlePixSuccess}
-              />
-            )}
           </div>
 
           {/* Order Summary */}
