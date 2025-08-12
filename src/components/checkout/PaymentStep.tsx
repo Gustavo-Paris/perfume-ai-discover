@@ -44,6 +44,8 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
           items: checkoutItems,
           order_draft_id: orderDraftId,
           payment_method: paymentMethod, // 'pix' | 'card'
+          success_url: `${window.location.origin}/payment-success`,
+          cancel_url: `${window.location.origin}/payment-cancel`,
         },
       });
 

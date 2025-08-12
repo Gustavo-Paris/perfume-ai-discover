@@ -22,6 +22,8 @@ interface CheckoutRequest {
   user_email?: string;
   order_draft_id?: string;
   payment_method?: 'pix' | 'card';
+  success_url?: string;
+  cancel_url?: string;
 }
 
 const logStep = (step: string, details?: any) => {
@@ -74,7 +76,7 @@ serve(async (req) => {
     }
 
 // Parse request body
-const { items, user_email, order_draft_id, payment_method }: CheckoutRequest = await req.json();
+const { items, user_email, order_draft_id, payment_method, success_url, cancel_url }: CheckoutRequest = await req.json();
 const method: 'pix' | 'card' = payment_method === 'pix' ? 'pix' : 'card';
 logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_draft_id, method });
 
@@ -109,7 +111,7 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
     }
 
     // Prepare line items for Stripe using real perfume prices
-    const lineItems = items.map(item => ({
+    let lineItems = items.map(item => ({
       price_data: {
         currency: 'brl',
         product_data: {
@@ -127,14 +129,107 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
 
     logStep("Line items prepared", { count: lineItems.length });
 
-    // Calculate totals for logging
-    const totalAmount = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
-    logStep("Total amount calculated", { total: totalAmount, currency: 'BRL' });
+    // Enrich with shipping and prefill address from order draft
+    let shippingCost = 0;
+    let shippingService: string | null = null;
+    let addressData: any = null;
 
-// Get origin for redirect URLs
-const origin = req.headers.get('origin') || 'https://localhost:5173';
-const successUrl = `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
-const cancelUrl = `${origin}/payment-cancel?payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
+    if (order_draft_id && user?.id) {
+      // Use service role to read protected tables securely
+      const supabaseService = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+
+      const { data: draft, error: draftErr } = await supabaseService
+        .from('order_drafts')
+        .select('id, shipping_cost, shipping_service, address_id')
+        .eq('id', order_draft_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (draftErr) {
+        logStep("Warning: failed to load order draft", { message: draftErr.message });
+      } else if (draft) {
+        shippingCost = Number(draft.shipping_cost || 0);
+        shippingService = draft.shipping_service || null;
+        if (draft.address_id) {
+          const { data: addr, error: addrErr } = await supabaseService
+            .from('addresses')
+            .select('*')
+            .eq('id', draft.address_id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          if (!addrErr && addr) {
+            addressData = addr;
+            logStep("Address loaded for prefill", { addressId: addr.id });
+          }
+        }
+      }
+    }
+
+    // Add shipping as a line item when applicable
+    if (shippingCost > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'brl',
+          product_data: {
+            name: `Frete${shippingService ? ` - ${shippingService}` : ''}`,
+          },
+          unit_amount: Math.round(shippingCost * 100),
+        },
+        quantity: 1,
+      });
+      logStep("Shipping line item added", { shippingCost, shippingService });
+    }
+
+    // Calculate totals for logging (now including shipping)
+    const itemsTotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+    const totalAmount = itemsTotal + shippingCost;
+    logStep("Total amount calculated", { itemsTotal, shippingCost, total: totalAmount, currency: 'BRL' });
+
+    // Update or create Stripe customer with address to prefill checkout
+    if (addressData) {
+      const customerPayload: any = {
+        address: {
+          line1: `${addressData.street}, ${addressData.number}`,
+          line2: `${addressData.district}${addressData.complement ? ' - ' + addressData.complement : ''}`,
+          city: addressData.city,
+          state: addressData.state,
+          postal_code: addressData.cep,
+          country: (addressData.country || 'BR'),
+        },
+        name: addressData.name || undefined,
+      };
+      try {
+        if (customerId) {
+          await stripe.customers.update(customerId, customerPayload);
+          logStep("Stripe customer updated with address", { customerId });
+        } else {
+          const newCustomer = await stripe.customers.create({
+            email: customerEmail,
+            ...customerPayload,
+          });
+          customerId = newCustomer.id;
+          logStep("Stripe customer created with address", { customerId });
+        }
+      } catch (e) {
+        logStep("Warning: customer address prefill failed", { message: (e as Error).message });
+      }
+    }
+
+    // Get origin for redirect URLs and build success/cancel
+    const origin = req.headers.get('origin') || 'http://localhost:5173';
+    let successUrl = success_url || `${origin}/payment-success`;
+    let cancelUrl = cancel_url || `${origin}/payment-cancel`;
+    if (!successUrl.includes('{CHECKOUT_SESSION_ID}')) {
+      const sep = successUrl.includes('?') ? '&' : '?';
+      successUrl = `${successUrl}${sep}session_id={CHECKOUT_SESSION_ID}`;
+    }
+    successUrl = `${successUrl}&payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
+    const sep2 = cancelUrl.includes('?') ? '&' : '?';
+    cancelUrl = `${cancelUrl}${sep2}payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
     
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
