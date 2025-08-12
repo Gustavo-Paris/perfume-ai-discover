@@ -489,6 +489,7 @@ export type Database = {
           created_at: string
           id: string
           recommended_perfumes: Json | null
+          session_id: string | null
           session_status: string
           updated_at: string
           user_id: string | null
@@ -499,6 +500,7 @@ export type Database = {
           created_at?: string
           id?: string
           recommended_perfumes?: Json | null
+          session_id?: string | null
           session_status?: string
           updated_at?: string
           user_id?: string | null
@@ -509,6 +511,7 @@ export type Database = {
           created_at?: string
           id?: string
           recommended_perfumes?: Json | null
+          session_id?: string | null
           session_status?: string
           updated_at?: string
           user_id?: string | null
