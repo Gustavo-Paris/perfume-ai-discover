@@ -2436,6 +2436,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      process_affiliate_referral: {
+        Args: { affiliate_code: string; order_id: string; order_total: number }
+        Returns: boolean
+      }
       trigger_email_notification: {
         Args: { notification_type: string; record_id: string }
         Returns: undefined

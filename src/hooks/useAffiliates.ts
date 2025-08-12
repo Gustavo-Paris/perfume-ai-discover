@@ -133,51 +133,19 @@ export const useAffiliates = () => {
     orderTotal: number
   ): Promise<boolean> => {
     try {
-      // Buscar afiliado pelo código
-      const { data: affiliateData, error: affiliateError } = await supabase
-        .from('affiliates')
-        .select('*')
-        .eq('affiliate_code', affiliateCode)
-        .eq('status', 'active')
-        .single();
+      // Processar via função RPC segura (evita expor tabela de afiliados)
+      const { data, error } = await supabase.rpc('process_affiliate_referral', {
+        affiliate_code: affiliateCode,
+        order_id: orderId,
+        order_total: orderTotal
+      });
 
-      if (affiliateError || !affiliateData) {
-        console.error('Affiliate not found:', affiliateCode);
+      if (error) {
+        console.error('Error processing affiliate referral via RPC:', error);
         return false;
       }
 
-      // Calcular comissão
-      const commissionAmount = orderTotal * affiliateData.commission_rate;
-
-      // Criar referral
-      const { error: referralError } = await supabase
-        .from('affiliate_referrals')
-        .insert({
-          affiliate_id: affiliateData.id,
-          order_id: orderId,
-          commission_amount: commissionAmount,
-          status: 'pending'
-        });
-
-      if (referralError) {
-        console.error('Error creating referral:', referralError);
-        return false;
-      }
-
-      // Atualizar totais do afiliado
-      const { error: updateError } = await supabase
-        .from('affiliates')
-        .update({
-          total_referrals: affiliateData.total_referrals + 1,
-          total_earnings: affiliateData.total_earnings + commissionAmount
-        })
-        .eq('id', affiliateData.id);
-
-      if (updateError) {
-        console.error('Error updating affiliate totals:', updateError);
-      }
-
-      return true;
+      return data === true;
     } catch (error) {
       console.error('Error processing affiliate referral:', error);
       return false;
