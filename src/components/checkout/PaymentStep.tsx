@@ -50,8 +50,21 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
       if (error) throw error;
 
       if (data?.success && data?.checkout_url) {
-        window.location.href = data.checkout_url;
-        toast({ title: 'Redirecionando...', description: 'Indo para o pagamento com segurança.' });
+        const url = data.checkout_url as string;
+        const newTab = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!newTab) {
+          // Fallback para navegação no topo se o popup for bloqueado
+          try {
+            if (window.top) {
+              window.top.location.href = url;
+            } else {
+              window.location.href = url;
+            }
+          } catch {
+            window.location.href = url;
+          }
+        }
+        toast({ title: 'Redirecionando...', description: 'Abrindo o checkout seguro da Stripe em nova aba.' });
       } else {
         throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
       }
