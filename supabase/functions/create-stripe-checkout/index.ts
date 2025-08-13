@@ -191,28 +191,54 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
 
     // Update or create Stripe customer with address to prefill checkout
     if (addressData) {
+      logStep('Address data for customer prefill', { 
+        street: addressData.street,
+        number: addressData.number,
+        city: addressData.city,
+        state: addressData.state,
+        cep: addressData.cep,
+        district: addressData.district,
+        complement: addressData.complement,
+        name: addressData.name
+      });
+      
+      // Validate required address fields
+      if (!addressData.street || !addressData.number || !addressData.city || !addressData.state || !addressData.cep) {
+        logStep('Address validation failed - missing required fields', {
+          hasStreet: !!addressData.street,
+          hasNumber: !!addressData.number, 
+          hasCity: !!addressData.city,
+          hasState: !!addressData.state,
+          hasCep: !!addressData.cep
+        });
+        throw new Error('Dados de endereço incompletos');
+      }
+      
       const customerPayload: any = {
+        name: addressData.name || undefined,
         address: {
           line1: `${addressData.street}, ${addressData.number}`,
-          line2: `${addressData.district}${addressData.complement ? ' - ' + addressData.complement : ''}`,
+          line2: addressData.complement ? `${addressData.district} - ${addressData.complement}` : addressData.district,
           city: addressData.city,
           state: addressData.state,
-          postal_code: addressData.cep,
-          country: (addressData.country || 'BR'),
+          postal_code: addressData.cep.replace(/\D/g, ''), // Remove non-digits
+          country: 'BR',
         },
-        name: addressData.name || undefined,
         shipping: {
           address: {
             line1: `${addressData.street}, ${addressData.number}`,
-            line2: `${addressData.district}${addressData.complement ? ' - ' + addressData.complement : ''}`,
+            line2: addressData.complement ? `${addressData.district} - ${addressData.complement}` : addressData.district,
             city: addressData.city,
             state: addressData.state,
-            postal_code: addressData.cep,
-            country: (addressData.country || 'BR'),
+            postal_code: addressData.cep.replace(/\D/g, ''), // Remove non-digits
+            country: 'BR',
           },
           name: addressData.name || undefined,
         }
       };
+      
+      logStep('Customer payload prepared', { payload: customerPayload });
+      
       try {
         if (customerId) {
           await stripe.customers.update(customerId, customerPayload);
@@ -226,7 +252,7 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
           logStep("Stripe customer created with address", { customerId });
         }
       } catch (e) {
-        logStep("Warning: customer address prefill failed", { message: (e as Error).message });
+        logStep("Warning: customer address prefill failed", { message: (e as Error).message, stack: (e as Error).stack });
       }
     }
 
@@ -251,14 +277,14 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
       success_url: successUrl,
       cancel_url: cancelUrl,
       payment_method_types: method === 'pix' ? ['pix'] : ['card'],
-      billing_address_collection: 'required',
+      billing_address_collection: addressData ? 'auto' : 'required',
       shipping_address_collection: addressData ? undefined : {
         allowed_countries: ['BR'],
       },
       customer_update: {
         address: 'auto',
         name: 'auto',
-        shipping: addressData ? 'auto' : undefined
+        shipping: 'auto'
       },
       payment_intent_data: {
         metadata: {
