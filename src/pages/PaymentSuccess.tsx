@@ -26,12 +26,7 @@ const PaymentSuccess = () => {
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    // Ensure required params are present
+    // Ensure required params are present (do not force auth here)
     const paymentTxnId = sessionId || transactionId;
     if (!orderDraftId || !paymentTxnId) {
       setErrorMessage('Dados de pagamento ausentes.');
@@ -41,7 +36,7 @@ const PaymentSuccess = () => {
     }
 
     confirmOrder();
-  }, [user, navigate, transactionId, paymentMethod, orderDraftId, sessionId]);
+  }, [transactionId, paymentMethod, orderDraftId, sessionId]);
 
   const confirmOrder = async (silent = false) => {
     const paymentTxnId = sessionId || transactionId;
@@ -78,7 +73,11 @@ const PaymentSuccess = () => {
             value: data.order.total_amount,
             items: []
           });
-          await clearCart();
+          try {
+            await clearCart();
+          } catch (e) {
+            console.warn('Falha ao limpar carrinho:', e);
+          }
           setStatus('success');
         } else {
           setStatus('pending');

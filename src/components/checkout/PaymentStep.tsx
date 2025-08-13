@@ -22,6 +22,8 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
   const { items } = useCart();
 
   const handleCheckout = async () => {
+    // Pré-abre a aba para evitar bloqueadores de pop-up e manter a aba original
+    const checkoutTab = window.open('', '_blank', 'noopener,noreferrer');
     setProcessing(true);
     try {
       // Monta itens para o checkout
@@ -53,24 +55,19 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
 
       if (data?.success && data?.checkout_url) {
         const url = data.checkout_url as string;
-        const newTab = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!newTab) {
-          // Fallback para navegação no topo se o popup for bloqueado
-          try {
-            if (window.top) {
-              window.top.location.href = url;
-            } else {
-              window.location.href = url;
-            }
-          } catch {
-            window.location.href = url;
-          }
+        if (checkoutTab) {
+          checkoutTab.location.href = url;
+        } else {
+          // Tenta abrir novamente em nova aba, sem navegar a atual
+          window.open(url, '_blank', 'noopener,noreferrer');
         }
-        toast({ title: 'Redirecionando...', description: 'Abrindo o checkout seguro da Stripe em nova aba.' });
+        toast({ title: 'Redirecionando...', description: 'Checkout Stripe aberto em nova aba. Você pode continuar navegando aqui.' });
       } else {
         throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
       }
     } catch (err) {
+      // Fecha a aba em branco caso tenha sido aberta e houve falha
+      try { checkoutTab?.close(); } catch {}
       console.error('Checkout error:', err);
       toast({
         title: 'Erro no Checkout',
@@ -81,7 +78,6 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
       setProcessing(false);
     }
   };
-
   return (
     <Card>
       <CardHeader>
