@@ -201,6 +201,17 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
           country: (addressData.country || 'BR'),
         },
         name: addressData.name || undefined,
+        shipping: {
+          address: {
+            line1: `${addressData.street}, ${addressData.number}`,
+            line2: `${addressData.district}${addressData.complement ? ' - ' + addressData.complement : ''}`,
+            city: addressData.city,
+            state: addressData.state,
+            postal_code: addressData.cep,
+            country: (addressData.country || 'BR'),
+          },
+          name: addressData.name || undefined,
+        }
       };
       try {
         if (customerId) {
@@ -241,8 +252,13 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
       cancel_url: cancelUrl,
       payment_method_types: method === 'pix' ? ['pix'] : ['card'],
       billing_address_collection: 'required',
-      shipping_address_collection: {
+      shipping_address_collection: addressData ? undefined : {
         allowed_countries: ['BR'],
+      },
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+        shipping: addressData ? 'auto' : undefined
       },
       payment_intent_data: {
         metadata: {
