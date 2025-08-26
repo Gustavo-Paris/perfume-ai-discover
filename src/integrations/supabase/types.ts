@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -483,6 +483,84 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          ambiente_nfe: string
+          certificado_a1_base64: string | null
+          certificado_senha: string | null
+          cnpj: string
+          created_at: string
+          email: string
+          endereco_bairro: string
+          endereco_cep: string
+          endereco_cidade: string
+          endereco_codigo_municipio: string
+          endereco_complemento: string | null
+          endereco_logradouro: string
+          endereco_numero: string
+          endereco_uf: string
+          focus_nfe_token: string | null
+          id: string
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
+          nome_fantasia: string | null
+          razao_social: string
+          regime_tributario: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ambiente_nfe?: string
+          certificado_a1_base64?: string | null
+          certificado_senha?: string | null
+          cnpj: string
+          created_at?: string
+          email: string
+          endereco_bairro: string
+          endereco_cep: string
+          endereco_cidade: string
+          endereco_codigo_municipio: string
+          endereco_complemento?: string | null
+          endereco_logradouro: string
+          endereco_numero: string
+          endereco_uf: string
+          focus_nfe_token?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_fantasia?: string | null
+          razao_social: string
+          regime_tributario?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ambiente_nfe?: string
+          certificado_a1_base64?: string | null
+          certificado_senha?: string | null
+          cnpj?: string
+          created_at?: string
+          email?: string
+          endereco_bairro?: string
+          endereco_cep?: string
+          endereco_cidade?: string
+          endereco_codigo_municipio?: string
+          endereco_complemento?: string | null
+          endereco_logradouro?: string
+          endereco_numero?: string
+          endereco_uf?: string
+          focus_nfe_token?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_fantasia?: string | null
+          razao_social?: string
+          regime_tributario?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversational_sessions: {
         Row: {
           conversation_json: Json
@@ -661,6 +739,161 @@ export type Database = {
           value?: number
         }
         Relationships: []
+      }
+      fiscal_note_items: {
+        Row: {
+          cfop: string
+          codigo_produto: string
+          created_at: string
+          descricao: string
+          fiscal_note_id: string
+          id: string
+          ncm: string
+          numero_item: number
+          order_item_id: string
+          quantidade: number
+          unidade_comercial: string
+          valor_cofins: number | null
+          valor_icms: number | null
+          valor_ipi: number | null
+          valor_pis: number | null
+          valor_total: number
+          valor_unitario: number
+        }
+        Insert: {
+          cfop: string
+          codigo_produto: string
+          created_at?: string
+          descricao: string
+          fiscal_note_id: string
+          id?: string
+          ncm: string
+          numero_item: number
+          order_item_id: string
+          quantidade: number
+          unidade_comercial?: string
+          valor_cofins?: number | null
+          valor_icms?: number | null
+          valor_ipi?: number | null
+          valor_pis?: number | null
+          valor_total: number
+          valor_unitario: number
+        }
+        Update: {
+          cfop?: string
+          codigo_produto?: string
+          created_at?: string
+          descricao?: string
+          fiscal_note_id?: string
+          id?: string
+          ncm?: string
+          numero_item?: number
+          order_item_id?: string
+          quantidade?: number
+          unidade_comercial?: string
+          valor_cofins?: number | null
+          valor_icms?: number | null
+          valor_ipi?: number | null
+          valor_pis?: number | null
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_note_items_fiscal_note_id_fkey"
+            columns: ["fiscal_note_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiscal_note_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiscal_notes: {
+        Row: {
+          chave_acesso: string | null
+          created_at: string
+          data_autorizacao: string | null
+          data_emissao: string
+          erro_message: string | null
+          focus_nfe_ref: string | null
+          id: string
+          numero: number
+          order_id: string
+          pdf_url: string | null
+          protocolo_autorizacao: string | null
+          serie: number
+          status: string
+          updated_at: string
+          valor_cofins: number | null
+          valor_icms: number | null
+          valor_ipi: number | null
+          valor_pis: number | null
+          valor_produtos: number
+          valor_total: number
+          xml_content: string | null
+        }
+        Insert: {
+          chave_acesso?: string | null
+          created_at?: string
+          data_autorizacao?: string | null
+          data_emissao?: string
+          erro_message?: string | null
+          focus_nfe_ref?: string | null
+          id?: string
+          numero: number
+          order_id: string
+          pdf_url?: string | null
+          protocolo_autorizacao?: string | null
+          serie?: number
+          status?: string
+          updated_at?: string
+          valor_cofins?: number | null
+          valor_icms?: number | null
+          valor_ipi?: number | null
+          valor_pis?: number | null
+          valor_produtos: number
+          valor_total: number
+          xml_content?: string | null
+        }
+        Update: {
+          chave_acesso?: string | null
+          created_at?: string
+          data_autorizacao?: string | null
+          data_emissao?: string
+          erro_message?: string | null
+          focus_nfe_ref?: string | null
+          id?: string
+          numero?: number
+          order_id?: string
+          pdf_url?: string | null
+          protocolo_autorizacao?: string | null
+          serie?: number
+          status?: string
+          updated_at?: string
+          valor_cofins?: number | null
+          valor_icms?: number | null
+          valor_ipi?: number | null
+          valor_pis?: number | null
+          valor_produtos?: number
+          valor_total?: number
+          xml_content?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_lots: {
         Row: {
@@ -1310,6 +1543,81 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      product_fiscal_data: {
+        Row: {
+          cest: string | null
+          cfop: string
+          cofins_aliquota: number | null
+          cofins_situacao_tributaria: string
+          created_at: string
+          icms_aliquota: number | null
+          icms_situacao_tributaria: string
+          id: string
+          ipi_aliquota: number | null
+          ipi_situacao_tributaria: string
+          ncm: string
+          observacoes: string | null
+          origem_mercadoria: string
+          perfume_id: string
+          pis_aliquota: number | null
+          pis_situacao_tributaria: string
+          updated_at: string
+        }
+        Insert: {
+          cest?: string | null
+          cfop?: string
+          cofins_aliquota?: number | null
+          cofins_situacao_tributaria?: string
+          created_at?: string
+          icms_aliquota?: number | null
+          icms_situacao_tributaria?: string
+          id?: string
+          ipi_aliquota?: number | null
+          ipi_situacao_tributaria?: string
+          ncm?: string
+          observacoes?: string | null
+          origem_mercadoria?: string
+          perfume_id: string
+          pis_aliquota?: number | null
+          pis_situacao_tributaria?: string
+          updated_at?: string
+        }
+        Update: {
+          cest?: string | null
+          cfop?: string
+          cofins_aliquota?: number | null
+          cofins_situacao_tributaria?: string
+          created_at?: string
+          icms_aliquota?: number | null
+          icms_situacao_tributaria?: string
+          id?: string
+          ipi_aliquota?: number | null
+          ipi_situacao_tributaria?: string
+          ncm?: string
+          observacoes?: string | null
+          origem_mercadoria?: string
+          perfume_id?: string
+          pis_aliquota?: number | null
+          pis_situacao_tributaria?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_fiscal_data_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: true
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_fiscal_data_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: true
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -2229,11 +2537,11 @@ export type Database = {
     Functions: {
       add_points_transaction: {
         Args: {
-          user_uuid: string
           points_delta: number
-          transaction_source: string
-          transaction_description?: string
           related_order_id?: string
+          transaction_description?: string
+          transaction_source: string
+          user_uuid: string
         }
         Returns: string
       }
@@ -2248,12 +2556,12 @@ export type Database = {
       check_advanced_stock_alerts: {
         Args: Record<PropertyKey, never>
         Returns: {
-          perfume_id: string
-          perfume_name: string
+          alert_level: string
           brand: string
           current_stock_ml: number
-          alert_level: string
           days_until_stockout: number
+          perfume_id: string
+          perfume_name: string
           should_reorder: boolean
         }[]
       }
@@ -2264,8 +2572,8 @@ export type Database = {
       check_perfume_availability: {
         Args: {
           perfume_uuid: string
-          size_ml_param: number
           quantity_requested?: number
+          size_ml_param: number
         }
         Returns: {
           available: boolean
@@ -2293,11 +2601,11 @@ export type Database = {
       create_cart_recovery_attempt: {
         Args: {
           cart_session_uuid: string
+          discount_code_param?: string
+          discount_offered_param?: number
+          message_param?: string
           recovery_type_param: string
           subject_param?: string
-          message_param?: string
-          discount_offered_param?: number
-          discount_code_param?: string
         }
         Returns: string
       }
@@ -2305,18 +2613,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           cart_session_id: string
-          user_id: string
-          session_id: string
-          items_count: number
-          total_value: number
           hours_since_abandonment: number
-          recommended_action: string
+          items_count: number
           priority_score: number
+          recommended_action: string
+          session_id: string
+          total_value: number
+          user_id: string
         }[]
       }
       generate_affiliate_code: {
         Args: { user_name?: string }
         Returns: string
+      }
+      generate_fiscal_note_number: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       generate_order_number: {
         Args: Record<PropertyKey, never>
@@ -2325,30 +2637,30 @@ export type Database = {
       get_active_promotion: {
         Args: { perfume_uuid: string }
         Returns: {
-          id: string
-          title: string
           description: string
           discount_type: string
           discount_value: number
-          promotional_price_5ml: number
-          promotional_price_10ml: number
-          promotional_price_full: number
           ends_at: string
+          id: string
+          promotional_price_10ml: number
+          promotional_price_5ml: number
+          promotional_price_full: number
+          title: string
         }[]
       }
       get_active_promotion_optimized: {
         Args: { perfume_uuid: string }
         Returns: {
-          id: string
-          title: string
           description: string
           discount_type: string
           discount_value: number
-          promotional_price_5ml: number
-          promotional_price_10ml: number
-          promotional_price_full: number
           ends_at: string
+          id: string
+          promotional_price_10ml: number
+          promotional_price_5ml: number
+          promotional_price_full: number
           time_remaining: unknown
+          title: string
         }[]
       }
       get_available_stock: {
@@ -2356,16 +2668,16 @@ export type Database = {
         Returns: number
       }
       get_perfume_recommendations: {
-        Args: { perfume_uuid: string; limit_count?: number; min_score?: number }
+        Args: { limit_count?: number; min_score?: number; perfume_uuid: string }
         Returns: {
-          perfume_id: string
-          name: string
           brand: string
           image_url: string
+          name: string
+          perfume_id: string
           price_5ml: number
           price_full: number
-          similarity_score: number
           recommendation_reason: string
+          similarity_score: number
         }[]
       }
       get_user_points_balance: {
@@ -2373,16 +2685,16 @@ export type Database = {
         Returns: number
       }
       get_user_recommendations: {
-        Args: { user_uuid?: string; limit_count?: number }
+        Args: { limit_count?: number; user_uuid?: string }
         Returns: {
-          perfume_id: string
-          name: string
           brand: string
           image_url: string
+          name: string
+          perfume_id: string
           price_5ml: number
           price_full: number
-          recommendation_score: number
           recommendation_reason: string
+          recommendation_score: number
         }[]
       }
       hard_delete_user_data: {
@@ -2391,8 +2703,8 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
@@ -2402,42 +2714,42 @@ export type Database = {
       }
       log_login_attempt: {
         Args: {
-          email_param: string
           attempt_type_param: string
+          email_param: string
           ip_param?: unknown
-          user_agent_param?: string
           metadata_param?: Json
+          user_agent_param?: string
         }
         Returns: string
       }
       log_perfume_interaction: {
         Args: {
-          perfume_uuid: string
           interaction_type_param: string
-          source_page_param?: string
-          position_param?: number
           metadata_param?: Json
+          perfume_uuid: string
+          position_param?: number
+          source_page_param?: string
         }
         Returns: string
       }
       log_security_event: {
         Args: {
-          user_uuid: string
-          event_type_param: string
           event_description_param: string
+          event_type_param: string
           ip_address_param?: unknown
-          user_agent_param?: string
-          risk_level_param?: string
           metadata_param?: Json
+          risk_level_param?: string
+          user_agent_param?: string
+          user_uuid: string
         }
         Returns: string
       }
       log_user_access: {
         Args: {
-          user_uuid: string
           access_route: string
           client_ip?: unknown
           client_user_agent?: string
+          user_uuid: string
         }
         Returns: string
       }
@@ -2459,16 +2771,16 @@ export type Database = {
       }
       upsert_reservation: {
         Args: {
-          perfume_uuid: string
-          size_ml_param: number
-          qty_param: number
-          user_uuid?: string
           expires_minutes?: number
+          perfume_uuid: string
+          qty_param: number
+          size_ml_param: number
+          user_uuid?: string
         }
         Returns: string
       }
       user_has_purchased_perfume: {
-        Args: { user_uuid: string; perfume_uuid: string }
+        Args: { perfume_uuid: string; user_uuid: string }
         Returns: boolean
       }
       validate_coupon: {
@@ -2477,10 +2789,10 @@ export type Database = {
       }
       validate_coupon_advanced: {
         Args: {
+          cart_items?: Json
           coupon_code: string
           order_total: number
           user_uuid: string
-          cart_items?: Json
         }
         Returns: Json
       }
