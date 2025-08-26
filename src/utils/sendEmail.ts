@@ -6,7 +6,8 @@ export type EmailTemplate =
   | 'shipping_label'
   | 'order_delivered'
   | 'review_approved'
-  | 'stock_alert_admin';
+  | 'stock_alert_admin'
+  | 'nfe_generated';
 
 export interface EmailData {
   order_confirmed: {
@@ -51,6 +52,13 @@ export interface EmailData {
     perfumeBrand: string;
     remainingStock: number;
     warehouseName: string;
+  };
+  nfe_generated: {
+    customerName: string;
+    orderNumber: string;
+    nfeNumber: number;
+    nfeKey: string;
+    pdfUrl: string;
   };
 }
 

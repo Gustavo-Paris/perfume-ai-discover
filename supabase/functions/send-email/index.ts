@@ -438,7 +438,22 @@ const handler = async (req: Request): Promise<Response> => {
         ...corsHeaders,
       },
     });
-  }
+    },
+    
+    nfe_generated: {
+      subject: '📄 Sua Nota Fiscal Eletrônica foi emitida',
+      template: async (data: any) => {
+        return await renderAsync(
+          React.createElement(NFEGeneratedEmail, {
+            customerName: data.customerName,
+            orderNumber: data.orderNumber, 
+            nfeNumber: data.nfeNumber,
+            nfeKey: data.nfeKey,
+            pdfUrl: data.pdfUrl
+          })
+        );
+      }
+    }
 };
 
 serve(handler);
