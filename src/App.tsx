@@ -42,6 +42,8 @@ import ComparisonPage from "./pages/ComparisonPage";
 import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
+import TermosUso from "./pages/TermosUso";
+import SAC from "./pages/SAC";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import EmailPreferences from "./components/notifications/EmailPreferences";
@@ -104,8 +106,8 @@ const AppContent = () => {
             <Route path="inventory" element={<AdminInventory />} />
             <Route path="lots" element={<AdminLots />} />
           </Route>
-          <Route path="/privacidade" element={<Privacidade />} />
-          <Route path="/troca-devolucao" element={<TrocaDevolucao />} />
+          <Route path="/termos-uso" element={<TermosUso />} />
+          <Route path="/sac" element={<SAC />} />
           <Route path="/search" element={<Search />} />
           <Route path="/afiliados" element={<Afiliados />} />
           <Route path="/email-preferences" element={<EmailPreferences />} />

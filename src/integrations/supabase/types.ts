@@ -483,6 +483,63 @@ export type Database = {
         }
         Relationships: []
       }
+      company_info: {
+        Row: {
+          cep: string
+          cidade: string
+          cnpj: string
+          created_at: string
+          email_contato: string
+          email_sac: string
+          endereco_completo: string
+          estado: string
+          id: string
+          inscricao_estadual: string | null
+          inscricao_municipal: string | null
+          nome_fantasia: string | null
+          razao_social: string
+          responsavel_tecnico: string | null
+          telefone: string
+          updated_at: string
+        }
+        Insert: {
+          cep: string
+          cidade: string
+          cnpj: string
+          created_at?: string
+          email_contato: string
+          email_sac: string
+          endereco_completo: string
+          estado: string
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_fantasia?: string | null
+          razao_social: string
+          responsavel_tecnico?: string | null
+          telefone: string
+          updated_at?: string
+        }
+        Update: {
+          cep?: string
+          cidade?: string
+          cnpj?: string
+          created_at?: string
+          email_contato?: string
+          email_sac?: string
+          endereco_completo?: string
+          estado?: string
+          id?: string
+          inscricao_estadual?: string | null
+          inscricao_municipal?: string | null
+          nome_fantasia?: string | null
+          razao_social?: string
+          responsavel_tecnico?: string | null
+          telefone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           ambiente_nfe: string
@@ -558,6 +615,48 @@ export type Database = {
           regime_tributario?: string
           telefone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      compliance_audit_log: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          legal_basis: string | null
+          resource_id: string | null
+          resource_type: string
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          legal_basis?: string | null
+          resource_id?: string | null
+          resource_type: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          legal_basis?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -946,6 +1045,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      legal_documents: {
+        Row: {
+          content: string
+          created_at: string
+          effective_date: string
+          id: string
+          is_active: boolean
+          requires_acceptance: boolean
+          title: string
+          type: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          effective_date: string
+          id?: string
+          is_active?: boolean
+          requires_acceptance?: boolean
+          title: string
+          type: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          effective_date?: string
+          id?: string
+          is_active?: boolean
+          requires_acceptance?: boolean
+          title?: string
+          type?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
       }
       login_attempts: {
         Row: {
@@ -1516,30 +1654,42 @@ export type Database = {
       }
       privacy_consents: {
         Row: {
+          browser_fingerprint: string | null
           consent_type: string
           consented: boolean
+          cookie_categories: Json | null
           created_at: string
+          data_retention_days: number | null
           expires_at: string | null
           id: string
           ip_address: unknown | null
+          legal_basis: string | null
           user_id: string | null
         }
         Insert: {
+          browser_fingerprint?: string | null
           consent_type: string
           consented?: boolean
+          cookie_categories?: Json | null
           created_at?: string
+          data_retention_days?: number | null
           expires_at?: string | null
           id?: string
           ip_address?: unknown | null
+          legal_basis?: string | null
           user_id?: string | null
         }
         Update: {
+          browser_fingerprint?: string | null
           consent_type?: string
           consented?: boolean
+          cookie_categories?: Json | null
           created_at?: string
+          data_retention_days?: number | null
           expires_at?: string | null
           id?: string
           ip_address?: unknown | null
+          legal_basis?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -1721,6 +1871,39 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: unknown | null
+          request_count: number
+          user_id: string | null
+          window_start: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number
+          user_id?: string | null
+          window_start?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number
+          user_id?: string | null
+          window_start?: string
+        }
+        Relationships: []
+      }
       recommendation_sessions: {
         Row: {
           ai_provider_id: string
@@ -1889,6 +2072,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sac_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          description: string
+          first_response_at: string | null
+          id: string
+          order_number: string | null
+          priority: string
+          protocol_number: string
+          resolution: string | null
+          resolution_date: string | null
+          satisfaction_comment: string | null
+          satisfaction_rating: number | null
+          sla_due_date: string | null
+          status: string
+          subcategory: string | null
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          description: string
+          first_response_at?: string | null
+          id?: string
+          order_number?: string | null
+          priority?: string
+          protocol_number: string
+          resolution?: string | null
+          resolution_date?: string | null
+          satisfaction_comment?: string | null
+          satisfaction_rating?: number | null
+          sla_due_date?: string | null
+          status?: string
+          subcategory?: string | null
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          description?: string
+          first_response_at?: string | null
+          id?: string
+          order_number?: string | null
+          priority?: string
+          protocol_number?: string
+          resolution?: string | null
+          resolution_date?: string | null
+          satisfaction_comment?: string | null
+          satisfaction_rating?: number | null
+          sla_due_date?: string | null
+          status?: string
+          subcategory?: string | null
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       search_queries: {
         Row: {
@@ -2339,6 +2597,36 @@ export type Database = {
           },
         ]
       }
+      terms_acceptance: {
+        Row: {
+          accepted_at: string
+          id: string
+          ip_address: unknown | null
+          type: string
+          user_agent: string | null
+          user_id: string | null
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          type?: string
+          user_agent?: string | null
+          user_id?: string | null
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          type?: string
+          user_agent?: string | null
+          user_id?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -2582,13 +2870,21 @@ export type Database = {
         }[]
       }
       check_rate_limit: {
-        Args: {
-          email_param: string
-          ip_param?: unknown
-          max_attempts?: number
-          window_minutes?: number
-        }
-        Returns: Json
+        Args:
+          | {
+              email_param: string
+              ip_param?: unknown
+              max_attempts?: number
+              window_minutes?: number
+            }
+          | {
+              p_endpoint?: string
+              p_ip_address?: unknown
+              p_limit?: number
+              p_user_id?: string
+              p_window_minutes?: number
+            }
+        Returns: boolean
       }
       cleanup_expired_reservations: {
         Args: Record<PropertyKey, never>
@@ -2631,6 +2927,10 @@ export type Database = {
         Returns: number
       }
       generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_sac_protocol: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -2711,6 +3011,20 @@ export type Database = {
       increment_search_count: {
         Args: { search_query: string }
         Returns: undefined
+      }
+      log_compliance_event: {
+        Args: {
+          p_action_type: string
+          p_details?: Json
+          p_ip_address?: unknown
+          p_legal_basis?: string
+          p_resource_id?: string
+          p_resource_type: string
+          p_session_id?: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
       }
       log_login_attempt: {
         Args: {
