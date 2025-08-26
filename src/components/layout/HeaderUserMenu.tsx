@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, UserCircle, Trash2, AlertTriangle, Shield, Users } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, LogOut, Settings, UserCircle, Trash2, AlertTriangle, Shield, Users, Package, Heart, CreditCard, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -65,7 +65,7 @@ const HeaderUserMenu = ({ disabled = false }: HeaderUserMenuProps) => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/');
+      window.location.href = '/';
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
@@ -157,29 +157,51 @@ const HeaderUserMenu = ({ disabled = false }: HeaderUserMenuProps) => {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           
-          <DropdownMenuItem onClick={() => navigate('/pedidos')}>
-            <User className="mr-2 h-4 w-4" />
-            Meus Pedidos
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem onClick={() => navigate('/fidelidade')}>
-            <Settings className="mr-2 h-4 w-4" />
-            Programa de Fidelidade
-          </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/pedidos">
+                <Package className="h-4 w-4" />
+                <span>Meus Pedidos</span>
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild>
+              <Link to="/wishlist">
+                <Heart className="h-4 w-4" />
+                <span>Lista de Desejos</span>
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild>
+              <Link to="/notas-fiscais">
+                <FileText className="h-4 w-4" />
+                <span>Minhas Notas Fiscais</span>
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild>
+              <Link to="/fidelidade">
+                <CreditCard className="h-4 w-4" />
+                <span>Programa de Fidelidade</span>
+              </Link>
+            </DropdownMenuItem>
           
           {user && affiliate && affiliate.status === 'active' && (
-            <DropdownMenuItem onClick={() => navigate('/afiliados')}>
-              <Users className="mr-2 h-4 w-4" />
-              Programa de Afiliados
+            <DropdownMenuItem asChild>
+              <Link to="/afiliados">
+                <Users className="h-4 w-4" />
+                <span>Programa de Afiliados</span>
+              </Link>
             </DropdownMenuItem>
           )}
           
           {isAdmin && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/admin')}>
-                <Shield className="mr-2 h-4 w-4" />
-                Área de Administrador
+              <DropdownMenuItem asChild>
+                <Link to="/admin">
+                  <Shield className="h-4 w-4" />
+                  <span>Administração</span>
+                </Link>
               </DropdownMenuItem>
             </>
           )}

@@ -49,6 +49,8 @@ import Unsubscribe from "./pages/Unsubscribe";
 import Search from "./pages/Search";
 import Afiliados from "./pages/Afiliados";
 import ImageSearchDemo from "./pages/ImageSearchDemo";
+import AdminFiscal from './pages/admin/AdminFiscal';
+import MinhasNotasFiscais from './pages/MinhasNotasFiscais';
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminSupportMacros from "./pages/admin/AdminSupportMacros";
 import { SupportChat } from "./components/support/SupportChat";
@@ -77,6 +79,7 @@ const AppContent = () => {
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/notificacoes" element={<Notificacoes />} />
+          <Route path="/notas-fiscais" element={<MinhasNotasFiscais />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/comparacao/:id" element={<ComparisonPage />} />
           <Route path="/busca-imagem" element={<ImageSearchDemo />} />
@@ -86,6 +89,7 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="fiscal" element={<AdminFiscal />} />
             <Route path="stock" element={<AdminStock />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="reviews" element={<AdminReviews />} />
