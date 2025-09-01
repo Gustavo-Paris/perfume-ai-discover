@@ -17,10 +17,24 @@ serve(async (req) => {
   }
 
   try {
-    const config: AnalyticsConfig = {
-      gaMeasurementId: Deno.env.get("GA_MEASUREMENT_ID") || null,
-      sentryDsn: Deno.env.get("SENTRY_DSN") || null,
+    const rawSentryDsn = Deno.env.get("SENTRY_DSN");
+    const rawGaMeasurementId = Deno.env.get("GA_MEASUREMENT_ID");
+    
+    // Validate Sentry DSN format
+    const isValidSentryDsn = (dsn: string): boolean => {
+      const sentryDsnPattern = /^https:\/\/[a-f0-9]+@[a-f0-9]+\.ingest\.sentry\.io\/\d+$/;
+      return sentryDsnPattern.test(dsn);
     };
+
+    const config: AnalyticsConfig = {
+      gaMeasurementId: rawGaMeasurementId || null,
+      sentryDsn: rawSentryDsn && isValidSentryDsn(rawSentryDsn) ? rawSentryDsn : null,
+    };
+
+    // Log validation results (helpful for debugging)
+    if (rawSentryDsn && !isValidSentryDsn(rawSentryDsn)) {
+      console.warn("Invalid Sentry DSN format detected, not returning to client");
+    }
 
     return new Response(JSON.stringify(config), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

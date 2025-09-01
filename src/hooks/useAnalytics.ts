@@ -8,17 +8,32 @@ export const useAnalytics = () => {
     const initializeAnalytics = async () => {
       try {
         // Fetch public analytics config from edge function
-        const { data } = await supabase.functions.invoke('public-analytics-config');
+        const { data, error } = await supabase.functions.invoke('public-analytics-config');
 
-        if (data?.sentryDsn) {
-          initSentry(data.sentryDsn);
+        if (error) {
+          console.warn('Analytics config error:', error);
+          return;
         }
 
+        // Safe Sentry initialization
+        if (data?.sentryDsn) {
+          const sentryInitialized = initSentry(data.sentryDsn);
+          if (!sentryInitialized) {
+            console.warn('Sentry initialization failed, continuing without error tracking');
+          }
+        }
+
+        // Safe GA4 initialization
         if (data?.gaMeasurementId) {
-          initGA4(data.gaMeasurementId);
+          try {
+            initGA4(data.gaMeasurementId);
+          } catch (ga4Error) {
+            console.warn('GA4 initialization failed:', ga4Error);
+          }
         }
       } catch (error) {
         console.warn('Failed to initialize analytics:', error);
+        // Continue app execution even if analytics fail
       }
     };
 
