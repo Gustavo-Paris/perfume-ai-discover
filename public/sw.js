@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'paris-co-parfums-v2';
+const CACHE_NAME = 'paris-co-parfums-v3';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
