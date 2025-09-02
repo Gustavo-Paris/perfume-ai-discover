@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { generateUUID } from '@/lib/uuid';
 import type { SupportConversation, SupportMessage } from '@/types/support';
 
 export const useSupportChat = () => {
@@ -60,7 +61,7 @@ export const useSupportChat = () => {
         .from('support_conversations')
         .insert({
           user_id: user?.id,
-          session_id: user ? undefined : crypto.randomUUID(),
+          session_id: user ? undefined : generateUUID(),
           subject: subject || 'Conversa de Suporte',
           category,
           status: 'open'

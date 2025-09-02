@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { trackEvent } from '@/utils/analytics';
 import { useAuth } from '@/contexts/AuthContext';
+import { generateUUID } from '@/lib/uuid';
 
 interface UserSession {
   sessionId: string;
@@ -39,7 +40,7 @@ export const useUserAnalytics = () => {
 
     // Create new session
     const newSession: UserSession = {
-      sessionId: crypto.randomUUID(),
+      sessionId: generateUUID(),
       startTime: Date.now(),
       lastActive: Date.now(),
       pageViews: 0,
