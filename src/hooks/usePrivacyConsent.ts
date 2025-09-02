@@ -35,10 +35,16 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
     mutationFn: async ({ consented }: { consented: boolean }) => {
       const { data: user } = await supabase.auth.getUser();
       
+      // Only record consent for authenticated users to comply with RLS policies
+      if (!user.user?.id) {
+        console.log('Skipping database consent recording for anonymous user');
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('privacy_consents')
         .insert({
-          user_id: user.user?.id || null,
+          user_id: user.user.id,
           consent_type: COOKIE_NAMES[consentType],
           consented,
           expires_at: consented 

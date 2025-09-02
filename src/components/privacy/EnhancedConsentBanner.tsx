@@ -137,21 +137,27 @@ export default function EnhancedConsentBanner({ onAccept, onReject }: EnhancedCo
       return acc;
     }, {} as Record<string, boolean>);
 
-    const { error } = await supabase
-      .from('privacy_consents')
-      .insert({
-        user_id: user.user?.id || null,
-        consent_type: 'PRIVACY_CHAT',
-        consented: true,
-        cookie_categories: cookieCategories,
-        browser_fingerprint: navigator.userAgent,
-        legal_basis: 'consent',
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      });
+    // Only record consent in database for authenticated users (RLS compliance)
+    if (user.user?.id) {
+      const { error } = await supabase
+        .from('privacy_consents')
+        .insert({
+          user_id: user.user.id,
+          consent_type: 'PRIVACY_CHAT',
+          consented: true,
+          cookie_categories: cookieCategories,
+          browser_fingerprint: navigator.userAgent,
+          legal_basis: 'consent',
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        });
 
-    if (error) throw error;
+      if (error) throw error;
+    } else {
+      // For anonymous users, skip database recording but continue with cookie setting
+      console.log('Skipping database consent recording for anonymous user - using cookies only');
+    }
 
-    // Set cookies for frontend use
+    // Set cookies for frontend use (works for both authenticated and anonymous users)
     selectedCategories.forEach(cat => {
       if (cat.enabled) {
         document.cookie = `${cat.id}_consent=true; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
