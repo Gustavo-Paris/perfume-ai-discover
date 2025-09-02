@@ -371,6 +371,32 @@ const templates = {
         </div>
       </div>
     `
+  },
+
+  nfe_generated: {
+    subject: '📄 Sua Nota Fiscal Eletrônica foi emitida - Pedido #{{orderNumber}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #22c55e;">📄 Nota Fiscal Eletrônica Gerada</h1>
+        <p>Olá {{customerName}},</p>
+        <p>Sua Nota Fiscal Eletrônica do pedido #{{orderNumber}} foi gerada com sucesso!</p>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p><strong>Número da NF-e:</strong> {{nfeNumber}}</p>
+          <p><strong>Chave de acesso:</strong> {{nfeKey}}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{pdfUrl}}" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            📥 Baixar PDF da NF-e
+          </a>
+        </div>
+        
+        <p>Guarde este documento para seus registros financeiros.</p>
+        
+        <p>Obrigado por escolher a Perfume Connect!</p>
+      </div>
+    `
   }
 };
 
@@ -438,22 +464,7 @@ const handler = async (req: Request): Promise<Response> => {
         ...corsHeaders,
       },
     });
-    },
-    
-    nfe_generated: {
-      subject: '📄 Sua Nota Fiscal Eletrônica foi emitida',
-      template: async (data: any) => {
-        return await renderAsync(
-          React.createElement(NFEGeneratedEmail, {
-            customerName: data.customerName,
-            orderNumber: data.orderNumber, 
-            nfeNumber: data.nfeNumber,
-            nfeKey: data.nfeKey,
-            pdfUrl: data.pdfUrl
-          })
-        );
-      }
-    }
+  }
 };
 
 serve(handler);
