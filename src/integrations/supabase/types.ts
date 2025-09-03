@@ -2795,6 +2795,27 @@ export type Database = {
           },
         ]
       }
+      company_public_info: {
+        Row: {
+          cidade: string | null
+          email_contato: string | null
+          estado: string | null
+          nome_fantasia: string | null
+        }
+        Insert: {
+          cidade?: string | null
+          email_contato?: string | null
+          estado?: string | null
+          nome_fantasia?: string | null
+        }
+        Update: {
+          cidade?: string | null
+          email_contato?: string | null
+          estado?: string | null
+          nome_fantasia?: string | null
+        }
+        Relationships: []
+      }
       perfumes_with_stock: {
         Row: {
           base_notes: string[] | null
@@ -2980,6 +3001,15 @@ export type Database = {
           similarity_score: number
         }[]
       }
+      get_public_company_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cidade: string
+          email_contato: string
+          estado: string
+          nome_fantasia: string
+        }[]
+      }
       get_user_points_balance: {
         Args: { user_uuid: string }
         Returns: number
@@ -3057,6 +3087,10 @@ export type Database = {
           user_uuid: string
         }
         Returns: string
+      }
+      log_unauthorized_company_access: {
+        Args: { p_action?: string; p_user_id?: string }
+        Returns: undefined
       }
       log_user_access: {
         Args: {
