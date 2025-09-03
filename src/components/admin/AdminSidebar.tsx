@@ -73,6 +73,16 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     ]
   },
   { title: 'Configurações', url: '/admin/config', icon: Settings },
+  {
+    title: 'Sistema',
+    icon: Settings,
+    defaultOpen: false,
+    items: [
+      { title: 'Dados da Empresa', url: '/admin/company', icon: Settings },
+      { title: 'Preparar Dados', url: '/admin/data-seeder', icon: Package },
+      { title: 'Monitoramento', url: '/admin/monitoring', icon: TrendingUp },
+    ]
+  },
 ];
 
 interface AdminSidebarProps {

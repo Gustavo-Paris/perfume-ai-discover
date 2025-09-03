@@ -55,6 +55,9 @@ import AdminFiscal from './pages/admin/AdminFiscal';
 import MinhasNotasFiscais from './pages/MinhasNotasFiscais';
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminSupportMacros from "./pages/admin/AdminSupportMacros";
+import AdminCompany from "./pages/admin/AdminCompany";
+import AdminDataSeeder from "./pages/admin/AdminDataSeeder";
+import AdminMonitoring from "./pages/admin/AdminMonitoring";
 import { SupportChat } from "./components/support/SupportChat";
 
 const queryClient = new QueryClient();
@@ -101,6 +104,9 @@ const AppContent = () => {
             <Route path="support" element={<AdminSupport />} />
             <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
+            <Route path="company" element={<AdminCompany />} />
+            <Route path="data-seeder" element={<AdminDataSeeder />} />
+            <Route path="monitoring" element={<AdminMonitoring />} />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />
             <Route path="inventory" element={<AdminInventory />} />
