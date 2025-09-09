@@ -1688,6 +1688,7 @@ export type Database = {
           last_cost_calculation: string | null
           name: string
           price_10ml: number | null
+          price_2ml: number | null
           price_5ml: number | null
           price_full: number
           target_margin_percentage: number | null
@@ -1708,6 +1709,7 @@ export type Database = {
           last_cost_calculation?: string | null
           name: string
           price_10ml?: number | null
+          price_2ml?: number | null
           price_5ml?: number | null
           price_full: number
           target_margin_percentage?: number | null
@@ -1728,6 +1730,7 @@ export type Database = {
           last_cost_calculation?: string | null
           name?: string
           price_10ml?: number | null
+          price_2ml?: number | null
           price_5ml?: number | null
           price_full?: number
           target_margin_percentage?: number | null
