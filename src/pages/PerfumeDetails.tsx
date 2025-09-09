@@ -22,7 +22,7 @@ const PerfumeDetails = () => {
   const { addToCart, loading: cartLoading } = useCart();
   const { data: databasePerfumes, isLoading } = usePerfumes();
   const { user } = useAuth();
-  const [selectedSize, setSelectedSize] = useState<5 | 10 | null>(5);
+  const [selectedSize, setSelectedSize] = useState<2 | 5 | 10 | null>(5);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
   
@@ -32,6 +32,11 @@ const PerfumeDetails = () => {
 
   // Find perfume by id from database
   const databasePerfume = databasePerfumes?.find((p: DatabasePerfume) => p.id === id);
+  
+  // Set initial size based on available sizes
+  if (databasePerfume && selectedSize === null) {
+    setSelectedSize(databasePerfume.price_2ml ? 2 : 5);
+  }
 
   if (isLoading) {
     return (
@@ -75,7 +80,8 @@ const PerfumeDetails = () => {
     }
   };
 
-  const currentPrice = selectedSize === 5 ? databasePerfume.price_5ml : 
+  const currentPrice = selectedSize === 2 ? databasePerfume.price_2ml :
+                      selectedSize === 5 ? databasePerfume.price_5ml : 
                       selectedSize === 10 ? databasePerfume.price_10ml : 
                       databasePerfume.price_5ml;
 
@@ -147,27 +153,77 @@ const PerfumeDetails = () => {
               </Card>
             )}
 
-            {/* Notes */}
+            {/* Notes - Melhorado */}
             <Card>
               <CardContent className="pt-6">
-                <h3 className="font-semibold mb-4">Notas Olfativas</h3>
-                <div className="space-y-3">
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                  Pirâmide Olfativa
+                </h3>
+                <div className="space-y-4">
                   {databasePerfume.top_notes && databasePerfume.top_notes.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground">Notas de Saída</h4>
-                      <p className="text-sm">{databasePerfume.top_notes.join(', ')}</p>
+                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400" />
+                        <h4 className="font-medium text-orange-800">Notas de Saída</h4>
+                        <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">
+                          Primeira impressão
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {databasePerfume.top_notes.map((note, index) => (
+                          <span 
+                            key={index}
+                            className="px-2 py-1 bg-white rounded-full text-sm text-orange-700 border border-orange-200"
+                          >
+                            {note}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
+                  
                   {databasePerfume.heart_notes && databasePerfume.heart_notes.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground">Notas de Coração</h4>
-                      <p className="text-sm">{databasePerfume.heart_notes.join(', ')}</p>
+                    <div className="bg-gradient-to-r from-pink-50 to-rose-50 p-4 rounded-lg border border-pink-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-pink-400 to-rose-400" />
+                        <h4 className="font-medium text-rose-800">Notas de Coração</h4>
+                        <Badge variant="secondary" className="text-xs bg-pink-100 text-pink-700">
+                          Corpo da fragrância
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {databasePerfume.heart_notes.map((note, index) => (
+                          <span 
+                            key={index}
+                            className="px-2 py-1 bg-white rounded-full text-sm text-rose-700 border border-pink-200"
+                          >
+                            {note}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
+                  
                   {databasePerfume.base_notes && databasePerfume.base_notes.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground">Notas de Fundo</h4>
-                      <p className="text-sm">{databasePerfume.base_notes.join(', ')}</p>
+                    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500" />
+                        <h4 className="font-medium text-amber-800">Notas de Fundo</h4>
+                        <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700">
+                          Fixação e duração
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {databasePerfume.base_notes.map((note, index) => (
+                          <span 
+                            key={index}
+                            className="px-2 py-1 bg-white rounded-full text-sm text-amber-700 border border-amber-200"
+                          >
+                            {note}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -177,7 +233,19 @@ const PerfumeDetails = () => {
             {/* Size Selection */}
             <div>
               <h3 className="font-semibold mb-3">Tamanho</h3>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
+                {databasePerfume.price_2ml && databasePerfume.price_2ml > 0 && (
+                  <Button
+                    variant={selectedSize === 2 ? "default" : "outline"}
+                    onClick={() => setSelectedSize(2)}
+                    className={selectedSize === 2 ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800" : ""}
+                  >
+                    2ml - R$ {Number(databasePerfume.price_2ml).toFixed(2).replace('.', ',')}
+                    <Badge variant="secondary" className="ml-2 bg-purple-100 text-purple-800 text-xs">
+                      Luxo
+                    </Badge>
+                  </Button>
+                )}
                 {databasePerfume.price_5ml && databasePerfume.price_5ml > 0 && (
                   <Button
                     variant={selectedSize === 5 ? "default" : "outline"}

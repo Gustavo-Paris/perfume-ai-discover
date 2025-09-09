@@ -3,7 +3,7 @@ import { DatabasePerfume } from '@/types';
 interface ProductSchemaProps {
   perfume: DatabasePerfume;
   currentPrice: number;
-  selectedSize: 5 | 10;
+  selectedSize: 2 | 5 | 10;
 }
 
 const ProductSchema = ({ perfume, currentPrice, selectedSize }: ProductSchemaProps) => {

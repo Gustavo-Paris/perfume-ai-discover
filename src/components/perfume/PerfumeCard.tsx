@@ -28,7 +28,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   // Buscar promoção ativa para este perfume
   const { data: activePromotion } = useActivePromotionByPerfume(perfume.id);
 
-  const handleQuickAdd = (e: React.MouseEvent, size: 5 | 10) => {
+  const handleQuickAdd = (e: React.MouseEvent, size: 2 | 5 | 10) => {
     e.stopPropagation();
     addToCart({
       perfume_id: perfume.id,
@@ -51,12 +51,14 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const imageUrl = perfume.image_url || `https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop&crop=center&q=80`;
 
   // Calcular preços promocionais se houver promoção ativa
-  const getDisplayPrice = (size: 5 | 10) => {
-    const originalPrice = size === 5 ? perfume.price_5ml : perfume.price_10ml;
+  const getDisplayPrice = (size: 2 | 5 | 10) => {
+    const originalPrice = size === 2 ? perfume.price_2ml : 
+                         size === 5 ? perfume.price_5ml : perfume.price_10ml;
     if (!originalPrice) return null;
 
     if (activePromotion) {
-      const promotionalField = size === 5 ? 'promotional_price_5ml' : 'promotional_price_10ml';
+      const promotionalField = size === 2 ? 'promotional_price_2ml' : 
+                               size === 5 ? 'promotional_price_5ml' : 'promotional_price_10ml';
       const promotionalPrice = activePromotion[promotionalField];
       
       if (promotionalPrice) {
@@ -87,9 +89,10 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     };
   };
 
+  const price2ml = perfume.price_2ml ? getDisplayPrice(2) : null;
   const price5ml = getDisplayPrice(5);
   const price10ml = getDisplayPrice(10);
-  const basePrice = price5ml?.promotional || perfume.price_5ml || 0;
+  const basePrice = price2ml?.promotional || price5ml?.promotional || perfume.price_5ml || 0;
 
   return (
     <TooltipProvider>
@@ -205,6 +208,34 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
 
           {/* Quick Add Buttons */}
           <div className="flex gap-2">
+            {price2ml && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={(e) => handleQuickAdd(e, 2)}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-display font-medium"
+                    size="sm"
+                  >
+                    <Plus className="mr-1 h-3 w-3" />
+                    2ml
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {price2ml.hasDiscount ? (
+                    <div className="text-center">
+                      <p className="text-red-600 font-bold">
+                        R$ {price2ml.promotional.toFixed(2).replace('.', ',')}
+                      </p>
+                      <p className="text-xs text-gray-500 line-through">
+                        R$ {price2ml.original.toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                  ) : (
+                    <p>R$ {price2ml.promotional.toFixed(2).replace('.', ',')}</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            )}
             {price5ml && (
               <Tooltip>
                 <TooltipTrigger asChild>

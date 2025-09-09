@@ -6,6 +6,7 @@ export interface Perfume {
   gender: 'masculino' | 'feminino' | 'unissex';
   size_ml?: number[]; // Optional for database compatibility
   price_full: number;
+  price_2ml?: number | null;
   price_5ml?: number | null;
   price_10ml?: number | null;
   stock_full?: number; // Optional for database compatibility
@@ -99,6 +100,7 @@ export interface DatabasePerfume {
   top_notes: string[];
   heart_notes: string[];
   base_notes: string[];
+  price_2ml?: number | null;
   price_5ml: number | null;
   price_10ml: number | null;
   price_full: number;
