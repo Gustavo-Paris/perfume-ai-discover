@@ -3001,27 +3001,6 @@ export type Database = {
           },
         ]
       }
-      company_public_info: {
-        Row: {
-          cidade: string | null
-          email_contato: string | null
-          estado: string | null
-          nome_fantasia: string | null
-        }
-        Insert: {
-          cidade?: string | null
-          email_contato?: string | null
-          estado?: string | null
-          nome_fantasia?: string | null
-        }
-        Update: {
-          cidade?: string | null
-          email_contato?: string | null
-          estado?: string | null
-          nome_fantasia?: string | null
-        }
-        Relationships: []
-      }
       perfumes_with_stock: {
         Row: {
           base_notes: string[] | null
@@ -3209,6 +3188,15 @@ export type Database = {
       get_available_stock: {
         Args: { perfume_uuid: string; size_ml_param: number }
         Returns: number
+      }
+      get_company_public_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cidade: string
+          email_contato: string
+          estado: string
+          nome_fantasia: string
+        }[]
       }
       get_perfume_recommendations: {
         Args: { limit_count?: number; min_score?: number; perfume_uuid: string }
