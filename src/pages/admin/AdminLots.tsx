@@ -30,6 +30,8 @@ const AdminLots = () => {
     expiry_date: '',
     qty_ml: 0,
     warehouse_id: '',
+    cost_per_ml: 0,
+    supplier: '',
   });
 
   const resetForm = () => {
@@ -39,6 +41,8 @@ const AdminLots = () => {
       expiry_date: '',
       qty_ml: 0,
       warehouse_id: '',
+      cost_per_ml: 0,
+      supplier: '',
     });
   };
 
@@ -49,6 +53,7 @@ const AdminLots = () => {
       await createLot.mutateAsync({
         ...formData,
         expiry_date: formData.expiry_date || null,
+        total_cost: formData.cost_per_ml * formData.qty_ml,
       });
       toast({ title: "Lote criado com sucesso!" });
       setIsCreateOpen(false);
@@ -132,6 +137,29 @@ const AdminLots = () => {
               </div>
 
               <div>
+                <Label htmlFor="cost_per_ml">Custo por ML (R$)</Label>
+                <Input
+                  id="cost_per_ml"
+                  type="number"
+                  step="0.01"
+                  value={formData.cost_per_ml}
+                  onChange={(e) => setFormData({ ...formData, cost_per_ml: Number(e.target.value) })}
+                  placeholder="0.00"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="supplier">Fornecedor (opcional)</Label>
+                <Input
+                  id="supplier"
+                  value={formData.supplier}
+                  onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                  placeholder="Nome do fornecedor"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="warehouse">Armazém</Label>
                 <Select value={formData.warehouse_id} onValueChange={(value) => setFormData({ ...formData, warehouse_id: value })}>
                   <SelectTrigger>
@@ -166,9 +194,10 @@ const AdminLots = () => {
                 <TableHead>Código do Lote</TableHead>
                 <TableHead>Perfume</TableHead>
                 <TableHead>Quantidade</TableHead>
+                <TableHead>Custo</TableHead>
+                <TableHead>Fornecedor</TableHead>
                 <TableHead>Armazém</TableHead>
                 <TableHead>Validade</TableHead>
-                <TableHead>Criado em</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -195,6 +224,15 @@ const AdminLots = () => {
                     <TableCell>{lot.qty_ml} ml</TableCell>
                     <TableCell>
                       <div>
+                        <div className="font-medium">R$ {lot.cost_per_ml?.toFixed(4) || '0.0000'}/ml</div>
+                        <div className="text-sm text-muted-foreground">Total: R$ {lot.total_cost?.toFixed(2) || '0.00'}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {lot.supplier || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <div>
                         <div className="font-medium">{lot.warehouses?.name}</div>
                         <div className="text-sm text-muted-foreground">{lot.warehouses?.location}</div>
                       </div>
@@ -210,9 +248,6 @@ const AdminLots = () => {
                       ) : (
                         'N/A'
                       )}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(lot.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </TableCell>
                     <TableCell>
                       {isExpired ? (

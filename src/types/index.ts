@@ -122,6 +122,9 @@ export interface InventoryLot {
   expiry_date: string | null;
   qty_ml: number;
   warehouse_id: string;
+  cost_per_ml?: number;
+  total_cost?: number;
+  supplier?: string;
   created_at: string;
 }
 

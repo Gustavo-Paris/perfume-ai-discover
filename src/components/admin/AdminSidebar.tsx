@@ -18,7 +18,9 @@ import {
   ChevronDown,
   ChevronRight,
   ShoppingCart,
-  Megaphone
+  Megaphone,
+  Calculator,
+  Boxes
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -48,6 +50,8 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
       { title: 'Estoque', url: '/admin/stock', icon: Package },
       { title: 'Inventário', url: '/admin/inventory', icon: Package },
       { title: 'Lotes', url: '/admin/lots', icon: Package },
+      { title: 'Materiais', url: '/admin/materials', icon: Boxes },
+      { title: 'Gestão de Custos', url: '/admin/cost-management', icon: Calculator },
     ]
   },
   {
