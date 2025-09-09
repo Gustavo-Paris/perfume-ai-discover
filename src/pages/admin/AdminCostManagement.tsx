@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Calculator, TrendingUp, Package } from 'lucide-react';
-import { usePerfumes } from '@/hooks/usePerfumes';
+import { usePerfumesWithCosts, type PerfumeWithCosts } from '@/hooks/usePerfumes';
 import { useProductRecipes, useCreateProductRecipe, useCalculateProductCost } from '@/hooks/useMaterials';
 import { useMaterials } from '@/hooks/useMaterials';
 import { toast } from 'sonner';
@@ -24,7 +24,7 @@ export default function AdminCostManagement() {
     quantity_needed: 0,
   });
 
-  const { data: perfumes = [] } = usePerfumes();
+  const { data: perfumes = [] } = usePerfumesWithCosts();
   const { data: materials = [] } = useMaterials();
   const { data: recipes = [] } = useProductRecipes(selectedPerfume);
   const createRecipe = useCreateProductRecipe();
@@ -328,11 +328,11 @@ export default function AdminCostManagement() {
                         <h3 className="font-medium">{perfume.name}</h3>
                         <p className="text-sm text-muted-foreground">{perfume.brand}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Custo médio: R$ {(perfume as any).avg_cost_per_ml?.toFixed(4) || '0.0000'}/ml
+                          Custo médio: R$ {perfume.avg_cost_per_ml?.toFixed(4) || '0.0000'}/ml
                         </p>
                       </div>
                       <Badge variant="outline">
-                        Margem alvo: {(((perfume as any).target_margin_percentage || 0.5) * 100).toFixed(0)}%
+                        Margem alvo: {((perfume.target_margin_percentage || 0.5) * 100).toFixed(0)}%
                       </Badge>
                     </div>
                     

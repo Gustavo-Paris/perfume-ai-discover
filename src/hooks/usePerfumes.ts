@@ -21,6 +21,30 @@ export const usePerfumes = () => {
   });
 };
 
+// Extended perfume type with cost fields
+export interface PerfumeWithCosts extends DatabasePerfume {
+  avg_cost_per_ml?: number;
+  target_margin_percentage?: number;
+  last_cost_calculation?: string;
+}
+
+export const usePerfumesWithCosts = () => {
+  return useQuery({
+    queryKey: ['perfumes-with-costs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('perfumes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as PerfumeWithCosts[];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache for cost data
+    refetchOnWindowFocus: false,
+  });
+};
+
 export const useCreatePerfume = () => {
   const queryClient = useQueryClient();
   
