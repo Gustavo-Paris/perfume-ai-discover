@@ -996,30 +996,39 @@ export type Database = {
       }
       inventory_lots: {
         Row: {
+          cost_per_ml: number | null
           created_at: string | null
           expiry_date: string | null
           id: string
           lot_code: string
           perfume_id: string
           qty_ml: number
+          supplier: string | null
+          total_cost: number | null
           warehouse_id: string
         }
         Insert: {
+          cost_per_ml?: number | null
           created_at?: string | null
           expiry_date?: string | null
           id?: string
           lot_code: string
           perfume_id: string
           qty_ml?: number
+          supplier?: string | null
+          total_cost?: number | null
           warehouse_id: string
         }
         Update: {
+          cost_per_ml?: number | null
           created_at?: string | null
           expiry_date?: string | null
           id?: string
           lot_code?: string
           perfume_id?: string
           qty_ml?: number
+          supplier?: string | null
+          total_cost?: number | null
           warehouse_id?: string
         }
         Relationships: [
@@ -1136,6 +1145,104 @@ export type Database = {
           min_points?: number
           multiplier?: number
           name?: string
+        }
+        Relationships: []
+      }
+      material_lots: {
+        Row: {
+          cost_per_unit: number
+          created_at: string
+          expiry_date: string | null
+          id: string
+          lot_code: string | null
+          material_id: string
+          notes: string | null
+          purchase_date: string
+          quantity: number
+          supplier: string | null
+          total_cost: number
+        }
+        Insert: {
+          cost_per_unit: number
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          lot_code?: string | null
+          material_id: string
+          notes?: string | null
+          purchase_date?: string
+          quantity: number
+          supplier?: string | null
+          total_cost: number
+        }
+        Update: {
+          cost_per_unit?: number
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          lot_code?: string | null
+          material_id?: string
+          notes?: string | null
+          purchase_date?: string
+          quantity?: number
+          supplier?: string | null
+          total_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_lots_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          category: string
+          cost_per_unit: number
+          created_at: string
+          current_stock: number
+          description: string | null
+          id: string
+          is_active: boolean
+          min_stock_alert: number
+          name: string
+          supplier: string | null
+          type: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          cost_per_unit?: number
+          created_at?: string
+          current_stock?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_stock_alert?: number
+          name: string
+          supplier?: string | null
+          type: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_per_unit?: number
+          created_at?: string
+          current_stock?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_stock_alert?: number
+          name?: string
+          supplier?: string | null
+          type?: string
+          unit?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1324,6 +1431,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      packaging_rules: {
+        Row: {
+          container_material_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          item_size_ml: number | null
+          max_items: number
+          priority: number
+        }
+        Insert: {
+          container_material_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_size_ml?: number | null
+          max_items: number
+          priority?: number
+        }
+        Update: {
+          container_material_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_size_ml?: number | null
+          max_items?: number
+          priority?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packaging_rules_container_material_id_fkey"
+            columns: ["container_material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_events: {
         Row: {
@@ -1529,6 +1674,7 @@ export type Database = {
       }
       perfumes: {
         Row: {
+          avg_cost_per_ml: number | null
           base_notes: string[] | null
           brand: string
           category: string | null
@@ -1539,13 +1685,16 @@ export type Database = {
           heart_notes: string[] | null
           id: string
           image_url: string | null
+          last_cost_calculation: string | null
           name: string
           price_10ml: number | null
           price_5ml: number | null
           price_full: number
+          target_margin_percentage: number | null
           top_notes: string[] | null
         }
         Insert: {
+          avg_cost_per_ml?: number | null
           base_notes?: string[] | null
           brand: string
           category?: string | null
@@ -1556,13 +1705,16 @@ export type Database = {
           heart_notes?: string[] | null
           id?: string
           image_url?: string | null
+          last_cost_calculation?: string | null
           name: string
           price_10ml?: number | null
           price_5ml?: number | null
           price_full: number
+          target_margin_percentage?: number | null
           top_notes?: string[] | null
         }
         Update: {
+          avg_cost_per_ml?: number | null
           base_notes?: string[] | null
           brand?: string
           category?: string | null
@@ -1573,10 +1725,12 @@ export type Database = {
           heart_notes?: string[] | null
           id?: string
           image_url?: string | null
+          last_cost_calculation?: string | null
           name?: string
           price_10ml?: number | null
           price_5ml?: number | null
           price_full?: number
+          target_margin_percentage?: number | null
           top_notes?: string[] | null
         }
         Relationships: []
@@ -1764,6 +1918,55 @@ export type Database = {
             foreignKeyName: "product_fiscal_data_perfume_id_fkey"
             columns: ["perfume_id"]
             isOneToOne: true
+            referencedRelation: "perfumes_with_stock"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_recipes: {
+        Row: {
+          created_at: string
+          id: string
+          material_id: string
+          perfume_id: string
+          quantity_needed: number
+          size_ml: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material_id: string
+          perfume_id: string
+          quantity_needed: number
+          size_ml: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material_id?: string
+          perfume_id?: string
+          quantity_needed?: number
+          size_ml?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_recipes_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recipes_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recipes_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
             referencedRelation: "perfumes_with_stock"
             referencedColumns: ["id"]
           },
@@ -2862,6 +3065,22 @@ export type Database = {
         Args: { perfume_a_id: string; perfume_b_id: string }
         Returns: number
       }
+      calculate_packaging_costs: {
+        Args: { cart_items: Json }
+        Returns: {
+          containers_needed: Json
+          total_packaging_cost: number
+        }[]
+      }
+      calculate_product_total_cost: {
+        Args: { perfume_uuid: string; size_ml_param: number }
+        Returns: {
+          materials_cost_per_unit: number
+          perfume_cost_per_unit: number
+          suggested_price: number
+          total_cost_per_unit: number
+        }[]
+      }
       check_advanced_stock_alerts: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -3111,6 +3330,10 @@ export type Database = {
       }
       trigger_email_notification: {
         Args: { notification_type: string; record_id: string }
+        Returns: undefined
+      }
+      update_perfume_avg_cost: {
+        Args: { perfume_uuid: string }
         Returns: undefined
       }
       update_sales_statistics: {

@@ -13,6 +13,8 @@ interface FinancialStats {
   avgOrderValue: number;
   refundRate: number;
   revenueGrowth: number;
+  avgMargin: number;
+  totalCosts: number;
 }
 
 interface PaymentMethodData {
@@ -31,7 +33,9 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
     monthlyRevenue: 0,
     avgOrderValue: 0,
     refundRate: 0,
-    revenueGrowth: 0
+    revenueGrowth: 0,
+    avgMargin: 0,
+    totalCosts: 0,
   });
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodData[]>([]);
@@ -73,7 +77,9 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
           monthlyRevenue,
           avgOrderValue,
           refundRate: 2.5, // Placeholder
-          revenueGrowth
+          revenueGrowth,
+          avgMargin: 0, // Will be calculated later
+          totalCosts: 0, // Will be calculated later
         });
 
         // Revenue chart data - optimized single query
@@ -206,10 +212,10 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
         />
         
         <StatCard
-          title="Taxa de Reembolso"
-          value={`${stats.refundRate}%`}
-          icon={ArrowDownRight}
-          subtitle="Pedidos reembolsados"
+          title="Margem Média"
+          value={`${stats.avgMargin.toFixed(1)}%`}
+          icon={TrendingUp}
+          subtitle="Margem de lucro média"
           gradient="from-orange-500 to-orange-600"
         />
       </div>

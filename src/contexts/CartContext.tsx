@@ -6,6 +6,18 @@ import { useAuth } from './AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { trackAddToCart } from '@/utils/analytics';
 
+export interface PackagingCosts {
+  containers_needed: {
+    material_id: string;
+    name: string;
+    quantity: number;
+    cost_per_unit: number;
+    total_cost: number;
+    items_per_container: number;
+  }[];
+  total_packaging_cost: number;
+}
+
 interface CartContextType {
   items: CartItem[];
   addToCart: (item: { perfume_id: string; size_ml: number; quantity: number }) => Promise<void>;
@@ -14,6 +26,8 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   getTotal: () => number;
   loading: boolean;
+  packagingCosts: PackagingCosts | null;
+  calculatePackagingCosts: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -28,6 +42,7 @@ export const useCart = () => {
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [packagingCosts, setPackagingCosts] = useState<PackagingCosts | null>(null);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
@@ -400,13 +415,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const calculatePackagingCosts = async () => {
+    try {
+      const cartData = items.map(item => ({
+        perfume_id: item.perfume.id,
+        size_ml: item.size,
+        quantity: item.quantity
+      }));
+
+      const { data, error } = await supabase.rpc('calculate_packaging_costs', {
+        cart_items: cartData
+      });
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Type assertion to handle Supabase Json type
+        const result = data[0] as PackagingCosts;
+        setPackagingCosts(result);
+      }
+    } catch (error) {
+      console.error('Error calculating packaging costs:', error);
+    }
+  };
+
   const getTotal = () => {
-    return items.reduce((total, item) => {
+    const itemsTotal = items.reduce((total, item) => {
       let price = item.perfume.price_full;
       if (item.size === 5) price = item.perfume.price_5ml || 0;
       if (item.size === 10) price = item.perfume.price_10ml || 0;
       return total + (price * item.quantity);
     }, 0);
+    
+    const packagingTotal = packagingCosts?.total_packaging_cost || 0;
+    return itemsTotal + packagingTotal;
   };
 
   return (
@@ -418,7 +460,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeItem,
         clearCart,
         getTotal,
-        loading
+        loading,
+        packagingCosts,
+        calculatePackagingCosts,
       }}
     >
       {children}
