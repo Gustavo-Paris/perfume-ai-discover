@@ -1,7 +1,7 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, ShoppingCart, Plus, Minus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +22,7 @@ const PerfumeDetails = () => {
   const { addToCart, loading: cartLoading } = useCart();
   const { data: databasePerfumes, isLoading } = usePerfumes();
   const { user } = useAuth();
-  const [selectedSize, setSelectedSize] = useState<2 | 5 | 10 | null>(5);
+  const [selectedSize, setSelectedSize] = useState<2 | 5 | 10 | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
   
@@ -33,10 +33,12 @@ const PerfumeDetails = () => {
   // Find perfume by id from database
   const databasePerfume = databasePerfumes?.find((p: DatabasePerfume) => p.id === id);
   
-  // Set initial size based on available sizes
-  if (databasePerfume && selectedSize === null) {
-    setSelectedSize(databasePerfume.price_2ml ? 2 : 5);
-  }
+  // Set initial size based on available sizes using useEffect
+  useEffect(() => {
+    if (databasePerfume && selectedSize === null) {
+      setSelectedSize(databasePerfume.price_2ml ? 2 : 5);
+    }
+  }, [databasePerfume, selectedSize]);
 
   if (isLoading) {
     return (
