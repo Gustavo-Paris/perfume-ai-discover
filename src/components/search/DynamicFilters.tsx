@@ -51,18 +51,19 @@ const DynamicFilters = ({
   const loadFilterOptions = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('perfumes_with_stock')
-        .select('brand, family, gender, category, price_full');
+      // Use a função RPC em vez da view
+      let { data: perfumesData } = await supabase.rpc('get_perfumes_with_stock');
 
-      // Se há uma busca ativa, filtrar por ela
-      if (searchQuery && searchQuery.trim()) {
-        query = query.or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      // Filtrar dados localmente se há busca ativa
+      let data = perfumesData;
+      if (searchQuery && searchQuery.trim() && data) {
+        const searchTerm = searchQuery.toLowerCase();
+        data = data.filter(item => 
+          item.name?.toLowerCase().includes(searchTerm) ||
+          item.brand?.toLowerCase().includes(searchTerm) ||
+          item.description?.toLowerCase().includes(searchTerm)
+        );
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
 
       if (data) {
         // Processar marcas

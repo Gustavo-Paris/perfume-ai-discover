@@ -20,22 +20,22 @@ const ProfitMarginConfig = () => {
   const [margins, setMargins] = useState<MarginConfig[]>([
     {
       category: 'Premium',
-      currentMargin: 47,
+      currentMargin: 50,
       suggestedMargin: 50,
       perfumeCount: 10,
       color: 'bg-blue-500'
     },
     {
       category: 'Luxury', 
-      currentMargin: 57,
-      suggestedMargin: 60,
+      currentMargin: 45,
+      suggestedMargin: 45,
       perfumeCount: 8,
       color: 'bg-purple-500'
     },
     {
       category: 'Ultra Luxury',
-      currentMargin: 65,
-      suggestedMargin: 70,
+      currentMargin: 40,
+      suggestedMargin: 40,
       perfumeCount: 5,
       color: 'bg-amber-500'
     }
@@ -182,9 +182,9 @@ const ProfitMarginConfig = () => {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold text-blue-900 mb-2">💡 Margens de Mercado</h4>
             <div className="text-sm text-blue-700 space-y-1">
-              <p><strong>Premium:</strong> 45-50% - Perfumes de uso diário e marcas consolidadas</p>
-              <p><strong>Luxury:</strong> 55-65% - Perfumes de nicho e ocasiões especiais</p>
-              <p><strong>Ultra Luxury:</strong> 65-75% - Perfumes exclusivos e edições limitadas</p>
+              <p><strong>Premium:</strong> 50% - Perfumes de uso diário e marcas consolidadas</p>
+              <p><strong>Luxury:</strong> 45% - Perfumes de nicho e ocasiões especiais</p>
+              <p><strong>Ultra Luxury:</strong> 40% - Perfumes exclusivos e edições limitadas</p>
             </div>
           </div>
 

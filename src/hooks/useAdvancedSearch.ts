@@ -145,49 +145,69 @@ export const useAdvancedSearch = () => {
       // Log da busca
       await logSearchQuery(searchQuery);
 
-      // Busca inteligente com prioridade
-      let query = supabase.from('perfumes_with_stock').select('*');
+      // Buscar dados usando a função RPC
+      const { data: allPerfumes } = await supabase.rpc('get_perfumes_with_stock');
       
-      // Se a busca contém " - " (formato marca - nome), buscar mais específico
+      if (!allPerfumes) {
+        setResults([]);
+        return;
+      }
+
+      // Filtrar dados localmente
+      let filteredResults = allPerfumes;
+
+      // Aplicar busca por texto
       if (searchQuery.includes(' - ')) {
-        const [brand, name] = searchQuery.split(' - ').map(s => s.trim());
-        
-        
+        const [brand, name] = searchQuery.split(' - ').map(s => s.trim().toLowerCase());
         // Busca específica: marca E nome devem corresponder
-        query = query.ilike('brand', `%${brand}%`).ilike('name', `%${name}%`);
+        filteredResults = filteredResults.filter(item =>
+          item.brand?.toLowerCase().includes(brand) && 
+          item.name?.toLowerCase().includes(name)
+        );
       } else {
         // Busca geral: buscar em qualquer campo
-        query = query.or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+        const searchTerm = searchQuery.toLowerCase();
+        filteredResults = filteredResults.filter(item =>
+          item.name?.toLowerCase().includes(searchTerm) ||
+          item.brand?.toLowerCase().includes(searchTerm) ||
+          item.description?.toLowerCase().includes(searchTerm)
+        );
       }
 
       // Aplicar filtros
       const currentFilters = { ...filters, ...appliedFilters };
       
       if (currentFilters.brands.length > 0) {
-        query = query.in('brand', currentFilters.brands);
+        filteredResults = filteredResults.filter(item => 
+          currentFilters.brands.includes(item.brand)
+        );
       }
       
       if (currentFilters.families.length > 0) {
-        query = query.in('family', currentFilters.families);
+        filteredResults = filteredResults.filter(item => 
+          currentFilters.families.includes(item.family)
+        );
       }
       
       if (currentFilters.genders.length > 0) {
-        query = query.in('gender', currentFilters.genders);
+        filteredResults = filteredResults.filter(item => 
+          currentFilters.genders.includes(item.gender)
+        );
       }
 
       if (currentFilters.priceRange[0] > 0 || currentFilters.priceRange[1] < 1000) {
-        query = query.gte('price_full', currentFilters.priceRange[0])
-                  .lte('price_full', currentFilters.priceRange[1]);
+        filteredResults = filteredResults.filter(item =>
+          item.price_full >= currentFilters.priceRange[0] &&
+          item.price_full <= currentFilters.priceRange[1]
+        );
       }
 
-      const { data, error } = await query
-        .order('name')
-        .limit(20);
+      // Ordenar e limitar resultados
+      const sortedResults = filteredResults
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .slice(0, 20);
 
-      if (error) throw error;
-
-      
-      setResults(data || []);
+      setResults(sortedResults);
       
       // Atualizar histórico de buscas
       updateRecentSearches(searchQuery);
