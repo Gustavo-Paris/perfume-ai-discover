@@ -3331,6 +3331,10 @@ export type Database = {
         Args: { affiliate_code: string; order_id: string; order_total: number }
         Returns: boolean
       }
+      recalculate_all_prices: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       trigger_email_notification: {
         Args: { notification_type: string; record_id: string }
         Returns: undefined
