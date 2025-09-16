@@ -2225,7 +2225,7 @@ export type Database = {
           subcategory: string | null
           subject: string
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           assigned_to?: string | null
@@ -2249,7 +2249,7 @@ export type Database = {
           subcategory?: string | null
           subject: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           assigned_to?: string | null
@@ -2273,7 +2273,7 @@ export type Database = {
           subcategory?: string | null
           subject?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -3099,6 +3099,15 @@ export type Database = {
           email_contato: string
           estado: string
           nome_fantasia: string
+        }[]
+      }
+      get_sac_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_resolution_time: unknown
+          open_tickets: number
+          resolved_tickets: number
+          total_tickets: number
         }[]
       }
       get_user_points_balance: {

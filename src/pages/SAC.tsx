@@ -65,13 +65,24 @@ const SAC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Authentication is now required for ticket creation
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para criar uma solicitação de atendimento.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { error } = await supabase
         .from('sac_tickets')
         .insert([{
-          user_id: user?.id || null,
+          user_id: user.id, // Required field - no longer nullable
           category: formData.category,
           subcategory: formData.subcategory || null,
           subject: formData.subject,
@@ -98,13 +109,14 @@ const SAC = () => {
         subject: '',
         description: '',
         customer_name: '',
-        customer_email: user?.email || '',
+        customer_email: user.email || '',
         customer_phone: '',
         order_number: ''
       });
       
-      if (user) loadTickets();
+      loadTickets();
     } catch (error) {
+      console.error('Error creating ticket:', error);
       toast({
         title: "Erro",
         description: "Não foi possível enviar sua solicitação. Tente novamente.",
@@ -213,7 +225,19 @@ const SAC = () => {
                 Abra uma solicitação<br />
                 e acompanhe o status
               </p>
-              <Button onClick={() => setShowForm(true)}>
+              <Button 
+                onClick={() => {
+                  if (!user) {
+                    toast({
+                      title: "Login necessário",
+                      description: "Você precisa estar logado para criar uma solicitação.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  setShowForm(true);
+                }}
+              >
                 Nova Solicitação
               </Button>
             </CardContent>
