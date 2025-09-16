@@ -104,32 +104,58 @@ const AdminProductCadastro = () => {
   // Calcular custo por ml automaticamente
   const costPerMl = lotData.qty_ml > 0 ? lotData.total_cost / lotData.qty_ml : 0;
 
-  // Função para calcular preços usando a função do banco
+   // Função para calcular preços usando a função do banco
   const calculatePricesWithMaterials = async () => {
     if (!currentPerfumeId || costPerMl === 0) return null;
 
     try {
       const sizes = [2, 5, 10];
-      const promises = sizes.map(size => 
-        supabase.rpc('calculate_product_total_cost', {
-          perfume_uuid: currentPerfumeId,
-          size_ml_param: size
-        })
-      );
-
-      const results = await Promise.all(promises);
       
-      if (results.every(r => r.error === null && r.data && r.data.length > 0)) {
+      // Buscar materiais de embalagem
+      const { data: materials } = await supabase
+        .from('materials')
+        .select('*')
+        .eq('type', 'input')
+        .eq('is_active', true)
+        .in('category', ['frasco', 'etiqueta']);
+
+      const getPackagingCost = (sizeMl: number) => {
+        if (!materials) return 0;
+        
+        const frasco = materials.find(m => 
+          m.category === 'frasco' && m.name.includes(`${sizeMl}ml`)
+        );
+        const etiqueta = materials.find(m => m.category === 'etiqueta');
+        
+        return (frasco?.cost_per_unit || 0) + (etiqueta?.cost_per_unit || 0);
+      };
+
+      // Calcular preços para cada tamanho
+      const prices = sizes.map(size => {
+        const perfumeCost = costPerMl * size;
+        const packagingCost = getPackagingCost(size);
+        const totalCost = perfumeCost + packagingCost;
+        const margin = 1 + (marginPercentage / 100);
+        const suggestedPrice = totalCost * margin;
+        
         return {
-          price_2ml: results[0].data[0]?.suggested_price || 0,
-          price_5ml: results[1].data[0]?.suggested_price || 0,
-          price_10ml: results[2].data[0]?.suggested_price || 0,
-          perfume_cost: results[1].data[0]?.perfume_cost_per_unit || 0,
-          materials_cost: results[1].data[0]?.materials_cost_per_unit || 0,
-          packaging_cost: 0, // Campo não disponível na função atual
-          total_cost_per_unit: results[1].data[0]?.total_cost_per_unit || 0,
+          size,
+          perfumeCost,
+          packagingCost,
+          totalCost,
+          suggestedPrice
         };
-      }
+      });
+
+      return {
+        price_2ml: prices[0].suggestedPrice,
+        price_5ml: prices[1].suggestedPrice,
+        price_10ml: prices[2].suggestedPrice,
+        perfume_cost: prices[1].perfumeCost,
+        materials_cost: 0, // Sem materiais adicionais por enquanto
+        packaging_cost: prices[1].packagingCost,
+        total_cost_per_unit: prices[1].totalCost,
+      };
     } catch (error) {
       console.error('Erro ao calcular preços:', error);
     }
