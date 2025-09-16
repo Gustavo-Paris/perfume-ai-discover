@@ -20,7 +20,8 @@ import {
   ShoppingCart,
   Megaphone,
   Calculator,
-  Boxes
+  Boxes,
+  Warehouse
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -41,32 +42,39 @@ interface AdminNavGroup {
 
 const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
-  { title: '✨ Assistente de Cadastro', url: '/admin/produto-wizard', icon: Package },
   {
-    title: 'Gestão de Vendas',
-    icon: TrendingUp,
+    title: 'Produtos',
+    icon: Package,
     defaultOpen: true,
     items: [
-      { title: 'Pedidos', url: '/admin/orders', icon: ShoppingBag },
-      { title: 'Estoque', url: '/admin/stock', icon: Package },
-      { title: 'Inventário', url: '/admin/inventory', icon: Package },
-      { title: 'Lotes', url: '/admin/lots', icon: Package },
+      { title: 'Cadastrar Produto', url: '/admin/produto-cadastro', icon: Package },
+      { title: 'Gerenciar Perfumes', url: '/admin/perfumes', icon: Package },
+      { title: 'Lotes de Estoque', url: '/admin/lots', icon: Boxes },
       { title: 'Materiais', url: '/admin/materials', icon: Boxes },
+    ]
+  },
+  {
+    title: 'Estoque',
+    icon: Warehouse,
+    defaultOpen: false,
+    items: [
+      { title: 'Visão Geral', url: '/admin/stock', icon: Package },
+      { title: 'Movimentações', url: '/admin/inventory', icon: TrendingUp },
       { title: 'Gestão de Custos', url: '/admin/cost-management', icon: Calculator },
     ]
   },
   {
-    title: 'Catálogo & Marketing',
-    icon: ShoppingCart,
+    title: 'Vendas',
+    icon: ShoppingBag,
     defaultOpen: false,
     items: [
-      { title: 'Perfumes', url: '/admin/perfumes', icon: Package },
+      { title: 'Pedidos', url: '/admin/orders', icon: ShoppingBag },
       { title: 'Promoções', url: '/admin/promotions', icon: Percent },
       { title: 'Cupons', url: '/admin/coupons', icon: Tag },
     ]
   },
   {
-    title: 'Relacionamento',
+    title: 'Clientes',
     icon: Users,
     defaultOpen: false,
     items: [
@@ -74,17 +82,15 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
       { title: 'Reviews', url: '/admin/reviews', icon: MessageSquare },
       { title: 'Afiliados', url: '/admin/affiliates', icon: UserPlus },
       { title: 'Suporte', url: '/admin/support', icon: MessageCircle },
-      { title: 'Macros de Suporte', url: '/admin/support/macros', icon: Megaphone },
     ]
   },
-  { title: 'Configurações', url: '/admin/config', icon: Settings },
   {
     title: 'Sistema',
     icon: Settings,
     defaultOpen: false,
     items: [
-      { title: 'Dados da Empresa', url: '/admin/company', icon: Settings },
-      { title: 'Preparar Dados', url: '/admin/data-seeder', icon: Package },
+      { title: 'Configurações', url: '/admin/config', icon: Settings },
+      { title: 'Empresa', url: '/admin/company', icon: Settings },
       { title: 'Monitoramento', url: '/admin/monitoring', icon: TrendingUp },
     ]
   },
