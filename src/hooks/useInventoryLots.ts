@@ -54,3 +54,25 @@ export const useCreateInventoryLot = () => {
     },
   });
 };
+
+export const useUpdateInventoryLot = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<InventoryLot> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('inventory_lots')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory-lots'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-movements'] });
+    },
+  });
+};

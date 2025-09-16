@@ -60,6 +60,7 @@ import AdminDataSeeder from "./pages/admin/AdminDataSeeder";
 import AdminMonitoring from "./pages/admin/AdminMonitoring";
 import AdminMaterials from "./pages/admin/AdminMaterials";
 import AdminCostManagement from "./pages/admin/AdminCostManagement";
+import AdminProductWizard from "./pages/admin/AdminProductWizard";
 import { SupportChat } from "./components/support/SupportChat";
 
 const queryClient = new QueryClient();
@@ -111,6 +112,7 @@ const AppContent = () => {
             <Route path="monitoring" element={<AdminMonitoring />} />
             <Route path="materials" element={<AdminMaterials />} />
             <Route path="cost-management" element={<AdminCostManagement />} />
+            <Route path="produto-wizard" element={<AdminProductWizard />} />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />
             <Route path="inventory" element={<AdminInventory />} />

@@ -4,9 +4,12 @@ import { Calendar, Package, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useStockMovements } from '@/hooks/useStockMovements';
 import { usePerfumes } from '@/hooks/usePerfumes';
+import { NavigationBreadcrumbs } from '@/components/admin/NavigationBreadcrumbs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -61,7 +64,29 @@ const AdminInventory = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <>
+      <NavigationBreadcrumbs 
+        items={[
+          { label: 'Estoque', href: '/admin/stock' },
+          { label: 'Movimentações', current: true }
+        ]}
+        actions={
+          <div className="flex gap-2">
+            <Link to="/admin/lots">
+              <Button variant="outline" size="sm">
+                Gerenciar Lotes
+              </Button>
+            </Link>
+            <Link to="/admin/produto-wizard">
+              <Button size="sm">
+                Novo Produto
+              </Button>
+            </Link>
+          </div>
+        }
+      />
+      
+      <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Movimentações de Estoque</h1>
       </div>
@@ -158,9 +183,10 @@ const AdminInventory = () => {
               Nenhuma movimentação encontrada
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 };
 
