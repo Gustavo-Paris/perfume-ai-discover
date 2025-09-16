@@ -11,6 +11,7 @@ import { useCreatePerfume } from '@/hooks/usePerfumes';
 import { useCreateInventoryLot } from '@/hooks/useInventoryLots';
 import { useWarehouses } from '@/hooks/useWarehouses';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WizardStep {
   id: string;
@@ -86,6 +87,65 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
 
   const formatNotes = (notes: string[]) => notes.join(', ');
 
+  // Função para criar receitas padrão de materiais para o produto
+  const createProductRecipes = async (perfumeId: string) => {
+    try {
+      // Buscar os materiais necessários
+      const { data: materials, error: materialsError } = await supabase
+        .from('materials')
+        .select('id, name')
+        .in('name', ['Frasco 2ml', 'Frasco 5ml', 'Frasco 10ml', 'Etiqueta Padrão'])
+        .eq('is_active', true);
+
+      if (materialsError) throw materialsError;
+
+      const frascoMaterials = materials?.filter(m => m.name.includes('Frasco')) || [];
+      const etiquetaId = materials?.find(m => m.name === 'Etiqueta Padrão')?.id;
+
+      if (!etiquetaId) {
+        console.warn('Etiqueta Padrão não encontrada');
+        return;
+      }
+
+      // Criar receitas para cada tamanho
+      const recipes = [];
+      
+      // Para cada frasco, criar receita com o frasco + etiqueta
+      for (const frasco of frascoMaterials) {
+        const sizeML = frasco.name === 'Frasco 2ml' ? 2 : 
+                       frasco.name === 'Frasco 5ml' ? 5 : 10;
+        
+        // Adicionar o frasco
+        recipes.push({
+          perfume_id: perfumeId,
+          size_ml: sizeML,
+          material_id: frasco.id,
+          quantity_needed: 1
+        });
+        
+        // Adicionar a etiqueta
+        recipes.push({
+          perfume_id: perfumeId,
+          size_ml: sizeML,
+          material_id: etiquetaId,
+          quantity_needed: 1
+        });
+      }
+
+      // Inserir todas as receitas
+      if (recipes.length > 0) {
+        const { error: recipesError } = await supabase
+          .from('product_recipes')
+          .insert(recipes);
+
+        if (recipesError) throw recipesError;
+      }
+    } catch (error) {
+      console.error('Erro ao criar receitas do produto:', error);
+      // Não vamos interromper o fluxo por causa disso
+    }
+  };
+
   const validateCurrentStep = () => {
     switch (currentStep) {
       case 0:
@@ -125,6 +185,10 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
           target_margin_percentage: pricingData.target_margin_percentage,
         });
         setCreatedPerfumeId(perfume.id);
+        
+        // Criar receitas padrão para o produto (materiais necessários)
+        await createProductRecipes(perfume.id);
+        
         setCompletedSteps(prev => new Set([...prev, 0]));
       } catch (error) {
         toast({

@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { useMaterials, useCreateMaterial, useMaterialLots, useCreateMaterialLot, usePackagingRules, useCreatePackagingRule } from '@/hooks/useMaterials';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AdminMaterialsSimplified() {
   const [isCreateMaterialOpen, setIsCreateMaterialOpen] = useState(false);
@@ -109,6 +110,28 @@ export default function AdminMaterialsSimplified() {
       };
       
       await createMaterialLot.mutateAsync(lotData);
+      
+      // Atualizar o estoque atual do material
+      const { data: currentMaterial } = await supabase
+        .from('materials')
+        .select('current_stock')
+        .eq('id', lotForm.material_id)
+        .single();
+      
+      if (currentMaterial) {
+        const { error: updateError } = await supabase
+          .from('materials')
+          .update({ 
+            current_stock: currentMaterial.current_stock + lotForm.quantity,
+            cost_per_unit: lotForm.cost_per_unit // Atualizar também o custo por unidade
+          })
+          .eq('id', lotForm.material_id);
+        
+        if (updateError) {
+          console.error('Erro ao atualizar estoque do material:', updateError);
+        }
+      }
+      
       toast.success('Lote de material criado com sucesso!');
       setIsCreateLotOpen(false);
       setLotForm({
