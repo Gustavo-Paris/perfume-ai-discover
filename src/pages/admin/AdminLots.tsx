@@ -32,7 +32,7 @@ const AdminLots = () => {
     expiry_date: '',
     qty_ml: 0,
     warehouse_id: '',
-    cost_per_ml: 0,
+    total_cost: 0,
     supplier: '',
   });
 
@@ -43,7 +43,7 @@ const AdminLots = () => {
       expiry_date: '',
       qty_ml: 0,
       warehouse_id: '',
-      cost_per_ml: 0,
+      total_cost: 0,
       supplier: '',
     });
   };
@@ -57,7 +57,7 @@ const AdminLots = () => {
           id: editingLot.id,
           ...formData,
           expiry_date: formData.expiry_date || null,
-          total_cost: formData.cost_per_ml * formData.qty_ml,
+          cost_per_ml: formData.qty_ml > 0 ? formData.total_cost / formData.qty_ml : 0,
         });
         toast({ title: "Lote atualizado com sucesso!" });
         setEditingLot(null);
@@ -65,7 +65,7 @@ const AdminLots = () => {
         await createLot.mutateAsync({
           ...formData,
           expiry_date: formData.expiry_date || null,
-          total_cost: formData.cost_per_ml * formData.qty_ml,
+          cost_per_ml: formData.qty_ml > 0 ? formData.total_cost / formData.qty_ml : 0,
         });
         toast({ title: "Lote criado com sucesso!" });
         setIsCreateOpen(false);
@@ -87,7 +87,7 @@ const AdminLots = () => {
       expiry_date: lot.expiry_date ? format(new Date(lot.expiry_date), 'yyyy-MM-dd') : '',
       qty_ml: lot.qty_ml,
       warehouse_id: lot.warehouse_id,
-      cost_per_ml: lot.cost_per_ml || 0,
+      total_cost: lot.total_cost || (lot.cost_per_ml || 0) * lot.qty_ml,
       supplier: lot.supplier || '',
     });
     setEditingLot(lot);
@@ -170,16 +170,21 @@ const AdminLots = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="cost_per_ml">Custo por ML (R$)</Label>
+                    <Label htmlFor="total_cost">Custo Total (R$)</Label>
                     <Input
-                      id="cost_per_ml"
+                      id="total_cost"
                       type="number"
                       step="0.01"
-                      value={formData.cost_per_ml}
-                      onChange={(e) => setFormData({ ...formData, cost_per_ml: Number(e.target.value) })}
+                      value={formData.total_cost}
+                      onChange={(e) => setFormData({ ...formData, total_cost: Number(e.target.value) })}
                       placeholder="0.00"
                       min="0"
                     />
+                    {formData.qty_ml > 0 && formData.total_cost > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Custo por ML: R$ {(formData.total_cost / formData.qty_ml).toFixed(4)}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -384,16 +389,21 @@ const AdminLots = () => {
               </div>
 
               <div>
-                <Label htmlFor="edit-cost_per_ml">Custo por ML (R$)</Label>
+                <Label htmlFor="edit-total_cost">Custo Total (R$)</Label>
                 <Input
-                  id="edit-cost_per_ml"
+                  id="edit-total_cost"
                   type="number"
                   step="0.01"
-                  value={formData.cost_per_ml}
-                  onChange={(e) => setFormData({ ...formData, cost_per_ml: Number(e.target.value) })}
+                  value={formData.total_cost}
+                  onChange={(e) => setFormData({ ...formData, total_cost: Number(e.target.value) })}
                   placeholder="0.00"
                   min="0"
                 />
+                {formData.qty_ml > 0 && formData.total_cost > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Custo por ML: R$ {(formData.total_cost / formData.qty_ml).toFixed(4)}
+                  </p>
+                )}
               </div>
 
               <div>
