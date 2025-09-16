@@ -85,8 +85,32 @@ export default function AdminMaterials() {
   };
 
   const handleCreateLot = async () => {
+    // Validações básicas
+    if (!lotForm.material_id) {
+      toast.error('Selecione um material');
+      return;
+    }
+    
+    if (lotForm.quantity <= 0) {
+      toast.error('Quantidade deve ser maior que zero');
+      return;
+    }
+    
+    if (lotForm.cost_per_unit <= 0) {
+      toast.error('Custo por unidade deve ser maior que zero');
+      return;
+    }
+
     try {
-      await createMaterialLot.mutateAsync(lotForm);
+      const lotData = {
+        ...lotForm,
+        supplier: lotForm.supplier || null, // Converter string vazia para null
+        expiry_date: lotForm.expiry_date || null, // Converter string vazia para null
+        lot_code: lotForm.lot_code || null, // Converter string vazia para null
+        notes: lotForm.notes || null, // Converter string vazia para null
+      };
+      
+      await createMaterialLot.mutateAsync(lotData);
       toast.success('Lote de material criado com sucesso!');
       setIsCreateLotOpen(false);
       setLotForm({
@@ -101,7 +125,8 @@ export default function AdminMaterials() {
         notes: '',
       });
     } catch (error) {
-      toast.error('Erro ao criar lote de material');
+      console.error('Erro ao criar lote de material:', error);
+      toast.error('Erro ao criar lote de material: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   };
 
