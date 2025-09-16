@@ -47,10 +47,10 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     icon: Package,
     defaultOpen: true,
     items: [
-      { title: 'Cadastrar Produto', url: '/admin/produto-cadastro', icon: Package },
+      { title: 'Cadastrar Produto', url: '/admin/produto-wizard', icon: Package },
       { title: 'Gerenciar Perfumes', url: '/admin/perfumes', icon: Package },
       { title: 'Lotes de Estoque', url: '/admin/lots', icon: Boxes },
-      { title: 'Materiais', url: '/admin/materials', icon: Boxes },
+      { title: 'Materiais Simplificado', url: '/admin/materials-simplified', icon: Boxes },
     ]
   },
   {
@@ -60,7 +60,6 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     items: [
       { title: 'Visão Geral', url: '/admin/stock', icon: Package },
       { title: 'Movimentações', url: '/admin/inventory', icon: TrendingUp },
-      { title: 'Gestão de Custos', url: '/admin/cost-management', icon: Calculator },
     ]
   },
   {
