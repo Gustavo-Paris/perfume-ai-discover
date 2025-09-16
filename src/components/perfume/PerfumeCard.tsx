@@ -54,7 +54,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const getDisplayPrice = (size: 2 | 5 | 10) => {
     const originalPrice = size === 2 ? perfume.price_2ml : 
                          size === 5 ? perfume.price_5ml : perfume.price_10ml;
-    if (!originalPrice) return null;
+    if (!originalPrice || originalPrice <= 0) return null;
 
     if (activePromotion) {
       const promotionalField = size === 2 ? 'promotional_price_2ml' : 
@@ -89,11 +89,13 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     };
   };
 
-  const price2ml = perfume.price_2ml ? getDisplayPrice(2) : null;
+  const price2ml = getDisplayPrice(2);
   const price5ml = getDisplayPrice(5);
   const price10ml = getDisplayPrice(10);
-  // Always use the lowest price available (2ml first, then 5ml, then 10ml)
-  const basePrice = price2ml?.promotional || price5ml?.promotional || price10ml?.promotional || perfume.price_5ml || 0;
+  
+  // Calculate the lowest available price for display
+  const availablePrices = [price2ml?.promotional, price5ml?.promotional, price10ml?.promotional].filter(Boolean);
+  const basePrice = availablePrices.length > 0 ? Math.min(...availablePrices) : 0;
 
   return (
     <TooltipProvider>
