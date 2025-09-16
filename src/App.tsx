@@ -59,7 +59,7 @@ import AdminCompany from "./pages/admin/AdminCompany";
 import AdminDataSeeder from "./pages/admin/AdminDataSeeder";
 import AdminMonitoring from "./pages/admin/AdminMonitoring";
 import AdminMaterials from "./pages/admin/AdminMaterials";
-import AdminCostManagement from "./pages/admin/AdminCostManagement";
+import AdminMaterialsSimplified from "./pages/admin/AdminMaterialsSimplified";
 import AdminProductWizard from './pages/admin/AdminProductWizard';
 import AdminProductCadastro from './pages/admin/AdminProductCadastro';
 import { SupportChat } from "./components/support/SupportChat";
@@ -112,7 +112,7 @@ const AppContent = () => {
             <Route path="data-seeder" element={<AdminDataSeeder />} />
             <Route path="monitoring" element={<AdminMonitoring />} />
             <Route path="materials" element={<AdminMaterials />} />
-            <Route path="cost-management" element={<AdminCostManagement />} />
+            <Route path="materials-simplified" element={<AdminMaterialsSimplified />} />
             <Route path="produto-wizard" element={<AdminProductWizard />} />
             <Route path="produto-cadastro" element={<AdminProductCadastro />} />
             {/* Legacy admin routes */}

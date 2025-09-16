@@ -106,6 +106,9 @@ export interface DatabasePerfume {
   price_full: number;
   image_url: string | null;
   category: string | null;
+  avg_cost_per_ml?: number | null;
+  target_margin_percentage?: number | null;
+  last_cost_calculation?: string | null;
   created_at: string;
 }
 
