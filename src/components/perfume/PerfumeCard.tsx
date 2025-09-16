@@ -212,13 +212,13 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           </div>
 
           {/* Quick Add Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {price2ml && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 2)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs px-2"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
@@ -246,7 +246,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 5)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs px-2"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
@@ -274,7 +274,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 10)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs px-2"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
