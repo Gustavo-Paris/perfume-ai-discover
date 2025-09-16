@@ -240,12 +240,8 @@ const PerfumeDetails = () => {
                   <Button
                     variant={selectedSize === 2 ? "default" : "outline"}
                     onClick={() => setSelectedSize(2)}
-                    className={selectedSize === 2 ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800" : ""}
                   >
                     2ml - R$ {Number(databasePerfume.price_2ml).toFixed(2).replace('.', ',')}
-                    <Badge variant="secondary" className="ml-2 bg-purple-100 text-purple-800 text-xs">
-                      Luxo
-                    </Badge>
                   </Button>
                 )}
                 {databasePerfume.price_5ml && databasePerfume.price_5ml > 0 && (

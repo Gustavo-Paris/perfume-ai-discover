@@ -92,7 +92,8 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const price2ml = perfume.price_2ml ? getDisplayPrice(2) : null;
   const price5ml = getDisplayPrice(5);
   const price10ml = getDisplayPrice(10);
-  const basePrice = price2ml?.promotional || price5ml?.promotional || perfume.price_5ml || 0;
+  // Always use the lowest price available (2ml first, then 5ml, then 10ml)
+  const basePrice = price2ml?.promotional || price5ml?.promotional || price10ml?.promotional || perfume.price_5ml || 0;
 
   return (
     <TooltipProvider>
@@ -213,7 +214,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 2)}
-                    className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-display font-medium"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium"
                     size="sm"
                   >
                     <Plus className="mr-1 h-3 w-3" />
