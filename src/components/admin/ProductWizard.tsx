@@ -64,9 +64,10 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
   });
 
   const [pricingData, setPricingData] = useState({
+    price_2ml: null as number | null,
     price_5ml: null as number | null,
     price_10ml: null as number | null,
-    price_full: 0,
+    total_cost: 0,
     cost_per_ml: 0,
     target_margin_percentage: 50,
   });
@@ -90,7 +91,7 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
       case 0:
         return perfumeData.brand && perfumeData.name && perfumeData.family;
       case 1:
-        return pricingData.price_full > 0 && pricingData.cost_per_ml > 0;
+        return pricingData.total_cost > 0 && pricingData.target_margin_percentage > 0;
       case 2:
         return stockData.lot_code && stockData.qty_ml > 0 && stockData.warehouse_id;
       default:
@@ -111,11 +112,16 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
     if (currentStep === 0) {
       // Criar o perfume
       try {
+        // Calculate cost per ml from total cost and quantity
+        const calculatedCostPerMl = pricingData.total_cost / stockData.qty_ml;
+        setPricingData(prev => ({...prev, cost_per_ml: calculatedCostPerMl}));
+        
         const perfume = await createPerfume.mutateAsync({
           ...perfumeData,
+          price_2ml: pricingData.price_2ml,
           price_5ml: pricingData.price_5ml,
           price_10ml: pricingData.price_10ml,
-          price_full: pricingData.price_full,
+          price_full: 0, // Not used anymore, set to 0
           target_margin_percentage: pricingData.target_margin_percentage,
         });
         setCreatedPerfumeId(perfume.id);
@@ -141,7 +147,7 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
           ...stockData,
           perfume_id: createdPerfumeId,
           cost_per_ml: pricingData.cost_per_ml,
-          total_cost: stockData.qty_ml * pricingData.cost_per_ml,
+          total_cost: pricingData.total_cost,
           expiry_date: stockData.expiry_date || null,
         });
         setCompletedSteps(prev => new Set([...prev, 2]));
@@ -317,92 +323,139 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
     </Card>
   );
 
-  const renderPricingStep = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle>Precificação</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-blue-50 p-4 rounded-lg mb-4">
-          <p className="text-sm text-blue-700">
-            <strong>Dica:</strong> Defina primeiro o custo por ML e a margem desejada. 
-            Os preços serão calculados automaticamente.
-          </p>
-        </div>
+  const renderPricingStep = () => {
+    // Calculate cost per ml from total cost and quantity when both are available
+    const calculatePrices = () => {
+      if (pricingData.total_cost > 0 && stockData.qty_ml > 0) {
+        const costPerMl = pricingData.total_cost / stockData.qty_ml;
+        const marginMultiplier = (1 + pricingData.target_margin_percentage / 100);
+        
+        return {
+          cost_per_ml: costPerMl,
+          price_2ml: costPerMl * 2 * marginMultiplier,
+          price_5ml: costPerMl * 5 * marginMultiplier,
+          price_10ml: costPerMl * 10 * marginMultiplier,
+        };
+      }
+      return {
+        cost_per_ml: 0,
+        price_2ml: 0,
+        price_5ml: 0,
+        price_10ml: 0,
+      };
+    };
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="cost_per_ml">Custo por ML (R$) *</Label>
-            <Input
-              id="cost_per_ml"
-              type="number"
-              step="0.0001"
-              value={pricingData.cost_per_ml}
-              onChange={(e) => {
-                const cost = Number(e.target.value);
-                setPricingData({ 
-                  ...pricingData, 
-                  cost_per_ml: cost,
-                  // Auto-calculate prices with margin
-                  price_5ml: cost * 5 * (1 + pricingData.target_margin_percentage / 100),
-                  price_10ml: cost * 10 * (1 + pricingData.target_margin_percentage / 100),
-                  price_full: cost * 50 * (1 + pricingData.target_margin_percentage / 100),
-                });
-              }}
-              placeholder="0.5000"
-            />
-          </div>
-          <div>
-            <Label htmlFor="target_margin_percentage">Margem Alvo (%)</Label>
-            <Input
-              id="target_margin_percentage"
-              type="number"
-              value={pricingData.target_margin_percentage}
-              onChange={(e) => {
-                const margin = Number(e.target.value);
-                setPricingData({ 
-                  ...pricingData, 
-                  target_margin_percentage: margin,
-                  // Auto-calculate prices with new margin
-                  price_5ml: pricingData.cost_per_ml * 5 * (1 + margin / 100),
-                  price_10ml: pricingData.cost_per_ml * 10 * (1 + margin / 100),
-                  price_full: pricingData.cost_per_ml * 50 * (1 + margin / 100),
-                });
-              }}
-              placeholder="50"
-            />
-          </div>
-        </div>
+    const calculatedPrices = calculatePrices();
 
-        <div className="border-t pt-4">
-          <h4 className="font-medium mb-3">Preços Calculados</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Precificação</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <p className="text-sm text-blue-700">
+              <strong>Dica:</strong> Defina o custo total do lote e a margem desejada. 
+              Os preços serão calculados automaticamente baseados na quantidade do estoque.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Preço 5ml</Label>
-              <div className="p-2 bg-gray-50 rounded border">
-                R$ {pricingData.price_5ml?.toFixed(2) || '0.00'}
-              </div>
-            </div>
-            <div>
-              <Label>Preço 10ml</Label>
-              <div className="p-2 bg-gray-50 rounded border">
-                R$ {pricingData.price_10ml?.toFixed(2) || '0.00'}
-              </div>
-            </div>
-            <div>
-              <Label>Preço 50ml *</Label>
+              <Label htmlFor="total_cost">Custo Total (R$) *</Label>
               <Input
+                id="total_cost"
                 type="number"
                 step="0.01"
-                value={pricingData.price_full}
-                onChange={(e) => setPricingData({ ...pricingData, price_full: Number(e.target.value) })}
+                value={pricingData.total_cost}
+                onChange={(e) => {
+                  const totalCost = Number(e.target.value);
+                  const calculated = calculatePrices();
+                  if (stockData.qty_ml > 0) {
+                    const costPerMl = totalCost / stockData.qty_ml;
+                    const marginMultiplier = (1 + pricingData.target_margin_percentage / 100);
+                    setPricingData({ 
+                      ...pricingData, 
+                      total_cost: totalCost,
+                      cost_per_ml: costPerMl,
+                      price_2ml: costPerMl * 2 * marginMultiplier,
+                      price_5ml: costPerMl * 5 * marginMultiplier,
+                      price_10ml: costPerMl * 10 * marginMultiplier,
+                    });
+                  } else {
+                    setPricingData({ ...pricingData, total_cost: totalCost });
+                  }
+                }}
+                placeholder="500.00"
+              />
+              {stockData.qty_ml > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Custo por ML: R$ {calculatedPrices.cost_per_ml.toFixed(4)}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="target_margin_percentage">Margem Alvo (%)</Label>
+              <Input
+                id="target_margin_percentage"
+                type="number"
+                value={pricingData.target_margin_percentage}
+                onChange={(e) => {
+                  const margin = Number(e.target.value);
+                  if (pricingData.total_cost > 0 && stockData.qty_ml > 0) {
+                    const costPerMl = pricingData.total_cost / stockData.qty_ml;
+                    const marginMultiplier = (1 + margin / 100);
+                    setPricingData({ 
+                      ...pricingData, 
+                      target_margin_percentage: margin,
+                      price_2ml: costPerMl * 2 * marginMultiplier,
+                      price_5ml: costPerMl * 5 * marginMultiplier,
+                      price_10ml: costPerMl * 10 * marginMultiplier,
+                    });
+                  } else {
+                    setPricingData({ ...pricingData, target_margin_percentage: margin });
+                  }
+                }}
+                placeholder="50"
               />
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3">Preços Calculados</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Preço 2ml</Label>
+                <div className="p-2 bg-gray-50 rounded border">
+                  R$ {calculatedPrices.price_2ml.toFixed(2)}
+                </div>
+              </div>
+              <div>
+                <Label>Preço 5ml</Label>
+                <div className="p-2 bg-gray-50 rounded border">
+                  R$ {calculatedPrices.price_5ml.toFixed(2)}
+                </div>
+              </div>
+              <div>
+                <Label>Preço 10ml</Label>
+                <div className="p-2 bg-gray-50 rounded border">
+                  R$ {calculatedPrices.price_10ml.toFixed(2)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {(!stockData.qty_ml || stockData.qty_ml === 0) && (
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <p className="text-sm text-yellow-700">
+                <strong>Atenção:</strong> Para calcular os preços automaticamente, primeiro preencha a quantidade em ML no próximo passo.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   const renderStockStep = () => (
     <Card>

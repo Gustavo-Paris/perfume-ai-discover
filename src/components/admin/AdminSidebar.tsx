@@ -50,7 +50,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
       { title: 'Cadastrar Produto', url: '/admin/produto-wizard', icon: Package },
       { title: 'Gerenciar Perfumes', url: '/admin/perfumes', icon: Package },
       { title: 'Lotes de Estoque', url: '/admin/lots', icon: Boxes },
-      { title: 'Materiais Simplificado', url: '/admin/materials-simplified', icon: Boxes },
+      { title: 'Materiais', url: '/admin/materials-simplified', icon: Boxes },
     ]
   },
   {
