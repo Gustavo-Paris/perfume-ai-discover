@@ -41,6 +41,7 @@ interface AdminNavGroup {
 
 const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
+  { title: '✨ Assistente de Cadastro', url: '/admin/produto-wizard', icon: Package },
   {
     title: 'Gestão de Vendas',
     icon: TrendingUp,

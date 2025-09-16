@@ -346,10 +346,64 @@ const AdminConfig = () => {
             Configure parâmetros do sistema e chaves de API
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Salvando...' : 'Salvar Configurações'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => window.location.href = '/admin/produto-wizard'} 
+            variant="outline"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none hover:from-blue-600 hover:to-purple-700"
+          >
+            ✨ Assistente de Cadastro
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? 'Salvando...' : 'Salvar Configurações'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Cards de Ação Rápida */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => window.location.href = '/admin/produto-wizard'}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                ✨
+              </div>
+              <div>
+                <h3 className="font-medium">Assistente de Cadastro</h3>
+                <p className="text-sm text-muted-foreground">Cadastre produtos passo a passo</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => window.location.href = '/admin/lots'}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                📦
+              </div>
+              <div>
+                <h3 className="font-medium">Gerenciar Lotes</h3>
+                <p className="text-sm text-muted-foreground">Controle de estoque e validades</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => window.location.href = '/admin/inventory'}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                📊
+              </div>
+              <div>
+                <h3 className="font-medium">Movimentações</h3>
+                <p className="text-sm text-muted-foreground">Histórico de estoque</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
