@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Upload, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, RefreshCw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { usePerfumes, useCreatePerfume, useUpdatePerfume, useDeletePerfume } from '@/hooks/usePerfumes';
+import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
@@ -19,11 +20,13 @@ const AdminPerfumes = () => {
   const createPerfume = useCreatePerfume();
   const updatePerfume = useUpdatePerfume();
   const deletePerfume = useDeletePerfume();
+  const updateMargin = useUpdatePerfumeMargin();
   const { toast } = useToast();
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingPerfume, setEditingPerfume] = useState<DatabasePerfume | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [newMargin, setNewMargin] = useState<number>(50);
   const [formData, setFormData] = useState({
     brand: '',
     name: '',
@@ -33,6 +36,7 @@ const AdminPerfumes = () => {
     top_notes: [] as string[],
     heart_notes: [] as string[],
     base_notes: [] as string[],
+    price_2ml: null as number | null,
     price_5ml: null as number | null,
     price_10ml: null as number | null,
     price_full: 0,
@@ -74,12 +78,14 @@ const AdminPerfumes = () => {
       top_notes: [],
       heart_notes: [],
       base_notes: [],
+      price_2ml: null,
       price_5ml: null,
       price_10ml: null,
       price_full: 0,
       image_url: '',
       category: '',
     });
+    setNewMargin(50);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,13 +136,32 @@ const AdminPerfumes = () => {
       top_notes: perfume.top_notes,
       heart_notes: perfume.heart_notes,
       base_notes: perfume.base_notes,
+      price_2ml: perfume.price_2ml,
       price_5ml: perfume.price_5ml,
       price_10ml: perfume.price_10ml,
       price_full: perfume.price_full,
       image_url: perfume.image_url || '',
       category: perfume.category || '',
     });
+    setNewMargin((perfume as any).target_margin_percentage ? (perfume as any).target_margin_percentage * 100 : 50);
     setEditingPerfume(perfume);
+  };
+
+  const handleMarginUpdate = async () => {
+    if (!editingPerfume) return;
+    
+    try {
+      await updateMargin.mutateAsync({
+        perfumeId: editingPerfume.id,
+        newMarginPercentage: newMargin / 100
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar margem de lucro",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatNotes = (notes: string[]) => notes.join(', ');
@@ -261,6 +286,12 @@ const AdminPerfumes = () => {
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
+                    {formData.category === 'Ultra Luxury' && (
+                      <div className="p-3 border rounded-lg bg-muted/50">
+                        <Label className="text-xs text-muted-foreground">2ml</Label>
+                        <p className="text-lg font-semibold">R$ {formData.price_2ml?.toFixed(2) || '0.00'}</p>
+                      </div>
+                    )}
                     <div className="p-3 border rounded-lg bg-muted/50">
                       <Label className="text-xs text-muted-foreground">5ml</Label>
                       <p className="text-lg font-semibold">R$ {formData.price_5ml?.toFixed(2) || '0.00'}</p>
@@ -268,10 +299,6 @@ const AdminPerfumes = () => {
                     <div className="p-3 border rounded-lg bg-muted/50">
                       <Label className="text-xs text-muted-foreground">10ml</Label>
                       <p className="text-lg font-semibold">R$ {formData.price_10ml?.toFixed(2) || '0.00'}</p>
-                    </div>
-                    <div className="p-3 border rounded-lg bg-muted/50">
-                      <Label className="text-xs text-muted-foreground">50ml</Label>
-                      <p className="text-lg font-semibold">R$ {formData.price_full?.toFixed(2) || '0.00'}</p>
                     </div>
                   </div>
                 </div>
@@ -333,9 +360,11 @@ const AdminPerfumes = () => {
                   <TableCell>{perfume.category}</TableCell>
                   <TableCell>
                     <div className="text-sm">
+                      {perfume.category === 'Ultra Luxury' && perfume.price_2ml && (
+                        <div>2ml: R$ {perfume.price_2ml}</div>
+                      )}
                       {perfume.price_5ml && <div>5ml: R$ {perfume.price_5ml}</div>}
                       {perfume.price_10ml && <div>10ml: R$ {perfume.price_10ml}</div>}
-                      <div>Full: R$ {perfume.price_full}</div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -458,6 +487,12 @@ const AdminPerfumes = () => {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-4">
+                {formData.category === 'Ultra Luxury' && (
+                  <div className="p-3 border rounded-lg bg-muted/50">
+                    <Label className="text-xs text-muted-foreground">2ml</Label>
+                    <p className="text-lg font-semibold">R$ {formData.price_2ml?.toFixed(2) || '0.00'}</p>
+                  </div>
+                )}
                 <div className="p-3 border rounded-lg bg-muted/50">
                   <Label className="text-xs text-muted-foreground">5ml</Label>
                   <p className="text-lg font-semibold">R$ {formData.price_5ml?.toFixed(2) || '0.00'}</p>
@@ -466,12 +501,43 @@ const AdminPerfumes = () => {
                   <Label className="text-xs text-muted-foreground">10ml</Label>
                   <p className="text-lg font-semibold">R$ {formData.price_10ml?.toFixed(2) || '0.00'}</p>
                 </div>
-                <div className="p-3 border rounded-lg bg-muted/50">
-                  <Label className="text-xs text-muted-foreground">50ml</Label>
-                  <p className="text-lg font-semibold">R$ {formData.price_full?.toFixed(2) || '0.00'}</p>
-                </div>
               </div>
             </div>
+
+            {editingPerfume && (
+              <div className="space-y-4 border-t pt-4">
+                <div>
+                  <Label>Margem de Lucro</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Ajuste a margem de lucro para recalcular automaticamente todos os preços
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={newMargin}
+                      onChange={(e) => setNewMargin(Number(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <Label className="text-sm font-medium">%</Label>
+                  <Button
+                    type="button"
+                    onClick={handleMarginUpdate}
+                    disabled={updateMargin.isPending}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    {updateMargin.isPending ? 'Aplicando...' : 'Aplicar'}
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
