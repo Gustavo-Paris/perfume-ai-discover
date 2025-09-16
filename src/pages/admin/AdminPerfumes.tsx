@@ -253,37 +253,26 @@ const AdminPerfumes = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="price_5ml">Preço 5ml</Label>
-                    <Input
-                      id="price_5ml"
-                      type="number"
-                      step="0.01"
-                      value={formData.price_5ml || ''}
-                      onChange={(e) => setFormData({ ...formData, price_5ml: e.target.value ? Number(e.target.value) : null })}
-                    />
+                    <Label>Preços (Calculados Automaticamente)</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Os preços são calculados automaticamente com base nos custos dos materiais e margem de lucro
+                    </p>
                   </div>
-                  <div>
-                    <Label htmlFor="price_10ml">Preço 10ml</Label>
-                    <Input
-                      id="price_10ml"
-                      type="number"
-                      step="0.01"
-                      value={formData.price_10ml || ''}
-                      onChange={(e) => setFormData({ ...formData, price_10ml: e.target.value ? Number(e.target.value) : null })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="price_full">Preço Tamanho Cheio</Label>
-                    <Input
-                      id="price_full"
-                      type="number"
-                      step="0.01"
-                      value={formData.price_full}
-                      onChange={(e) => setFormData({ ...formData, price_full: Number(e.target.value) })}
-                      required
-                    />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-3 border rounded-lg bg-muted/50">
+                      <Label className="text-xs text-muted-foreground">5ml</Label>
+                      <p className="text-lg font-semibold">R$ {formData.price_5ml?.toFixed(2) || '0.00'}</p>
+                    </div>
+                    <div className="p-3 border rounded-lg bg-muted/50">
+                      <Label className="text-xs text-muted-foreground">10ml</Label>
+                      <p className="text-lg font-semibold">R$ {formData.price_10ml?.toFixed(2) || '0.00'}</p>
+                    </div>
+                    <div className="p-3 border rounded-lg bg-muted/50">
+                      <Label className="text-xs text-muted-foreground">50ml</Label>
+                      <p className="text-lg font-semibold">R$ {formData.price_full?.toFixed(2) || '0.00'}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -461,37 +450,26 @@ const AdminPerfumes = () => {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-price_5ml">Preço 5ml</Label>
-                <Input
-                  id="edit-price_5ml"
-                  type="number"
-                  step="0.01"
-                  value={formData.price_5ml || ''}
-                  onChange={(e) => setFormData({ ...formData, price_5ml: e.target.value ? Number(e.target.value) : null })}
-                />
+                <Label>Preços (Calculados Automaticamente)</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Os preços são calculados automaticamente com base nos custos dos materiais e margem de lucro
+                </p>
               </div>
-              <div>
-                <Label htmlFor="edit-price_10ml">Preço 10ml</Label>
-                <Input
-                  id="edit-price_10ml"
-                  type="number"
-                  step="0.01"
-                  value={formData.price_10ml || ''}
-                  onChange={(e) => setFormData({ ...formData, price_10ml: e.target.value ? Number(e.target.value) : null })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-price_full">Preço Tamanho Cheio</Label>
-                <Input
-                  id="edit-price_full"
-                  type="number"
-                  step="0.01"
-                  value={formData.price_full}
-                  onChange={(e) => setFormData({ ...formData, price_full: Number(e.target.value) })}
-                  required
-                />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 border rounded-lg bg-muted/50">
+                  <Label className="text-xs text-muted-foreground">5ml</Label>
+                  <p className="text-lg font-semibold">R$ {formData.price_5ml?.toFixed(2) || '0.00'}</p>
+                </div>
+                <div className="p-3 border rounded-lg bg-muted/50">
+                  <Label className="text-xs text-muted-foreground">10ml</Label>
+                  <p className="text-lg font-semibold">R$ {formData.price_10ml?.toFixed(2) || '0.00'}</p>
+                </div>
+                <div className="p-3 border rounded-lg bg-muted/50">
+                  <Label className="text-xs text-muted-foreground">50ml</Label>
+                  <p className="text-lg font-semibold">R$ {formData.price_full?.toFixed(2) || '0.00'}</p>
+                </div>
               </div>
             </div>
 

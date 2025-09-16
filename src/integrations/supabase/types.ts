@@ -3208,6 +3208,10 @@ export type Database = {
         Args: { notification_type: string; record_id: string }
         Returns: undefined
       }
+      update_material_avg_cost: {
+        Args: { material_uuid: string }
+        Returns: undefined
+      }
       update_perfume_avg_cost: {
         Args: { perfume_uuid: string }
         Returns: undefined

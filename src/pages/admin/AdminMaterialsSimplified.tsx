@@ -32,10 +32,6 @@ export default function AdminMaterialsSimplified() {
     name: '',
     type: 'input' as 'input' | 'asset',
     category: '',
-    unit: '',
-    cost_per_unit: 0,
-    current_stock: 0,
-    min_stock_alert: 0,
     supplier: '',
     description: '',
     is_active: true,
@@ -63,17 +59,21 @@ export default function AdminMaterialsSimplified() {
 
   const handleCreateMaterial = async () => {
     try {
-      await createMaterial.mutateAsync(materialForm);
+      // Provide default values for fields that will be set by lots
+      const materialData = {
+        ...materialForm,
+        unit: 'unidade', // Default unit
+        cost_per_unit: 0, // Will be calculated from lots
+        current_stock: 0, // Will be calculated from lots
+        min_stock_alert: 0, // Can be updated later
+      };
+      await createMaterial.mutateAsync(materialData);
       toast.success('Material criado com sucesso!');
       setIsCreateMaterialOpen(false);
       setMaterialForm({
         name: '',
         type: 'input',
         category: '',
-        unit: '',
-        cost_per_unit: 0,
-        current_stock: 0,
-        min_stock_alert: 0,
         supplier: '',
         description: '',
         is_active: true,
@@ -111,26 +111,7 @@ export default function AdminMaterialsSimplified() {
       
       await createMaterialLot.mutateAsync(lotData);
       
-      // Atualizar o estoque atual do material
-      const { data: currentMaterial } = await supabase
-        .from('materials')
-        .select('current_stock')
-        .eq('id', lotForm.material_id)
-        .single();
-      
-      if (currentMaterial) {
-        const { error: updateError } = await supabase
-          .from('materials')
-          .update({ 
-            current_stock: currentMaterial.current_stock + lotForm.quantity,
-            cost_per_unit: lotForm.cost_per_unit // Atualizar também o custo por unidade
-          })
-          .eq('id', lotForm.material_id);
-        
-        if (updateError) {
-          console.error('Erro ao atualizar estoque do material:', updateError);
-        }
-      }
+      // O trigger automático já atualizará o custo médio e estoque
       
       toast.success('Lote de material criado com sucesso!');
       setIsCreateLotOpen(false);
@@ -275,24 +256,11 @@ export default function AdminMaterialsSimplified() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label>Unidade</Label>
-                      <Input
-                        value={materialForm.unit}
-                        onChange={(e) => setMaterialForm({ ...materialForm, unit: e.target.value })}
-                        placeholder="unidade"
-                      />
-                    </div>
-                    <div>
-                      <Label>Custo (R$)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={materialForm.cost_per_unit}
-                        onChange={(e) => setMaterialForm({ ...materialForm, cost_per_unit: parseFloat(e.target.value) || 0 })}
-                      />
-                    </div>
+                  <div>
+                    <Label>Nota</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Unidade e custos serão definidos pelos lotes
+                    </p>
                   </div>
                   <div className="flex justify-end space-x-2">
                     <Button variant="outline" onClick={() => setIsCreateMaterialOpen(false)}>

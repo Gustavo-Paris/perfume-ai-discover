@@ -34,10 +34,6 @@ export default function AdminMaterials() {
     name: '',
     type: 'input' as 'input' | 'asset',
     category: '',
-    unit: '',
-    cost_per_unit: 0,
-    current_stock: 0,
-    min_stock_alert: 0,
     supplier: '',
     description: '',
     is_active: true,
@@ -65,17 +61,21 @@ export default function AdminMaterials() {
 
   const handleCreateMaterial = async () => {
     try {
-      await createMaterial.mutateAsync(materialForm);
+      // Provide default values for fields that will be set by lots
+      const materialData = {
+        ...materialForm,
+        unit: 'unidade', // Default unit
+        cost_per_unit: 0, // Will be calculated from lots
+        current_stock: 0, // Will be calculated from lots
+        min_stock_alert: 0, // Can be updated later
+      };
+      await createMaterial.mutateAsync(materialData);
       toast.success('Material criado com sucesso!');
       setIsCreateMaterialOpen(false);
       setMaterialForm({
         name: '',
         type: 'input',
         category: '',
-        unit: '',
-        cost_per_unit: 0,
-        current_stock: 0,
-        min_stock_alert: 0,
         supplier: '',
         description: '',
         is_active: true,
@@ -113,26 +113,7 @@ export default function AdminMaterials() {
       
       await createMaterialLot.mutateAsync(lotData);
       
-      // Atualizar o estoque atual do material
-      const { data: currentMaterial } = await supabase
-        .from('materials')
-        .select('current_stock')
-        .eq('id', lotForm.material_id)
-        .single();
-      
-      if (currentMaterial) {
-        const { error: updateError } = await supabase
-          .from('materials')
-          .update({ 
-            current_stock: currentMaterial.current_stock + lotForm.quantity,
-            cost_per_unit: lotForm.cost_per_unit // Atualizar também o custo por unidade
-          })
-          .eq('id', lotForm.material_id);
-        
-        if (updateError) {
-          console.error('Erro ao atualizar estoque do material:', updateError);
-        }
-      }
+      // O trigger automático já atualizará o custo médio e estoque
       
       toast.success('Lote de material criado com sucesso!');
       setIsCreateLotOpen(false);
@@ -275,41 +256,10 @@ export default function AdminMaterials() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="unit">Unidade</Label>
-                    <Input
-                      id="unit"
-                      value={materialForm.unit}
-                      onChange={(e) => setMaterialForm({ ...materialForm, unit: e.target.value })}
-                      placeholder="Ex: pieces, ml, kg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cost">Custo por Unidade (R$)</Label>
-                    <Input
-                      id="cost"
-                      type="number"
-                      step="0.01"
-                      value={materialForm.cost_per_unit}
-                      onChange={(e) => setMaterialForm({ ...materialForm, cost_per_unit: parseFloat(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="stock">Estoque Atual</Label>
-                    <Input
-                      id="stock"
-                      type="number"
-                      value={materialForm.current_stock}
-                      onChange={(e) => setMaterialForm({ ...materialForm, current_stock: parseFloat(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="min_stock">Estoque Mínimo</Label>
-                    <Input
-                      id="min_stock"
-                      type="number"
-                      value={materialForm.min_stock_alert}
-                      onChange={(e) => setMaterialForm({ ...materialForm, min_stock_alert: parseFloat(e.target.value) || 0 })}
-                    />
+                    <Label>Nota</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Unidade e custos serão definidos pelos lotes
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="supplier">Fornecedor</Label>
