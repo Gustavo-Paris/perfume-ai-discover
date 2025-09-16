@@ -43,6 +43,7 @@ const Catalogo = () => {
       gender: dbPerfume.gender,
       size_ml: [50, 100],
       price_full: Number(dbPerfume.price_full),
+      price_2ml: dbPerfume.price_2ml ? Number(dbPerfume.price_2ml) : null,
       price_5ml: dbPerfume.price_5ml ? Number(dbPerfume.price_5ml) : 0,
       price_10ml: dbPerfume.price_10ml ? Number(dbPerfume.price_10ml) : 0,
       stock_full: 10,

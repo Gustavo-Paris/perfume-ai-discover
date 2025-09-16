@@ -54,7 +54,9 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const getDisplayPrice = (size: 2 | 5 | 10) => {
     const originalPrice = size === 2 ? perfume.price_2ml : 
                          size === 5 ? perfume.price_5ml : perfume.price_10ml;
-    if (!originalPrice || originalPrice <= 0) return null;
+    
+    // Check if price exists and is a positive number
+    if (!originalPrice || typeof originalPrice !== 'number' || originalPrice <= 0) return null;
 
     if (activePromotion) {
       const promotionalField = size === 2 ? 'promotional_price_2ml' : 
@@ -94,8 +96,8 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const price10ml = getDisplayPrice(10);
   
   // Calculate the lowest available price for display
-  const availablePrices = [price2ml?.promotional, price5ml?.promotional, price10ml?.promotional].filter(Boolean);
-  const basePrice = availablePrices.length > 0 ? Math.min(...availablePrices) : 0;
+  const availablePrices = [price2ml?.promotional, price5ml?.promotional, price10ml?.promotional].filter(price => price && price > 0);
+  const basePrice = availablePrices.length > 0 ? Math.min(...availablePrices) : (perfume.price_5ml || 0);
 
   return (
     <TooltipProvider>
