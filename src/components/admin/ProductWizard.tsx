@@ -68,7 +68,7 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
     price_10ml: null as number | null,
     price_full: 0,
     cost_per_ml: 0,
-    target_margin: 50,
+    target_margin_percentage: 50,
   });
 
   const [stockData, setStockData] = useState({
@@ -113,7 +113,10 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
       try {
         const perfume = await createPerfume.mutateAsync({
           ...perfumeData,
-          ...pricingData,
+          price_5ml: pricingData.price_5ml,
+          price_10ml: pricingData.price_10ml,
+          price_full: pricingData.price_full,
+          target_margin_percentage: pricingData.target_margin_percentage,
         });
         setCreatedPerfumeId(perfume.id);
         setCompletedSteps(prev => new Set([...prev, 0]));
@@ -341,25 +344,25 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
                   ...pricingData, 
                   cost_per_ml: cost,
                   // Auto-calculate prices with margin
-                  price_5ml: cost * 5 * (1 + pricingData.target_margin / 100),
-                  price_10ml: cost * 10 * (1 + pricingData.target_margin / 100),
-                  price_full: cost * 50 * (1 + pricingData.target_margin / 100),
+                  price_5ml: cost * 5 * (1 + pricingData.target_margin_percentage / 100),
+                  price_10ml: cost * 10 * (1 + pricingData.target_margin_percentage / 100),
+                  price_full: cost * 50 * (1 + pricingData.target_margin_percentage / 100),
                 });
               }}
               placeholder="0.5000"
             />
           </div>
           <div>
-            <Label htmlFor="target_margin">Margem Alvo (%)</Label>
+            <Label htmlFor="target_margin_percentage">Margem Alvo (%)</Label>
             <Input
-              id="target_margin"
+              id="target_margin_percentage"
               type="number"
-              value={pricingData.target_margin}
+              value={pricingData.target_margin_percentage}
               onChange={(e) => {
                 const margin = Number(e.target.value);
                 setPricingData({ 
                   ...pricingData, 
-                  target_margin: margin,
+                  target_margin_percentage: margin,
                   // Auto-calculate prices with new margin
                   price_5ml: pricingData.cost_per_ml * 5 * (1 + margin / 100),
                   price_10ml: pricingData.cost_per_ml * 10 * (1 + margin / 100),
