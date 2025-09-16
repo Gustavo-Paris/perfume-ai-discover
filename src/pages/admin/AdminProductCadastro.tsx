@@ -271,7 +271,7 @@ const AdminProductCadastro = () => {
         cost_per_ml: costPerMl, // Calculado automaticamente
         total_cost: lotData.total_cost,
         warehouse_id: lotData.warehouse_id,
-        supplier: lotData.supplier,
+        supplier: lotData.supplier || null, // Converter string vazia para null
         expiry_date: lotData.expiry_date || null
       });
 
