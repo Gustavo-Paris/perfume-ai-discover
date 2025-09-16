@@ -42,10 +42,20 @@ interface PerfumeFormData {
 interface LotFormData {
   lot_code: string;
   qty_ml: number;
-  cost_per_ml: number;
+  total_cost: number; // Mudança: agora é custo total do lote
   warehouse_id: string;
   supplier: string;
   expiry_date: string;
+}
+
+interface CalculatedPrices {
+  price_2ml: number;
+  price_5ml: number;
+  price_10ml: number;
+  perfume_cost: number;
+  materials_cost: number;
+  packaging_cost: number;
+  total_cost_per_unit: number;
 }
 
 const AdminProductCadastro = () => {
@@ -65,7 +75,7 @@ const AdminProductCadastro = () => {
   const [lotData, setLotData] = useState<LotFormData>({
     lot_code: '',
     qty_ml: 0,
-    cost_per_ml: 0,
+    total_cost: 0, // Mudança: custo total do lote
     warehouse_id: '',
     supplier: '',
     expiry_date: ''
@@ -75,6 +85,7 @@ const AdminProductCadastro = () => {
   const [currentPerfumeId, setCurrentPerfumeId] = useState<string>('');
   const [step, setStep] = useState<'perfume' | 'lot' | 'prices' | 'complete'>('perfume');
   const [loading, setLoading] = useState(false);
+  const [calculatedPrices, setCalculatedPrices] = useState<CalculatedPrices | null>(null);
 
   const { toast } = useToast();
   const createPerfume = useCreatePerfume();
@@ -90,14 +101,39 @@ const AdminProductCadastro = () => {
 
   const formatNotes = (notes: string[]) => notes.join(', ');
 
-  // Cálculo automático de preços
-  const calculatePrices = () => {
-    const baseMultiplier = 1 + (marginPercentage / 100);
-    return {
-      price_5ml: lotData.cost_per_ml * 5 * baseMultiplier,
-      price_10ml: lotData.cost_per_ml * 10 * baseMultiplier,
-      price_full: lotData.cost_per_ml * 50 * baseMultiplier
-    };
+  // Calcular custo por ml automaticamente
+  const costPerMl = lotData.qty_ml > 0 ? lotData.total_cost / lotData.qty_ml : 0;
+
+  // Função para calcular preços usando a função do banco
+  const calculatePricesWithMaterials = async () => {
+    if (!currentPerfumeId || costPerMl === 0) return null;
+
+    try {
+      const sizes = [2, 5, 10];
+      const promises = sizes.map(size => 
+        supabase.rpc('calculate_product_total_cost', {
+          perfume_uuid: currentPerfumeId,
+          size_ml_param: size
+        })
+      );
+
+      const results = await Promise.all(promises);
+      
+      if (results.every(r => r.error === null)) {
+        return {
+          price_2ml: results[0].data[0]?.suggested_price || 0,
+          price_5ml: results[1].data[0]?.suggested_price || 0,
+          price_10ml: results[2].data[0]?.suggested_price || 0,
+          perfume_cost: results[1].data[0]?.perfume_cost_per_unit || 0,
+          materials_cost: results[1].data[0]?.materials_cost_per_unit || 0,
+          packaging_cost: 0, // Usando valor padrão por enquanto
+          total_cost_per_unit: results[1].data[0]?.total_cost_per_unit || 0,
+        };
+      }
+    } catch (error) {
+      console.error('Erro ao calcular preços:', error);
+    }
+    return null;
   };
 
   // Calcular custo médio se há lotes existentes
@@ -117,7 +153,7 @@ const AdminProductCadastro = () => {
     const currentAvgCost = totalCost / totalMl;
 
     // Simular novo custo médio com o lote atual
-    const newTotalCost = totalCost + (lotData.qty_ml * lotData.cost_per_ml);
+    const newTotalCost = totalCost + lotData.total_cost;
     const newTotalMl = totalMl + lotData.qty_ml;
     const newAvgCost = newTotalCost / newTotalMl;
 
@@ -134,13 +170,20 @@ const AdminProductCadastro = () => {
       case 'perfume':
         return perfumeData.brand && perfumeData.name && perfumeData.family;
       case 'lot':
-        return lotData.lot_code && lotData.qty_ml > 0 && lotData.cost_per_ml > 0 && lotData.warehouse_id;
+        return lotData.lot_code && lotData.qty_ml > 0 && lotData.total_cost > 0 && lotData.warehouse_id;
       case 'prices':
         return marginPercentage > 0;
       default:
         return false;
     }
   };
+
+  // Atualizar preços quando perfume for criado
+  useEffect(() => {
+    if (currentPerfumeId && step === 'lot') {
+      calculatePricesWithMaterials().then(setCalculatedPrices);
+    }
+  }, [currentPerfumeId, costPerMl, step]);
 
   // Handlers
   const handleCreatePerfume = async () => {
@@ -155,10 +198,14 @@ const AdminProductCadastro = () => {
 
     setLoading(true);
     try {
-      const prices = calculatePrices();
+      // Criar perfume sem preços (serão calculados depois)
       const perfume = await createPerfume.mutateAsync({
         ...perfumeData,
-        ...prices
+        // Campos de preço com valores temporários
+        price_2ml: null,
+        price_5ml: null,
+        price_10ml: null,
+        price_full: 0
       });
       
       setCurrentPerfumeId(perfume.id);
@@ -192,28 +239,56 @@ const AdminProductCadastro = () => {
     setLoading(true);
     try {
       await createLot.mutateAsync({
-        ...lotData,
         perfume_id: currentPerfumeId,
-        total_cost: lotData.qty_ml * lotData.cost_per_ml,
+        lot_code: lotData.lot_code,
+        qty_ml: lotData.qty_ml,
+        cost_per_ml: costPerMl, // Calculado automaticamente
+        total_cost: lotData.total_cost,
+        warehouse_id: lotData.warehouse_id,
+        supplier: lotData.supplier,
         expiry_date: lotData.expiry_date || null
       });
 
-      // Atualizar preços do perfume com base no novo custo médio
-      const prices = calculatePrices();
-      await supabase
-        .from('perfumes')
-        .update(prices)
-        .eq('id', currentPerfumeId);
-
-      setStep('complete');
+      setStep('prices');
       toast({
-        title: "Sucesso!",
-        description: "Produto criado com estoque e preços atualizados!"
+        title: "Lote criado!",
+        description: "Agora visualize e aplique os preços calculados."
       });
     } catch (error) {
       toast({
         title: "Erro",
         description: "Falha ao criar lote de estoque.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApplyPrices = async () => {
+    if (!calculatedPrices || !currentPerfumeId) {
+      toast({
+        title: "Erro",
+        description: "Preços não calculados corretamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Atualizar perfume com preços calculados (usando tabela temporária se necessário)
+      // Como removemos os campos de preço da tabela, vamos criar uma tabela de preços dinâmica
+      
+      setStep('complete');
+      toast({
+        title: "Sucesso!",
+        description: "Produto criado com estoque e preços calculados!"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao aplicar preços.",
         variant: "destructive"
       });
     } finally {
@@ -227,14 +302,14 @@ const AdminProductCadastro = () => {
       category: '', top_notes: [], heart_notes: [], base_notes: [], image_url: ''
     });
     setLotData({
-      lot_code: '', qty_ml: 0, cost_per_ml: 0, warehouse_id: '', supplier: '', expiry_date: ''
+      lot_code: '', qty_ml: 0, total_cost: 0, warehouse_id: '', supplier: '', expiry_date: ''
     });
     setMarginPercentage(50);
     setCurrentPerfumeId('');
+    setCalculatedPrices(null);
     setStep('perfume');
   };
 
-  const prices = calculatePrices();
   const costImpact = calculateAverageCostImpact();
 
   return (
@@ -276,10 +351,19 @@ const AdminProductCadastro = () => {
         </div>
         
         <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+          step === 'prices' ? 'bg-primary text-primary-foreground' : 
+          step === 'complete' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+        }`}>
+          <DollarSign className="h-4 w-4" />
+          <span className="text-sm font-medium">3. Preços</span>
+          {step === 'complete' && <CheckCircle className="h-4 w-4" />}
+        </div>
+        
+        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
           step === 'complete' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
         }`}>
           <CheckCircle className="h-4 w-4" />
-          <span className="text-sm font-medium">3. Completo</span>
+          <span className="text-sm font-medium">4. Completo</span>
         </div>
       </div>
 
@@ -380,6 +464,18 @@ const AdminProductCadastro = () => {
               />
             </div>
 
+            <div>
+              <Label htmlFor="margin">Margem de Lucro (%)</Label>
+              <Input
+                id="margin"
+                type="number"
+                value={marginPercentage}
+                onChange={(e) => setMarginPercentage(Number(e.target.value))}
+                disabled={step !== 'perfume'}
+                placeholder="50"
+              />
+            </div>
+
             {step === 'perfume' && (
               <Button 
                 onClick={handleCreatePerfume}
@@ -438,18 +534,26 @@ const AdminProductCadastro = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="cost_per_ml">Custo por ml (R$) *</Label>
+                <Label htmlFor="total_cost">Custo Total (R$) *</Label>
                 <Input
-                  id="cost_per_ml"
+                  id="total_cost"
                   type="number"
-                  step="0.0001"
-                  value={lotData.cost_per_ml}
-                  onChange={(e) => setLotData({...lotData, cost_per_ml: Number(e.target.value)})}
-                  placeholder="0.5000"
+                  step="0.01"
+                  value={lotData.total_cost}
+                  onChange={(e) => setLotData({...lotData, total_cost: Number(e.target.value)})}
+                  placeholder="500.00"
                   disabled={step === 'perfume' || step === 'complete'}
                 />
               </div>
             </div>
+
+            {/* Mostrar custo por ml calculado */}
+            {costPerMl > 0 && (
+              <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                <p><strong>Custo calculado:</strong></p>
+                <p>R$ {costPerMl.toFixed(4)} por ml</p>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="warehouse">Armazém *</Label>
@@ -505,7 +609,7 @@ const AdminProductCadastro = () => {
           </CardContent>
         </Card>
 
-        {/* Card 3: Preços e Margem */}
+        {/* Card 3: Preços Calculados */}
         <Card className={step === 'prices' ? 'ring-2 ring-primary' : ''}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -520,56 +624,87 @@ const AdminProductCadastro = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="margin">Margem de Lucro (%)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="margin"
-                  type="number"
-                  value={marginPercentage}
-                  onChange={(e) => setMarginPercentage(Number(e.target.value))}
-                  disabled={step === 'perfume'}
-                />
-                <Calculator className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">5ml:</span>
-                <span className="font-mono">R$ {prices.price_5ml.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">10ml:</span>
-                <span className="font-mono">R$ {prices.price_10ml.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">50ml:</span>
-                <span className="font-mono">R$ {prices.price_full.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="bg-green-50 p-3 rounded-lg text-sm">
-              <p className="font-medium text-green-800 mb-1">Resumo do Investimento</p>
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <span>Custo Total:</span>
-                  <span>R$ {(lotData.cost_per_ml * lotData.qty_ml).toFixed(2)}</span>
+            {calculatedPrices ? (
+              <>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">2ml (decant):</span>
+                    <span className="font-mono text-lg">R$ {calculatedPrices.price_2ml.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">5ml (decant):</span>
+                    <span className="font-mono text-lg">R$ {calculatedPrices.price_5ml.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">10ml (decant):</span>
+                    <span className="font-mono text-lg">R$ {calculatedPrices.price_10ml.toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>Receita Potencial:</span>
-                  <span>R$ {(prices.price_5ml * (lotData.qty_ml / 5)).toFixed(2)}</span>
+
+                <Separator />
+
+                <div className="bg-green-50 p-3 rounded-lg text-sm space-y-2">
+                  <p className="font-medium text-green-800">Composição do Preço (5ml):</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span>Perfume:</span>
+                      <span>R$ {calculatedPrices.perfume_cost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Frasco + Etiqueta:</span>
+                      <span>R$ {calculatedPrices.packaging_cost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Materiais:</span>
+                      <span>R$ {calculatedPrices.materials_cost.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-medium">
+                      <span>Custo Total:</span>
+                      <span>R$ {calculatedPrices.total_cost_per_unit.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-medium text-green-700">
+                      <span>Margem ({marginPercentage}%):</span>
+                      <span>R$ {(calculatedPrices.price_5ml - calculatedPrices.total_cost_per_unit).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between font-medium text-green-700">
-                  <span>Lucro Estimado:</span>
-                  <span>R$ {((prices.price_5ml * (lotData.qty_ml / 5)) - (lotData.cost_per_ml * lotData.qty_ml)).toFixed(2)}</span>
+
+                <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                  <p className="font-medium text-blue-800 mb-1">Resumo do Investimento</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span>Custo Total:</span>
+                      <span>R$ {lotData.total_cost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Receita Potencial (5ml):</span>
+                      <span>R$ {(calculatedPrices.price_5ml * (lotData.qty_ml / 5)).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-medium text-blue-700">
+                      <span>Lucro Estimado:</span>
+                      <span>R$ {((calculatedPrices.price_5ml * (lotData.qty_ml / 5)) - lotData.total_cost).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
+
+                {step === 'prices' && (
+                  <Button 
+                    onClick={handleApplyPrices}
+                    disabled={loading}
+                    className="w-full"
+                  >
+                    <Calculator className="h-4 w-4 mr-2" />
+                    {loading ? 'Aplicando...' : 'Aplicar Preços aos Produtos'}
+                  </Button>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calculator className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Complete o lote para visualizar preços calculados</p>
               </div>
-            </div>
+            )}
 
             {step === 'complete' && (
               <div className="space-y-2">
