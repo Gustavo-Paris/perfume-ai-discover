@@ -9,11 +9,11 @@ export const usePerfumes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('perfumes')
-        .select('*')
+        .select('*, target_margin_percentage, avg_cost_per_ml')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as DatabasePerfume[];
+      return data as (DatabasePerfume & { target_margin_percentage?: number; avg_cost_per_ml?: number })[];
     },
     staleTime: 15 * 60 * 1000, // 15 minutes cache - perfumes don't change often
     gcTime: 30 * 60 * 1000, // 30 minutes garbage collection

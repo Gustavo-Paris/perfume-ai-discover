@@ -3218,7 +3218,7 @@ export type Database = {
       }
       update_perfume_margin: {
         Args: { new_margin_percentage: number; perfume_uuid: string }
-        Returns: boolean
+        Returns: undefined
       }
       update_sales_statistics: {
         Args: Record<PropertyKey, never>

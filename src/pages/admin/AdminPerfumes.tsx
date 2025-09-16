@@ -127,6 +127,7 @@ const AdminPerfumes = () => {
   };
 
   const handleEdit = (perfume: DatabasePerfume) => {
+    console.log('Editing perfume:', perfume); // Debug log
     setFormData({
       brand: perfume.brand,
       name: perfume.name,
@@ -143,7 +144,12 @@ const AdminPerfumes = () => {
       image_url: perfume.image_url || '',
       category: perfume.category || '',
     });
-    setNewMargin((perfume as any).target_margin_percentage ? (perfume as any).target_margin_percentage * 100 : 50);
+    // Load the actual margin from database or default to 50%
+    const marginFromDb = (perfume as any).target_margin_percentage;
+    console.log('Margin from DB:', marginFromDb); // Debug log
+    console.log('Perfume category:', perfume.category); // Debug log
+    console.log('Price 2ml:', perfume.price_2ml); // Debug log
+    setNewMargin(marginFromDb ? marginFromDb * 100 : 50);
     setEditingPerfume(perfume);
   };
 
@@ -155,6 +161,11 @@ const AdminPerfumes = () => {
         perfumeId: editingPerfume.id,
         newMarginPercentage: newMargin / 100
       });
+      // After successful update, refresh the perfume data to show new prices
+      const updatedPerfume = perfumes?.find(p => p.id === editingPerfume.id);
+      if (updatedPerfume) {
+        handleEdit(updatedPerfume);
+      }
     } catch (error) {
       toast({
         title: "Erro",
@@ -286,7 +297,7 @@ const AdminPerfumes = () => {
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
-                    {formData.category === 'Ultra Luxury' && (
+                    {formData.price_2ml && formData.price_2ml > 0 && (
                       <div className="p-3 border rounded-lg bg-muted/50">
                         <Label className="text-xs text-muted-foreground">2ml</Label>
                         <p className="text-lg font-semibold">R$ {formData.price_2ml?.toFixed(2) || '0.00'}</p>
@@ -360,7 +371,7 @@ const AdminPerfumes = () => {
                   <TableCell>{perfume.category}</TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {perfume.category === 'Ultra Luxury' && perfume.price_2ml && (
+                      {perfume.price_2ml && perfume.price_2ml > 0 && (
                         <div>2ml: R$ {perfume.price_2ml}</div>
                       )}
                       {perfume.price_5ml && <div>5ml: R$ {perfume.price_5ml}</div>}
@@ -487,7 +498,7 @@ const AdminPerfumes = () => {
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                {formData.category === 'Ultra Luxury' && (
+                {formData.price_2ml && formData.price_2ml > 0 && (
                   <div className="p-3 border rounded-lg bg-muted/50">
                     <Label className="text-xs text-muted-foreground">2ml</Label>
                     <p className="text-lg font-semibold">R$ {formData.price_2ml?.toFixed(2) || '0.00'}</p>
