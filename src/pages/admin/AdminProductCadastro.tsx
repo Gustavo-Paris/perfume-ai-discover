@@ -119,14 +119,14 @@ const AdminProductCadastro = () => {
 
       const results = await Promise.all(promises);
       
-      if (results.every(r => r.error === null)) {
+      if (results.every(r => r.error === null && r.data && r.data.length > 0)) {
         return {
           price_2ml: results[0].data[0]?.suggested_price || 0,
           price_5ml: results[1].data[0]?.suggested_price || 0,
           price_10ml: results[2].data[0]?.suggested_price || 0,
           perfume_cost: results[1].data[0]?.perfume_cost_per_unit || 0,
           materials_cost: results[1].data[0]?.materials_cost_per_unit || 0,
-          packaging_cost: 0, // Usando valor padrão por enquanto
+          packaging_cost: 0, // Campo não disponível na função atual
           total_cost_per_unit: results[1].data[0]?.total_cost_per_unit || 0,
         };
       }
