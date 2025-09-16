@@ -218,11 +218,11 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 2)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 items-center justify-center"
                     size="sm"
                   >
-                    <Plus className="mr-0.5 h-3 w-3" />
-                    2ml
+                    <Plus className="h-3 w-3" />
+                    <span className="ml-0.5">2ml</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -246,11 +246,11 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 5)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 items-center justify-center"
                     size="sm"
                   >
-                    <Plus className="mr-0.5 h-3 w-3" />
-                    5ml
+                    <Plus className="h-3 w-3" />
+                    <span className="ml-0.5">5ml</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -274,11 +274,11 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, 10)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 items-center justify-center"
                     size="sm"
                   >
-                    <Plus className="mr-0.5 h-3 w-3" />
-                    10ml
+                    <Plus className="h-3 w-3" />
+                    <span className="ml-0.5">10ml</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
