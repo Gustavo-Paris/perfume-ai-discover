@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { useCreateInventoryLot } from '@/hooks/useInventoryLots';
 import { useWarehouses } from '@/hooks/useWarehouses';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCalculateProductCost } from '@/hooks/useMaterials';
 
 interface WizardStep {
   id: string;
@@ -50,6 +51,7 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
   const createPerfume = useCreatePerfume();
   const createLot = useCreateInventoryLot();
   const { data: warehouses } = useWarehouses();
+  const calculateProductCost = useCalculateProductCost();
 
   const [perfumeData, setPerfumeData] = useState({
     brand: '',
@@ -86,6 +88,27 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
   };
 
   const formatNotes = (notes: string[]) => notes.join(', ');
+
+  // Função para calcular preços incluindo materiais
+  const calculatePrices = () => {
+    if (pricingData.total_cost > 0 && stockData.qty_ml > 0) {
+      const costPerMl = pricingData.total_cost / stockData.qty_ml;
+      const marginMultiplier = (1 + pricingData.target_margin_percentage / 100);
+      
+      return {
+        cost_per_ml: costPerMl,
+        price_2ml: costPerMl * 2 * marginMultiplier + 0.65, // Adicionar custo dos materiais estimado
+        price_5ml: costPerMl * 5 * marginMultiplier + 0.95, // Frasco 5ml + etiqueta
+        price_10ml: costPerMl * 10 * marginMultiplier + 1.35, // Frasco 10ml + etiqueta
+      };
+    }
+    return {
+      cost_per_ml: 0,
+      price_2ml: 0,
+      price_5ml: 0,
+      price_10ml: 0,
+    };
+  };
 
   // Função para criar receitas padrão de materiais para o produto
   const createProductRecipes = async (perfumeId: string) => {
@@ -176,11 +199,14 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
         const calculatedCostPerMl = pricingData.total_cost / stockData.qty_ml;
         setPricingData(prev => ({...prev, cost_per_ml: calculatedCostPerMl}));
         
+        // Usar os preços calculados que incluem materiais
+        const finalPrices = calculatePrices();
+        
         const perfume = await createPerfume.mutateAsync({
           ...perfumeData,
-          price_2ml: pricingData.price_2ml,
-          price_5ml: pricingData.price_5ml,
-          price_10ml: pricingData.price_10ml,
+          price_2ml: finalPrices.price_2ml,
+          price_5ml: finalPrices.price_5ml,
+          price_10ml: finalPrices.price_10ml,
           price_full: 0, // Not used anymore, set to 0
           target_margin_percentage: pricingData.target_margin_percentage,
         });
@@ -396,9 +422,9 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
         
         return {
           cost_per_ml: costPerMl,
-          price_2ml: costPerMl * 2 * marginMultiplier,
-          price_5ml: costPerMl * 5 * marginMultiplier,
-          price_10ml: costPerMl * 10 * marginMultiplier,
+          price_2ml: costPerMl * 2 * marginMultiplier + 0.65, // Adicionar custo dos materiais estimado
+          price_5ml: costPerMl * 5 * marginMultiplier + 0.95, // Frasco 5ml + etiqueta
+          price_10ml: costPerMl * 10 * marginMultiplier + 1.35, // Frasco 10ml + etiqueta
         };
       }
       return {
@@ -420,7 +446,7 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
           <div className="bg-blue-50 p-4 rounded-lg mb-4">
             <p className="text-sm text-blue-700">
               <strong>Dica:</strong> Defina o custo total do lote e a margem desejada. 
-              Os preços serão calculados automaticamente baseados na quantidade do estoque.
+              Os preços serão calculados automaticamente incluindo os custos dos materiais (frascos + etiquetas).
             </p>
           </div>
 
@@ -434,21 +460,7 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
                 value={pricingData.total_cost}
                 onChange={(e) => {
                   const totalCost = Number(e.target.value);
-                  const calculated = calculatePrices();
-                  if (stockData.qty_ml > 0) {
-                    const costPerMl = totalCost / stockData.qty_ml;
-                    const marginMultiplier = (1 + pricingData.target_margin_percentage / 100);
-                    setPricingData({ 
-                      ...pricingData, 
-                      total_cost: totalCost,
-                      cost_per_ml: costPerMl,
-                      price_2ml: costPerMl * 2 * marginMultiplier,
-                      price_5ml: costPerMl * 5 * marginMultiplier,
-                      price_10ml: costPerMl * 10 * marginMultiplier,
-                    });
-                  } else {
-                    setPricingData({ ...pricingData, total_cost: totalCost });
-                  }
+                  setPricingData({ ...pricingData, total_cost: totalCost });
                 }}
                 placeholder="500.00"
               />
@@ -466,27 +478,43 @@ export const ProductWizard = ({ onComplete }: { onComplete?: () => void }) => {
                 value={pricingData.target_margin_percentage}
                 onChange={(e) => {
                   const margin = Number(e.target.value);
-                  if (pricingData.total_cost > 0 && stockData.qty_ml > 0) {
-                    const costPerMl = pricingData.total_cost / stockData.qty_ml;
-                    const marginMultiplier = (1 + margin / 100);
-                    setPricingData({ 
-                      ...pricingData, 
-                      target_margin_percentage: margin,
-                      price_2ml: costPerMl * 2 * marginMultiplier,
-                      price_5ml: costPerMl * 5 * marginMultiplier,
-                      price_10ml: costPerMl * 10 * marginMultiplier,
-                    });
-                  } else {
-                    setPricingData({ ...pricingData, target_margin_percentage: margin });
-                  }
+                  setPricingData({ ...pricingData, target_margin_percentage: margin });
                 }}
                 placeholder="50"
               />
             </div>
           </div>
 
+          {stockData.qty_ml > 0 && pricingData.total_cost > 0 && (
+            <div className="border rounded-lg p-4 bg-green-50">
+              <h4 className="font-medium mb-2 text-green-800">Composição do Preço (5ml):</h4>
+              <div className="text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span>Perfume:</span>
+                  <span>R$ {(calculatedPrices.cost_per_ml * 5).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Frasco + Etiqueta:</span>
+                  <span>R$ 0.95</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Materiais:</span>
+                  <span>R$ 0.95</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Custo Total:</span>
+                  <span>R$ {(calculatedPrices.cost_per_ml * 5 + 0.95).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-green-700 font-medium">
+                  <span>Margem ({pricingData.target_margin_percentage}%):</span>
+                  <span>R$ {(calculatedPrices.price_5ml - (calculatedPrices.cost_per_ml * 5 + 0.95)).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">Preços Calculados</h4>
+            <h4 className="font-medium mb-3">Preços Calculados (incluindo materiais)</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label>Preço 2ml</Label>
