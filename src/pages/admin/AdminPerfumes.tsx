@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
 
 const AdminPerfumes = () => {
-  const { data: perfumes, isLoading } = usePerfumes();
+  const { data: perfumes, isLoading, refetch } = usePerfumes();
   const createPerfume = useCreatePerfume();
   const updatePerfume = useUpdatePerfume();
   const deletePerfume = useDeletePerfume();
@@ -161,11 +161,22 @@ const AdminPerfumes = () => {
         perfumeId: editingPerfume.id,
         newMarginPercentage: newMargin / 100
       });
+      
+      toast({
+        title: "Margem atualizada!",
+        description: "Preços recalculados automaticamente",
+      });
+      
+      // Force refresh the data
+      await refetch();
+      
       // After successful update, refresh the perfume data to show new prices
-      const updatedPerfume = perfumes?.find(p => p.id === editingPerfume.id);
-      if (updatedPerfume) {
-        handleEdit(updatedPerfume);
-      }
+      setTimeout(() => {
+        const updatedPerfume = perfumes?.find(p => p.id === editingPerfume.id);
+        if (updatedPerfume) {
+          handleEdit(updatedPerfume);
+        }
+      }, 500);
     } catch (error) {
       toast({
         title: "Erro",
