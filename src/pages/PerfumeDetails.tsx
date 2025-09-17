@@ -436,23 +436,6 @@ const PerfumeDetails = () => {
                   <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
               </div>
-              
-              {/* Admin: Recalcular preços faltantes */}
-              {isAdmin && (
-                <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded space-y-1">
-                  <div>Admin: Tamanhos calculados: {availableSizes.filter(size => prices[size] && prices[size] > 0).join(', ')}ml</div>
-                  <div>Total de preços: {Object.keys(prices).filter(size => prices[parseInt(size)] > 0).length}</div>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={handleDebugRecalculate}
-                    disabled={recalculatePerfume.isPending}
-                    className="mt-2"
-                  >
-                    🔄 {recalculatePerfume.isPending ? 'Recalculando...' : 'Recalcular preços faltantes'}
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         </div>
