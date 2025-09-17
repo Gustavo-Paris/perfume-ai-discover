@@ -44,14 +44,14 @@ interface PerfumeFormData {
 interface LotFormData {
   lot_code: string;
   qty_ml: number;
-  total_cost: number; // Mudança: agora é custo total do lote
+  total_cost: number;
   warehouse_id: string;
   supplier: string;
   expiry_date: string;
 }
 
 interface CalculatedPrices {
-  [key: string]: any; // Permite propriedades dinâmicas como price_20ml
+  [key: string]: any;
   sizes?: number[];
   prices?: Array<{
     sizeMl: number;
@@ -83,7 +83,7 @@ const AdminProductCadastro = () => {
   const [lotData, setLotData] = useState<LotFormData>({
     lot_code: '',
     qty_ml: 0,
-    total_cost: 0, // Mudança: custo total do lote
+    total_cost: 0,
     warehouse_id: '',
     supplier: '',
     expiry_date: ''
@@ -105,7 +105,6 @@ const AdminProductCadastro = () => {
   const createPerfume = useCreatePerfume();
   const createLot = useCreateInventoryLot();
 
-  // Funções utilitárias
   const parseNotes = (notesString: string): string[] => {
     return notesString.split(',').map(note => note.trim()).filter(note => note.length > 0);
   };
@@ -162,66 +161,55 @@ const AdminProductCadastro = () => {
       };
     } catch (error) {
       console.error('Erro ao calcular preços:', error);
-      toast.error('Erro ao calcular preços');
+      toast({
+        title: "Erro",
+        description: "Erro ao calcular preços",
+        variant: "destructive"
+      });
       return null;
     }
   };
-  };
 
-  // Calcular custo médio se há lotes existentes
   const calculateAverageCostImpact = () => {
-    if (!currentPerfumeId || !existingLots) return null;
+    if (!perfumesWithCosts || perfumesWithCosts.length === 0) return null;
     
-    const perfumeLots = existingLots.filter(lot => 
-      lot.perfume_id === currentPerfumeId
-    );
+    const avgCost = perfumesWithCosts.reduce((sum, p) => sum + (p.avg_cost_per_ml || 0), 0) / perfumesWithCosts.length;
+    const currentCost = costPerMl;
     
-    if (perfumeLots.length === 0) return null;
-
-    const totalCost = perfumeLots.reduce((sum, lot) => 
-      sum + (lot.qty_ml * lot.cost_per_ml), 0
-    );
-    const totalMl = perfumeLots.reduce((sum, lot) => sum + lot.qty_ml, 0);
-    const currentAvgCost = totalCost / totalMl;
-
-    // Simular novo custo médio com o lote atual
-    const newTotalCost = totalCost + lotData.total_cost;
-    const newTotalMl = totalMl + lotData.qty_ml;
-    const newAvgCost = newTotalCost / newTotalMl;
-
     return {
-      currentAvgCost,
-      newAvgCost,
-      impact: ((newAvgCost - currentAvgCost) / currentAvgCost) * 100
+      avgCost,
+      currentCost,
+      impact: currentCost > avgCost ? 'acima' : currentCost < avgCost ? 'abaixo' : 'media',
+      difference: Math.abs(currentCost - avgCost)
     };
   };
 
-  // Validações inteligentes
-  const validateStep = (currentStep: string) => {
-    switch (currentStep) {
+  const validateStep = (stepName: string): boolean => {
+    switch (stepName) {
       case 'perfume':
-        return perfumeData.brand && perfumeData.name && perfumeData.family;
+        return !!(perfumeData.brand && perfumeData.name && perfumeData.family && perfumeData.gender);
       case 'lot':
-        return lotData.lot_code && lotData.qty_ml > 0 && lotData.total_cost > 0 && lotData.warehouse_id;
-      case 'prices':
-        return marginPercentage > 0;
+        return !!(lotData.lot_code && lotData.qty_ml > 0 && lotData.total_cost > 0 && lotData.warehouse_id);
       default:
         return false;
     }
   };
 
-  // Atualizar preços quando perfume for criado
   useEffect(() => {
-    if (currentPerfumeId && step === 'lot') {
-      calculatePricesWithMaterials().then(setCalculatedPrices);
-    }
-  }, [currentPerfumeId, costPerMl, step]);
+    const fetchPrices = async () => {
+      if (step === 'prices' && currentPerfumeId) {
+        const prices = await calculatePricesWithMaterials();
+        setCalculatedPrices(prices);
+      }
+    };
+    
+    fetchPrices();
+  }, [step, currentPerfumeId, costPerMl, marginPercentage]);
 
-  // Handlers
   const handleCreatePerfume = async () => {
     if (!validateStep('perfume')) {
       toast({
-        title: "Dados incompletos",
+        title: "Dados incompletos", 
         description: "Preencha todos os campos obrigatórios do perfume.",
         variant: "destructive"
       });
@@ -230,19 +218,14 @@ const AdminProductCadastro = () => {
 
     setLoading(true);
     try {
-      // Criar perfume sem preços (serão calculados depois)
       const perfume = await createPerfume.mutateAsync({
         ...perfumeData,
-        // Campos de preço com valores temporários
-        price_2ml: null,
-        price_5ml: null,
-        price_10ml: null,
-        price_full: 0
-      });
-      
+        avg_cost_per_ml: 0,
+        target_margin_percentage: marginPercentage / 100,
+      } as any);
+
       setCurrentPerfumeId(perfume.id);
       setStep('lot');
-      
       toast({
         title: "Perfume criado!",
         description: "Agora adicione o primeiro lote de estoque."
@@ -274,10 +257,10 @@ const AdminProductCadastro = () => {
         perfume_id: currentPerfumeId,
         lot_code: lotData.lot_code,
         qty_ml: lotData.qty_ml,
-        cost_per_ml: costPerMl, // Calculado automaticamente
+        cost_per_ml: costPerMl,
         total_cost: lotData.total_cost,
         warehouse_id: lotData.warehouse_id,
-        supplier: lotData.supplier || null, // Converter string vazia para null
+        supplier: lotData.supplier || null,
         expiry_date: lotData.expiry_date || null
       });
 
@@ -366,55 +349,13 @@ const AdminProductCadastro = () => {
         actions={
           <Button 
             onClick={resetForm}
-            variant="outline"
-            disabled={loading}
+            variant="outline" 
+            size="sm"
           >
+            <Plus className="h-4 w-4 mr-2" />
             Novo Produto
           </Button>
         }
-      />
-
-      {/* Indicador de Progresso Simples */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-          step === 'perfume' ? 'bg-primary text-primary-foreground' : 
-          ['lot', 'prices', 'complete'].includes(step) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-        }`}>
-          <Package className="h-4 w-4" />
-          <span className="text-sm font-medium">1. Perfume</span>
-          {['lot', 'prices', 'complete'].includes(step) && <CheckCircle className="h-4 w-4" />}
-        </div>
-        
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-          step === 'lot' ? 'bg-primary text-primary-foreground' : 
-          ['prices', 'complete'].includes(step) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-        }`}>
-          <Package className="h-4 w-4" />
-          <span className="text-sm font-medium">2. Lote</span>
-          {['prices', 'complete'].includes(step) && <CheckCircle className="h-4 w-4" />}
-        </div>
-        
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-          step === 'prices' ? 'bg-primary text-primary-foreground' : 
-          step === 'complete' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-        }`}>
-          <DollarSign className="h-4 w-4" />
-          <span className="text-sm font-medium">3. Preços</span>
-          {step === 'complete' && <CheckCircle className="h-4 w-4" />}
-        </div>
-        
-        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-          step === 'complete' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-        }`}>
-          <CheckCircle className="h-4 w-4" />
-          <span className="text-sm font-medium">4. Completo</span>
-        </div>
-      </div>
-
-      {/* Validações Inteligentes */}
-      <SmartValidations 
-        entityType="perfume" 
-        entityData={{ ...perfumeData, ...lotData, marginPercentage }}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -424,16 +365,16 @@ const AdminProductCadastro = () => {
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
               Dados do Perfume
-              {['lot', 'prices', 'complete'].includes(step) && (
+              {step !== 'perfume' && currentPerfumeId && (
                 <Badge variant="default" className="ml-auto">
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Completo
+                  Criado
                 </Badge>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="brand">Marca *</Label>
                 <Input
@@ -441,7 +382,6 @@ const AdminProductCadastro = () => {
                   value={perfumeData.brand}
                   onChange={(e) => setPerfumeData({...perfumeData, brand: e.target.value})}
                   placeholder="Ex: Chanel"
-                  disabled={step !== 'perfume'}
                 />
               </div>
               <div>
@@ -451,29 +391,35 @@ const AdminProductCadastro = () => {
                   value={perfumeData.name}
                   onChange={(e) => setPerfumeData({...perfumeData, name: e.target.value})}
                   placeholder="Ex: Bleu de Chanel"
-                  disabled={step !== 'perfume'}
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="family">Família Olfativa *</Label>
-              <Input
-                id="family"
-                value={perfumeData.family}
-                onChange={(e) => setPerfumeData({...perfumeData, family: e.target.value})}
-                placeholder="Ex: Amadeirado Oriental"
-                disabled={step !== 'perfume'}
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                value={perfumeData.description}
+                onChange={(e) => setPerfumeData({...perfumeData, description: e.target.value})}
+                placeholder="Descrição do perfume..."
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="gender">Gênero</Label>
+                <Label htmlFor="family">Família Olfativa *</Label>
+                <Input
+                  id="family"
+                  value={perfumeData.family}
+                  onChange={(e) => setPerfumeData({...perfumeData, family: e.target.value})}
+                  placeholder="Ex: Amadeirada Aromática"
+                />
+              </div>
+              <div>
+                <Label htmlFor="gender">Gênero *</Label>
                 <Select 
                   value={perfumeData.gender} 
                   onValueChange={(value: any) => setPerfumeData({...perfumeData, gender: value})}
-                  disabled={step !== 'perfume'}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -485,39 +431,54 @@ const AdminProductCadastro = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label>Notas de Topo</Label>
+              <Input
+                value={formatNotes(perfumeData.top_notes)}
+                onChange={(e) => setPerfumeData({...perfumeData, top_notes: parseNotes(e.target.value)})}
+                placeholder="Ex: Bergamota, Limão"
+              />
+            </div>
+
+            <div>
+              <Label>Notas de Coração</Label>
+              <Input
+                value={formatNotes(perfumeData.heart_notes)}
+                onChange={(e) => setPerfumeData({...perfumeData, heart_notes: parseNotes(e.target.value)})}
+                placeholder="Ex: Gengibre, Noz-moscada"
+              />
+            </div>
+
+            <div>
+              <Label>Notas de Base</Label>
+              <Input
+                value={formatNotes(perfumeData.base_notes)}
+                onChange={(e) => setPerfumeData({...perfumeData, base_notes: parseNotes(e.target.value)})}
+                placeholder="Ex: Sândalo, Cedro"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="category">Categoria</Label>
                 <Input
                   id="category"
                   value={perfumeData.category}
                   onChange={(e) => setPerfumeData({...perfumeData, category: e.target.value})}
-                  placeholder="Premium, Designer..."
-                  disabled={step !== 'perfume'}
+                  placeholder="Ex: Premium"
                 />
               </div>
-            </div>
-
-            <div>
-              <Label>Descrição</Label>
-              <Textarea
-                value={perfumeData.description}
-                onChange={(e) => setPerfumeData({...perfumeData, description: e.target.value})}
-                placeholder="Descrição do perfume..."
-                rows={2}
-                disabled={step !== 'perfume'}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="margin">Margem de Lucro (%)</Label>
-              <Input
-                id="margin"
-                type="number"
-                value={marginPercentage}
-                onChange={(e) => setMarginPercentage(Number(e.target.value))}
-                disabled={step !== 'perfume'}
-                placeholder="50"
-              />
+              <div>
+                <Label htmlFor="image_url">URL da Imagem</Label>
+                <Input
+                  id="image_url"
+                  value={perfumeData.image_url}
+                  onChange={(e) => setPerfumeData({...perfumeData, image_url: e.target.value})}
+                  placeholder="https://..."
+                />
+              </div>
             </div>
 
             {step === 'perfume' && (
@@ -529,13 +490,6 @@ const AdminProductCadastro = () => {
                 {loading ? 'Criando...' : 'Criar Perfume'}
               </Button>
             )}
-
-            {step !== 'perfume' && (
-              <Button variant="outline" onClick={() => setStep('perfume')} className="w-full">
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Perfume
-              </Button>
-            )}
           </CardContent>
         </Card>
 
@@ -543,101 +497,132 @@ const AdminProductCadastro = () => {
         <Card className={step === 'lot' ? 'ring-2 ring-primary' : ''}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Primeiro Lote
-              {['prices', 'complete'].includes(step) && (
+              <TrendingUp className="h-5 w-5" />
+              Lote de Estoque
+              {(step === 'prices' || step === 'complete') && (
                 <Badge variant="default" className="ml-auto">
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Completo
+                  Adicionado
                 </Badge>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="lot_code">Código do Lote *</Label>
-              <Input
-                id="lot_code"
-                value={lotData.lot_code}
-                onChange={(e) => setLotData({...lotData, lot_code: e.target.value})}
-                placeholder="LOT001-2024"
-                disabled={step === 'perfume' || step === 'complete'}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="lot_code">Código do Lote *</Label>
+                <Input
+                  id="lot_code"
+                  value={lotData.lot_code}
+                  onChange={(e) => setLotData({...lotData, lot_code: e.target.value})}
+                  placeholder="Ex: BDC001"
+                />
+              </div>
               <div>
                 <Label htmlFor="qty_ml">Quantidade (ml) *</Label>
                 <Input
                   id="qty_ml"
                   type="number"
-                  value={lotData.qty_ml}
-                  onChange={(e) => setLotData({...lotData, qty_ml: Number(e.target.value)})}
-                  placeholder="1000"
-                  disabled={step === 'perfume' || step === 'complete'}
+                  value={lotData.qty_ml || ''}
+                  onChange={(e) => setLotData({...lotData, qty_ml: parseInt(e.target.value) || 0})}
+                  placeholder="Ex: 1000"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="total_cost">Custo Total (R$) *</Label>
                 <Input
                   id="total_cost"
                   type="number"
                   step="0.01"
-                  value={lotData.total_cost}
-                  onChange={(e) => setLotData({...lotData, total_cost: Number(e.target.value)})}
-                  placeholder="500.00"
-                  disabled={step === 'perfume' || step === 'complete'}
+                  value={lotData.total_cost || ''}
+                  onChange={(e) => setLotData({...lotData, total_cost: parseFloat(e.target.value) || 0})}
+                  placeholder="Ex: 500.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="warehouse">Depósito *</Label>
+                <Select 
+                  value={lotData.warehouse_id} 
+                  onValueChange={(value) => setLotData({...lotData, warehouse_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o depósito" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((warehouse) => (
+                      <SelectItem key={warehouse.id} value={warehouse.id}>
+                        {warehouse.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="supplier">Fornecedor</Label>
+                <Input
+                  id="supplier"
+                  value={lotData.supplier}
+                  onChange={(e) => setLotData({...lotData, supplier: e.target.value})}
+                  placeholder="Nome do fornecedor"
+                />
+              </div>
+              <div>
+                <Label htmlFor="expiry_date">Data de Validade</Label>
+                <Input
+                  id="expiry_date"
+                  type="date"
+                  value={lotData.expiry_date}
+                  onChange={(e) => setLotData({...lotData, expiry_date: e.target.value})}
                 />
               </div>
             </div>
 
-            {/* Mostrar custo por ml calculado */}
+            {/* Análise de Custo */}
             {costPerMl > 0 && (
-              <div className="bg-blue-50 p-3 rounded-lg text-sm">
-                <p><strong>Custo calculado:</strong></p>
-                <p>R$ {costPerMl.toFixed(4)} por ml</p>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calculator className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-blue-800">Análise de Custo</span>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Custo por ml:</span>
+                    <span className="font-mono">R$ {costPerMl.toFixed(3)}</span>
+                  </div>
+                  {costImpact && (
+                    <div className="flex justify-between">
+                      <span>Vs. média do portfólio:</span>
+                      <span className={`font-medium ${
+                        costImpact.impact === 'acima' ? 'text-orange-600' : 
+                        costImpact.impact === 'abaixo' ? 'text-green-600' : 'text-blue-600'
+                      }`}>
+                        {costImpact.impact === 'acima' ? '↑' : costImpact.impact === 'abaixo' ? '↓' : '='} 
+                        {costImpact.impact}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
-            <div>
-              <Label htmlFor="warehouse">Armazém *</Label>
-              <Select 
-                value={lotData.warehouse_id} 
-                onValueChange={(value) => setLotData({...lotData, warehouse_id: value})}
-                disabled={step === 'perfume' || step === 'complete'}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um armazém" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses?.map((warehouse) => (
-                    <SelectItem key={warehouse.id} value={warehouse.id}>
-                      {warehouse.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="supplier">Fornecedor</Label>
-              <Input
-                id="supplier"
-                value={lotData.supplier}
-                onChange={(e) => setLotData({...lotData, supplier: e.target.value})}
-                placeholder="Nome do fornecedor"
-                disabled={step === 'perfume' || step === 'complete'}
-              />
-            </div>
-
-            {costImpact && (
-              <div className="bg-blue-50 p-3 rounded-lg text-sm">
-                <p><strong>Impacto no Custo Médio:</strong></p>
-                <p>Atual: R$ {costImpact.currentAvgCost.toFixed(4)}/ml</p>
-                <p>Novo: R$ {costImpact.newAvgCost.toFixed(4)}/ml</p>
-                <p className={costImpact.impact > 0 ? 'text-red-600' : 'text-green-600'}>
-                  {costImpact.impact > 0 ? '↗' : '↘'} {Math.abs(costImpact.impact).toFixed(1)}%
-                </p>
+            {costImpact && costImpact.impact === 'acima' && (
+              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-orange-800">
+                    <p className="font-medium">Custo acima da média</p>
+                    <p>
+                      Este lote tem custo R$ {costImpact.difference.toFixed(3)}/ml acima da média. 
+                      Considere revisar o fornecedor ou ajustar a margem.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -675,7 +660,7 @@ const AdminProductCadastro = () => {
                     <div key={size} className="flex justify-between items-center">
                       <span className="text-sm font-medium">{size}ml (decant):</span>
                       <span className="font-mono text-lg">
-                        R$ {calculatedPrices.prices[index]?.suggestedPrice?.toFixed(2) || '0.00'}
+                        R$ {calculatedPrices.prices?.[index]?.suggestedPrice?.toFixed(2) || '0.00'}
                       </span>
                     </div>
                   ))}
@@ -707,7 +692,7 @@ const AdminProductCadastro = () => {
                     </div>
                     <div className="flex justify-between font-medium text-green-700">
                       <span>Margem ({marginPercentage}%):</span>
-                      <span>R$ {(calculatedPrices.price_5ml - calculatedPrices.total_cost_per_unit).toFixed(2)}</span>
+                      <span>R$ {((calculatedPrices.prices?.[0]?.suggestedPrice || 0) - calculatedPrices.total_cost_per_unit).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -720,12 +705,12 @@ const AdminProductCadastro = () => {
                       <span>R$ {lotData.total_cost.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Receita Potencial (5ml):</span>
-                      <span>R$ {(calculatedPrices.price_5ml * (lotData.qty_ml / 5)).toFixed(2)}</span>
+                      <span>Receita Potencial ({calculatedPrices.sizes?.[0] || 5}ml):</span>
+                      <span>R$ {((calculatedPrices.prices?.[0]?.suggestedPrice || 0) * (lotData.qty_ml / (calculatedPrices.sizes?.[0] || 5))).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-medium text-blue-700">
                       <span>Lucro Estimado:</span>
-                      <span>R$ {((calculatedPrices.price_5ml * (lotData.qty_ml / 5)) - lotData.total_cost).toFixed(2)}</span>
+                      <span>R$ {(((calculatedPrices.prices?.[0]?.suggestedPrice || 0) * (lotData.qty_ml / (calculatedPrices.sizes?.[0] || 5))) - lotData.total_cost).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
