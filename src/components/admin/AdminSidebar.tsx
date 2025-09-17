@@ -21,7 +21,8 @@ import {
   Megaphone,
   Calculator,
   Boxes,
-  Warehouse
+  Warehouse,
+  Truck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -90,6 +91,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     items: [
       { title: 'Configurações', url: '/admin/config', icon: Settings },
       { title: 'Empresa', url: '/admin/company', icon: Settings },
+      { title: 'Entrega Local', url: '/admin/local-delivery', icon: Truck },
       { title: 'Monitoramento', url: '/admin/monitoring', icon: TrendingUp },
     ]
   },

@@ -56,6 +56,7 @@ import MinhasNotasFiscais from './pages/MinhasNotasFiscais';
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminSupportMacros from "./pages/admin/AdminSupportMacros";
 import AdminCompany from "./pages/admin/AdminCompany";
+import AdminLocalDelivery from "./pages/admin/AdminLocalDelivery";
 import AdminDataSeeder from "./pages/admin/AdminDataSeeder";
 import AdminMonitoring from "./pages/admin/AdminMonitoring";
 
@@ -109,6 +110,7 @@ const AppContent = () => {
             <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
             <Route path="company" element={<AdminCompany />} />
+            <Route path="local-delivery" element={<AdminLocalDelivery />} />
             <Route path="data-seeder" element={<AdminDataSeeder />} />
             <Route path="monitoring" element={<AdminMonitoring />} />
             
