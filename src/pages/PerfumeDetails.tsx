@@ -18,6 +18,8 @@ import ReviewList from '@/components/reviews/ReviewList';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import SEO from '@/components/SEO';
 import ProductSchema from '@/components/ProductSchema';
+import { useActivePromotionByPerfume, calculatePromotionalPrice } from '@/hooks/usePromotions';
+import PromotionBadge from '@/components/promotions/PromotionBadge';
 
 const PerfumeDetails = () => {
   const { id } = useParams();
@@ -40,6 +42,9 @@ const PerfumeDetails = () => {
   // Get dynamic prices for this perfume
   const { prices, availableSizes, isLoading: pricesLoading } = usePerfumePricesObject(id || '');
   const recalculatePerfume = useRecalculatePerfumePrice();
+  
+  // Buscar promoção ativa para este perfume
+  const { data: activePromotion } = useActivePromotionByPerfume(id || '');
   
   // Set initial size based on available sizes using useEffect
   useEffect(() => {
@@ -88,6 +93,21 @@ const PerfumeDetails = () => {
   };
 
   const currentPrice = selectedSize ? prices[selectedSize] || 0 : 0;
+  
+  // Aplicar preço promocional se existir promoção ativa
+  const getPromotionalPrice = (size: number, originalPrice: number) => {
+    if (!activePromotion || !originalPrice) return originalPrice;
+    
+    return calculatePromotionalPrice(
+      originalPrice,
+      activePromotion.discount_type as 'percent' | 'fixed',
+      activePromotion.discount_value
+    );
+  };
+  
+  const finalPrice = selectedSize 
+    ? getPromotionalPrice(selectedSize, prices[selectedSize] || 0)
+    : 0;
 
   const handleDebugRecalculate = async () => {
     if (!databasePerfume?.id) return;
@@ -120,7 +140,7 @@ const PerfumeDetails = () => {
       {selectedSize && (
         <ProductSchema 
           perfume={databasePerfume}
-          currentPrice={currentPrice}
+          currentPrice={finalPrice}
           selectedSize={selectedSize as 2 | 5 | 10}
         />
       )}
@@ -139,7 +159,16 @@ const PerfumeDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Image */}
           <div className="space-y-4">
-            <div className="aspect-[4/5] overflow-hidden rounded-lg bg-white">
+            <div className="aspect-[4/5] overflow-hidden rounded-lg bg-white relative">
+              {/* Promoção Badge */}
+              {activePromotion && (
+                <div className="absolute top-4 left-4 z-10">
+                  <PromotionBadge promotion={{
+                    ...activePromotion,
+                    discount_type: activePromotion.discount_type as 'percent' | 'fixed'
+                  }} />
+                </div>
+              )}
               <img
                 src={databasePerfume.image_url || '/placeholder.svg'}
                 alt={databasePerfume.name}
@@ -308,22 +337,44 @@ const PerfumeDetails = () => {
                   </Badge>
                 )}
               </div>
-              <div className="flex gap-3 flex-wrap">
+               <div className="flex gap-3 flex-wrap">
                 {availableSizes
                   .filter(size => prices[size] && prices[size] > 0)
-                  .map(size => (
-                    <Button
-                      key={size}
-                      variant={selectedSize === size ? "default" : "outline"}
-                      onClick={() => setSelectedSize(size)}
-                      className="relative"
-                    >
-                      {size}ml - R$ {Number(prices[size] || 0).toFixed(2).replace('.', ',')}
-                      {databasePerfume.product_type === 'miniature' && (
-                        <span className="ml-1 text-xs opacity-75">(miniatura)</span>
-                      )}
-                    </Button>
-                  ))}
+                  .map(size => {
+                    const originalPrice = prices[size] || 0;
+                    const promotionalPrice = getPromotionalPrice(size, originalPrice);
+                    const hasDiscount = activePromotion && promotionalPrice < originalPrice;
+                    
+                    return (
+                      <Button
+                        key={size}
+                        variant={selectedSize === size ? "default" : "outline"}
+                        onClick={() => setSelectedSize(size)}
+                        className="relative flex-col h-auto py-2 px-4"
+                      >
+                        <div className="flex items-center gap-1">
+                          <span>{size}ml</span>
+                          {databasePerfume.product_type === 'miniature' && (
+                            <span className="text-xs opacity-75">(miniatura)</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          {hasDiscount ? (
+                            <>
+                              <span className="text-red-600 font-semibold">
+                                R$ {promotionalPrice.toFixed(2).replace('.', ',')}
+                              </span>
+                              <span className="text-muted-foreground line-through text-xs">
+                                R$ {originalPrice.toFixed(2).replace('.', ',')}
+                              </span>
+                            </>
+                          ) : (
+                            <span>R$ {originalPrice.toFixed(2).replace('.', ',')}</span>
+                          )}
+                        </div>
+                      </Button>
+                    );
+                  })}
                 {availableSizes.filter(size => prices[size] && prices[size] > 0).length === 0 && (
                   <div className="text-muted-foreground text-sm py-2">
                     Nenhum tamanho disponível para este perfume
@@ -357,8 +408,15 @@ const PerfumeDetails = () => {
 
             {/* Price and Actions */}
             <div className="space-y-4">
-              <div className="text-2xl font-bold">
-                R$ {(Number(currentPrice) * quantity).toFixed(2).replace('.', ',')}
+              <div className="space-y-2">
+                <div className="text-2xl font-bold text-red-600">
+                  R$ {(finalPrice * quantity).toFixed(2).replace('.', ',')}
+                </div>
+                {activePromotion && selectedSize && (
+                  <div className="text-sm text-muted-foreground line-through">
+                    R$ {(currentPrice * quantity).toFixed(2).replace('.', ',')}
+                  </div>
+                )}
               </div>
               
               <div className="flex gap-3">
