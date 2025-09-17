@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/contexts/CartContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { usePerfumes } from '@/hooks/usePerfumes';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
+import { useRecalculatePerfumePrice } from '@/hooks/useRecalculatePerfumePrice';
 import { DatabasePerfume } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCanReview, useUserReview } from '@/hooks/useReviews';
@@ -36,6 +37,7 @@ const PerfumeDetails = () => {
   
   // Get dynamic prices for this perfume
   const { prices, availableSizes, isLoading: pricesLoading } = usePerfumePricesObject(id || '');
+  const recalculatePerfume = useRecalculatePerfumePrice();
   
   // Set initial size based on available sizes using useEffect
   useEffect(() => {
@@ -77,16 +79,32 @@ const PerfumeDetails = () => {
         quantity
       });
 
-      toast({
-        title: "Adicionado ao carrinho!",
-        description: `${databasePerfume.name} ${selectedSize}ml (${quantity}x) foi adicionado ao seu carrinho.`,
-      });
+      toast.success(`Adicionado ao carrinho! ${databasePerfume.name} ${selectedSize}ml (${quantity}x) foi adicionado ao seu carrinho.`);
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
   };
 
   const currentPrice = selectedSize ? prices[selectedSize] || 0 : 0;
+
+  const handleDebugRecalculate = async () => {
+    if (!databasePerfume?.id) return;
+    
+    // Try to recalculate missing sizes (like 20ml)
+    const allConfiguredSizes = [2, 5, 10, 20]; // From material_configurations
+    const missingSizes = allConfiguredSizes.filter(size => !availableSizes.includes(size));
+    
+    if (missingSizes.length === 0) {
+      toast('Todos os tamanhos já têm preços calculados');
+      return;
+    }
+    
+    toast(`🔄 Recalculando ${missingSizes.length} tamanho(s) faltante(s): ${missingSizes.join(', ')}ml`);
+    await recalculatePerfume.mutateAsync({ 
+      perfumeId: databasePerfume.id, 
+      sizes: missingSizes 
+    });
+  };
 
   return (
     <>
@@ -298,6 +316,21 @@ const PerfumeDetails = () => {
                   onClick={() => setIsLiked(!isLiked)}
                 >
                   <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                </Button>
+              </div>
+              
+              {/* Debug: Available vs Configured sizes */}
+              <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded space-y-1">
+                <div>Tamanhos disponíveis: {availableSizes.join(', ')}ml</div>
+                <div>Total de preços: {Object.keys(prices).length}</div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={handleDebugRecalculate}
+                  disabled={recalculatePerfume.isPending}
+                  className="mt-2"
+                >
+                  🔧 {recalculatePerfume.isPending ? 'Recalculando...' : 'Debug: Recalcular Tamanhos Faltantes'}
                 </Button>
               </div>
             </div>
