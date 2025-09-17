@@ -19,7 +19,6 @@ import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
 import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
 import { PricesDisplayModal } from '@/components/admin/PricesDisplayModal';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
-import { MarginValidator } from '@/components/admin/MarginValidator';
 import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
 
 const AdminPerfumes = () => {
@@ -219,13 +218,6 @@ const AdminPerfumes = () => {
 
   return (
       <div className="container mx-auto p-6">
-      {/* Validador de margem para debugging */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-6">
-          <MarginValidator />
-        </div>
-      )}
-      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gerenciar Perfumes</h1>
         <div className="flex gap-2">
