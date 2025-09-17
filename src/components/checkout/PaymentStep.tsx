@@ -65,20 +65,18 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
 
       if (data?.success && data?.checkout_url) {
         const url = data.checkout_url as string;
-        console.log('Opening Stripe checkout:', url);
+        console.log('Redirecting to Stripe checkout:', url);
         
-        // Abre em nova aba diretamente com a URL
-        const newTab = window.open(url, '_blank', 'noopener,noreferrer');
+        // Show loading message before redirect
+        toast({ 
+          title: 'Redirecionando para pagamento...', 
+          description: 'Você será direcionado para o checkout seguro do Stripe.' 
+        });
         
-        if (newTab) {
-          toast({ title: 'Redirecionando...', description: 'Checkout Stripe aberto em nova aba. Você pode continuar navegando aqui.' });
-        } else {
-          toast({ 
-            title: 'Pop-up bloqueado', 
-            description: 'Por favor, permita pop-ups e tente novamente.',
-            variant: 'destructive'
-          });
-        }
+        // Redirect in the same tab for smoother experience
+        setTimeout(() => {
+          window.location.href = url;
+        }, 1000); // Small delay to show the toast message
       } else {
         throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
       }
