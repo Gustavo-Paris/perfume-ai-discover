@@ -21,6 +21,7 @@ const Carrinho = () => {
 
   const getPriceForSize = (perfume: any, size: number) => {
     switch (size) {
+      case 2: return perfume.price_2ml || 0;
       case 5: return perfume.price_5ml || 0;
       case 10: return perfume.price_10ml || 0;
       default: return perfume.price_full;

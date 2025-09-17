@@ -88,6 +88,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gender,
           description,
           image_url,
+          price_2ml,
           price_5ml,
           price_10ml,
           price_full,
@@ -165,7 +166,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Get perfume data for analytics
       const { data: perfume } = await supabase
         .from('perfumes')
-        .select('id, name, brand, price_5ml, price_10ml, price_full')
+        .select('id, name, brand, price_2ml, price_5ml, price_10ml, price_full')
         .eq('id', item.perfume_id)
         .single();
 
@@ -178,7 +179,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Track add_to_cart event
       if (perfume) {
-        const price = item.size_ml === 5 ? perfume.price_5ml : 
+        const price = item.size_ml === 2 ? perfume.price_2ml : 
+                     item.size_ml === 5 ? perfume.price_5ml : 
                      item.size_ml === 10 ? perfume.price_10ml : 
                      perfume.price_full;
         
@@ -261,7 +263,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Get perfume data
     const { data: perfume, error } = await supabase
       .from('perfumes')
-      .select('id, name, brand, family, gender, description, image_url, price_5ml, price_10ml, price_full, top_notes, heart_notes, base_notes, category, created_at')
+      .select('id, name, brand, family, gender, description, image_url, price_2ml, price_5ml, price_10ml, price_full, top_notes, heart_notes, base_notes, category, created_at')
       .eq('id', perfumeId)
       .single();
 
@@ -442,6 +444,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getTotal = () => {
     const itemsTotal = items.reduce((total, item) => {
       let price = item.perfume.price_full;
+      if (item.size === 2) price = item.perfume.price_2ml || 0;
       if (item.size === 5) price = item.perfume.price_5ml || 0;
       if (item.size === 10) price = item.perfume.price_10ml || 0;
       return total + (price * item.quantity);
