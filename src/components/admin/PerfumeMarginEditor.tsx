@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
-import { decimalToPercentage, formatMarginDisplay, isValidMargin } from '@/utils/marginHelpers';
+import { decimalToPercentage, formatMarginDisplay, isValidMargin, percentageToDecimal } from '@/utils/marginHelpers';
 
 interface PerfumeMarginEditorProps {
   perfume: {
@@ -40,10 +40,10 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
     setError('');
     
     try {
-      // Hook já converte porcentagem para decimal internamente
+      // Converter porcentagem para decimal antes de enviar
       await updateMargin.mutateAsync({
         perfumeId: perfume.id,
-        newMarginPercentage: marginValue // Enviando como porcentagem
+        newMarginPercentage: percentageToDecimal(marginValue) // Convertendo para decimal
       });
       setIsEditing(false);
     } catch (error) {
