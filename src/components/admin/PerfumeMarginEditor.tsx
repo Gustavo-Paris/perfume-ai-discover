@@ -33,7 +33,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
   const handleSave = async () => {
     // Validar margem
     if (!isValidMargin(marginValue)) {
-      setError('Margem deve estar entre 50% e 500%');
+      setError('Margem deve estar entre 50% e 99%');
       return;
     }
     
@@ -63,7 +63,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
     setMarginValue(value);
     
     if (!isValidMargin(value)) {
-      setError('Margem deve estar entre 50% e 500%');
+      setError('Margem deve estar entre 50% e 99%');
     } else {
       setError('');
     }
@@ -88,7 +88,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
                   onChange={handleValueChange}
                   className={`w-24 h-8 ${error ? 'border-red-500' : ''}`}
                   min="50"
-                  max="500"
+                  max="99"
                   step="10"
                   placeholder="200"
                 />
