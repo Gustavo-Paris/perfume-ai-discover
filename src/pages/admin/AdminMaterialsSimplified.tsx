@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   useMaterials, 
   useCreateMaterial, 
@@ -31,7 +32,6 @@ import {
 import MaterialSetupAssistant from '@/components/admin/MaterialSetupAssistant';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 
 export default function AdminMaterialsSimplified() {
   const [isCreateMaterialOpen, setIsCreateMaterialOpen] = useState(false);
@@ -42,11 +42,6 @@ export default function AdminMaterialsSimplified() {
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [editingLot, setEditingLot] = useState<MaterialLot | null>(null);
   const [editingRule, setEditingRule] = useState<PackagingRule | null>(null);
-  
-  // Estados para confirmação de exclusão
-  const [deletingMaterial, setDeletingMaterial] = useState<Material | null>(null);
-  const [deletingLot, setDeletingLot] = useState<MaterialLot | null>(null);
-  const [deletingRule, setDeletingRule] = useState<PackagingRule | null>(null);
 
   const { data: materials = [], isLoading: materialsLoading } = useMaterials();
   const { data: materialLots = [], isLoading: lotsLoading } = useMaterialLots();
@@ -144,10 +139,8 @@ export default function AdminMaterialsSimplified() {
     try {
       await deleteMaterial.mutateAsync(material.id);
       toast.success('Material excluído com sucesso!');
-      setDeletingMaterial(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao excluir material');
-      setDeletingMaterial(null);
     }
   };
 
@@ -226,10 +219,8 @@ export default function AdminMaterialsSimplified() {
     try {
       await deleteMaterialLot.mutateAsync(lot.id);
       toast.success('Lote excluído com sucesso!');
-      setDeletingLot(null);
     } catch (error) {
       toast.error('Erro ao excluir lote');
-      setDeletingLot(null);
     }
   };
 
@@ -276,16 +267,12 @@ export default function AdminMaterialsSimplified() {
     try {
       await deletePackagingRule.mutateAsync(rule.id);
       toast.success('Regra excluída com sucesso!');
-      setDeletingRule(null);
     } catch (error) {
       toast.error('Erro ao excluir regra');
-      setDeletingRule(null);
     }
   };
 
-  const inputMaterials = materials.filter(m => m.type === 'input');
-  const packagingMaterials = inputMaterials.filter(m => ['frasco', 'etiqueta', 'caixa'].includes(m.category));
-  const otherMaterials = inputMaterials.filter(m => !['frasco', 'etiqueta', 'caixa'].includes(m.category));
+  const packagingMaterials = materials.filter(m => ['frasco', 'etiqueta', 'caixa'].includes(m.category));
   const lowStockMaterials = materials.filter(m => m.current_stock <= m.min_stock_alert);
 
   if (materialsLoading || lotsLoading || rulesLoading) {
@@ -343,507 +330,608 @@ export default function AdminMaterialsSimplified() {
         </CardContent>
       </Card>
 
-      {/* Main Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Packaging Materials */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Embalagens ({packagingMaterials.length})
-            </CardTitle>
-            <CardDescription>Frascos, etiquetas e caixas</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {packagingMaterials.map(material => (
-              <div key={material.id} className="flex justify-between items-center p-2 border rounded">
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{material.name}</p>
-                  <p className="text-xs text-muted-foreground">{material.category}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <p className="text-sm font-medium">R$ {material.cost_per_unit.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {material.current_stock} {material.unit}
-                    </p>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditMaterial(material)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit2 className="h-3 w-3" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir Material</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja excluir "{material.name}"? Esta ação não pode ser desfeita.
-                            O sistema verificará se o material pode ser excluído com segurança.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteMaterial(material)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </div>
-            ))}
-            <Dialog open={isCreateMaterialOpen} onOpenChange={setIsCreateMaterialOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Material
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>{editingMaterial ? 'Editar Material' : 'Novo Material'}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Nome</Label>
-                    <Input
-                      value={materialForm.name}
-                      onChange={(e) => setMaterialForm({ ...materialForm, name: e.target.value })}
-                      placeholder="Ex: Frasco 5ml"
-                    />
-                  </div>
-                  <div>
-                    <Label>Categoria</Label>
-                    <Select
-                      value={materialForm.category}
-                      onValueChange={(value) => setMaterialForm({ ...materialForm, category: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="frasco">Frasco</SelectItem>
-                        <SelectItem value="etiqueta">Etiqueta</SelectItem>
-                        <SelectItem value="caixa">Caixa</SelectItem>
-                        <SelectItem value="outros">Outros</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Nota</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Unidade e custos serão definidos pelos lotes
-                    </p>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => {
-                      setIsCreateMaterialOpen(false);
-                      setEditingMaterial(null);
-                      setMaterialForm({
-                        name: '',
-                        type: 'input',
-                        category: '',
-                        supplier: '',
-                        description: '',
-                        is_active: true,
-                      });
-                    }}>
-                      Cancelar
-                    </Button>
-                    <Button 
-                      onClick={handleCreateMaterial} 
-                      disabled={createMaterial.isPending || updateMaterial.isPending}
-                    >
-                      {createMaterial.isPending || updateMaterial.isPending 
-                        ? (editingMaterial ? 'Atualizando...' : 'Criando...') 
-                        : (editingMaterial ? 'Atualizar' : 'Criar')
-                      }
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
+      {/* Tab-based Interface */}
+      <Tabs defaultValue="materials" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="materials">Materiais</TabsTrigger>
+          <TabsTrigger value="lots">Lotes</TabsTrigger>
+          <TabsTrigger value="rules">Regras de Embalagem</TabsTrigger>
+        </TabsList>
 
-        {/* Recent Lots */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Boxes className="h-5 w-5" />
-              Lotes Recentes ({materialLots.length})
-            </CardTitle>
-            <CardDescription>Últimos lotes cadastrados</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {materialLots.slice(0, 4).map(lot => {
-              return (
-                <div key={lot.id} className="flex justify-between items-center p-2 border rounded">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{lot.materials?.name || 'Material não encontrado'}</p>
-                    <p className="text-xs text-muted-foreground">Lote: {lot.lot_code}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{lot.quantity} {lot.materials?.unit || 'un'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        R$ {lot.cost_per_unit.toFixed(2)}/un
+        {/* Materials Tab */}
+        <TabsContent value="materials" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Boxes className="h-5 w-5" />
+                  Todos os Materiais ({materials.length})
+                </CardTitle>
+                <CardDescription>
+                  Gestão completa dos materiais do sistema
+                </CardDescription>
+              </div>
+              <Dialog open={isCreateMaterialOpen} onOpenChange={setIsCreateMaterialOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Material
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>{editingMaterial ? 'Editar Material' : 'Novo Material'}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Nome</Label>
+                      <Input
+                        value={materialForm.name}
+                        onChange={(e) => setMaterialForm({ ...materialForm, name: e.target.value })}
+                        placeholder="Ex: Frasco 5ml"
+                      />
+                    </div>
+                    <div>
+                      <Label>Categoria</Label>
+                      <Select
+                        value={materialForm.category}
+                        onValueChange={(value) => setMaterialForm({ ...materialForm, category: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="frasco">Frasco</SelectItem>
+                          <SelectItem value="etiqueta">Etiqueta</SelectItem>
+                          <SelectItem value="caixa">Caixa</SelectItem>
+                          <SelectItem value="outros">Outros</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Fornecedor (opcional)</Label>
+                      <Input
+                        value={materialForm.supplier}
+                        onChange={(e) => setMaterialForm({ ...materialForm, supplier: e.target.value })}
+                        placeholder="Nome do fornecedor"
+                      />
+                    </div>
+                    <div>
+                      <Label>Descrição (opcional)</Label>
+                      <Textarea
+                        value={materialForm.description}
+                        onChange={(e) => setMaterialForm({ ...materialForm, description: e.target.value })}
+                        placeholder="Detalhes do material"
+                      />
+                    </div>
+                    <div>
+                      <Label>Nota</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Unidade e custos serão definidos pelos lotes
                       </p>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditLot(lot)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit2 className="h-3 w-3" />
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => {
+                        setIsCreateMaterialOpen(false);
+                        setEditingMaterial(null);
+                        setMaterialForm({
+                          name: '',
+                          type: 'input',
+                          category: '',
+                          supplier: '',
+                          description: '',
+                          is_active: true,
+                        });
+                      }}>
+                        Cancelar
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                      <Button 
+                        onClick={handleCreateMaterial} 
+                        disabled={createMaterial.isPending || updateMaterial.isPending}
+                      >
+                        {createMaterial.isPending || updateMaterial.isPending ? 'Salvando...' : (editingMaterial ? 'Atualizar' : 'Criar')}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Material</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Custo/Unidade</TableHead>
+                    <TableHead>Estoque</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {materials.map(material => (
+                    <TableRow key={material.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{material.name}</p>
+                          <p className="text-sm text-muted-foreground">{material.supplier || 'Sem fornecedor'}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{material.category}</Badge>
+                      </TableCell>
+                      <TableCell>R$ {material.cost_per_unit.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span>{material.current_stock} {material.unit}</span>
+                          {material.current_stock <= material.min_stock_alert && (
+                            <Badge variant="destructive">Baixo</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={material.is_active ? "default" : "secondary"}>
+                          {material.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            onClick={() => handleEditMaterial(material)}
+                            className="h-8 w-8 p-0"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Edit2 className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir Lote</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir este lote? Esta ação irá recalcular automaticamente 
-                              o custo médio do material "{lot.materials?.name}".
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteLot(lot)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            <Dialog open={isCreateLotOpen} onOpenChange={setIsCreateLotOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Novo Lote
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{editingLot ? 'Editar Lote' : 'Novo Lote'}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Material</Label>
-                    <Select
-                      value={lotForm.material_id}
-                      onValueChange={(value) => setLotForm({ ...lotForm, material_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o material" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {inputMaterials.map(material => (
-                          <SelectItem key={material.id} value={material.id}>
-                            {material.name} ({material.unit})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Quantidade</Label>
-                      <Input
-                        type="number"
-                        value={lotForm.quantity}
-                        onChange={(e) => {
-                          const quantity = parseFloat(e.target.value) || 0;
-                          setLotForm({ 
-                            ...lotForm, 
-                            quantity,
-                            total_cost: quantity * lotForm.cost_per_unit
-                          });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>Custo por Unidade</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={lotForm.cost_per_unit}
-                        onChange={(e) => {
-                          const cost = parseFloat(e.target.value) || 0;
-                          setLotForm({ 
-                            ...lotForm, 
-                            cost_per_unit: cost,
-                            total_cost: lotForm.quantity * cost
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Código do Lote</Label>
-                    <Input
-                      value={lotForm.lot_code}
-                      onChange={(e) => setLotForm({ ...lotForm, lot_code: e.target.value })}
-                      placeholder="Ex: LOT001"
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => {
-                      setIsCreateLotOpen(false);
-                      setEditingLot(null);
-                      setLotForm({
-                        material_id: '',
-                        quantity: 0,
-                        cost_per_unit: 0,
-                        total_cost: 0,
-                        supplier: '',
-                        purchase_date: new Date().toISOString().split('T')[0],
-                        expiry_date: '',
-                        lot_code: '',
-                        notes: '',
-                      });
-                    }}>
-                      Cancelar
-                    </Button>
-                    <Button 
-                      onClick={handleCreateLot} 
-                      disabled={createMaterialLot.isPending || updateMaterialLot.isPending}
-                    >
-                      {createMaterialLot.isPending || updateMaterialLot.isPending 
-                        ? (editingLot ? 'Atualizando...' : 'Criando...') 
-                        : (editingLot ? 'Atualizar Lote' : 'Criar Lote')
-                      }
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir Material</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir "{material.name}"? Esta ação não pode ser desfeita.
+                                  O sistema verificará se o material pode ser excluído com segurança.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteMaterial(material)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* Packaging Rules */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Tags className="h-5 w-5" />
-              Regras de Embalagem ({packagingRules.length})
-            </CardTitle>
-            <CardDescription>Para cálculo de frete</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {packagingRules.map(rule => {
-              return (
-                <div key={rule.id} className="flex justify-between items-center p-2 border rounded">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{rule.materials?.name || 'Material não encontrado'}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Máx: {rule.max_items} itens
-                      {rule.item_size_ml && ` (${rule.item_size_ml}ml)`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={rule.is_active ? "default" : "secondary"}>
-                      {rule.is_active ? "Ativa" : "Inativa"}
-                    </Badge>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditRule(rule)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir Regra</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir esta regra de embalagem? 
-                              Isso pode afetar o cálculo de frete dos pedidos.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteRule(rule)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            <Dialog open={isCreateRuleOpen} onOpenChange={setIsCreateRuleOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nova Regra
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{editingRule ? 'Editar Regra de Embalagem' : 'Nova Regra de Embalagem'}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Caixa/Container</Label>
-                    <Select
-                      value={ruleForm.container_material_id}
-                      onValueChange={(value) => setRuleForm({ ...ruleForm, container_material_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a caixa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {materials.filter(m => m.category === 'caixa').map(material => (
-                          <SelectItem key={material.id} value={material.id}>
-                            {material.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+        {/* Lots Tab */}
+        <TabsContent value="lots" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Lotes de Materiais ({materialLots.length})
+                </CardTitle>
+                <CardDescription>
+                  Controle de compras e estoque por lotes
+                </CardDescription>
+              </div>
+              <Dialog open={isCreateLotOpen} onOpenChange={setIsCreateLotOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Lote
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>{editingLot ? 'Editar Lote' : 'Novo Lote'}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
                     <div>
-                      <Label>Máx Itens por Caixa</Label>
+                      <Label>Material</Label>
+                      <Select
+                        value={lotForm.material_id}
+                        onValueChange={(value) => setLotForm({ ...lotForm, material_id: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o material" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {materials.map(material => (
+                            <SelectItem key={material.id} value={material.id}>
+                              {material.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Quantidade</Label>
+                        <Input
+                          type="number"
+                          value={lotForm.quantity}
+                          onChange={(e) => setLotForm({ ...lotForm, quantity: Number(e.target.value) })}
+                          placeholder="100"
+                        />
+                      </div>
+                      <div>
+                        <Label>Custo/Unidade</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={lotForm.cost_per_unit}
+                          onChange={(e) => setLotForm({ ...lotForm, cost_per_unit: Number(e.target.value), total_cost: Number(e.target.value) * lotForm.quantity })}
+                          placeholder="1.50"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Código do Lote (opcional)</Label>
                       <Input
-                        type="number"
-                        value={ruleForm.max_items}
-                        onChange={(e) => setRuleForm({ ...ruleForm, max_items: parseInt(e.target.value) || 6 })}
+                        value={lotForm.lot_code}
+                        onChange={(e) => setLotForm({ ...lotForm, lot_code: e.target.value })}
+                        placeholder="LOTE001"
                       />
                     </div>
                     <div>
-                      <Label>Tamanho ML (opcional)</Label>
+                      <Label>Fornecedor (opcional)</Label>
+                      <Input
+                        value={lotForm.supplier}
+                        onChange={(e) => setLotForm({ ...lotForm, supplier: e.target.value })}
+                        placeholder="Nome do fornecedor"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Data da Compra</Label>
+                        <Input
+                          type="date"
+                          value={lotForm.purchase_date}
+                          onChange={(e) => setLotForm({ ...lotForm, purchase_date: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label>Data de Validade (opcional)</Label>
+                        <Input
+                          type="date"
+                          value={lotForm.expiry_date}
+                          onChange={(e) => setLotForm({ ...lotForm, expiry_date: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Observações (opcional)</Label>
+                      <Textarea
+                        value={lotForm.notes}
+                        onChange={(e) => setLotForm({ ...lotForm, notes: e.target.value })}
+                        placeholder="Informações adicionais"
+                      />
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <strong>Custo Total: R$ {(lotForm.quantity * lotForm.cost_per_unit).toFixed(2)}</strong>
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => {
+                        setIsCreateLotOpen(false);
+                        setEditingLot(null);
+                        setLotForm({
+                          material_id: '',
+                          quantity: 0,
+                          cost_per_unit: 0,
+                          total_cost: 0,
+                          supplier: '',
+                          purchase_date: new Date().toISOString().split('T')[0],
+                          expiry_date: '',
+                          lot_code: '',
+                          notes: '',
+                        });
+                      }}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={handleCreateLot} 
+                        disabled={createMaterialLot.isPending || updateMaterialLot.isPending}
+                      >
+                        {createMaterialLot.isPending || updateMaterialLot.isPending ? 'Salvando...' : (editingLot ? 'Atualizar' : 'Criar')}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Material</TableHead>
+                    <TableHead>Lote</TableHead>
+                    <TableHead>Quantidade</TableHead>
+                    <TableHead>Custo/Unidade</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Compra</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {materialLots.map(lot => (
+                    <TableRow key={lot.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{lot.materials?.name || 'Material não encontrado'}</p>
+                          <p className="text-sm text-muted-foreground">{lot.supplier || 'Sem fornecedor'}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{lot.lot_code || `#${lot.id.slice(-6)}`}</Badge>
+                      </TableCell>
+                      <TableCell>{lot.quantity}</TableCell>
+                      <TableCell>R$ {lot.cost_per_unit.toFixed(2)}</TableCell>
+                      <TableCell>R$ {lot.total_cost.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm">{format(new Date(lot.purchase_date), 'dd/MM/yyyy')}</p>
+                          {lot.expiry_date && (
+                            <p className="text-xs text-muted-foreground">
+                              Validade: {format(new Date(lot.expiry_date), 'dd/MM/yyyy')}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditLot(lot)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir Lote</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este lote? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteLot(lot)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Packaging Rules Tab */}
+        <TabsContent value="rules" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Tags className="h-5 w-5" />
+                  Regras de Embalagem ({packagingRules.length})
+                </CardTitle>
+                <CardDescription>
+                  Configuração de como embalar os pedidos
+                </CardDescription>
+              </div>
+              <Dialog open={isCreateRuleOpen} onOpenChange={setIsCreateRuleOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Regra
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>{editingRule ? 'Editar Regra' : 'Nova Regra de Embalagem'}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Tipo de Container</Label>
+                      <Select
+                        value={ruleForm.container_material_id}
+                        onValueChange={(value) => setRuleForm({ ...ruleForm, container_material_id: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o container" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {packagingMaterials.map(material => (
+                            <SelectItem key={material.id} value={material.id}>
+                              {material.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Máximo de Itens</Label>
+                        <Input
+                          type="number"
+                          value={ruleForm.max_items}
+                          onChange={(e) => setRuleForm({ ...ruleForm, max_items: Number(e.target.value) })}
+                          placeholder="6"
+                        />
+                      </div>
+                      <div>
+                        <Label>Prioridade</Label>
+                        <Input
+                          type="number"
+                          value={ruleForm.priority}
+                          onChange={(e) => setRuleForm({ ...ruleForm, priority: Number(e.target.value) })}
+                          placeholder="1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Tamanho do Item (ml) - opcional</Label>
                       <Input
                         type="number"
                         value={ruleForm.item_size_ml || ''}
-                        onChange={(e) => setRuleForm({ ...ruleForm, item_size_ml: e.target.value ? parseInt(e.target.value) : null })}
-                        placeholder="Ex: 5"
+                        onChange={(e) => setRuleForm({ ...ruleForm, item_size_ml: e.target.value ? Number(e.target.value) : null })}
+                        placeholder="Para tamanhos específicos (ex: 5)"
                       />
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={ruleForm.is_active}
+                        onCheckedChange={(checked) => setRuleForm({ ...ruleForm, is_active: checked })}
+                      />
+                      <Label>Regra ativa</Label>
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => {
+                        setIsCreateRuleOpen(false);
+                        setEditingRule(null);
+                        setRuleForm({
+                          container_material_id: '',
+                          max_items: 6,
+                          item_size_ml: null,
+                          priority: 1,
+                          is_active: true,
+                        });
+                      }}>
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={handleCreateRule} 
+                        disabled={createPackagingRule.isPending || updatePackagingRule.isPending}
+                      >
+                        {createPackagingRule.isPending || updatePackagingRule.isPending ? 'Salvando...' : (editingRule ? 'Atualizar' : 'Criar')}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => {
-                      setIsCreateRuleOpen(false);
-                      setEditingRule(null);
-                      setRuleForm({
-                        container_material_id: '',
-                        max_items: 6,
-                        item_size_ml: null,
-                        priority: 1,
-                        is_active: true,
-                      });
-                    }}>
-                      Cancelar
-                    </Button>
-                    <Button 
-                      onClick={handleCreateRule} 
-                      disabled={createPackagingRule.isPending || updatePackagingRule.isPending}
-                    >
-                      {createPackagingRule.isPending || updatePackagingRule.isPending 
-                        ? (editingRule ? 'Atualizando...' : 'Criando...') 
-                        : (editingRule ? 'Atualizar Regra' : 'Criar Regra')
-                      }
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* All Materials Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Todos os Materiais</CardTitle>
-          <CardDescription>Lista completa de materiais cadastrados</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Custo/Unidade</TableHead>
-                <TableHead>Estoque</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {materials.map(material => (
-                <TableRow key={material.id}>
-                  <TableCell className="font-medium">{material.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{material.category}</Badge>
-                  </TableCell>
-                  <TableCell>R$ {material.cost_per_unit.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <span className={material.current_stock <= material.min_stock_alert ? 'text-warning font-medium' : ''}>
-                      {material.current_stock} {material.unit}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={material.is_active ? "default" : "secondary"}>
-                      {material.is_active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Container</TableHead>
+                    <TableHead>Max. Itens</TableHead>
+                    <TableHead>Tamanho Item</TableHead>
+                    <TableHead>Prioridade</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {packagingRules.map(rule => (
+                    <TableRow key={rule.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{rule.materials?.name || 'Container não encontrado'}</p>
+                          <p className="text-sm text-muted-foreground">R$ {rule.materials?.cost_per_unit?.toFixed(2) || '0.00'}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{rule.max_items}</TableCell>
+                      <TableCell>
+                        {rule.item_size_ml ? `${rule.item_size_ml}ml` : 'Qualquer'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{rule.priority}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={rule.is_active ? "default" : "secondary"}>
+                          {rule.is_active ? 'Ativa' : 'Inativa'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditRule(rule)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir Regra</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir esta regra de embalagem? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteRule(rule)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
