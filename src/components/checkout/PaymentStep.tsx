@@ -24,20 +24,32 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
   const handleCheckout = async () => {
     setProcessing(true);
     try {
-      // Monta itens para o checkout
-      const checkoutItems = items.map(item => ({
-        perfume_id: item.perfume.id,
-        name: item.perfume.name,
-        brand: item.perfume.brand,
-        size_ml: item.size,
-        quantity: item.quantity,
-        unit_price:
-          item.size === 5
-            ? item.perfume.price_5ml || 45
-            : item.size === 10
-            ? item.perfume.price_10ml || 85
-            : item.perfume.price_full || 320,
-      }));
+      // Monta itens para o checkout usando a mesma lógica do CartContext
+      const checkoutItems = items.map(item => {
+        // Tentar usar preços dinâmicos primeiro
+        const perfumeWithDynamic = item.perfume as any;
+        let price = 0;
+        
+        // Se tem preços dinâmicos, usar eles
+        if (perfumeWithDynamic.dynamicPrices && perfumeWithDynamic.dynamicPrices[item.size]) {
+          price = perfumeWithDynamic.dynamicPrices[item.size];
+        } else {
+          // Fallback para preços hardcoded
+          if (item.size === 2) price = item.perfume.price_2ml || 0;
+          else if (item.size === 5) price = item.perfume.price_5ml || 0;
+          else if (item.size === 10) price = item.perfume.price_10ml || 0;
+          else price = item.perfume.price_full || 0; // Para outros tamanhos como fallback
+        }
+
+        return {
+          perfume_id: item.perfume.id,
+          name: item.perfume.name,
+          brand: item.perfume.brand,
+          size_ml: item.size,
+          quantity: item.quantity,
+          unit_price: price,
+        };
+      });
 
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
         body: {
