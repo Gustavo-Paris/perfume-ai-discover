@@ -20,6 +20,8 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [marginValue, setMarginValue] = useState(perfume.target_margin_percentage || 200);
   const updateMargin = useUpdatePerfumeMargin();
+  
+  // Buscar preços dinâmicos da nova estrutura
   const { prices, availableSizes, isLoading } = usePerfumePricesObject(perfume.id);
 
   const handleSave = async () => {
@@ -55,10 +57,13 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
                 type="number"
                 value={marginValue}
                 onChange={(e) => setMarginValue(parseFloat(e.target.value) || 0)}
-                className="w-20 h-8"
-                min="0"
+                className="w-24 h-8"
+                min="50"
+                max="500"
                 step="10"
+                placeholder="200"
               />
+              <span className="text-sm text-muted-foreground">%</span>
               <Button
                 size="sm"
                 onClick={handleSave}
@@ -77,7 +82,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
           ) : (
             <>
               <Badge variant="outline">
-                {perfume.target_margin_percentage || 200}% margem
+                {(perfume.target_margin_percentage || 200).toFixed(0)}% margem
               </Badge>
               <Button
                 size="sm"
@@ -91,23 +96,24 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
         </div>
       </div>
 
-      {/* Mostrar preços dinâmicos da nova tabela */}
-      <div className="grid grid-cols-3 gap-4 text-sm">
+      {/* Preços Dinâmicos */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Preços Calculados:</p>
         {isLoading ? (
-          <div className="col-span-3 text-center text-muted-foreground">
-            Carregando preços...
-          </div>
+          <p className="text-sm text-muted-foreground">Carregando preços...</p>
         ) : availableSizes.length > 0 ? (
-          availableSizes.slice(0, 3).map(size => (
-            <div key={size} className="text-center p-2 bg-muted rounded">
-              <p className="text-muted-foreground">{size}ml</p>
-              <p className="font-medium">R$ {(prices[size] || 0).toFixed(2)}</p>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-3 text-center text-muted-foreground">
-            Nenhum preço calculado
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {availableSizes.map(size => (
+              <div key={size} className="text-center p-2 bg-muted rounded text-sm">
+                <p className="text-muted-foreground">{size}ml</p>
+                <p className="font-medium">
+                  R$ {(prices[size] || 0).toFixed(2)}
+                </p>
+              </div>
+            ))}
           </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Nenhum preço disponível</p>
         )}
       </div>
     </div>

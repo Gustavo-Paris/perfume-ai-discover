@@ -12,6 +12,8 @@ export const useUpdatePerfumeMargin = () => {
 
   return useMutation({
     mutationFn: async ({ perfumeId, newMarginPercentage }: UpdateMarginParams) => {
+      console.log('Updating margin:', { perfumeId, newMarginPercentage }); // Debug log
+      
       const { data, error } = await supabase.rpc('update_perfume_margin', {
         perfume_uuid: perfumeId,
         new_margin_percentage: newMarginPercentage
@@ -22,15 +24,19 @@ export const useUpdatePerfumeMargin = () => {
         throw error;
       }
 
+      console.log('Margin updated successfully:', data); // Debug log
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, { perfumeId }) => {
+      console.log('Success callback, invalidating queries for perfume:', perfumeId); // Debug log
+      
       toast.success('Margem atualizada! Preços recalculados automaticamente.');
-      // Invalidate relevant queries
+      
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['perfumes'] });
       queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
       queryClient.invalidateQueries({ queryKey: ['perfume-prices'] });
-      queryClient.invalidateQueries({ queryKey: ['available-sizes'] });
+      queryClient.invalidateQueries({ queryKey: ['perfume-prices', perfumeId] });
     },
     onError: (error) => {
       console.error('Failed to update margin:', error);
