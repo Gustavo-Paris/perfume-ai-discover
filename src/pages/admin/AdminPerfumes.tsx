@@ -17,6 +17,7 @@ import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
 import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
+import { PricesDisplayModal } from '@/components/admin/PricesDisplayModal';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
 import { MarginValidator } from '@/components/admin/MarginValidator';
 import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
@@ -158,8 +159,9 @@ const AdminPerfumes = () => {
       price_full: (perfume as any).price_full || 0,
     });
     
+    // CORRIGIR: Usar função correta para converter multiplicador para porcentagem
     const marginFromDb = (perfume as any).target_margin_percentage;
-    setNewMargin(marginFromDb ? marginFromDb * 100 : 200);
+    setNewMargin(decimalToPercentage(marginFromDb || 2.0));
     setEditingPerfume(perfume);
   };
 
@@ -547,30 +549,7 @@ const AdminPerfumes = () => {
               />
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label>Preços (Calculados Automaticamente)</Label>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Os preços são calculados automaticamente com base nos custos dos materiais e margem de lucro
-                </p>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                {formData.price_2ml && formData.price_2ml > 0 && (
-                  <div className="p-3 border rounded-lg bg-muted/50">
-                    <Label className="text-xs text-muted-foreground">2ml</Label>
-                    <p className="text-lg font-semibold">R$ {formData.price_2ml?.toFixed(2) || '0.00'}</p>
-                  </div>
-                )}
-                <div className="p-3 border rounded-lg bg-muted/50">
-                  <Label className="text-xs text-muted-foreground">5ml</Label>
-                  <p className="text-lg font-semibold">R$ {formData.price_5ml?.toFixed(2) || '0.00'}</p>
-                </div>
-                <div className="p-3 border rounded-lg bg-muted/50">
-                  <Label className="text-xs text-muted-foreground">10ml</Label>
-                  <p className="text-lg font-semibold">R$ {formData.price_10ml?.toFixed(2) || '0.00'}</p>
-                </div>
-              </div>
-            </div>
+            <PricesDisplayModal perfumeId={editingPerfume?.id} />
 
             {editingPerfume && (
               <div className="space-y-4 border-t pt-4">
@@ -584,9 +563,9 @@ const AdminPerfumes = () => {
                   <div className="flex-1">
                     <Input
                       type="number"
-                      min="0"
-                      max="100"
-                      step="1"
+                      min="50"
+                      max="300"
+                      step="10"
                       value={newMargin}
                       onChange={(e) => setNewMargin(Number(e.target.value))}
                       className="w-full"
