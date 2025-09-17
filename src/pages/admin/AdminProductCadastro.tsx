@@ -481,15 +481,23 @@ const AdminProductCadastro = () => {
                   placeholder="Ex: Premium"
                 />
               </div>
-              <div>
-                <Label htmlFor="image_url">URL da Imagem</Label>
-                <Input
-                  id="image_url"
-                  value={perfumeData.image_url}
-                  onChange={(e) => setPerfumeData({...perfumeData, image_url: e.target.value})}
-                  placeholder="https://..."
-                />
-              </div>
+                {/* Margem de Lucro */}
+                <div>
+                  <Label htmlFor="margin">Margem de Lucro (%)</Label>
+                  <Input
+                    id="margin"
+                    type="number"
+                    value={marginPercentage}
+                    onChange={(e) => setMarginPercentage(Number(e.target.value))}
+                    min="50"
+                    max="500"
+                    step="10"
+                    placeholder="200"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Margem padrão: 200% (preço final será 3x o custo)
+                  </p>
+                </div>
             </div>
 
             {/* Tipo de Produto */}

@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePerfumes, useCreatePerfume, useUpdatePerfume, useDeletePerfume } from '@/hooks/usePerfumes';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { useAvailableSizes, usePerfumePricesObject } from '@/hooks/usePerfumePrices';
+import { useMaterialConfigurations } from '@/hooks/useMaterialConfigurations';
 import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
@@ -23,7 +24,10 @@ const AdminPerfumes = () => {
   const updatePerfume = useUpdatePerfume();
   const deletePerfume = useDeletePerfume();
   const updateMargin = useUpdatePerfumeMargin();
-  const { data: availableSizes } = useAvailableSizes();
+  const { data: materialConfig } = useMaterialConfigurations();
+  
+  // Tamanhos dinâmicos das configurações
+  const availableSizes = materialConfig?.bottle_materials?.map(b => b.size_ml).sort((a, b) => a - b) || [2, 5, 10, 20];
   const { toast } = useToast();
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -39,12 +43,13 @@ const AdminPerfumes = () => {
     top_notes: [] as string[],
     heart_notes: [] as string[],
     base_notes: [] as string[],
-    price_2ml: null as number | null,
-    price_5ml: null as number | null,
-    price_10ml: null as number | null,
-    price_full: 0,
     image_url: '',
     category: '',
+    target_margin_percentage: 2.0, // 200% como decimal
+    price_2ml: null as number | null,
+    price_5ml: null as number | null, 
+    price_10ml: null as number | null,
+    price_full: 0,
   });
 
   const handleSyncToAlgolia = async () => {
@@ -81,14 +86,15 @@ const AdminPerfumes = () => {
       top_notes: [],
       heart_notes: [],
       base_notes: [],
+      image_url: '',
+      category: '',
+      target_margin_percentage: 2.0,
       price_2ml: null,
       price_5ml: null,
       price_10ml: null,
       price_full: 0,
-      image_url: '',
-      category: '',
     });
-    setNewMargin(50);
+    setNewMargin(200);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,7 +136,6 @@ const AdminPerfumes = () => {
   };
 
   const handleEdit = (perfume: DatabasePerfume) => {
-    console.log('Editing perfume:', perfume); // Debug log
     setFormData({
       brand: perfume.brand,
       name: perfume.name,
@@ -140,19 +145,17 @@ const AdminPerfumes = () => {
       top_notes: perfume.top_notes,
       heart_notes: perfume.heart_notes,
       base_notes: perfume.base_notes,
-      price_2ml: perfume.price_2ml,
-      price_5ml: perfume.price_5ml,
-      price_10ml: perfume.price_10ml,
-      price_full: perfume.price_full,
       image_url: perfume.image_url || '',
       category: perfume.category || '',
+      target_margin_percentage: (perfume as any).target_margin_percentage || 2.0,
+      price_2ml: (perfume as any).price_2ml || null,
+      price_5ml: (perfume as any).price_5ml || null,
+      price_10ml: (perfume as any).price_10ml || null,
+      price_full: (perfume as any).price_full || 0,
     });
-    // Load the actual margin from database or default to 50%
+    
     const marginFromDb = (perfume as any).target_margin_percentage;
-    console.log('Margin from DB:', marginFromDb); // Debug log
-    console.log('Perfume category:', perfume.category); // Debug log
-    console.log('Price 2ml:', perfume.price_2ml); // Debug log
-    setNewMargin(marginFromDb ? marginFromDb * 100 : 50);
+    setNewMargin(marginFromDb ? marginFromDb * 100 : 200);
     setEditingPerfume(perfume);
   };
 
@@ -303,6 +306,23 @@ const AdminPerfumes = () => {
                   />
                 </div>
 
+                {/* Margem de Lucro */}
+                <div>
+                  <Label htmlFor="margin">Margem de Lucro (%)</Label>
+                  <Input
+                    id="margin"
+                    type="number"
+                    value={formData.target_margin_percentage * 100}
+                    onChange={(e) => setFormData({ ...formData, target_margin_percentage: Number(e.target.value) / 100 })}
+                    min="50"
+                    max="500"
+                    step="10"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Margem padrão: 200% (preço final será 3x o custo)
+                  </p>
+                </div>
+
                 <div className="space-y-4">
                   <div>
                     <Label>Preços (Calculados Automaticamente)</Label>
@@ -364,6 +384,7 @@ const AdminPerfumes = () => {
                 <TableHead>Gênero</TableHead>
                 <TableHead>Categoria</TableHead>
                 <TableHead>Preços</TableHead>
+                <TableHead>Margem</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -379,6 +400,11 @@ const AdminPerfumes = () => {
                   <TableCell>{perfume.category}</TableCell>
                   <TableCell>
                     <PerfumePricesDisplay perfumeId={perfume.id} />
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {((perfume as any).target_margin_percentage * 100 || 200).toFixed(0)}%
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
@@ -412,7 +438,7 @@ const AdminPerfumes = () => {
             <DialogTitle>Editar Perfume</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Same form fields as create dialog */}
+            {/* Form fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="edit-brand">Marca</Label>
