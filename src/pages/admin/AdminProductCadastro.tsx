@@ -228,10 +228,11 @@ const AdminProductCadastro = () => {
       const perfume = await createPerfume.mutateAsync({
         ...perfumeData,
         avg_cost_per_ml: 0,
-        target_margin_percentage: marginPercentage / 100,
-        product_type: perfumeData.product_type,
-        source_size_ml: perfumeData.source_size_ml,
-        available_sizes: perfumeData.available_sizes
+        target_margin_percentage: (100 + marginPercentage) / 100, // Converter % para multiplicador
+        price_full: 0, // Será recalculado depois
+        price_5ml: 0,
+        price_10ml: 0,
+        price_2ml: 0
       } as any);
 
       setCurrentPerfumeId(perfume.id);
@@ -241,9 +242,10 @@ const AdminProductCadastro = () => {
         description: "Agora adicione o primeiro lote de estoque."
       });
     } catch (error) {
+      console.error('Erro detalhado ao criar perfume:', error);
       toast({
         title: "Erro",
-        description: "Falha ao criar perfume. Verifique os dados.",
+        description: `Falha ao criar perfume: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive"
       });
     } finally {
