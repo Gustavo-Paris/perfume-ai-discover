@@ -100,7 +100,7 @@ export const SmartValidations = ({ entityType, entityData, context }: SmartValid
           message: 'Material abaixo do estoque mínimo.',
           action: {
             label: 'Reabastecer',
-            href: '/admin/materials'
+            href: '/admin/materials-simplified'
           }
         });
       }
@@ -211,7 +211,7 @@ export const DependencyStatus = ({
       name: 'Materiais',
       status: hasMaterials,
       icon: <Warehouse className="h-4 w-4" />,
-      href: '/admin/materials',
+      href: '/admin/materials-simplified',
       show: showMaterials
     }
   ].filter(dep => dep.show);
