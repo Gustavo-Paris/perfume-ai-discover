@@ -7,6 +7,14 @@ interface UpdateMarginParams {
   newMarginPercentage: number;
 }
 
+interface UpdateMarginResponse {
+  success: boolean;
+  perfume_id: string;
+  new_margin: number;
+  updated_sizes: number[];
+  message: string;
+}
+
 export const useUpdatePerfumeMargin = () => {
   const queryClient = useQueryClient();
 
@@ -27,10 +35,13 @@ export const useUpdatePerfumeMargin = () => {
 
       console.log('Margin updated successfully:', data);
       
+      // Cast the response to our interface (safe cast through unknown)
+      const response = data as unknown as UpdateMarginResponse;
+      
       // Check if the update was successful
-      if (data && data.length > 0 && data[0].success) {
-        console.log('Updated prices:', data[0].updated_prices);
-        return data[0];
+      if (response && response.success) {
+        console.log('Updated sizes:', response.updated_sizes);
+        return response;
       } else {
         throw new Error('Failed to update margin - perfume not found or no changes made');
       }

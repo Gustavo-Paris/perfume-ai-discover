@@ -18,7 +18,7 @@ interface PerfumeMarginEditorProps {
 }
 
 export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
-  // Converter decimal do banco para porcentagem da interface
+  // Converter multiplicador do banco para porcentagem da interface
   const initialMargin = decimalToPercentage(perfume.target_margin_percentage || 2.0);
   
   const [isEditing, setIsEditing] = useState(false);
@@ -31,19 +31,22 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
   const { prices, availableSizes, isLoading, refetch: refetchPrices } = usePerfumePricesObject(perfume.id);
 
   const handleSave = async () => {
-    // Validar margem
+    // Validar margem (50% a 300%)
     if (!isValidMargin(marginValue)) {
-      setError('Margem deve estar entre 50% e 99%');
+      setError('Margem deve estar entre 50% e 300%');
       return;
     }
     
     setError('');
     
     try {
-      // Converter porcentagem para decimal antes de enviar
+      // Converter margem percentual para multiplicador
+      // Ex: 80% margem = 1.8 multiplicador, 100% margem = 2.0 multiplicador
+      const marginMultiplier = 1 + (marginValue / 100);
+      
       await updateMargin.mutateAsync({
         perfumeId: perfume.id,
-        newMarginPercentage: percentageToDecimal(marginValue) // Convertendo para decimal
+        newMarginPercentage: marginMultiplier
       });
       
       // Force refetch prices after successful update
@@ -70,7 +73,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
     setMarginValue(value);
     
     if (!isValidMargin(value)) {
-      setError('Margem deve estar entre 50% e 99%');
+      setError('Margem deve estar entre 50% e 300%');
     } else {
       setError('');
     }
@@ -95,7 +98,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
                   onChange={handleValueChange}
                   className={`w-24 h-8 ${error ? 'border-red-500' : ''}`}
                   min="50"
-                  max="99"
+                  max="300"
                   step="10"
                   placeholder="200"
                 />
