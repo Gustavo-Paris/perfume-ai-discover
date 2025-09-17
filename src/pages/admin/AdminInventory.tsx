@@ -77,7 +77,7 @@ const AdminInventory = () => {
                 Gerenciar Lotes
               </Button>
             </Link>
-            <Link to="/admin/produto-wizard">
+            <Link to="/admin/produto-cadastro">
               <Button size="sm">
                 Novo Produto
               </Button>

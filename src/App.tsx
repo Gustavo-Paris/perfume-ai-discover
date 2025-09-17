@@ -60,7 +60,7 @@ import AdminDataSeeder from "./pages/admin/AdminDataSeeder";
 import AdminMonitoring from "./pages/admin/AdminMonitoring";
 
 import AdminMaterialsSimplified from "./pages/admin/AdminMaterialsSimplified";
-import AdminProductWizard from './pages/admin/AdminProductWizard';
+
 import AdminProductCadastro from './pages/admin/AdminProductCadastro';
 import { SupportChat } from "./components/support/SupportChat";
 
@@ -113,7 +113,7 @@ const AppContent = () => {
             <Route path="monitoring" element={<AdminMonitoring />} />
             
             <Route path="materials-simplified" element={<AdminMaterialsSimplified />} />
-            <Route path="produto-wizard" element={<AdminProductWizard />} />
+            
             <Route path="produto-cadastro" element={<AdminProductCadastro />} />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />

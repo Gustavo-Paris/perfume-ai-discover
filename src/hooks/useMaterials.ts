@@ -419,4 +419,3 @@ export const useDeletePackagingRule = () => {
 };
 
 // Hooks de automação removidos na simplificação conservadora
-// Para criar receitas, use o ProductWizard que já funciona bem
