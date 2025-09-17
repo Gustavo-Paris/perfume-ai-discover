@@ -125,8 +125,16 @@ const AdminProductCadastro = () => {
     if (!currentPerfumeId || costPerMl === 0) return null;
 
     try {
-      // Usar tamanhos das configurações ou padrão se não houver
-      const sizes = materialConfig?.bottle_materials?.map(bm => bm.size_ml) || [2, 5, 10];
+      // Definir tamanhos baseado no tipo de produto
+      let sizes: number[];
+      
+      if (perfumeData.product_type === 'miniature') {
+        // Para miniaturas, calcular apenas para o tamanho original
+        sizes = [perfumeData.source_size_ml];
+      } else {
+        // Para decants, usar tamanhos das configurações ou padrão
+        sizes = materialConfig?.bottle_materials?.map(bm => bm.size_ml) || [2, 5, 10];
+      }
       
       // Usar nova função RPC para calcular preços dinamicamente
       const { data: calculatedPrices, error } = await supabase.rpc('calculate_dynamic_product_costs', {
@@ -164,6 +172,7 @@ const AdminProductCadastro = () => {
         materials_cost: 0,
         packaging_cost: prices[0]?.packagingCost || 0,
         total_cost_per_unit: prices[0]?.totalCost || 0,
+        product_type: perfumeData.product_type, // Adicionar tipo do produto
       };
     } catch (error) {
       console.error('Erro ao calcular preços:', error);
@@ -787,21 +796,38 @@ const AdminProductCadastro = () => {
             {calculatedPrices ? (
               <>
                 <div className="space-y-3">
-                  {calculatedPrices.sizes?.map((size: number, index: number) => (
-                    <div key={size} className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{size}ml (decant):</span>
-                      <span className="font-mono text-lg">
-                        R$ {calculatedPrices.prices?.[index]?.suggestedPrice?.toFixed(2) || '0.00'}
-                      </span>
+                  {calculatedPrices.product_type === 'miniature' ? (
+                    // Para miniatura, mostrar apenas o preço do tamanho original
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">
+                          {perfumeData.source_size_ml}ml (miniatura):
+                        </span>
+                        <span className="font-mono text-lg">
+                          R$ {calculatedPrices.prices?.[0]?.suggestedPrice?.toFixed(2) || '0.00'}
+                        </span>
+                      </div>
                     </div>
-                  ))}
+                  ) : (
+                    // Para decant, mostrar múltiplos tamanhos
+                    calculatedPrices.sizes?.map((size: number, index: number) => (
+                      <div key={size} className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{size}ml (decant):</span>
+                        <span className="font-mono text-lg">
+                          R$ {calculatedPrices.prices?.[index]?.suggestedPrice?.toFixed(2) || '0.00'}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 <Separator />
 
                 <div className="bg-green-50 p-3 rounded-lg text-sm space-y-2">
                   <p className="font-medium text-green-800">
-                    Composição do Preço ({calculatedPrices.sizes?.[0] || 5}ml):
+                    Composição do Preço ({calculatedPrices.product_type === 'miniature' 
+                      ? `${perfumeData.source_size_ml}ml - Miniatura` 
+                      : `${calculatedPrices.sizes?.[0] || 5}ml - Decant`}):
                   </p>
                   <div className="space-y-1">
                     <div className="flex justify-between">
