@@ -100,13 +100,45 @@ export const usePerfumePricesObject = (perfumeId?: string) => {
   const { data: prices, ...rest } = usePerfumePrices(perfumeId);
   const { data: allSizes } = useAvailableSizes();
   
+  // Get perfume-specific available sizes
+  const { data: perfumeData } = useQuery({
+    queryKey: ['perfume-details', perfumeId],
+    queryFn: async () => {
+      if (!perfumeId) return null;
+      try {
+        const { data, error } = await supabase
+          .from('perfumes')
+          .select('available_sizes, product_type, source_size_ml')
+          .eq('id', perfumeId)
+          .single();
+          
+        if (error) {
+          console.warn('Could not fetch perfume details:', error);
+          return null;
+        }
+        return data;
+      } catch (error) {
+        console.warn('Error fetching perfume details:', error);
+        return null;
+      }
+    },
+    enabled: !!perfumeId,
+    staleTime: 10 * 60 * 1000,
+  });
+  
   const pricesObject = prices?.reduce((acc, price) => {
     acc[price.size_ml] = price.price;
     return acc;
   }, {} as DynamicPerfumePrices) || {};
   
-  // Sempre usar todos os tamanhos configurados, não apenas os que têm preço
-  const availableSizes = allSizes || [];
+  // Use perfume-specific available_sizes if available, otherwise use global configuration
+  const availableSizes = (perfumeData && 
+                         'available_sizes' in perfumeData && 
+                         perfumeData.available_sizes && 
+                         Array.isArray(perfumeData.available_sizes) && 
+                         perfumeData.available_sizes.length > 0)
+    ? (perfumeData.available_sizes as number[]).sort((a: number, b: number) => a - b)
+    : allSizes || [];
   
   return {
     prices: pricesObject,

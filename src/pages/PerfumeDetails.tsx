@@ -166,6 +166,49 @@ const PerfumeDetails = () => {
               <p className="text-muted-foreground">{databasePerfume.family}</p>
             </div>
 
+            {/* Product Type Information */}
+            {(databasePerfume.product_type || databasePerfume.source_size_ml) && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500" />
+                    Tipo de Produto
+                  </h3>
+                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
+                    {databasePerfume.product_type === 'decant' && databasePerfume.source_size_ml ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-blue-100 text-blue-800 border-blue-300">Decant</Badge>
+                          <span className="text-sm text-blue-700">
+                            Frasco original de {databasePerfume.source_size_ml}ml dividido em frascos menores
+                          </span>
+                        </div>
+                        <p className="text-xs text-blue-600">
+                          Você recebe o perfume em um frasco menor, permitindo experimentar a fragrância 
+                          com excelente custo-benefício antes de investir no frasco original.
+                        </p>
+                      </div>
+                    ) : databasePerfume.product_type === 'miniature' && databasePerfume.source_size_ml ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-purple-100 text-purple-800 border-purple-300">Miniatura</Badge>
+                          <span className="text-sm text-purple-700">
+                            Miniatura oficial de {databasePerfume.source_size_ml}ml da marca
+                          </span>
+                        </div>
+                        <p className="text-xs text-purple-600">
+                          Miniatura oficial da marca, perfeita para viagens ou para experimentar 
+                          a fragrância em tamanho compacto.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">Informações sobre o tipo de produto</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Description */}
             {databasePerfume.description && (
               <Card>
@@ -255,7 +298,16 @@ const PerfumeDetails = () => {
 
             {/* Size Selection - Só tamanhos calculados */}
             <div>
-              <h3 className="font-semibold mb-3">Tamanho</h3>
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="font-semibold">
+                  {databasePerfume.product_type === 'miniature' ? 'Miniatura Disponível' : 'Tamanhos Disponíveis'}
+                </h3>
+                {databasePerfume.product_type === 'decant' && (
+                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                    Decant
+                  </Badge>
+                )}
+              </div>
               <div className="flex gap-3 flex-wrap">
                 {availableSizes
                   .filter(size => prices[size] && prices[size] > 0)
@@ -264,8 +316,12 @@ const PerfumeDetails = () => {
                       key={size}
                       variant={selectedSize === size ? "default" : "outline"}
                       onClick={() => setSelectedSize(size)}
+                      className="relative"
                     >
                       {size}ml - R$ {Number(prices[size] || 0).toFixed(2).replace('.', ',')}
+                      {databasePerfume.product_type === 'miniature' && (
+                        <span className="ml-1 text-xs opacity-75">(miniatura)</span>
+                      )}
                     </Button>
                   ))}
                 {availableSizes.filter(size => prices[size] && prices[size] > 0).length === 0 && (

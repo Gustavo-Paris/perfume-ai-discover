@@ -19,6 +19,9 @@ export interface Perfume {
   base_notes?: string[] | null;
   created_at: string;
   category?: string | null;
+  product_type?: 'decant' | 'miniature' | 'both' | null;
+  source_size_ml?: number | null;
+  available_sizes?: number[] | null;
 }
 
 export interface User {

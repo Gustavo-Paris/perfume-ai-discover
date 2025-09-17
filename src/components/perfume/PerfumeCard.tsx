@@ -221,6 +221,19 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             <p className="text-sm text-gray-600 font-display mt-1">{perfume.family}</p>
           </div>
 
+          {/* Product Type Info */}
+          {(perfume.product_type || perfume.source_size_ml) && (
+            <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
+              {perfume.product_type === 'decant' && perfume.source_size_ml ? (
+                <span>Decant de frasco {perfume.source_size_ml}ml</span>
+              ) : perfume.product_type === 'miniature' && perfume.source_size_ml ? (
+                <span>Miniatura {perfume.source_size_ml}ml</span>
+              ) : (
+                <span>Tamanhos disponíveis</span>
+              )}
+            </div>
+          )}
+
           {/* Price */}
           <div className="flex items-center justify-between">
             <div>
@@ -248,11 +261,11 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, size)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
-                    size="sm"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>{size}ml</span>
+                     className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
+                     size="sm"
+                   >
+                     <Plus className="h-3 w-3" />
+                     <span>{size}ml{perfume.product_type === 'miniature' ? '' : ''}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
