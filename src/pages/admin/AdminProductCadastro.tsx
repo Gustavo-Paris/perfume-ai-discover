@@ -132,8 +132,8 @@ const AdminProductCadastro = () => {
         // Para miniaturas, calcular apenas para o tamanho original
         sizes = [perfumeData.source_size_ml];
       } else {
-        // Para decants, usar tamanhos das configurações ou padrão
-        sizes = materialConfig?.bottle_materials?.map(bm => bm.size_ml) || [2, 5, 10];
+        // Para decants, usar tamanhos selecionados pelo usuário
+        sizes = perfumeData.available_sizes || [5, 10];
       }
       
       // Usar nova função RPC para calcular preços dinamicamente
@@ -153,7 +153,7 @@ const AdminProductCadastro = () => {
       const prices = calculatedPrices.map((calc: any) => ({
         sizeMl: calc.size_ml,
         perfumeCost: calc.perfume_cost_per_unit,
-        packagingCost: calc.materials_cost_per_unit,
+        materialsCost: calc.materials_cost_per_unit, // Frasco + Etiqueta
         totalCost: calc.total_cost_per_unit,
         suggestedPrice: calc.suggested_price
       }));
@@ -169,8 +169,8 @@ const AdminProductCadastro = () => {
         sizes: sizes,
         prices: prices,
         perfume_cost: prices[0]?.perfumeCost || 0,
-        materials_cost: 0,
-        packaging_cost: prices[0]?.packagingCost || 0,
+        materials_cost: prices[0]?.materialsCost || 0, // Custo de frasco + etiqueta
+        packaging_cost: 0, // Não usado mais
         total_cost_per_unit: prices[0]?.totalCost || 0,
         product_type: perfumeData.product_type, // Adicionar tipo do produto
       };
@@ -274,6 +274,7 @@ const AdminProductCadastro = () => {
 
     setLoading(true);
     try {
+      // Criar lote de estoque
       await createLot.mutateAsync({
         perfume_id: currentPerfumeId,
         lot_code: lotData.lot_code,
@@ -285,21 +286,61 @@ const AdminProductCadastro = () => {
         expiry_date: lotData.expiry_date || null
       });
 
+      // Criar receitas de produtos automaticamente para cada tamanho selecionado
+      if (materialConfig && currentPerfumeId) {
+        const bottleMaterialsMap = materialConfig.bottle_materials?.reduce((map: any, bm: any) => {
+          map[bm.size_ml] = bm.material_id;
+          return map;
+        }, {});
+
+        const defaultLabelId = materialConfig.default_label_id;
+        
+        if (bottleMaterialsMap && defaultLabelId) {
+          const sizesToCreate = perfumeData.product_type === 'miniature' 
+            ? [perfumeData.source_size_ml] 
+            : perfumeData.available_sizes;
+
+          for (const size of sizesToCreate) {
+            const bottleMaterialId = bottleMaterialsMap[size];
+            
+            if (bottleMaterialId) {
+              // Criar receita para frasco
+              await supabase.from('product_recipes').insert({
+                perfume_id: currentPerfumeId,
+                size_ml: size,
+                material_id: bottleMaterialId,
+                quantity_needed: 1
+              });
+
+              // Criar receita para etiqueta
+              await supabase.from('product_recipes').insert({
+                perfume_id: currentPerfumeId,
+                size_ml: size,
+                material_id: defaultLabelId,
+                quantity_needed: 1
+              });
+            }
+          }
+        }
+      }
+
       setStep('prices');
       toast({
-        title: "Lote criado!",
-        description: "Agora visualize e aplique os preços calculados."
+        title: "Sucesso!",
+        description: `Lote "${lotData.lot_code}" adicionado com sucesso. Receitas criadas automaticamente.`
       });
     } catch (error) {
+      console.error('Erro ao criar lote:', error);
       toast({
         title: "Erro",
-        description: "Falha ao criar lote de estoque.",
+        description: `Falha ao adicionar lote: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleApplyPrices = async () => {
     if (!calculatedPrices || !currentPerfumeId) {
@@ -836,10 +877,6 @@ const AdminProductCadastro = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Frasco + Etiqueta:</span>
-                      <span>R$ {calculatedPrices.packaging_cost.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Materiais:</span>
                       <span>R$ {calculatedPrices.materials_cost.toFixed(2)}</span>
                     </div>
                     <Separator />
