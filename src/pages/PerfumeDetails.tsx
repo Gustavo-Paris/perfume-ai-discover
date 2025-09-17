@@ -12,6 +12,7 @@ import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 import { useRecalculatePerfumePrice } from '@/hooks/useRecalculatePerfumePrice';
 import { DatabasePerfume } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useCanReview, useUserReview } from '@/hooks/useReviews';
 import ReviewList from '@/components/reviews/ReviewList';
 import ReviewForm from '@/components/reviews/ReviewForm';
@@ -24,6 +25,7 @@ const PerfumeDetails = () => {
   const { addToCart, loading: cartLoading } = useCart();
   const { data: databasePerfumes, isLoading } = usePerfumes();
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
@@ -321,10 +323,10 @@ const PerfumeDetails = () => {
                 </Button>
               </div>
               
-              {/* Recalcular preços faltantes */}
-              {user && (
+              {/* Admin: Recalcular preços faltantes */}
+              {isAdmin && (
                 <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded space-y-1">
-                  <div>Tamanhos calculados: {availableSizes.filter(size => prices[size] && prices[size] > 0).join(', ')}ml</div>
+                  <div>Admin: Tamanhos calculados: {availableSizes.filter(size => prices[size] && prices[size] > 0).join(', ')}ml</div>
                   <div>Total de preços: {Object.keys(prices).filter(size => prices[parseInt(size)] > 0).length}</div>
                   <Button 
                     size="sm" 

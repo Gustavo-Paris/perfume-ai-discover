@@ -109,6 +109,9 @@ export interface DatabasePerfume {
   avg_cost_per_ml?: number | null;
   target_margin_percentage?: number | null;
   last_cost_calculation?: string | null;
+  product_type?: 'decant' | 'miniature' | 'both';
+  source_size_ml?: number;
+  available_sizes?: number[];
   created_at: string;
 }
 
