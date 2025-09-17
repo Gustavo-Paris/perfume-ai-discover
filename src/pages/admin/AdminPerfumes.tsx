@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Upload, RefreshCw, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, RefreshCw, Settings, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +19,7 @@ import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
 import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
 import { MarginValidator } from '@/components/admin/MarginValidator';
+import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
 
 const AdminPerfumes = () => {
   const { data: perfumes, isLoading, refetch } = usePerfumes();
@@ -26,6 +27,7 @@ const AdminPerfumes = () => {
   const updatePerfume = useUpdatePerfume();
   const deletePerfume = useDeletePerfume();
   const updateMargin = useUpdatePerfumeMargin();
+  const recalculateAll = useRecalculateAllPrices();
   const { data: materialConfig } = useMaterialConfigurations();
   
   // Tamanhos dinâmicos das configurações
@@ -225,6 +227,15 @@ const AdminPerfumes = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gerenciar Perfumes</h1>
         <div className="flex gap-2">
+          <Button
+            onClick={() => recalculateAll.mutate()}
+            disabled={recalculateAll.isPending}
+            variant="outline"
+            size="sm"
+          >
+            <Calculator className={`mr-2 h-4 w-4 ${recalculateAll.isPending ? 'animate-spin' : ''}`} />
+            {recalculateAll.isPending ? 'Recalculando...' : 'Recalcular Todos os Preços'}
+          </Button>
           <Button
             onClick={handleSyncToAlgolia}
             disabled={isSyncing}

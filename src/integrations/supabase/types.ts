@@ -3306,6 +3306,14 @@ export type Database = {
         Args: { affiliate_code: string; order_id: string; order_total: number }
         Returns: boolean
       }
+      recalculate_all_perfume_prices: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          message: string
+          perfume_id: string
+          updated_sizes: number[]
+        }[]
+      }
       recalculate_all_prices: {
         Args: Record<PropertyKey, never>
         Returns: undefined
