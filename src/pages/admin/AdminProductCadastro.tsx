@@ -39,6 +39,9 @@ interface PerfumeFormData {
   heart_notes: string[];
   base_notes: string[];
   image_url: string;
+  product_type: 'decant' | 'miniature';
+  source_size_ml: number;
+  available_sizes: number[];
 }
 
 interface LotFormData {
@@ -77,7 +80,10 @@ const AdminProductCadastro = () => {
     top_notes: [],
     heart_notes: [],
     base_notes: [],
-    image_url: ''
+    image_url: '',
+    product_type: 'decant',
+    source_size_ml: 100,
+    available_sizes: [5, 10]
   });
 
   const [lotData, setLotData] = useState<LotFormData>({
@@ -187,7 +193,8 @@ const AdminProductCadastro = () => {
   const validateStep = (stepName: string): boolean => {
     switch (stepName) {
       case 'perfume':
-        return !!(perfumeData.brand && perfumeData.name && perfumeData.family && perfumeData.gender);
+        return !!(perfumeData.brand && perfumeData.name && perfumeData.family && perfumeData.gender && 
+                 perfumeData.product_type && perfumeData.source_size_ml > 0 && perfumeData.available_sizes.length > 0);
       case 'lot':
         return !!(lotData.lot_code && lotData.qty_ml > 0 && lotData.total_cost > 0 && lotData.warehouse_id);
       default:
@@ -222,6 +229,9 @@ const AdminProductCadastro = () => {
         ...perfumeData,
         avg_cost_per_ml: 0,
         target_margin_percentage: marginPercentage / 100,
+        product_type: perfumeData.product_type,
+        source_size_ml: perfumeData.source_size_ml,
+        available_sizes: perfumeData.available_sizes
       } as any);
 
       setCurrentPerfumeId(perfume.id);
@@ -326,7 +336,8 @@ const AdminProductCadastro = () => {
   const resetForm = () => {
     setPerfumeData({
       brand: '', name: '', description: '', family: '', gender: 'unissex',
-      category: '', top_notes: [], heart_notes: [], base_notes: [], image_url: ''
+      category: '', top_notes: [], heart_notes: [], base_notes: [], image_url: '',
+      product_type: 'decant', source_size_ml: 100, available_sizes: [5, 10]
     });
     setLotData({
       lot_code: '', qty_ml: 0, total_cost: 0, warehouse_id: '', supplier: '', expiry_date: ''
@@ -478,6 +489,116 @@ const AdminProductCadastro = () => {
                   onChange={(e) => setPerfumeData({...perfumeData, image_url: e.target.value})}
                   placeholder="https://..."
                 />
+              </div>
+            </div>
+
+            {/* Tipo de Produto */}
+            <div className="p-4 bg-blue-50 rounded-lg space-y-4">
+              <h3 className="font-medium text-blue-900">Tipo de Produto</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="decant"
+                    name="product_type"
+                    value="decant"
+                    checked={perfumeData.product_type === 'decant'}
+                    onChange={(e) => setPerfumeData({
+                      ...perfumeData, 
+                      product_type: e.target.value as 'decant' | 'miniature',
+                      available_sizes: e.target.value === 'decant' ? [5, 10] : [perfumeData.source_size_ml]
+                    })}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <Label htmlFor="decant" className="text-sm">
+                    <span className="font-medium">Decant</span> - Perfume será dividido em frascos menores
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="miniature"
+                    name="product_type"
+                    value="miniature"
+                    checked={perfumeData.product_type === 'miniature'}
+                    onChange={(e) => setPerfumeData({
+                      ...perfumeData, 
+                      product_type: e.target.value as 'decant' | 'miniature',
+                      available_sizes: [perfumeData.source_size_ml]
+                    })}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <Label htmlFor="miniature" className="text-sm">
+                    <span className="font-medium">Miniatura</span> - Perfume pronto no tamanho final
+                  </Label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="source_size">
+                    {perfumeData.product_type === 'decant' ? 'Tamanho do Frasco Fonte (ml) *' : 'Tamanho da Miniatura (ml) *'}
+                  </Label>
+                  <Input
+                    id="source_size"
+                    type="number"
+                    value={perfumeData.source_size_ml || ''}
+                    onChange={(e) => {
+                      const newSize = parseInt(e.target.value) || 0;
+                      setPerfumeData({
+                        ...perfumeData, 
+                        source_size_ml: newSize,
+                        available_sizes: perfumeData.product_type === 'miniature' ? [newSize] : perfumeData.available_sizes
+                      });
+                    }}
+                    placeholder={perfumeData.product_type === 'decant' ? '100' : '25'}
+                  />
+                </div>
+
+                {perfumeData.product_type === 'decant' && (
+                  <div>
+                    <Label>Tamanhos Disponíveis *</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {[2, 5, 10, 20].map(size => (
+                        <div key={size} className="flex items-center space-x-1">
+                          <input
+                            type="checkbox"
+                            id={`size_${size}`}
+                            checked={perfumeData.available_sizes.includes(size)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setPerfumeData({
+                                  ...perfumeData,
+                                  available_sizes: [...perfumeData.available_sizes, size].sort((a, b) => a - b)
+                                });
+                              } else {
+                                setPerfumeData({
+                                  ...perfumeData,
+                                  available_sizes: perfumeData.available_sizes.filter(s => s !== size)
+                                });
+                              }
+                            }}
+                            className="w-3 h-3"
+                          />
+                          <Label htmlFor={`size_${size}`} className="text-xs">{size}ml</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Exibir informações do produto configurado */}
+              <div className="text-xs text-blue-700 bg-blue-100 p-2 rounded">
+                <p className="font-medium">Configuração:</p>
+                <p>
+                  {perfumeData.product_type === 'decant' 
+                    ? `Decant de frasco ${perfumeData.source_size_ml}ml em tamanhos: ${perfumeData.available_sizes.join(', ')}ml`
+                    : `Miniatura pronta de ${perfumeData.source_size_ml}ml`
+                  }
+                </p>
               </div>
             </div>
 
