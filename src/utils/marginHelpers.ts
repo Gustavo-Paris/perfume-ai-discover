@@ -37,11 +37,11 @@ export const formatMarginDisplay = (decimal?: number | null): string => {
 
 /**
  * Valida se uma margem está dentro dos limites aceitáveis
- * @param percentage Porcentagem da interface
+ * @param percentage Porcentagem da interface (ex: 80 para 80% markup)
  * @returns true se válida
  */
 export const isValidMargin = (percentage: number): boolean => {
-  return percentage >= 50 && percentage < 100; // Não permitir 100% para evitar divisão por zero
+  return percentage >= 50 && percentage <= 500; // Permitir até 500% markup
 };
 
 /**

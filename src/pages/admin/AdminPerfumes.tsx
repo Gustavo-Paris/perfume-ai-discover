@@ -167,8 +167,9 @@ const AdminPerfumes = () => {
     try {
       console.log('AdminPerfumes: Updating margin for perfume:', editingPerfume.id, 'from', newMargin);
       
-      // Margem deve ser enviada como multiplicador: 200% = 2.0, 150% = 1.5, etc.
-      const marginMultiplier = (100 + newMargin) / 100; // 80% markup = 1.8 multiplier
+      // Converter margem percentual para multiplicador
+      // 80% markup → 1.8 multiplier, 100% markup → 2.0 multiplier
+      const marginMultiplier = (100 + newMargin) / 100;
       
       await updateMargin.mutateAsync({
         perfumeId: editingPerfume.id,

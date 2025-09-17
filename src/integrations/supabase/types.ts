@@ -2969,8 +2969,10 @@ export type Database = {
       calculate_product_total_cost: {
         Args: { perfume_uuid: string; size_ml_param: number }
         Returns: {
-          materials_cost_per_unit: number
-          perfume_cost_per_unit: number
+          cost_breakdown: Json
+          margin_percentage: number
+          perfume_id: string
+          size_ml: number
           suggested_price: number
           total_cost_per_unit: number
         }[]
