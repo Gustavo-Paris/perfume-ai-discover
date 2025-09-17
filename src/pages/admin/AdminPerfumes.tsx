@@ -165,9 +165,11 @@ const AdminPerfumes = () => {
     if (!editingPerfume) return;
     
     try {
+      console.log('AdminPerfumes: Updating margin for perfume:', editingPerfume.id, 'from', newMargin);
+      
       await updateMargin.mutateAsync({
         perfumeId: editingPerfume.id,
-        newMarginPercentage: newMargin / 100
+        newMarginPercentage: newMargin / 100 // Convert percentage to decimal
       });
       
       toast({
@@ -178,13 +180,16 @@ const AdminPerfumes = () => {
       // Force refresh the data
       await refetch();
       
+      console.log('AdminPerfumes: Data refetched after margin update');
+      
       // After successful update, refresh the perfume data to show new prices
       setTimeout(() => {
         const updatedPerfume = perfumes?.find(p => p.id === editingPerfume.id);
         if (updatedPerfume) {
+          console.log('AdminPerfumes: Updated perfume found:', updatedPerfume.target_margin_percentage);
           handleEdit(updatedPerfume);
         }
-      }, 500);
+      }, 1500); // Increased timeout to give more time for DB updates
     } catch (error) {
       toast({
         title: "Erro",

@@ -28,7 +28,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
   const updateMargin = useUpdatePerfumeMargin();
   
   // Buscar preços dinâmicos da nova estrutura
-  const { prices, availableSizes, isLoading } = usePerfumePricesObject(perfume.id);
+  const { prices, availableSizes, isLoading, refetch: refetchPrices } = usePerfumePricesObject(perfume.id);
 
   const handleSave = async () => {
     // Validar margem
@@ -45,6 +45,13 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
         perfumeId: perfume.id,
         newMarginPercentage: percentageToDecimal(marginValue) // Convertendo para decimal
       });
+      
+      // Force refetch prices after successful update
+      setTimeout(() => {
+        refetchPrices();
+        console.log('Prices refetched after margin update');
+      }, 1000);
+      
       setIsEditing(false);
     } catch (error) {
       console.error('Erro ao salvar margem:', error);

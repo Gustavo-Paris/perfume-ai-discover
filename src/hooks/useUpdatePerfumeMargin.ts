@@ -33,11 +33,16 @@ export const useUpdatePerfumeMargin = () => {
       
       toast.success('Margem atualizada! Preços recalculados automaticamente.');
       
-      // Invalidate all relevant queries
+      // Invalidate all relevant queries with more specific targeting
       queryClient.invalidateQueries({ queryKey: ['perfumes'] });
       queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
       queryClient.invalidateQueries({ queryKey: ['perfume-prices'] });
       queryClient.invalidateQueries({ queryKey: ['perfume-prices', perfumeId] });
+      
+      // Force refetch of the specific perfume prices
+      queryClient.refetchQueries({ queryKey: ['perfume-prices', perfumeId] });
+      
+      console.log('All queries invalidated and refetched');
     },
     onError: (error) => {
       console.error('Failed to update margin:', error);
