@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
 import { usePerfumes } from '@/hooks/usePerfumes';
+import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 import { DatabasePerfume } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCanReview, useUserReview } from '@/hooks/useReviews';
@@ -22,7 +23,7 @@ const PerfumeDetails = () => {
   const { addToCart, loading: cartLoading } = useCart();
   const { data: databasePerfumes, isLoading } = usePerfumes();
   const { user } = useAuth();
-  const [selectedSize, setSelectedSize] = useState<2 | 5 | 10 | null>(null);
+  const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
   
@@ -33,14 +34,17 @@ const PerfumeDetails = () => {
   // Find perfume by id from database
   const databasePerfume = databasePerfumes?.find((p: DatabasePerfume) => p.id === id);
   
+  // Get dynamic prices for this perfume
+  const { prices, availableSizes, isLoading: pricesLoading } = usePerfumePricesObject(id || '');
+  
   // Set initial size based on available sizes using useEffect
   useEffect(() => {
-    if (databasePerfume && selectedSize === null) {
-      setSelectedSize(databasePerfume.price_2ml ? 2 : 5);
+    if (availableSizes.length > 0 && selectedSize === null) {
+      setSelectedSize(availableSizes[0]);
     }
-  }, [databasePerfume, selectedSize]);
+  }, [availableSizes, selectedSize]);
 
-  if (isLoading) {
+  if (isLoading || pricesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -82,10 +86,7 @@ const PerfumeDetails = () => {
     }
   };
 
-  const currentPrice = selectedSize === 2 ? databasePerfume.price_2ml :
-                      selectedSize === 5 ? databasePerfume.price_5ml : 
-                      selectedSize === 10 ? databasePerfume.price_10ml : 
-                      databasePerfume.price_5ml;
+  const currentPrice = selectedSize ? prices[selectedSize] || 0 : 0;
 
   return (
     <>
@@ -100,7 +101,7 @@ const PerfumeDetails = () => {
         <ProductSchema 
           perfume={databasePerfume}
           currentPrice={currentPrice}
-          selectedSize={selectedSize}
+          selectedSize={selectedSize as 2 | 5 | 10}
         />
       )}
       <div className="min-h-screen bg-gray-50 py-8">
@@ -236,29 +237,19 @@ const PerfumeDetails = () => {
             <div>
               <h3 className="font-semibold mb-3">Tamanho</h3>
               <div className="flex gap-3 flex-wrap">
-                {databasePerfume.price_2ml && databasePerfume.price_2ml > 0 && (
+                {availableSizes.map(size => (
                   <Button
-                    variant={selectedSize === 2 ? "default" : "outline"}
-                    onClick={() => setSelectedSize(2)}
+                    key={size}
+                    variant={selectedSize === size ? "default" : "outline"}
+                    onClick={() => setSelectedSize(size)}
                   >
-                    2ml - R$ {Number(databasePerfume.price_2ml).toFixed(2).replace('.', ',')}
+                    {size}ml - R$ {Number(prices[size] || 0).toFixed(2).replace('.', ',')}
                   </Button>
-                )}
-                {databasePerfume.price_5ml && databasePerfume.price_5ml > 0 && (
-                  <Button
-                    variant={selectedSize === 5 ? "default" : "outline"}
-                    onClick={() => setSelectedSize(5)}
-                  >
-                    5ml - R$ {Number(databasePerfume.price_5ml).toFixed(2).replace('.', ',')}
-                  </Button>
-                )}
-                {databasePerfume.price_10ml && databasePerfume.price_10ml > 0 && (
-                  <Button
-                    variant={selectedSize === 10 ? "default" : "outline"}
-                    onClick={() => setSelectedSize(10)}
-                  >
-                    10ml - R$ {Number(databasePerfume.price_10ml).toFixed(2).replace('.', ',')}
-                  </Button>
+                ))}
+                {availableSizes.length === 0 && (
+                  <div className="text-muted-foreground text-sm py-2">
+                    Nenhum tamanho disponível para este perfume
+                  </div>
                 )}
               </div>
             </div>

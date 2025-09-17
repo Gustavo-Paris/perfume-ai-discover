@@ -91,6 +91,10 @@ export default function MaterialSetupAssistant() {
       const currentSizes = currentConfig?.bottle_materials.map(b => b.size_ml) || [];
       const newSizes = setup.bottles.map(b => b.size).filter(size => !currentSizes.includes(size));
       
+      console.log('Current sizes:', currentSizes);
+      console.log('Setup sizes:', setup.bottles.map(b => b.size));
+      console.log('New sizes detected:', newSizes);
+      
       // Save configuration first
       await saveMutation.mutateAsync({
         bottle_materials: setup.bottles.map(b => ({
@@ -112,6 +116,16 @@ export default function MaterialSetupAssistant() {
       setIsOpen(false);
     } catch (error) {
       console.error('Erro ao salvar:', error);
+    }
+  };
+
+  const handleForceRecalculation = async () => {
+    try {
+      const allSizes = setup.bottles.map(b => b.size);
+      toast.info(`🔄 Forçando recálculo para todos os ${allSizes.length} tamanhos...`);
+      await recalculateAllPrices.mutateAsync(allSizes);
+    } catch (error) {
+      console.error('Erro ao forçar recálculo:', error);
     }
   };
 
@@ -260,19 +274,30 @@ export default function MaterialSetupAssistant() {
             </div>
           </div>
           
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancelar
-            </Button>
+          <div className="flex justify-between items-center pt-4 border-t">
             <Button 
-              onClick={handleSaveConfiguration}
+              variant="ghost" 
+              size="sm"
+              onClick={handleForceRecalculation}
               disabled={saveMutation.isPending || recalculateAllPrices.isPending}
+              className="text-xs"
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              {saveMutation.isPending ? 'Salvando...' : 
-               recalculateAllPrices.isPending ? 'Recalculando preços...' :
-               'Salvar Configuração'}
+              🔧 Debug: Forçar Recálculo
             </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSaveConfiguration}
+                disabled={saveMutation.isPending || recalculateAllPrices.isPending}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {saveMutation.isPending ? 'Salvando...' : 
+                 recalculateAllPrices.isPending ? 'Recalculando preços...' :
+                 'Salvar Configuração'}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
