@@ -1110,6 +1110,51 @@ export type Database = {
         }
         Relationships: []
       }
+      local_delivery_settings: {
+        Row: {
+          company_cep: string
+          company_city: string
+          company_state: string
+          created_at: string
+          id: string
+          local_delivery_enabled: boolean
+          local_delivery_fee: number
+          local_delivery_radius_km: number | null
+          pickup_address: string
+          pickup_available: boolean
+          pickup_instructions: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_cep?: string
+          company_city?: string
+          company_state?: string
+          created_at?: string
+          id?: string
+          local_delivery_enabled?: boolean
+          local_delivery_fee?: number
+          local_delivery_radius_km?: number | null
+          pickup_address?: string
+          pickup_available?: boolean
+          pickup_instructions?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_cep?: string
+          company_city?: string
+          company_state?: string
+          created_at?: string
+          id?: string
+          local_delivery_enabled?: boolean
+          local_delivery_fee?: number
+          local_delivery_radius_km?: number | null
+          pickup_address?: string
+          pickup_available?: boolean
+          pickup_instructions?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           attempt_type: string

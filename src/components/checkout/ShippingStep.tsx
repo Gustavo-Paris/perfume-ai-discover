@@ -3,6 +3,7 @@ import { ArrowLeft, Truck, Clock, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShippingQuote } from '@/types';
+import { LocalDeliveryOptions } from './LocalDeliveryOptions';
 
 interface ShippingStepProps {
   quotes: ShippingQuote[];
@@ -43,8 +44,27 @@ export const ShippingStep: React.FC<ShippingStepProps> = ({
           <p className="text-muted-foreground">Calculando frete...</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {quotes.map((quote, index) => (
+        <div className="space-y-6">
+          {/* Check if we have local delivery options */}
+          {quotes.some(quote => quote.local) ? (
+            <>
+              <LocalDeliveryOptions
+                quotes={quotes.filter(quote => quote.local)}
+                selectedShipping={selectedShipping}
+                onShippingSelect={onShippingSelect}
+              />
+              
+              {/* Show regular shipping options if available */}
+              {quotes.some(quote => !quote.local) && (
+                <>
+                  <div className="border-t pt-6">
+                    <h3 className="font-semibold mb-4 text-muted-foreground">
+                      Outras opções de entrega
+                    </h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {quotes.filter(quote => !quote.local).map((quote, index) => (
             <Card
               key={index}
               className={`cursor-pointer transition-all ${
@@ -95,7 +115,68 @@ export const ShippingStep: React.FC<ShippingStepProps> = ({
                 </div>
               </CardContent>
             </Card>
-          ))}
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            /* Regular shipping options only */
+            <div className="space-y-4">
+              {quotes.map((quote, index) => (
+                <Card
+                  key={index}
+                  className={`cursor-pointer transition-all ${
+                    selectedShipping?.service === quote.service
+                      ? 'ring-2 ring-blue-500 border-blue-200'
+                      : 'hover:border-gray-300'
+                  }`}
+                  onClick={() => onShippingSelect(quote)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedShipping?.service === quote.service
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedShipping?.service === quote.service && (
+                          <Check className="h-3 w-3 text-white" />
+                        )}
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Truck className="h-4 w-4 text-blue-600" />
+                          <h3 className="font-semibold">{quote.service}</h3>
+                          <span className="text-sm text-muted-foreground">
+                            ({quote.company})
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {quote.deadline === 1 
+                                ? '1 dia útil' 
+                                : `${quote.deadline} dias úteis`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-bold text-lg">
+                          {formatPrice(quote.price)}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {quotes.length === 0 && (
             <Card>

@@ -179,9 +179,14 @@ export interface OrderDraft {
 
 export interface ShippingQuote {
   service: string;
+  company: string;
   price: number;
   deadline: number;
-  company: string;
+  service_id: number | string;
+  company_id: number | string;
+  local?: boolean;
+  pickup_address?: string;
+  pickup_instructions?: string;
 }
 
 export interface CheckoutStep {

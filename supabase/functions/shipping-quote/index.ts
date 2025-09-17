@@ -101,6 +101,63 @@ serve(async (req) => {
 
     console.log('Address CEP:', address.cep)
 
+    // Check for local delivery settings
+    const { data: localSettings, error: localError } = await supabase
+      .from('local_delivery_settings')
+      .select('*')
+      .single()
+
+    if (localError) {
+      console.error('Error fetching local delivery settings:', localError)
+    }
+
+    // Check if delivery is local (same city)
+    const isLocalDelivery = localSettings && 
+      localSettings.local_delivery_enabled && 
+      address.city && 
+      address.city.toLowerCase() === localSettings.company_city.toLowerCase() &&
+      address.state && 
+      address.state.toLowerCase() === localSettings.company_state.toLowerCase()
+
+    console.log('Is local delivery:', isLocalDelivery)
+
+    // If local delivery, return local options
+    if (isLocalDelivery && localSettings) {
+      const localOptions = []
+
+      // Add pickup option if available
+      if (localSettings.pickup_available) {
+        localOptions.push({
+          service: 'Retirada no Local',
+          company: 'Loja Física',
+          price: 0,
+          deadline: 0,
+          service_id: 'pickup',
+          company_id: 'local',
+          local: true,
+          pickup_address: localSettings.pickup_address,
+          pickup_instructions: localSettings.pickup_instructions
+        })
+      }
+
+      // Add local delivery option
+      localOptions.push({
+        service: 'Entrega Local',
+        company: 'Entrega Própria',
+        price: parseFloat(localSettings.local_delivery_fee.toString()),
+        deadline: 1,
+        service_id: 'local_delivery',
+        company_id: 'local',
+        local: true
+      })
+
+      console.log('Returning local delivery options:', localOptions)
+      return new Response(
+        JSON.stringify({ quotes: localOptions }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_TOKEN')
     if (!melhorEnvioToken) {
       console.error('MELHOR_ENVIO_TOKEN not configured')
