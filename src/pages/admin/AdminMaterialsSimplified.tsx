@@ -30,6 +30,7 @@ import {
   PackagingRule
 } from '@/hooks/useMaterials';
 import MaterialSetupAssistant from '@/components/admin/MaterialSetupAssistant';
+import MaterialDetectionCard from '@/components/admin/MaterialDetectionCard';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -314,21 +315,25 @@ export default function AdminMaterialsSimplified() {
         </Card>
       )}
 
-      {/* Setup Assistant */}
-      <Card className="bg-muted/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Setup Inicial dos Materiais
-          </CardTitle>
-          <CardDescription>
-            Configure quais materiais serão usados como frascos e etiquetas padrão
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MaterialSetupAssistant />
-        </CardContent>
-      </Card>
+      {/* Cards de Automação */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Card className="bg-muted/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Setup Inicial dos Materiais
+            </CardTitle>
+            <CardDescription>
+              Configure quais materiais serão usados como frascos e etiquetas padrão
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MaterialSetupAssistant />
+          </CardContent>
+        </Card>
+        
+        <MaterialDetectionCard />
+      </div>
 
       {/* Tab-based Interface */}
       <Tabs defaultValue="materials" className="space-y-6">

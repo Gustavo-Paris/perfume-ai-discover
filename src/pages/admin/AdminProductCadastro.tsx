@@ -18,12 +18,14 @@ import {
   Plus,
   Edit,
   Eye,
-  Calculator
+  Calculator,
+  Bot
 } from 'lucide-react';
 import { useCreatePerfume, usePerfumesWithCosts } from '@/hooks/usePerfumes';
 import { useCreateInventoryLot, useInventoryLots } from '@/hooks/useInventoryLots';
 import { useWarehouses } from '@/hooks/useWarehouses';
 import { useToast } from '@/hooks/use-toast';
+import { useMaterialConfigurations } from '@/hooks/useMaterialConfigurations';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PerfumeFormData {
@@ -88,11 +90,14 @@ const AdminProductCadastro = () => {
   const [calculatedPrices, setCalculatedPrices] = useState<CalculatedPrices | null>(null);
 
   const { toast } = useToast();
+  
+  const { data: warehouses = [] } = useWarehouses();
+  const { data: existingLots = [] } = useInventoryLots();
+  const { data: materialConfig } = useMaterialConfigurations();
+  const { data: perfumesWithCosts } = usePerfumesWithCosts();
+  
   const createPerfume = useCreatePerfume();
   const createLot = useCreateInventoryLot();
-  const { data: warehouses } = useWarehouses();
-  const { data: perfumesWithCosts } = usePerfumesWithCosts();
-  const { data: existingLots } = useInventoryLots();
 
   // Funções utilitárias
   const parseNotes = (notesString: string): string[] => {

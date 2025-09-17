@@ -1134,6 +1134,36 @@ export type Database = {
         }
         Relationships: []
       }
+      material_configurations: {
+        Row: {
+          auto_detect_enabled: boolean
+          bottle_materials: Json
+          created_at: string
+          default_label_id: string | null
+          default_label_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          auto_detect_enabled?: boolean
+          bottle_materials?: Json
+          created_at?: string
+          default_label_id?: string | null
+          default_label_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_detect_enabled?: boolean
+          bottle_materials?: Json
+          created_at?: string
+          default_label_id?: string | null
+          default_label_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       material_lots: {
         Row: {
           cost_per_unit: number
@@ -2967,6 +2997,10 @@ export type Database = {
           total_value: number
           user_id: string
         }[]
+      }
+      detect_material_info: {
+        Args: { material_name: string }
+        Returns: Json
       }
       generate_affiliate_code: {
         Args: { user_name?: string }
