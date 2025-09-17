@@ -26,7 +26,14 @@ export const useUpdatePerfumeMargin = () => {
       }
 
       console.log('Margin updated successfully:', data);
-      return data;
+      
+      // Check if the update was successful
+      if (data && data.length > 0 && data[0].success) {
+        console.log('Updated prices:', data[0].updated_prices);
+        return data[0];
+      } else {
+        throw new Error('Failed to update margin - perfume not found or no changes made');
+      }
     },
     onSuccess: (_, { perfumeId }) => {
       console.log('Success callback, invalidating queries for perfume:', perfumeId);

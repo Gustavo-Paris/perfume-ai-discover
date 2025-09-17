@@ -3330,7 +3330,10 @@ export type Database = {
       }
       update_perfume_margin: {
         Args: { new_margin_percentage: number; perfume_uuid: string }
-        Returns: undefined
+        Returns: {
+          success: boolean
+          updated_prices: Json
+        }[]
       }
       update_sales_statistics: {
         Args: Record<PropertyKey, never>
