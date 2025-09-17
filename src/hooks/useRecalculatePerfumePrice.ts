@@ -60,7 +60,7 @@ export const useRecalculatePerfumePrice = () => {
       
       if (successful.length > 0) {
         toast.success(
-          `✅ ${successful.length} tamanho(s) recalculado(s): ${successful.map(r => `${r.size}ml=R$${r.price?.toFixed(2)}`).join(', ')}`
+          `✅ Preços recalculados! ${successful.length} novo(s) tamanho(s) agora disponível(is) no catálogo: ${successful.map(r => `${r.size}ml`).join(', ')}`
         );
       }
       

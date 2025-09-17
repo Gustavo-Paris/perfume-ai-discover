@@ -251,20 +251,22 @@ const PerfumeDetails = () => {
               </CardContent>
             </Card>
 
-            {/* Size Selection */}
+            {/* Size Selection - Só tamanhos calculados */}
             <div>
               <h3 className="font-semibold mb-3">Tamanho</h3>
               <div className="flex gap-3 flex-wrap">
-                {availableSizes.map(size => (
-                  <Button
-                    key={size}
-                    variant={selectedSize === size ? "default" : "outline"}
-                    onClick={() => setSelectedSize(size)}
-                  >
-                    {size}ml - R$ {Number(prices[size] || 0).toFixed(2).replace('.', ',')}
-                  </Button>
-                ))}
-                {availableSizes.length === 0 && (
+                {availableSizes
+                  .filter(size => prices[size] && prices[size] > 0)
+                  .map(size => (
+                    <Button
+                      key={size}
+                      variant={selectedSize === size ? "default" : "outline"}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}ml - R$ {Number(prices[size] || 0).toFixed(2).replace('.', ',')}
+                    </Button>
+                  ))}
+                {availableSizes.filter(size => prices[size] && prices[size] > 0).length === 0 && (
                   <div className="text-muted-foreground text-sm py-2">
                     Nenhum tamanho disponível para este perfume
                   </div>
@@ -319,20 +321,22 @@ const PerfumeDetails = () => {
                 </Button>
               </div>
               
-              {/* Debug: Available vs Configured sizes */}
-              <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded space-y-1">
-                <div>Tamanhos disponíveis: {availableSizes.join(', ')}ml</div>
-                <div>Total de preços: {Object.keys(prices).length}</div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={handleDebugRecalculate}
-                  disabled={recalculatePerfume.isPending}
-                  className="mt-2"
-                >
-                  🔧 {recalculatePerfume.isPending ? 'Recalculando...' : 'Debug: Recalcular Tamanhos Faltantes'}
-                </Button>
-              </div>
+              {/* Recalcular preços faltantes */}
+              {user && (
+                <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded space-y-1">
+                  <div>Tamanhos calculados: {availableSizes.filter(size => prices[size] && prices[size] > 0).join(', ')}ml</div>
+                  <div>Total de preços: {Object.keys(prices).filter(size => prices[parseInt(size)] > 0).length}</div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleDebugRecalculate}
+                    disabled={recalculatePerfume.isPending}
+                    className="mt-2"
+                  >
+                    🔄 {recalculatePerfume.isPending ? 'Recalculando...' : 'Recalcular preços faltantes'}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

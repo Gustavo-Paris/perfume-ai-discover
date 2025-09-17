@@ -117,16 +117,16 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     };
   };
 
-  // Calcular preços para todos os tamanhos disponíveis (incluindo os sem preço)
-  const sizesWithPrices = availableSizes.map(size => ({
-    size,
-    priceInfo: getDisplayPrice(size)
-  }));
+  // Só mostrar tamanhos que têm preços válidos calculados (UX profissional)
+  const sizesWithPrices = availableSizes
+    .map(size => ({
+      size,
+      priceInfo: getDisplayPrice(size)
+    }))
+    .filter(item => !item.priceInfo?.needsCalculation && item.priceInfo?.promotional > 0);
   
-  // Calculate the lowest available price for display (only priced items)
-  const availablePrices = sizesWithPrices
-    .filter(item => !item.priceInfo?.needsCalculation && item.priceInfo?.promotional > 0)
-    .map(item => item.priceInfo!.promotional);
+  // Calculate the lowest available price for display
+  const availablePrices = sizesWithPrices.map(item => item.priceInfo!.promotional);
   const basePrice = availablePrices.length > 0 ? Math.min(...availablePrices) : 0;
 
   return (
@@ -241,35 +241,22 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             </div>
           </div>
 
-          {/* Quick Add Buttons - Dynamic */}
+          {/* Quick Add Buttons - Só tamanhos calculados */}
           <div className="flex gap-1">
             {sizesWithPrices.map(({ size, priceInfo }) => (
               <Tooltip key={size}>
                 <TooltipTrigger asChild>
                   <Button 
-                    onClick={(e) => priceInfo?.needsCalculation ? e.preventDefault() : handleQuickAdd(e, size)}
-                    className={`flex-1 ${
-                      priceInfo?.needsCalculation 
-                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
-                        : 'bg-navy hover:bg-navy/90 text-white'
-                    } font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5`}
+                    onClick={(e) => handleQuickAdd(e, size)}
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
                     size="sm"
-                    disabled={priceInfo?.needsCalculation}
                   >
-                    {priceInfo?.needsCalculation ? (
-                      <span className="text-xs">Calc</span>
-                    ) : (
-                      <>
-                        <Plus className="h-3 w-3" />
-                        <span>{size}ml</span>
-                      </>
-                    )}
+                    <Plus className="h-3 w-3" />
+                    <span>{size}ml</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {priceInfo?.needsCalculation ? (
-                    <p>Preço a calcular - {size}ml</p>
-                  ) : priceInfo!.hasDiscount ? (
+                  {priceInfo!.hasDiscount ? (
                     <div className="text-center">
                       <p className="text-red-600 font-bold">
                         R$ {priceInfo!.promotional.toFixed(2).replace('.', ',')}
