@@ -244,3 +244,265 @@ export const useCalculatePackagingCosts = () => {
     },
   });
 };
+
+// ========== HOOKS DE EDIÇÃO E EXCLUSÃO ==========
+
+export const useUpdateMaterial = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Material> }) => {
+      const { data, error } = await supabase
+        .from('materials')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['material-lots'] });
+      // Invalidar perfumes para recalcular preços se necessário
+      queryClient.invalidateQueries({ queryKey: ['perfumes'] });
+      queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
+    },
+  });
+};
+
+export const useDeleteMaterial = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Verificar se material está sendo usado em receitas
+      const { data: recipes, error: recipesError } = await supabase
+        .from('product_recipes')
+        .select('id')
+        .eq('material_id', id)
+        .limit(1);
+      
+      if (recipesError) throw recipesError;
+      
+      if (recipes && recipes.length > 0) {
+        throw new Error('Material não pode ser excluído pois está sendo usado em receitas de produtos');
+      }
+      
+      // Verificar se há lotes ativos
+      const { data: lots, error: lotsError } = await supabase
+        .from('material_lots')
+        .select('id, quantity')
+        .eq('material_id', id);
+      
+      if (lotsError) throw lotsError;
+      
+      const activeLots = lots?.filter(lot => lot.quantity > 0) || [];
+      if (activeLots.length > 0) {
+        throw new Error(`Material possui ${activeLots.length} lote(s) com estoque. Exclua os lotes primeiro.`);
+      }
+      
+      // Excluir lotes vazios primeiro
+      if (lots && lots.length > 0) {
+        const { error: deleteLotsError } = await supabase
+          .from('material_lots')
+          .delete()
+          .eq('material_id', id);
+        
+        if (deleteLotsError) throw deleteLotsError;
+      }
+      
+      // Excluir material
+      const { error } = await supabase
+        .from('materials')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['material-lots'] });
+      queryClient.invalidateQueries({ queryKey: ['packaging-rules'] });
+    },
+  });
+};
+
+export const useUpdateMaterialLot = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<MaterialLot> }) => {
+      const { data, error } = await supabase
+        .from('material_lots')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['material-lots'] });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      // Recalcular preços dos perfumes que podem ter sido afetados
+      queryClient.invalidateQueries({ queryKey: ['perfumes'] });
+      queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
+    },
+  });
+};
+
+export const useDeleteMaterialLot = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('material_lots')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['material-lots'] });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      // Recalcular preços dos perfumes que podem ter sido afetados
+      queryClient.invalidateQueries({ queryKey: ['perfumes'] });
+      queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
+    },
+  });
+};
+
+export const useUpdatePackagingRule = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<PackagingRule> }) => {
+      const { data, error } = await supabase
+        .from('packaging_rules')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['packaging-rules'] });
+    },
+  });
+};
+
+export const useDeletePackagingRule = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('packaging_rules')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['packaging-rules'] });
+    },
+  });
+};
+
+// ========== HOOKS DE AUTOMAÇÃO ==========
+
+export const useAutoCreateRecipes = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (perfumeId: string) => {
+      // Buscar tamanhos disponíveis baseado nos frascos cadastrados
+      const { data: bottles, error: bottlesError } = await supabase
+        .from('materials')
+        .select('name, id')
+        .eq('category', 'frasco')
+        .eq('is_active', true);
+      
+      if (bottlesError) throw bottlesError;
+      
+      const sizes = bottles?.map(bottle => {
+        const match = bottle.name.match(/(\d+)ml/i);
+        return match ? { size: parseInt(match[1]), materialId: bottle.id } : null;
+      }).filter(Boolean) || [];
+      
+      // Buscar etiqueta padrão
+      const { data: labels, error: labelsError } = await supabase
+        .from('materials')
+        .select('id')
+        .eq('category', 'etiqueta')
+        .eq('is_active', true)
+        .limit(1);
+      
+      if (labelsError) throw labelsError;
+      
+      const labelId = labels?.[0]?.id;
+      
+      if (!labelId) {
+        throw new Error('Nenhuma etiqueta encontrada. Cadastre uma etiqueta primeiro.');
+      }
+      
+      // Criar receitas para cada tamanho
+      const recipes = [];
+      for (const sizeInfo of sizes) {
+        if (sizeInfo) {
+          // Frasco
+          recipes.push({
+            perfume_id: perfumeId,
+            size_ml: sizeInfo.size,
+            material_id: sizeInfo.materialId,
+            quantity_needed: 1
+          });
+          
+          // Etiqueta
+          recipes.push({
+            perfume_id: perfumeId,
+            size_ml: sizeInfo.size,
+            material_id: labelId,
+            quantity_needed: 1
+          });
+        }
+      }
+      
+      if (recipes.length === 0) {
+        throw new Error('Nenhum frasco disponível. Cadastre frascos primeiro.');
+      }
+      
+      const { data, error } = await supabase
+        .from('product_recipes')
+        .insert(recipes)
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-recipes'] });
+    },
+  });
+};
+
+export const useSmartPricing = () => {
+  return useMutation({
+    mutationFn: async (perfumeId: string) => {
+      // Chamar função do banco para recalcular todos os preços
+      const { error } = await supabase.rpc('recalculate_all_prices');
+      
+      if (error) throw error;
+      return true;
+    },
+  });
+};
