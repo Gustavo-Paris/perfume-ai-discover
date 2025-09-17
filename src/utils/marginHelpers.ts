@@ -41,7 +41,7 @@ export const formatMarginDisplay = (decimal?: number | null): string => {
  * @returns true se válida
  */
 export const isValidMargin = (percentage: number): boolean => {
-  return percentage >= 50 && percentage <= 500;
+  return percentage >= 50 && percentage < 100; // Não permitir 100% para evitar divisão por zero
 };
 
 /**
