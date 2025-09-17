@@ -352,65 +352,6 @@ const AdminConfig = () => {
         </Button>
       </div>
 
-      {/* Cards de Ação Rápida */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => window.location.href = '/admin/produto-cadastro'}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">Cadastrar Produto</h3>
-                <p className="text-sm text-muted-foreground">Sistema inteligente de cadastro</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => window.location.href = '/admin/perfumes'}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Eye className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">Gerenciar Perfumes</h3>
-                <p className="text-sm text-muted-foreground">Lista e edição de produtos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => window.location.href = '/admin/lots'}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Package className="h-4 w-4 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">Lotes de Estoque</h3>
-                <p className="text-sm text-muted-foreground">Controle de lotes e custos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => window.location.href = '/admin/stock'}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <TrendingUp className="h-4 w-4 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-medium">Visão de Estoque</h3>
-                <p className="text-sm text-muted-foreground">Análise e relatórios</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>
           <TabsTrigger value="general">Configurações Gerais</TabsTrigger>
