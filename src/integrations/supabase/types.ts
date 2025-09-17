@@ -3318,6 +3318,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      recalculate_perfume_prices_after_material_change: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       set_perfume_price: {
         Args: {
           perfume_uuid: string
