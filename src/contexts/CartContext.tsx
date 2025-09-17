@@ -106,18 +106,37 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    const formattedItems: CartItem[] = cartItems?.map((item: any) => ({
-      perfume: {
-        ...item.perfumes,
-        gender: item.perfumes.gender as 'masculino' | 'feminino' | 'unissex',
-        size_ml: [],
-        stock_full: 0,
-        stock_5ml: 0,
-        stock_10ml: 0
-      } as Perfume,
-      size: item.size_ml,
-      quantity: item.quantity
-    })) || [];
+    // Buscar preços dinâmicos para cada perfume no carrinho
+    const formattedItems: CartItem[] = [];
+    
+    for (const item of cartItems || []) {
+      // Buscar preços dinâmicos para este perfume
+      const { data: dynamicPrices } = await supabase
+        .from('perfume_prices')
+        .select('size_ml, price')
+        .eq('perfume_id', item.perfume_id);
+      
+      // Criar objeto de preços dinâmicos
+      const pricesMap: Record<number, number> = {};
+      dynamicPrices?.forEach(dp => {
+        pricesMap[dp.size_ml] = dp.price;
+      });
+      
+      formattedItems.push({
+        perfume: {
+          ...item.perfumes,
+          gender: item.perfumes.gender as 'masculino' | 'feminino' | 'unissex',
+          size_ml: [],
+          stock_full: 0,
+          stock_5ml: 0,
+          stock_10ml: 0,
+          // Adicionar preços dinâmicos ao objeto perfume
+          dynamicPrices: pricesMap
+        } as Perfume & { dynamicPrices: Record<number, number> },
+        size: item.size_ml,
+        quantity: item.quantity
+      });
+    }
 
     setItems(formattedItems);
   };
@@ -179,10 +198,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Track add_to_cart event
       if (perfume) {
-        const price = item.size_ml === 2 ? perfume.price_2ml : 
-                     item.size_ml === 5 ? perfume.price_5ml : 
-                     item.size_ml === 10 ? perfume.price_10ml : 
-                     perfume.price_full;
+        // Buscar preço dinâmico se existir
+        const { data: dynamicPrice } = await supabase
+          .from('perfume_prices')
+          .select('price')
+          .eq('perfume_id', item.perfume_id)
+          .eq('size_ml', item.size_ml)
+          .maybeSingle();
+        
+        // Usar preço dinâmico se disponível, senão usar hardcoded
+        let price = 0;
+        if (dynamicPrice) {
+          price = dynamicPrice.price;
+        } else {
+          price = item.size_ml === 2 ? perfume.price_2ml : 
+                   item.size_ml === 5 ? perfume.price_5ml : 
+                   item.size_ml === 10 ? perfume.price_10ml : 
+                   perfume.price_full;
+        }
         
         trackAddToCart({
           item_id: perfume.id,
@@ -271,18 +304,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Perfume not found');
     }
 
+    // Buscar preços dinâmicos
+    const { data: dynamicPrices } = await supabase
+      .from('perfume_prices')
+      .select('size_ml, price')
+      .eq('perfume_id', perfumeId);
+    
+    // Criar objeto de preços dinâmicos
+    const pricesMap: Record<number, number> = {};
+    dynamicPrices?.forEach(dp => {
+      pricesMap[dp.size_ml] = dp.price;
+    });
+
     const newItems = [...items];
     const existingItemIndex = newItems.findIndex(
       item => item.perfume.id === perfumeId && item.size === sizeML
     );
 
-    const formattedPerfume: Perfume = {
+    const formattedPerfume: Perfume & { dynamicPrices: Record<number, number> } = {
       ...perfume,
       gender: perfume.gender as 'masculino' | 'feminino' | 'unissex',
       size_ml: [],
       stock_full: 0,
       stock_5ml: 0,
-      stock_10ml: 0
+      stock_10ml: 0,
+      dynamicPrices: pricesMap
     };
 
     if (existingItemIndex >= 0) {
@@ -443,10 +489,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getTotal = () => {
     const itemsTotal = items.reduce((total, item) => {
-      let price = item.perfume.price_full;
-      if (item.size === 2) price = item.perfume.price_2ml || 0;
-      if (item.size === 5) price = item.perfume.price_5ml || 0;
-      if (item.size === 10) price = item.perfume.price_10ml || 0;
+      // Tentar usar preços dinâmicos primeiro
+      const perfumeWithDynamic = item.perfume as Perfume & { dynamicPrices?: Record<number, number> };
+      let price = 0;
+      
+      // Se tem preços dinâmicos, usar eles
+      if (perfumeWithDynamic.dynamicPrices && perfumeWithDynamic.dynamicPrices[item.size]) {
+        price = perfumeWithDynamic.dynamicPrices[item.size];
+      } else {
+        // Fallback para preços hardcoded
+        if (item.size === 2) price = item.perfume.price_2ml || 0;
+        else if (item.size === 5) price = item.perfume.price_5ml || 0;
+        else if (item.size === 10) price = item.perfume.price_10ml || 0;
+        else price = item.perfume.price_full || 0; // Para outros tamanhos como fallback
+      }
+      
       return total + (price * item.quantity);
     }, 0);
     

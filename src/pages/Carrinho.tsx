@@ -20,11 +20,17 @@ const Carrinho = () => {
     `R$ ${price.toFixed(2).replace('.', ',')}`;
 
   const getPriceForSize = (perfume: any, size: number) => {
+    // Tentar usar preços dinâmicos primeiro
+    if (perfume.dynamicPrices && perfume.dynamicPrices[size]) {
+      return perfume.dynamicPrices[size];
+    }
+    
+    // Fallback para preços hardcoded
     switch (size) {
       case 2: return perfume.price_2ml || 0;
       case 5: return perfume.price_5ml || 0;
       case 10: return perfume.price_10ml || 0;
-      default: return perfume.price_full;
+      default: return perfume.price_full || 0;
     }
   };
 
