@@ -17,8 +17,12 @@ interface PerfumeMarginEditorProps {
 }
 
 export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
+  // PADRÃO: target_margin_percentage está como decimal no BD (ex: 2.0 = 200%)
+  // Interface mostra como porcentagem para o usuário
+  const currentMarginPercent = (perfume.target_margin_percentage || 2.0) * 100;
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [marginValue, setMarginValue] = useState(perfume.target_margin_percentage || 200);
+  const [marginValue, setMarginValue] = useState(currentMarginPercent);
   const updateMargin = useUpdatePerfumeMargin();
   
   // Buscar preços dinâmicos da nova estrutura
@@ -26,18 +30,26 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
 
   const handleSave = async () => {
     try {
+      // Converter de porcentagem para decimal antes de enviar
+      const marginAsDecimal = marginValue / 100;
+      
+      console.log('Salvando margem:', { 
+        marginPercent: marginValue, 
+        marginDecimal: marginAsDecimal 
+      });
+      
       await updateMargin.mutateAsync({
         perfumeId: perfume.id,
-        newMarginPercentage: marginValue
+        newMarginPercentage: marginAsDecimal
       });
       setIsEditing(false);
     } catch (error) {
-      // Error handled in hook
+      console.error('Erro ao salvar margem:', error);
     }
   };
 
   const handleCancel = () => {
-    setMarginValue(perfume.target_margin_percentage || 200);
+    setMarginValue(currentMarginPercent);
     setIsEditing(false);
   };
 
@@ -82,7 +94,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
           ) : (
             <>
               <Badge variant="outline">
-                {(perfume.target_margin_percentage || 200).toFixed(0)}% margem
+                {currentMarginPercent.toFixed(0)}% margem
               </Badge>
               <Button
                 size="sm"
