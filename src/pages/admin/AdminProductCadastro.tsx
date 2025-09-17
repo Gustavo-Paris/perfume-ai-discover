@@ -51,9 +51,15 @@ interface LotFormData {
 }
 
 interface CalculatedPrices {
-  price_2ml: number;
-  price_5ml: number;
-  price_10ml: number;
+  [key: string]: any; // Permite propriedades dinâmicas como price_20ml
+  sizes?: number[];
+  prices?: Array<{
+    sizeMl: number;
+    perfumeCost: number;
+    packagingCost: number;
+    totalCost: number;
+    suggestedPrice: number;
+  }>;
   perfume_cost: number;
   materials_cost: number;
   packaging_cost: number;
@@ -109,12 +115,13 @@ const AdminProductCadastro = () => {
   // Calcular custo por ml automaticamente
   const costPerMl = lotData.qty_ml > 0 ? lotData.total_cost / lotData.qty_ml : 0;
 
-   // Função para calcular preços usando a função do banco
+  // Função para calcular preços usando a função do banco
   const calculatePricesWithMaterials = async () => {
     if (!currentPerfumeId || costPerMl === 0) return null;
 
     try {
-      const sizes = [2, 5, 10];
+      // Usar tamanhos das configurações ou padrão se não houver
+      const sizes = materialConfig?.bottle_materials?.map(bm => bm.size_ml) || [2, 5, 10];
       
       // Buscar materiais de embalagem
       const { data: materials } = await supabase
@@ -152,14 +159,20 @@ const AdminProductCadastro = () => {
         };
       });
 
+      // Criar estrutura dinâmica de preços
+      const pricesObj = {} as any;
+      prices.forEach((price, index) => {
+        pricesObj[`price_${sizes[index]}ml`] = price.suggestedPrice;
+      });
+
       return {
-        price_2ml: prices[0].suggestedPrice,
-        price_5ml: prices[1].suggestedPrice,
-        price_10ml: prices[2].suggestedPrice,
-        perfume_cost: prices[1].perfumeCost,
+        ...pricesObj,
+        sizes: sizes,
+        prices: prices,
+        perfume_cost: prices[0]?.perfumeCost || 0,
         materials_cost: 0, // Sem materiais adicionais por enquanto
-        packaging_cost: prices[1].packagingCost,
-        total_cost_per_unit: prices[1].totalCost,
+        packaging_cost: prices[0]?.packagingCost || 0,
+        total_cost_per_unit: prices[0]?.totalCost || 0,
       };
     } catch (error) {
       console.error('Erro ao calcular preços:', error);
@@ -658,24 +671,22 @@ const AdminProductCadastro = () => {
             {calculatedPrices ? (
               <>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">2ml (decant):</span>
-                    <span className="font-mono text-lg">R$ {calculatedPrices.price_2ml.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">5ml (decant):</span>
-                    <span className="font-mono text-lg">R$ {calculatedPrices.price_5ml.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">10ml (decant):</span>
-                    <span className="font-mono text-lg">R$ {calculatedPrices.price_10ml.toFixed(2)}</span>
-                  </div>
+                  {calculatedPrices.sizes?.map((size: number, index: number) => (
+                    <div key={size} className="flex justify-between items-center">
+                      <span className="text-sm font-medium">{size}ml (decant):</span>
+                      <span className="font-mono text-lg">
+                        R$ {calculatedPrices.prices[index]?.suggestedPrice?.toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                  ))}
                 </div>
 
                 <Separator />
 
                 <div className="bg-green-50 p-3 rounded-lg text-sm space-y-2">
-                  <p className="font-medium text-green-800">Composição do Preço (5ml):</p>
+                  <p className="font-medium text-green-800">
+                    Composição do Preço ({calculatedPrices.sizes?.[0] || 5}ml):
+                  </p>
                   <div className="space-y-1">
                     <div className="flex justify-between">
                       <span>Perfume:</span>
