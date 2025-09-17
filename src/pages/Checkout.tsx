@@ -321,21 +321,36 @@ const Checkout = () => {
                 <CardTitle className="font-playfair">Resumo do Pedido</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {items.map((item) => (
-                  <div key={`${item.perfume.id}-${item.size}`} className="flex justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{item.perfume.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.perfume.brand} • {item.size}ml • Qty: {item.quantity}
+                {items.map((item) => {
+                  // Calculate item price using dynamic prices first, then fallback to hardcoded
+                  const perfumeWithDynamic = item.perfume as any;
+                  let itemPrice = 0;
+                  
+                  // Use dynamic prices if available
+                  if (perfumeWithDynamic.dynamicPrices && perfumeWithDynamic.dynamicPrices[item.size]) {
+                    itemPrice = perfumeWithDynamic.dynamicPrices[item.size];
+                  } else {
+                    // Fallback to hardcoded prices
+                    if (item.size === 2) itemPrice = item.perfume.price_2ml || 0;
+                    else if (item.size === 5) itemPrice = item.perfume.price_5ml || 0;
+                    else if (item.size === 10) itemPrice = item.perfume.price_10ml || 0;
+                    else itemPrice = item.perfume.price_full || 0;
+                  }
+                  
+                  return (
+                    <div key={`${item.perfume.id}-${item.size}`} className="flex justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{item.perfume.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.perfume.brand} • {item.size}ml • Qty: {item.quantity}
+                        </p>
+                      </div>
+                      <p className="font-medium text-sm">
+                        R$ {(itemPrice * item.quantity).toFixed(2).replace('.', ',')}
                       </p>
                     </div>
-                    <p className="font-medium text-sm">
-                      R$ {((item.size === 5 ? item.perfume.price_5ml : 
-                           item.size === 10 ? item.perfume.price_10ml : 
-                           item.perfume.price_full) * item.quantity).toFixed(2).replace('.', ',')}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
                 
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between">
