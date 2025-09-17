@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Package, AlertTriangle, Boxes, Tags, Edit2, Trash2, Wand2 } from 'lucide-react';
+import { Plus, Package, AlertTriangle, Boxes, Tags, Edit2, Trash2, Settings } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,7 @@ import {
   MaterialLot,
   PackagingRule
 } from '@/hooks/useMaterials';
-import AutomationWizard from '@/components/admin/AutomationWizard';
+import MaterialSetupAssistant from '@/components/admin/MaterialSetupAssistant';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -327,19 +327,19 @@ export default function AdminMaterialsSimplified() {
         </Card>
       )}
 
-      {/* Automation Wizard */}
-      <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/30">
+      {/* Setup Assistant */}
+      <Card className="bg-muted/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Wand2 className="h-5 w-5" />
-            Sistema de Automação Inteligente
+            <Settings className="h-5 w-5" />
+            Setup Inicial dos Materiais
           </CardTitle>
           <CardDescription>
-            Configure uma vez e deixe o sistema gerenciar automaticamente receitas, preços e materiais
+            Configure quais materiais serão usados como frascos e etiquetas padrão
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AutomationWizard />
+          <MaterialSetupAssistant />
         </CardContent>
       </Card>
 

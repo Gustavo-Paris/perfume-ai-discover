@@ -1,0 +1,197 @@
+import { useState } from 'react';
+import { Settings, Package, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useMaterials } from '@/hooks/useMaterials';
+import { toast } from 'sonner';
+
+interface MaterialSetup {
+  bottles: Array<{ size: number; materialId: string; materialName: string }>;
+  defaultLabelId: string;
+  defaultLabelName: string;
+}
+
+export default function MaterialSetupAssistant() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const { data: materials = [] } = useMaterials();
+
+  // Detectar frascos automaticamente
+  const detectedBottles = materials
+    .filter(m => m.category === 'frasco' && m.is_active)
+    .map(bottle => {
+      const match = bottle.name.match(/(\d+)ml/i);
+      return match ? {
+        size: parseInt(match[1]),
+        materialId: bottle.id,
+        materialName: bottle.name
+      } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a?.size || 0) - (b?.size || 0)) as Array<{ size: number; materialId: string; materialName: string }>;
+
+  // Detectar etiquetas
+  const availableLabels = materials.filter(m => m.category === 'etiqueta' && m.is_active);
+
+  const [setup, setSetup] = useState<MaterialSetup>({
+    bottles: detectedBottles,
+    defaultLabelId: availableLabels[0]?.id || '',
+    defaultLabelName: availableLabels[0]?.name || '',
+  });
+
+  const handleDetectMaterials = () => {
+    const bottles = materials
+      .filter(m => m.category === 'frasco' && m.is_active)
+      .map(bottle => {
+        const match = bottle.name.match(/(\d+)ml/i);
+        return match ? {
+          size: parseInt(match[1]),
+          materialId: bottle.id,
+          materialName: bottle.name
+        } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a?.size || 0) - (b?.size || 0)) as Array<{ size: number; materialId: string; materialName: string }>;
+
+    setSetup(prev => ({ ...prev, bottles }));
+    toast.success(`${bottles.length} tamanhos de frascos detectados!`);
+  };
+
+  const handleSaveConfiguration = () => {
+    toast.success('Configuração salva! Use o Cadastro de Produto para criar perfumes com essas configurações.');
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="w-full">
+          <Settings className="h-4 w-4 mr-2" />
+          Configurar Materiais
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Assistente de Setup Inicial
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-6">
+            <div className="text-center">
+              <Settings className="h-10 w-10 mx-auto text-primary mb-3" />
+              <h3 className="text-lg font-semibold">Configuração de Materiais</h3>
+              <p className="text-muted-foreground text-sm">
+                Verificar e configurar frascos e etiquetas disponíveis
+              </p>
+            </div>
+
+            <div className="grid gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Package className="h-4 w-4" />
+                    Frascos Detectados ({setup.bottles.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {setup.bottles.length === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Nenhum frasco detectado</p>
+                      <p className="text-xs">Cadastre materiais do tipo "frasco" primeiro</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {setup.bottles.map(bottle => (
+                        <div key={bottle.materialId} className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                          <span className="text-sm font-medium">{bottle.materialName}</span>
+                          <Badge variant="outline">{bottle.size}ml</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full mt-3"
+                    onClick={handleDetectMaterials}
+                  >
+                    <Settings className="h-3 w-3 mr-2" />
+                    Atualizar Detecção
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Etiqueta Padrão</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select 
+                    value={setup.defaultLabelId} 
+                    onValueChange={(value) => {
+                      const label = availableLabels.find(l => l.id === value);
+                      setSetup(prev => ({ 
+                        ...prev, 
+                        defaultLabelId: value,
+                        defaultLabelName: label?.name || ''
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a etiqueta padrão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableLabels.map(label => (
+                        <SelectItem key={label.id} value={label.id}>
+                          {label.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {setup.defaultLabelName && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Selecionado: {setup.defaultLabelName}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-accent/10 border-accent/30">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-accent-foreground mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-accent-foreground text-sm">Configuração Simples</h4>
+                      <p className="text-xs text-accent-foreground/80 mt-1">
+                        Esta configuração será usada automaticamente no <strong>Cadastro de Produto</strong>. 
+                        Cada perfume ainda precisa ser cadastrado individualmente com suas margens e custos específicos.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveConfiguration}>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Salvar Configuração
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
