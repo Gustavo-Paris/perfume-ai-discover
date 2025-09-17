@@ -17,6 +17,8 @@ import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
 import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
+import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
+import { MarginValidator } from '@/components/admin/MarginValidator';
 
 const AdminPerfumes = () => {
   const { data: perfumes, isLoading, refetch } = usePerfumes();
@@ -203,7 +205,14 @@ const AdminPerfumes = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6">
+      {/* Validador de margem para debugging */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-6">
+          <MarginValidator />
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gerenciar Perfumes</h1>
         <div className="flex gap-2">
@@ -403,7 +412,7 @@ const AdminPerfumes = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
-                      {((perfume as any).target_margin_percentage * 100 || 200).toFixed(0)}%
+                      {formatMarginDisplay((perfume as any).target_margin_percentage)}
                     </Badge>
                   </TableCell>
                   <TableCell>

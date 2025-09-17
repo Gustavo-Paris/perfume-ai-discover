@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
+import { decimalToPercentage, formatMarginDisplay, isValidMargin } from '@/utils/marginHelpers';
 
 interface PerfumeMarginEditorProps {
   perfume: {
@@ -17,40 +18,55 @@ interface PerfumeMarginEditorProps {
 }
 
 export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
-  // PADRÃO: target_margin_percentage está como decimal no BD (ex: 2.0 = 200%)
-  // Interface mostra como porcentagem para o usuário
-  const currentMarginPercent = (perfume.target_margin_percentage || 2.0) * 100;
+  // Converter decimal do banco para porcentagem da interface
+  const initialMargin = decimalToPercentage(perfume.target_margin_percentage || 2.0);
   
   const [isEditing, setIsEditing] = useState(false);
-  const [marginValue, setMarginValue] = useState(currentMarginPercent);
+  const [marginValue, setMarginValue] = useState(initialMargin);
+  const [error, setError] = useState<string>('');
+  
   const updateMargin = useUpdatePerfumeMargin();
   
   // Buscar preços dinâmicos da nova estrutura
   const { prices, availableSizes, isLoading } = usePerfumePricesObject(perfume.id);
 
   const handleSave = async () => {
+    // Validar margem
+    if (!isValidMargin(marginValue)) {
+      setError('Margem deve estar entre 50% e 500%');
+      return;
+    }
+    
+    setError('');
+    
     try {
-      // Converter de porcentagem para decimal antes de enviar
-      const marginAsDecimal = marginValue / 100;
-      
-      console.log('Salvando margem:', { 
-        marginPercent: marginValue, 
-        marginDecimal: marginAsDecimal 
-      });
-      
+      // Hook já converte porcentagem para decimal internamente
       await updateMargin.mutateAsync({
         perfumeId: perfume.id,
-        newMarginPercentage: marginAsDecimal
+        newMarginPercentage: marginValue // Enviando como porcentagem
       });
       setIsEditing(false);
     } catch (error) {
       console.error('Erro ao salvar margem:', error);
+      setError('Erro ao atualizar margem');
     }
   };
 
   const handleCancel = () => {
-    setMarginValue(currentMarginPercent);
+    setMarginValue(initialMargin);
+    setError('');
     setIsEditing(false);
+  };
+
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || 0;
+    setMarginValue(value);
+    
+    if (!isValidMargin(value)) {
+      setError('Margem deve estar entre 50% e 500%');
+    } else {
+      setError('');
+    }
   };
 
   return (
@@ -64,37 +80,42 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
         </div>
         <div className="flex items-center gap-2">
           {isEditing ? (
-            <>
-              <Input
-                type="number"
-                value={marginValue}
-                onChange={(e) => setMarginValue(parseFloat(e.target.value) || 0)}
-                className="w-24 h-8"
-                min="50"
-                max="500"
-                step="10"
-                placeholder="200"
-              />
-              <span className="text-sm text-muted-foreground">%</span>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={updateMargin.isPending}
-              >
-                <Save className="h-3 w-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCancel}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={marginValue}
+                  onChange={handleValueChange}
+                  className={`w-24 h-8 ${error ? 'border-red-500' : ''}`}
+                  min="50"
+                  max="500"
+                  step="10"
+                  placeholder="200"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={updateMargin.isPending || !!error}
+                >
+                  <Save className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancel}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              {error && (
+                <p className="text-xs text-red-500">{error}</p>
+              )}
+            </div>
           ) : (
             <>
               <Badge variant="outline">
-                {currentMarginPercent.toFixed(0)}% margem
+                {formatMarginDisplay(perfume.target_margin_percentage)}
               </Badge>
               <Button
                 size="sm"
@@ -107,6 +128,13 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
           )}
         </div>
       </div>
+
+      {/* Status de atualização */}
+      {updateMargin.isPending && (
+        <div className="text-sm text-blue-600">
+          Recalculando preços automaticamente...
+        </div>
+      )}
 
       {/* Preços Dinâmicos */}
       <div className="space-y-2">
