@@ -3349,15 +3349,23 @@ export type Database = {
         Returns: string
       }
       log_security_event: {
-        Args: {
-          event_description_param: string
-          event_type_param: string
-          ip_address_param?: unknown
-          metadata_param?: Json
-          risk_level_param?: string
-          user_agent_param?: string
-          user_uuid: string
-        }
+        Args:
+          | {
+              event_description_param: string
+              event_type_param: string
+              ip_address_param?: unknown
+              metadata_param?: Json
+              risk_level_param?: string
+              user_agent_param?: string
+              user_uuid: string
+            }
+          | {
+              p_description: string
+              p_event_type: string
+              p_metadata?: Json
+              p_risk_level?: string
+              p_user_id: string
+            }
         Returns: string
       }
       log_unauthorized_company_access: {
