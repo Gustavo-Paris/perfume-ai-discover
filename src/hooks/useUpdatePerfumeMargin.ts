@@ -12,11 +12,18 @@ export const useUpdatePerfumeMargin = () => {
 
   return useMutation({
     mutationFn: async ({ perfumeId, newMarginPercentage }: UpdateMarginParams) => {
-      console.log('Updating margin:', { perfumeId, newMarginPercentage }); // Debug log
+      // Converter porcentagem para decimal (ex: 200 -> 2.0)
+      const marginAsDecimal = newMarginPercentage / 100;
+      
+      console.log('Updating margin:', { 
+        perfumeId, 
+        originalPercentage: newMarginPercentage,
+        marginAsDecimal 
+      });
       
       const { data, error } = await supabase.rpc('update_perfume_margin', {
         perfume_uuid: perfumeId,
-        new_margin_percentage: newMarginPercentage
+        new_margin_percentage: marginAsDecimal
       });
 
       if (error) {
@@ -24,7 +31,7 @@ export const useUpdatePerfumeMargin = () => {
         throw error;
       }
 
-      console.log('Margin updated successfully:', data); // Debug log
+      console.log('Margin updated successfully'); 
       return data;
     },
     onSuccess: (_, { perfumeId }) => {
