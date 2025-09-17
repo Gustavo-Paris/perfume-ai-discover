@@ -17,6 +17,13 @@ import { useActivePromotionByPerfume, calculatePromotionalPrice } from '@/hooks/
 import PromotionBadge from '@/components/promotions/PromotionBadge';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 
+interface PriceInfo {
+  original: number;
+  promotional: number;
+  hasDiscount: boolean;
+  needsCalculation?: boolean;
+}
+
 interface PerfumeCardProps {
   perfume: Perfume;
 }
@@ -55,7 +62,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const imageUrl = perfume.image_url || `https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop&crop=center&q=80`;
 
   // Calcular preços promocionais se houver promoção ativa - versão dinâmica
-  const getDisplayPrice = (size: number) => {
+  const getDisplayPrice = (size: number): PriceInfo => {
     // Primeiro tentar preços dinâmicos da nova tabela
     let originalPrice = dynamicPrices[size];
     
@@ -66,8 +73,15 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                      size === 10 ? perfume.price_10ml : 0;
     }
     
-    // Check if price exists and is a positive number
-    if (!originalPrice || typeof originalPrice !== 'number' || originalPrice <= 0) return null;
+    // Se não há preço disponível, marcar como necessitando cálculo
+    if (!originalPrice || typeof originalPrice !== 'number' || originalPrice <= 0) {
+      return {
+        original: 0,
+        promotional: 0,
+        hasDiscount: false,
+        needsCalculation: true
+      };
+    }
 
     if (activePromotion) {
       const promotionalField = size === 2 ? 'promotional_price_2ml' : 
@@ -103,14 +117,16 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     };
   };
 
-  // Calcular preços para todos os tamanhos disponíveis
+  // Calcular preços para todos os tamanhos disponíveis (incluindo os sem preço)
   const sizesWithPrices = availableSizes.map(size => ({
     size,
     priceInfo: getDisplayPrice(size)
-  })).filter(item => item.priceInfo !== null);
+  }));
   
-  // Calculate the lowest available price for display
-  const availablePrices = sizesWithPrices.map(item => item.priceInfo!.promotional).filter(price => price > 0);
+  // Calculate the lowest available price for display (only priced items)
+  const availablePrices = sizesWithPrices
+    .filter(item => !item.priceInfo?.needsCalculation && item.priceInfo?.promotional > 0)
+    .map(item => item.priceInfo!.promotional);
   const basePrice = availablePrices.length > 0 ? Math.min(...availablePrices) : 0;
 
   return (
@@ -231,16 +247,29 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
               <Tooltip key={size}>
                 <TooltipTrigger asChild>
                   <Button 
-                    onClick={(e) => handleQuickAdd(e, size)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
+                    onClick={(e) => priceInfo?.needsCalculation ? e.preventDefault() : handleQuickAdd(e, size)}
+                    className={`flex-1 ${
+                      priceInfo?.needsCalculation 
+                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                        : 'bg-navy hover:bg-navy/90 text-white'
+                    } font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5`}
                     size="sm"
+                    disabled={priceInfo?.needsCalculation}
                   >
-                    <Plus className="h-3 w-3" />
-                    <span>{size}ml</span>
+                    {priceInfo?.needsCalculation ? (
+                      <span className="text-xs">Calc</span>
+                    ) : (
+                      <>
+                        <Plus className="h-3 w-3" />
+                        <span>{size}ml</span>
+                      </>
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {priceInfo!.hasDiscount ? (
+                  {priceInfo?.needsCalculation ? (
+                    <p>Preço a calcular - {size}ml</p>
+                  ) : priceInfo!.hasDiscount ? (
                     <div className="text-center">
                       <p className="text-red-600 font-bold">
                         R$ {priceInfo!.promotional.toFixed(2).replace('.', ',')}

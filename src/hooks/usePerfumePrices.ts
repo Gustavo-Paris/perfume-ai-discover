@@ -98,13 +98,15 @@ export const useCalculateDynamicPrices = () => {
 // Hook utilitário para converter array de preços em objeto
 export const usePerfumePricesObject = (perfumeId?: string) => {
   const { data: prices, ...rest } = usePerfumePrices(perfumeId);
+  const { data: allSizes } = useAvailableSizes();
   
   const pricesObject = prices?.reduce((acc, price) => {
     acc[price.size_ml] = price.price;
     return acc;
   }, {} as DynamicPerfumePrices) || {};
   
-  const availableSizes = prices?.map(p => p.size_ml).sort((a, b) => a - b) || [];
+  // Sempre usar todos os tamanhos configurados, não apenas os que têm preço
+  const availableSizes = allSizes || [];
   
   return {
     prices: pricesObject,
