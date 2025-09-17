@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, Eye } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Perfume } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -157,24 +157,13 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           
           {/* Overlay Actions */}
           <div className="absolute inset-0 bg-navy/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute top-4 right-4 space-y-2">
+            <div className="absolute top-4 right-4">
               <WishlistButton 
                 perfumeId={perfume.id} 
                 variant="icon" 
                 size="sm"
                 className="bg-white/90 hover:bg-white shadow-lg"
               />
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-8 w-8 bg-white/90 hover:bg-white text-navy border-0 shadow-lg"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/perfume/${perfume.id}`);
-                }}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
@@ -196,7 +185,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           )}
 
           {/* Gender Badge */}
-          <div className={`absolute ${activePromotion ? 'bottom-4' : 'top-4'} ${activePromotion ? 'right-4' : 'left-4'}`}>
+          <div className="absolute top-4 left-4">
             <Badge 
               variant="secondary" 
               className={`
