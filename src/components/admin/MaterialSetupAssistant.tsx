@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useMaterials } from '@/hooks/useMaterials';
 import { useMaterialConfigurations, useSaveMaterialConfiguration } from '@/hooks/useMaterialConfigurations';
+import { useRecalculateAllPerfumePrices } from '@/hooks/useRecalculateAllPerfumePrices';
 import { toast } from 'sonner';
 
 interface MaterialSetup {
@@ -24,6 +25,7 @@ export default function MaterialSetupAssistant() {
   const { data: materials = [] } = useMaterials();
   const { data: currentConfig } = useMaterialConfigurations();
   const saveMutation = useSaveMaterialConfiguration();
+  const recalculateAllPrices = useRecalculateAllPerfumePrices();
 
   // Detectar frascos automaticamente
   const detectedBottles = materials
@@ -85,6 +87,11 @@ export default function MaterialSetupAssistant() {
 
   const handleSaveConfiguration = async () => {
     try {
+      // Detect new sizes compared to current configuration
+      const currentSizes = currentConfig?.bottle_materials.map(b => b.size_ml) || [];
+      const newSizes = setup.bottles.map(b => b.size).filter(size => !currentSizes.includes(size));
+      
+      // Save configuration first
       await saveMutation.mutateAsync({
         bottle_materials: setup.bottles.map(b => ({
           size_ml: b.size,
@@ -95,6 +102,13 @@ export default function MaterialSetupAssistant() {
         default_label_name: setup.defaultLabelName || null,
         auto_detect_enabled: setup.autoDetectEnabled,
       });
+
+      // If there are new sizes, trigger automatic price recalculation
+      if (newSizes.length > 0) {
+        toast.info(`🔄 Recalculando preços para ${newSizes.length} novo(s) tamanho(s)...`);
+        await recalculateAllPrices.mutateAsync(newSizes);
+      }
+      
       setIsOpen(false);
     } catch (error) {
       console.error('Erro ao salvar:', error);
@@ -252,10 +266,12 @@ export default function MaterialSetupAssistant() {
             </Button>
             <Button 
               onClick={handleSaveConfiguration}
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || recalculateAllPrices.isPending}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
-              {saveMutation.isPending ? 'Salvando...' : 'Salvar Configuração'}
+              {saveMutation.isPending ? 'Salvando...' : 
+               recalculateAllPrices.isPending ? 'Recalculando preços...' :
+               'Salvar Configuração'}
             </Button>
           </div>
         </div>
