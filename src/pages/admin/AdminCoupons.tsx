@@ -43,6 +43,28 @@ export default function AdminCoupons() {
     setEditingCoupon(null);
   };
 
+  const handleEdit = (coupon: Coupon) => {
+    setFormData({
+      code: coupon.code,
+      type: coupon.type,
+      value: coupon.value.toString(),
+      max_uses: coupon.max_uses?.toString() || '',
+      min_order_value: coupon.min_order_value.toString(),
+      expires_at: coupon.expires_at ? coupon.expires_at.split('T')[0] : '',
+      is_active: coupon.is_active
+    });
+    setEditingCoupon(coupon);
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleDelete = async (coupon: Coupon) => {
+    try {
+      await deleteCoupon.mutateAsync(coupon.code);
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -163,6 +185,50 @@ export default function AdminCoupons() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="max_uses">Limite de Usos</Label>
+                    <Input
+                      id="max_uses"
+                      type="number"
+                      value={formData.max_uses}
+                      onChange={(e) => setFormData({ ...formData, max_uses: e.target.value })}
+                      placeholder="Deixe vazio para ilimitado"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="min_order_value">Valor Mínimo do Pedido (R$)</Label>
+                    <Input
+                      id="min_order_value"
+                      type="number"
+                      step="0.01"
+                      value={formData.min_order_value}
+                      onChange={(e) => setFormData({ ...formData, min_order_value: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="expires_at">Data de Expiração</Label>
+                  <Input
+                    id="expires_at"
+                    type="date"
+                    value={formData.expires_at}
+                    onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="is_active">Cupom Ativo</Label>
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                </div>
+
                 <div className="flex gap-2 pt-4">
                   <Button
                     type="button"
@@ -203,11 +269,68 @@ export default function AdminCoupons() {
                           : `R$ ${coupon.value.toFixed(2)} de desconto`
                         }
                       </p>
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                        {coupon.max_uses && (
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {coupon.current_uses}/{coupon.max_uses} usos
+                          </span>
+                        )}
+                        {coupon.min_order_value > 0 && (
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3" />
+                            Min: R$ {coupon.min_order_value.toFixed(2)}
+                          </span>
+                        )}
+                        {coupon.expires_at && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Expira: {new Date(coupon.expires_at).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEdit(coupon)}
+                      disabled={updateCoupon.isPending}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={deleteCoupon.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir o cupom <strong>{coupon.code}</strong>? 
+                            Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(coupon)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </CardContent>
             </Card>
