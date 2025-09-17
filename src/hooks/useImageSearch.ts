@@ -53,7 +53,9 @@ export const useImageSearch = () => {
         .map(perfume => ({
           perfume: {
             ...perfume,
-            gender: perfume.gender as 'masculino' | 'feminino' | 'unissex'
+            gender: perfume.gender as 'masculino' | 'feminino' | 'unissex',
+            product_type: (perfume.product_type || 'decant') as 'decant' | 'miniature' | 'both',
+            available_sizes: Array.isArray(perfume.available_sizes) ? perfume.available_sizes as number[] : [5, 10]
           },
           confidence: Math.random() * 0.6 + 0.4, // 0.4 - 1.0
           matchedFeatures: mockFeatures.filter(() => Math.random() > 0.5)

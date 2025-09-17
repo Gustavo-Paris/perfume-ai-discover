@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
+import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 
 interface PerfumeMarginEditorProps {
   perfume: {
@@ -11,9 +12,6 @@ interface PerfumeMarginEditorProps {
     name: string;
     brand: string;
     target_margin_percentage?: number;
-    price_2ml?: number;
-    price_5ml?: number;
-    price_10ml?: number;
     avg_cost_per_ml?: number;
   };
 }
@@ -22,6 +20,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [marginValue, setMarginValue] = useState(perfume.target_margin_percentage || 200);
   const updateMargin = useUpdatePerfumeMargin();
+  const { prices, availableSizes, isLoading } = usePerfumePricesObject(perfume.id);
 
   const handleSave = async () => {
     try {
@@ -92,19 +91,24 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
         </div>
       </div>
 
+      {/* Mostrar preços dinâmicos da nova tabela */}
       <div className="grid grid-cols-3 gap-4 text-sm">
-        <div className="text-center p-2 bg-muted rounded">
-          <p className="text-muted-foreground">2ml</p>
-          <p className="font-medium">R$ {(perfume.price_2ml || 0).toFixed(2)}</p>
-        </div>
-        <div className="text-center p-2 bg-muted rounded">
-          <p className="text-muted-foreground">5ml</p>
-          <p className="font-medium">R$ {(perfume.price_5ml || 0).toFixed(2)}</p>
-        </div>
-        <div className="text-center p-2 bg-muted rounded">
-          <p className="text-muted-foreground">10ml</p>
-          <p className="font-medium">R$ {(perfume.price_10ml || 0).toFixed(2)}</p>
-        </div>
+        {isLoading ? (
+          <div className="col-span-3 text-center text-muted-foreground">
+            Carregando preços...
+          </div>
+        ) : availableSizes.length > 0 ? (
+          availableSizes.slice(0, 3).map(size => (
+            <div key={size} className="text-center p-2 bg-muted rounded">
+              <p className="text-muted-foreground">{size}ml</p>
+              <p className="font-medium">R$ {(prices[size] || 0).toFixed(2)}</p>
+            </div>
+          ))
+        ) : (
+          <div className="col-span-3 text-center text-muted-foreground">
+            Nenhum preço calculado
+          </div>
+        )}
       </div>
     </div>
   );

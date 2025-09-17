@@ -1697,6 +1697,7 @@ export type Database = {
       }
       perfumes: {
         Row: {
+          available_sizes: Json | null
           avg_cost_per_ml: number | null
           base_notes: string[] | null
           brand: string
@@ -1714,10 +1715,13 @@ export type Database = {
           price_2ml: number | null
           price_5ml: number | null
           price_full: number
+          product_type: string | null
+          source_size_ml: number | null
           target_margin_percentage: number | null
           top_notes: string[] | null
         }
         Insert: {
+          available_sizes?: Json | null
           avg_cost_per_ml?: number | null
           base_notes?: string[] | null
           brand: string
@@ -1735,10 +1739,13 @@ export type Database = {
           price_2ml?: number | null
           price_5ml?: number | null
           price_full: number
+          product_type?: string | null
+          source_size_ml?: number | null
           target_margin_percentage?: number | null
           top_notes?: string[] | null
         }
         Update: {
+          available_sizes?: Json | null
           avg_cost_per_ml?: number | null
           base_notes?: string[] | null
           brand?: string
@@ -1756,6 +1763,8 @@ export type Database = {
           price_2ml?: number | null
           price_5ml?: number | null
           price_full?: number
+          product_type?: string | null
+          source_size_ml?: number | null
           target_margin_percentage?: number | null
           top_notes?: string[] | null
         }

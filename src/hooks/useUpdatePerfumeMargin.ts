@@ -29,6 +29,8 @@ export const useUpdatePerfumeMargin = () => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['perfumes'] });
       queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
+      queryClient.invalidateQueries({ queryKey: ['perfume-prices'] });
+      queryClient.invalidateQueries({ queryKey: ['available-sizes'] });
     },
     onError: (error) => {
       console.error('Failed to update margin:', error);
