@@ -115,7 +115,7 @@ const AdminProductCadastro = () => {
   // Calcular custo por ml automaticamente
   const costPerMl = lotData.qty_ml > 0 ? lotData.total_cost / lotData.qty_ml : 0;
 
-  // Função para calcular preços usando a função do banco
+  // Função para calcular preços usando a nova função dinâmica
   const calculatePricesWithMaterials = async () => {
     if (!currentPerfumeId || costPerMl === 0) return null;
 
@@ -123,46 +123,32 @@ const AdminProductCadastro = () => {
       // Usar tamanhos das configurações ou padrão se não houver
       const sizes = materialConfig?.bottle_materials?.map(bm => bm.size_ml) || [2, 5, 10];
       
-      // Buscar materiais de embalagem
-      const { data: materials } = await supabase
-        .from('materials')
-        .select('*')
-        .eq('type', 'input')
-        .eq('is_active', true)
-        .in('category', ['frasco', 'etiqueta']);
-
-      const getPackagingCost = (sizeMl: number) => {
-        if (!materials) return 0;
-        
-        const frasco = materials.find(m => 
-          m.category === 'frasco' && m.name.includes(`${sizeMl}ml`)
-        );
-        const etiqueta = materials.find(m => m.category === 'etiqueta');
-        
-        return (frasco?.cost_per_unit || 0) + (etiqueta?.cost_per_unit || 0);
-      };
-
-      // Calcular preços para cada tamanho
-      const prices = sizes.map(size => {
-        const perfumeCost = costPerMl * size;
-        const packagingCost = getPackagingCost(size);
-        const totalCost = perfumeCost + packagingCost;
-        const margin = 1 + (marginPercentage / 100);
-        const suggestedPrice = totalCost * margin;
-        
-        return {
-          size,
-          perfumeCost,
-          packagingCost,
-          totalCost,
-          suggestedPrice
-        };
+      // Usar nova função RPC para calcular preços dinamicamente
+      const { data: calculatedPrices, error } = await supabase.rpc('calculate_dynamic_product_costs', {
+        perfume_uuid: currentPerfumeId,
+        sizes_array: sizes
       });
+
+      if (error) {
+        console.error('Error calculating prices:', error);
+        return null;
+      }
+
+      if (!calculatedPrices || calculatedPrices.length === 0) return null;
+
+      // Converter resultado para formato compatível
+      const prices = calculatedPrices.map((calc: any) => ({
+        sizeMl: calc.size_ml,
+        perfumeCost: calc.perfume_cost_per_unit,
+        packagingCost: calc.materials_cost_per_unit,
+        totalCost: calc.total_cost_per_unit,
+        suggestedPrice: calc.suggested_price
+      }));
 
       // Criar estrutura dinâmica de preços
       const pricesObj = {} as any;
-      prices.forEach((price, index) => {
-        pricesObj[`price_${sizes[index]}ml`] = price.suggestedPrice;
+      prices.forEach((price) => {
+        pricesObj[`price_${price.sizeMl}ml`] = price.suggestedPrice;
       });
 
       return {
@@ -170,14 +156,16 @@ const AdminProductCadastro = () => {
         sizes: sizes,
         prices: prices,
         perfume_cost: prices[0]?.perfumeCost || 0,
-        materials_cost: 0, // Sem materiais adicionais por enquanto
+        materials_cost: 0,
         packaging_cost: prices[0]?.packagingCost || 0,
         total_cost_per_unit: prices[0]?.totalCost || 0,
       };
     } catch (error) {
       console.error('Erro ao calcular preços:', error);
+      toast.error('Erro ao calcular preços');
+      return null;
     }
-    return null;
+  };
   };
 
   // Calcular custo médio se há lotes existentes
@@ -321,8 +309,20 @@ const AdminProductCadastro = () => {
 
     setLoading(true);
     try {
-      // Atualizar perfume com preços calculados (usando tabela temporária se necessário)
-      // Como removemos os campos de preço da tabela, vamos criar uma tabela de preços dinâmica
+      // Salvar preços dinamicamente na nova tabela
+      if (calculatedPrices.prices && calculatedPrices.prices.length > 0) {
+        const priceInserts = calculatedPrices.prices.map((price: any) => ({
+          perfume_id: currentPerfumeId,
+          size_ml: price.sizeMl,
+          price: price.suggestedPrice
+        }));
+
+        const { error: pricesError } = await supabase
+          .from('perfume_prices')
+          .insert(priceInserts);
+
+        if (pricesError) throw pricesError;
+      }
       
       setStep('complete');
       toast({

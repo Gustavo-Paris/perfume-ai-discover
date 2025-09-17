@@ -1606,6 +1606,41 @@ export type Database = {
           },
         ]
       }
+      perfume_prices: {
+        Row: {
+          created_at: string
+          id: string
+          perfume_id: string
+          price: number
+          size_ml: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          perfume_id: string
+          price?: number
+          size_ml: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          perfume_id?: string
+          price?: number
+          size_ml?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfume_prices_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfume_similarities: {
         Row: {
           behavior_similarity: number | null
@@ -2901,6 +2936,16 @@ export type Database = {
         Args: { coupon_code: string; order_uuid: string }
         Returns: boolean
       }
+      calculate_dynamic_product_costs: {
+        Args: { perfume_uuid: string; sizes_array: number[] }
+        Returns: {
+          materials_cost_per_unit: number
+          perfume_cost_per_unit: number
+          size_ml: number
+          suggested_price: number
+          total_cost_per_unit: number
+        }[]
+      }
       calculate_notes_similarity: {
         Args: { perfume_a_id: string; perfume_b_id: string }
         Returns: number
@@ -3087,6 +3132,13 @@ export type Database = {
           nome_fantasia: string
         }[]
       }
+      get_perfume_dynamic_prices: {
+        Args: { perfume_uuid: string }
+        Returns: {
+          price: number
+          size_ml: number
+        }[]
+      }
       get_perfume_recommendations: {
         Args: { limit_count?: number; min_score?: number; perfume_uuid: string }
         Returns: {
@@ -3246,6 +3298,14 @@ export type Database = {
       recalculate_all_prices: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      set_perfume_price: {
+        Args: {
+          perfume_uuid: string
+          price_param: number
+          size_ml_param: number
+        }
+        Returns: string
       }
       trigger_email_notification: {
         Args: { notification_type: string; record_id: string }

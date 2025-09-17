@@ -15,6 +15,7 @@ import { prefetchRelatedData } from '@/utils/queryPrefetch';
 import { WishlistButton } from '@/components/wishlist/WishlistButton';
 import { useActivePromotionByPerfume, calculatePromotionalPrice } from '@/hooks/usePromotions';
 import PromotionBadge from '@/components/promotions/PromotionBadge';
+import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 
 interface PerfumeCardProps {
   perfume: Perfume;
@@ -27,8 +28,11 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   
   // Buscar promoção ativa para este perfume
   const { data: activePromotion } = useActivePromotionByPerfume(perfume.id);
+  
+  // Buscar preços dinâmicos do perfume
+  const { prices: dynamicPrices, availableSizes } = usePerfumePricesObject(perfume.id);
 
-  const handleQuickAdd = (e: React.MouseEvent, size: 2 | 5 | 10) => {
+  const handleQuickAdd = (e: React.MouseEvent, size: number) => {
     e.stopPropagation();
     addToCart({
       perfume_id: perfume.id,
@@ -50,18 +54,26 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   // Use a high-quality perfume image from Unsplash as fallback
   const imageUrl = perfume.image_url || `https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=500&fit=crop&crop=center&q=80`;
 
-  // Calcular preços promocionais se houver promoção ativa
-  const getDisplayPrice = (size: 2 | 5 | 10) => {
-    const originalPrice = size === 2 ? perfume.price_2ml : 
-                         size === 5 ? perfume.price_5ml : perfume.price_10ml;
+  // Calcular preços promocionais se houver promoção ativa - versão dinâmica
+  const getDisplayPrice = (size: number) => {
+    // Primeiro tentar preços dinâmicos da nova tabela
+    let originalPrice = dynamicPrices[size];
+    
+    // Fallback para preços hardcoded (compatibilidade)
+    if (!originalPrice) {
+      originalPrice = size === 2 ? perfume.price_2ml : 
+                     size === 5 ? perfume.price_5ml : 
+                     size === 10 ? perfume.price_10ml : 0;
+    }
     
     // Check if price exists and is a positive number
     if (!originalPrice || typeof originalPrice !== 'number' || originalPrice <= 0) return null;
 
     if (activePromotion) {
       const promotionalField = size === 2 ? 'promotional_price_2ml' : 
-                               size === 5 ? 'promotional_price_5ml' : 'promotional_price_10ml';
-      const promotionalPrice = activePromotion[promotionalField];
+                               size === 5 ? 'promotional_price_5ml' : 
+                               size === 10 ? 'promotional_price_10ml' : null;
+      const promotionalPrice = promotionalField ? activePromotion[promotionalField] : null;
       
       if (promotionalPrice) {
         return {
@@ -91,13 +103,15 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     };
   };
 
-  const price2ml = getDisplayPrice(2);
-  const price5ml = getDisplayPrice(5);
-  const price10ml = getDisplayPrice(10);
+  // Calcular preços para todos os tamanhos disponíveis
+  const sizesWithPrices = availableSizes.map(size => ({
+    size,
+    priceInfo: getDisplayPrice(size)
+  })).filter(item => item.priceInfo !== null);
   
   // Calculate the lowest available price for display
-  const availablePrices = [price2ml?.promotional, price5ml?.promotional, price10ml?.promotional].filter(price => price && price > 0);
-  const basePrice = availablePrices.length > 0 ? Math.min(...availablePrices) : (perfume.price_5ml || 0);
+  const availablePrices = sizesWithPrices.map(item => item.priceInfo!.promotional).filter(price => price > 0);
+  const basePrice = availablePrices.length > 0 ? Math.min(...availablePrices) : 0;
 
   return (
     <TooltipProvider>
@@ -194,13 +208,13 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           {/* Price */}
           <div className="flex items-center justify-between">
             <div>
-              {activePromotion && price5ml?.hasDiscount ? (
+              {activePromotion && sizesWithPrices.some(item => item.priceInfo?.hasDiscount) ? (
                 <div className="space-y-1">
                   <p className="font-display font-bold text-lg text-red-600">
                     A partir de R$ {basePrice.toFixed(2).replace('.', ',')}
                   </p>
                   <p className="text-sm text-gray-500 line-through">
-                    R$ {(perfume.price_5ml || 0).toFixed(2).replace('.', ',')}
+                    R$ {sizesWithPrices.find(item => item.priceInfo?.hasDiscount)?.priceInfo?.original.toFixed(2).replace('.', ',') || '0,00'}
                   </p>
                 </div>
               ) : (
@@ -211,92 +225,36 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             </div>
           </div>
 
-          {/* Quick Add Buttons */}
+          {/* Quick Add Buttons - Dynamic */}
           <div className="flex gap-1">
-            {price2ml && (
-              <Tooltip>
+            {sizesWithPrices.map(({ size, priceInfo }) => (
+              <Tooltip key={size}>
                 <TooltipTrigger asChild>
                   <Button 
-                    onClick={(e) => handleQuickAdd(e, 2)}
+                    onClick={(e) => handleQuickAdd(e, size)}
                     className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
                     size="sm"
                   >
                     <Plus className="h-3 w-3" />
-                    <span>2ml</span>
+                    <span>{size}ml</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {price2ml.hasDiscount ? (
+                  {priceInfo!.hasDiscount ? (
                     <div className="text-center">
                       <p className="text-red-600 font-bold">
-                        R$ {price2ml.promotional.toFixed(2).replace('.', ',')}
+                        R$ {priceInfo!.promotional.toFixed(2).replace('.', ',')}
                       </p>
                       <p className="text-xs text-gray-500 line-through">
-                        R$ {price2ml.original.toFixed(2).replace('.', ',')}
+                        R$ {priceInfo!.original.toFixed(2).replace('.', ',')}
                       </p>
                     </div>
                   ) : (
-                    <p>R$ {price2ml.promotional.toFixed(2).replace('.', ',')}</p>
+                    <p>R$ {priceInfo!.promotional.toFixed(2).replace('.', ',')}</p>
                   )}
                 </TooltipContent>
               </Tooltip>
-            )}
-            {price5ml && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={(e) => handleQuickAdd(e, 5)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
-                    size="sm"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>5ml</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {price5ml.hasDiscount ? (
-                    <div className="text-center">
-                      <p className="text-red-600 font-bold">
-                        R$ {price5ml.promotional.toFixed(2).replace('.', ',')}
-                      </p>
-                      <p className="text-xs text-gray-500 line-through">
-                        R$ {price5ml.original.toFixed(2).replace('.', ',')}
-                      </p>
-                    </div>
-                  ) : (
-                    <p>R$ {price5ml.promotional.toFixed(2).replace('.', ',')}</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {price10ml && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={(e) => handleQuickAdd(e, 10)}
-                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
-                    size="sm"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>10ml</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {price10ml.hasDiscount ? (
-                    <div className="text-center">
-                      <p className="text-red-600 font-bold">
-                        R$ {price10ml.promotional.toFixed(2).replace('.', ',')}
-                      </p>
-                      <p className="text-xs text-gray-500 line-through">
-                        R$ {price10ml.original.toFixed(2).replace('.', ',')}
-                      </p>
-                    </div>
-                  ) : (
-                    <p>R$ {price10ml.promotional.toFixed(2).replace('.', ',')}</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            )}
+            ))}
           </div>
         </div>
       </motion.div>

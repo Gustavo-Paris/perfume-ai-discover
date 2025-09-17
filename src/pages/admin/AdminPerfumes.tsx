@@ -11,9 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { usePerfumes, useCreatePerfume, useUpdatePerfume, useDeletePerfume } from '@/hooks/usePerfumes';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
+import { useAvailableSizes, usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
+import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
 
 const AdminPerfumes = () => {
   const { data: perfumes, isLoading, refetch } = usePerfumes();
@@ -21,6 +23,7 @@ const AdminPerfumes = () => {
   const updatePerfume = useUpdatePerfume();
   const deletePerfume = useDeletePerfume();
   const updateMargin = useUpdatePerfumeMargin();
+  const { data: availableSizes } = useAvailableSizes();
   const { toast } = useToast();
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -307,21 +310,15 @@ const AdminPerfumes = () => {
                       Os preços são calculados automaticamente com base nos custos dos materiais e margem de lucro
                     </p>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {formData.price_2ml && formData.price_2ml > 0 && (
-                      <div className="p-3 border rounded-lg bg-muted/50">
-                        <Label className="text-xs text-muted-foreground">2ml</Label>
-                        <p className="text-lg font-semibold">R$ {formData.price_2ml?.toFixed(2) || '0.00'}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {availableSizes?.map(size => (
+                      <div key={size} className="p-3 border rounded-lg bg-muted/50">
+                        <Label className="text-xs text-muted-foreground">{size}ml</Label>
+                        <p className="text-lg font-semibold">
+                          Calculado automaticamente
+                        </p>
                       </div>
-                    )}
-                    <div className="p-3 border rounded-lg bg-muted/50">
-                      <Label className="text-xs text-muted-foreground">5ml</Label>
-                      <p className="text-lg font-semibold">R$ {formData.price_5ml?.toFixed(2) || '0.00'}</p>
-                    </div>
-                    <div className="p-3 border rounded-lg bg-muted/50">
-                      <Label className="text-xs text-muted-foreground">10ml</Label>
-                      <p className="text-lg font-semibold">R$ {formData.price_10ml?.toFixed(2) || '0.00'}</p>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
@@ -381,13 +378,7 @@ const AdminPerfumes = () => {
                   </TableCell>
                   <TableCell>{perfume.category}</TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      {perfume.price_2ml && perfume.price_2ml > 0 && (
-                        <div>2ml: R$ {perfume.price_2ml}</div>
-                      )}
-                      {perfume.price_5ml && <div>5ml: R$ {perfume.price_5ml}</div>}
-                      {perfume.price_10ml && <div>10ml: R$ {perfume.price_10ml}</div>}
-                    </div>
+                    <PerfumePricesDisplay perfumeId={perfume.id} />
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

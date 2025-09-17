@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import PerfumeCard from '@/components/perfume/PerfumeCard';
 import { usePerfumes } from '@/hooks/usePerfumes';
 import { DatabasePerfume } from '@/types';
+import { useAvailableSizes } from '@/hooks/usePerfumePrices';
 import AdvancedSearchBox from '@/components/search/AdvancedSearchBox';
 import DynamicFilters from '@/components/search/DynamicFilters';
 import { SearchFilters } from '@/hooks/useAdvancedSearch';
@@ -21,6 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const Catalogo = () => {
   const { data: databasePerfumes, isLoading } = usePerfumes();
+  const { data: availableSizes } = useAvailableSizes();
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [sortBy, setSortBy] = useState('name');
@@ -41,11 +43,13 @@ const Catalogo = () => {
       brand: dbPerfume.brand,
       family: dbPerfume.family,
       gender: dbPerfume.gender,
-      size_ml: [50, 100],
+      size_ml: availableSizes || [5, 10], // Use dynamic sizes
       price_full: Number(dbPerfume.price_full),
+      // Legacy compatibility - will be replaced by dynamic prices
       price_2ml: dbPerfume.price_2ml ? Number(dbPerfume.price_2ml) : null,
       price_5ml: dbPerfume.price_5ml ? Number(dbPerfume.price_5ml) : 0,
       price_10ml: dbPerfume.price_10ml ? Number(dbPerfume.price_10ml) : 0,
+      // Dynamic stock based on available sizes
       stock_full: 10,
       stock_5ml: 50,
       stock_10ml: 30,
@@ -54,9 +58,10 @@ const Catalogo = () => {
       top_notes: dbPerfume.top_notes,
       heart_notes: dbPerfume.heart_notes,
       base_notes: dbPerfume.base_notes,
-      created_at: dbPerfume.created_at
+      created_at: dbPerfume.created_at,
+      availableSizes: availableSizes || [5, 10] // New field for dynamic sizes
     }));
-  }, [searchResults, databasePerfumes]);
+  }, [searchResults, databasePerfumes, availableSizes]);
 
   // Get unique values for filters
   const brands = [...new Set(perfumesToShow.map(p => p.brand))];
