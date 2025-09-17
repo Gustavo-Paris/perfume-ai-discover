@@ -180,7 +180,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
 
           {/* Promotion Badge */}
           {activePromotion && (
-            <div className="absolute top-4 left-4 z-10">
+            <div className="absolute bottom-4 left-4 z-10">
               <PromotionBadge 
                 promotion={{
                   id: activePromotion.id,
@@ -196,7 +196,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
           )}
 
           {/* Gender Badge */}
-          <div className={`absolute ${activePromotion ? 'bottom-4' : 'top-4'} left-4`}>
+          <div className={`absolute ${activePromotion ? 'bottom-4' : 'top-4'} ${activePromotion ? 'right-4' : 'left-4'}`}>
             <Badge 
               variant="secondary" 
               className={`
