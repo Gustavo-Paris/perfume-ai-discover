@@ -24,10 +24,11 @@ interface CartContextType {
   updateQuantity: (perfumeId: string, sizeML: number, quantity: number) => Promise<void>;
   removeItem: (perfumeId: string, sizeML: number) => Promise<void>;
   clearCart: () => Promise<void>;
-  getTotal: () => number;
+  getTotal: () => Promise<number>;
   loading: boolean;
   packagingCosts: PackagingCosts | null;
   calculatePackagingCosts: () => Promise<void>;
+  getItemPrice: (perfumeId: string, size: number) => Promise<number>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -487,8 +488,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getTotal = () => {
-    const itemsTotal = items.reduce((total, item) => {
+  const getTotal = async () => {
+    let itemsTotal = 0;
+    
+    for (const item of items) {
       // Tentar usar preços dinâmicos primeiro
       const perfumeWithDynamic = item.perfume as Perfume & { dynamicPrices?: Record<number, number> };
       let price = 0;
@@ -504,11 +507,76 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         else price = item.perfume.price_full || 0; // Para outros tamanhos como fallback
       }
       
-      return total + (price * item.quantity);
-    }, 0);
+      // Verificar se há promoção ativa para este perfume
+      try {
+        const { data: promotion } = await supabase
+          .rpc('get_active_promotion', { perfume_uuid: item.perfume.id });
+        
+        if (promotion && promotion.length > 0) {
+          const activePromotion = promotion[0];
+          
+          // Aplicar preço promocional se disponível para este tamanho
+          if (item.size === 5 && activePromotion.promotional_price_5ml) {
+            price = activePromotion.promotional_price_5ml;
+          } else if (item.size === 10 && activePromotion.promotional_price_10ml) {
+            price = activePromotion.promotional_price_10ml;
+          } else if (activePromotion.promotional_price_full && item.size !== 5 && item.size !== 10) {
+            price = activePromotion.promotional_price_full;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking promotion for item:', error);
+      }
+      
+      itemsTotal += price * item.quantity;
+    }
     
     const packagingTotal = packagingCosts?.total_packaging_cost || 0;
     return itemsTotal + packagingTotal;
+  };
+
+  const getItemPrice = async (perfumeId: string, size: number) => {
+    // Encontrar o item no carrinho
+    const item = items.find(i => i.perfume.id === perfumeId);
+    if (!item) return 0;
+    
+    // Tentar usar preços dinâmicos primeiro
+    const perfumeWithDynamic = item.perfume as Perfume & { dynamicPrices?: Record<number, number> };
+    let price = 0;
+    
+    // Se tem preços dinâmicos, usar eles
+    if (perfumeWithDynamic.dynamicPrices && perfumeWithDynamic.dynamicPrices[size]) {
+      price = perfumeWithDynamic.dynamicPrices[size];
+    } else {
+      // Fallback para preços hardcoded
+      if (size === 2) price = item.perfume.price_2ml || 0;
+      else if (size === 5) price = item.perfume.price_5ml || 0;
+      else if (size === 10) price = item.perfume.price_10ml || 0;
+      else price = item.perfume.price_full || 0;
+    }
+    
+    // Verificar se há promoção ativa para este perfume
+    try {
+      const { data: promotion } = await supabase
+        .rpc('get_active_promotion', { perfume_uuid: perfumeId });
+      
+      if (promotion && promotion.length > 0) {
+        const activePromotion = promotion[0];
+        
+        // Aplicar preço promocional se disponível para este tamanho
+        if (size === 5 && activePromotion.promotional_price_5ml) {
+          price = activePromotion.promotional_price_5ml;
+        } else if (size === 10 && activePromotion.promotional_price_10ml) {
+          price = activePromotion.promotional_price_10ml;
+        } else if (activePromotion.promotional_price_full && size !== 5 && size !== 10) {
+          price = activePromotion.promotional_price_full;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking promotion for item:', error);
+    }
+    
+    return price;
   };
 
   return (
@@ -523,6 +591,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         packagingCosts,
         calculatePackagingCosts,
+        getItemPrice,
       }}
     >
       {children}

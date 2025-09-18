@@ -26,10 +26,23 @@ const Checkout = () => {
   const [orderDraft, setOrderDraft] = useState<OrderDraft | null>(null);
   const [shippingQuotes, setShippingQuotes] = useState<ShippingQuote[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<ShippingQuote | null>(null);
+  const [subtotal, setSubtotal] = useState(0);
   
   const [loading, setLoading] = useState(false);
   const [pointsUsed, setPointsUsed] = useState(0);
   const [pointsDiscount, setPointsDiscount] = useState(0);
+
+  // Calculate subtotal
+  useEffect(() => {
+    const calculateSubtotal = async () => {
+      if (items.length > 0) {
+        const total = await getTotal();
+        setSubtotal(total);
+      }
+    };
+    
+    calculateSubtotal();
+  }, [items, getTotal]);
 
   useEffect(() => {
     if (!user) {
@@ -209,7 +222,7 @@ const Checkout = () => {
 
 
   const getTotalWithShipping = () => {
-    return getTotal() + (selectedShipping?.price || 0) - pointsDiscount;
+    return subtotal + (selectedShipping?.price || 0) - pointsDiscount;
   };
 
   const handlePointsChange = (points: number, discount: number) => {
@@ -355,7 +368,7 @@ const Checkout = () => {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>R$ {getTotal().toFixed(2).replace('.', ',')}</span>
+                    <span>R$ {subtotal.toFixed(2).replace('.', ',')}</span>
                   </div>
                   
                   {selectedShipping && (
@@ -386,7 +399,7 @@ const Checkout = () => {
             {currentStep >= 2 && (
               <div className="mt-4">
                 <PointsRedemption
-                  subtotal={getTotal()}
+                  subtotal={subtotal}
                   onPointsChange={handlePointsChange}
                 />
               </div>

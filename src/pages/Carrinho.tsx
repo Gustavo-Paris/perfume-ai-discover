@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,11 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
+import { useActivePromotionByPerfume } from '@/hooks/usePromotions';
 
 const Carrinho = () => {
-  const { items, updateQuantity, removeItem, getTotal, clearCart, loading } = useCart();
+  const { items, updateQuantity, removeItem, getTotal, clearCart, loading, getItemPrice } = useCart();
+  const [subtotal, setSubtotal] = useState(0);
 
-  const subtotal = getTotal();
+  useEffect(() => {
+    const calculateSubtotal = async () => {
+      const total = await getTotal();
+      setSubtotal(total);
+    };
+    
+    if (items.length > 0) {
+      calculateSubtotal();
+    }
+  }, [items, getTotal]);
+
   const shipping = subtotal >= 299 ? 0 : 15.90;
   const total = subtotal + shipping;
   const pointsToEarn = Math.floor(total);
@@ -19,20 +31,64 @@ const Carrinho = () => {
   const formatPrice = (price: number) => 
     `R$ ${price.toFixed(2).replace('.', ',')}`;
 
-  const getPriceForSize = (perfume: any, size: number) => {
-    // Tentar usar preços dinâmicos primeiro
-    if (perfume.dynamicPrices && perfume.dynamicPrices[size]) {
-      return perfume.dynamicPrices[size];
-    }
+// Componente para mostrar preço com possível promoção
+const ItemPriceDisplay = ({ perfume, size, quantity }: { perfume: any; size: number; quantity: number }) => {
+  const { data: promotion } = useActivePromotionByPerfume(perfume.id);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [originalPrice, setOriginalPrice] = useState(0);
+  const { getItemPrice } = useCart();
+
+  useEffect(() => {
+    const calculatePrices = async () => {
+      // Preço original (sem promoção)
+      let basePrice = 0;
+      if (perfume.dynamicPrices && perfume.dynamicPrices[size]) {
+        basePrice = perfume.dynamicPrices[size];
+      } else {
+        switch (size) {
+          case 2: basePrice = perfume.price_2ml || 0; break;
+          case 5: basePrice = perfume.price_5ml || 0; break;
+          case 10: basePrice = perfume.price_10ml || 0; break;
+          default: basePrice = perfume.price_full || 0; break;
+        }
+      }
+      
+      // Preço atual (com promoção se houver)
+      const itemPrice = await getItemPrice(perfume.id, size);
+      
+      setOriginalPrice(basePrice);
+      setCurrentPrice(itemPrice);
+    };
     
-    // Fallback para preços hardcoded
-    switch (size) {
-      case 2: return perfume.price_2ml || 0;
-      case 5: return perfume.price_5ml || 0;
-      case 10: return perfume.price_10ml || 0;
-      default: return perfume.price_full || 0;
-    }
-  };
+    calculatePrices();
+  }, [perfume, size, getItemPrice, promotion]);
+
+  const hasDiscount = promotion && currentPrice < originalPrice;
+
+  return (
+    <div className="text-right">
+      <div className="font-bold text-lg">
+        {formatPrice(currentPrice * quantity)}
+      </div>
+      <div className="text-sm">
+        {hasDiscount ? (
+          <div className="space-y-1">
+            <div className="text-muted-foreground line-through">
+              {formatPrice(originalPrice)} cada
+            </div>
+            <div className="text-green-600 font-medium">
+              {formatPrice(currentPrice)} cada
+            </div>
+          </div>
+        ) : (
+          <div className="text-muted-foreground">
+            {formatPrice(currentPrice)} cada
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
   if (items.length === 0) {
     return (
@@ -156,14 +212,11 @@ const Carrinho = () => {
                           </Button>
                         </div>
 
-                        <div className="text-right">
-                          <p className="font-bold text-lg">
-                            {formatPrice(getPriceForSize(item.perfume, item.size) * item.quantity)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatPrice(getPriceForSize(item.perfume, item.size))} cada
-                          </p>
-                        </div>
+                        <ItemPriceDisplay 
+                          perfume={item.perfume} 
+                          size={item.size} 
+                          quantity={item.quantity}
+                        />
                       </div>
                     </div>
                   </div>
