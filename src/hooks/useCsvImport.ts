@@ -84,13 +84,27 @@ export const useCsvImport = () => {
             rowData[header.trim() as keyof CsvPerfumeData] = values[index] || '';
           });
           
+          const mapGender = (gender: string): string => {
+            const normalizedGender = (gender || '').toLowerCase().trim();
+            if (normalizedGender.includes('/') || normalizedGender.includes('unissex')) {
+              return 'unissex';
+            }
+            if (normalizedGender.includes('feminino')) {
+              return 'feminino';
+            }
+            if (normalizedGender.includes('masculino')) {
+              return 'masculino';
+            }
+            return 'unissex'; // default fallback
+          };
+
           // Create perfume
           const perfumeData = {
             brand: rowData.marca || '',
             name: rowData.nome || '',
             description: rowData.descricao || '',
             family: rowData.familia || '',
-            gender: (rowData.genero || '').toLowerCase(),
+            gender: mapGender(rowData.genero || ''),
             category: rowData.categoria || '',
             top_notes: parseNotes(rowData.notas_topo || ''),
             heart_notes: parseNotes(rowData.notas_coracao || ''),
