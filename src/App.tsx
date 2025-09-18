@@ -26,6 +26,7 @@ import Auth from "./pages/Auth";
 import AdminPerfumes from "./pages/admin/AdminPerfumes";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminLots from "./pages/admin/AdminLots";
+import AdminPerfumeImages from "./pages/admin/AdminPerfumeImages";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -117,6 +118,7 @@ const AppContent = () => {
             <Route path="materials-simplified" element={<AdminMaterialsSimplified />} />
             
             <Route path="produto-cadastro" element={<AdminProductCadastro />} />
+            <Route path="perfume-images" element={<AdminPerfumeImages />} />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />
             <Route path="inventory" element={<AdminInventory />} />
