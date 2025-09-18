@@ -3393,11 +3393,7 @@ export type Database = {
       }
       recalculate_all_perfume_prices: {
         Args: Record<PropertyKey, never>
-        Returns: {
-          message: string
-          perfume_id: string
-          updated_sizes: number[]
-        }[]
+        Returns: number
       }
       recalculate_all_prices: {
         Args: Record<PropertyKey, never>
