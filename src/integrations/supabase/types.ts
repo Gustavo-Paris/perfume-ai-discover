@@ -3097,6 +3097,10 @@ export type Database = {
             }
         Returns: boolean
       }
+      clean_duplicate_perfumes: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_expired_reservations: {
         Args: Record<PropertyKey, never>
         Returns: number

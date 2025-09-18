@@ -84,6 +84,19 @@ export const useCsvImport = () => {
             rowData[header.trim() as keyof CsvPerfumeData] = values[index] || '';
           });
           
+          // Check if perfume already exists
+          const { data: existingPerfume } = await supabase
+            .from('perfumes')
+            .select('id')
+            .eq('brand', rowData.marca || '')
+            .eq('name', rowData.nome || '')
+            .maybeSingle();
+
+          if (existingPerfume) {
+            console.log(`Perfume ${rowData.marca} - ${rowData.nome} já existe, pulando...`);
+            continue;
+          }
+
           const mapGender = (gender: string): string => {
             const normalizedGender = (gender || '').toLowerCase().trim();
             if (normalizedGender.includes('/') || normalizedGender.includes('unissex')) {
