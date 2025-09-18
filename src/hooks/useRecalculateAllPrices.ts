@@ -17,9 +17,9 @@ export const useRecalculateAllPrices = () => {
       return data;
     },
     onSuccess: (data) => {
-      if (data && data.length > 0) {
+      if (data && typeof data === 'object' && (data as any)?.message) {
         toast.success(
-          `✅ ${data[0].message}`
+          `✅ ${(data as any).message}`
         );
       } else {
         toast.success('✅ Todos os preços foram recalculados com sucesso');

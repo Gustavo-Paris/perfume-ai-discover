@@ -20,6 +20,7 @@ import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
 import { PricesDisplayModal } from '@/components/admin/PricesDisplayModal';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
 import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
+import { useUpdateAllMargins } from '@/hooks/useUpdateAllMargins';
 
 const AdminPerfumes = () => {
   const { data: perfumes, isLoading, refetch } = usePerfumes();
@@ -28,6 +29,7 @@ const AdminPerfumes = () => {
   const deletePerfume = useDeletePerfume();
   const updateMargin = useUpdatePerfumeMargin();
   const recalculateAll = useRecalculateAllPrices();
+  const updateAllMargins = useUpdateAllMargins();
   const { data: materialConfig } = useMaterialConfigurations();
   
   // Tamanhos dinâmicos das configurações
@@ -221,6 +223,16 @@ const AdminPerfumes = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gerenciar Perfumes</h1>
         <div className="flex gap-2">
+          <Button
+            onClick={() => updateAllMargins.mutate(80)}
+            disabled={updateAllMargins.isPending}
+            variant="default"
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Calculator className={`mr-2 h-4 w-4 ${updateAllMargins.isPending ? 'animate-spin' : ''}`} />
+            {updateAllMargins.isPending ? 'Atualizando...' : 'Definir Margem 80% p/ Todos'}
+          </Button>
           <Button
             onClick={() => recalculateAll.mutate()}
             disabled={recalculateAll.isPending}
