@@ -90,7 +90,7 @@ export const useCsvImport = () => {
             name: rowData.nome || '',
             description: rowData.descricao || '',
             family: rowData.familia || '',
-            gender: rowData.genero || '',
+            gender: (rowData.genero || '').toLowerCase(),
             category: rowData.categoria || '',
             top_notes: parseNotes(rowData.notas_topo || ''),
             heart_notes: parseNotes(rowData.notas_coracao || ''),
