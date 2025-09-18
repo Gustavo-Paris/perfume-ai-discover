@@ -3393,7 +3393,7 @@ export type Database = {
       }
       recalculate_all_perfume_prices: {
         Args: Record<PropertyKey, never>
-        Returns: number
+        Returns: Json
       }
       recalculate_all_prices: {
         Args: Record<PropertyKey, never>
