@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
-import { decimalToPercentage, formatMarginDisplay, isValidMargin, percentageToDecimal } from '@/utils/marginHelpers';
+import { decimalToPercentage, formatMarginDisplay, isValidMargin, percentageToMultiplier } from '@/utils/marginHelpers';
 
 interface PerfumeMarginEditorProps {
   perfume: {
@@ -40,9 +40,11 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
     setError('');
     
     try {
-      // Converter margem percentual para multiplicador
+      // Converter margem percentual para multiplicador usando a função helper
       // Ex: 80% margem = 1.8 multiplicador, 100% margem = 2.0 multiplicador
-      const marginMultiplier = 1 + (marginValue / 100);
+      const marginMultiplier = percentageToMultiplier(marginValue);
+      
+      console.log(`Converting ${marginValue}% to multiplier: ${marginMultiplier}`);
       
       await updateMargin.mutateAsync({
         perfumeId: perfume.id,
