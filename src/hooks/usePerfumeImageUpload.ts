@@ -10,6 +10,7 @@ export interface PerfumeImageUpload {
 }
 
 export const usePerfumeImageUpload = () => {
+  console.log('usePerfumeImageUpload: Hook loading');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<{
     name: string;

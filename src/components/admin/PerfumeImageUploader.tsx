@@ -7,6 +7,7 @@ import { Upload, Copy, CheckCircle, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const PerfumeImageUploader = () => {
+  console.log('PerfumeImageUploader: Component loading');
   const { perfumeImages, uploadImages, isUploading, uploadedImages } = usePerfumeImageUpload();
 
   const copyToClipboard = (url: string, name: string) => {

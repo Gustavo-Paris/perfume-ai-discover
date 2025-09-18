@@ -22,7 +22,8 @@ import {
   Calculator,
   Boxes,
   Warehouse,
-  Truck
+  Truck,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -49,6 +50,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     defaultOpen: true,
     items: [
       { title: 'Cadastrar Produto', url: '/admin/produto-cadastro', icon: Package },
+      { title: 'Upload de Imagens', url: '/admin/perfume-images', icon: Upload },
       { title: 'Gerenciar Perfumes', url: '/admin/perfumes', icon: Package },
       { title: 'Lotes de Estoque', url: '/admin/lots', icon: Boxes },
       { title: 'Materiais', url: '/admin/materials-simplified', icon: Boxes },
