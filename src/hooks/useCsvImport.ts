@@ -98,11 +98,11 @@ export const useCsvImport = () => {
             image_url: rowData.image_url || null,
             target_margin_percentage: parseFloat(rowData.margem_percentual || '80'),
             available_sizes: parseSizes(rowData.tamanhos_disponivel || '[]'),
-            price_2ml: null,
-            price_5ml: null,
-            price_10ml: null,
-            price_full: null,
-            avg_cost_per_ml: null
+            price_2ml: 0,
+            price_5ml: 0,
+            price_10ml: 0,
+            price_full: 0,
+            avg_cost_per_ml: 0
           };
           
           const { data: perfume, error: perfumeError } = await supabase
