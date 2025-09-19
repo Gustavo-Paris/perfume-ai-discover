@@ -12,11 +12,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInventoryLots, useCreateInventoryLot, useUpdateInventoryLot } from '@/hooks/useInventoryLots';
 import { usePerfumes } from '@/hooks/usePerfumes';
 import { useWarehouses } from '@/hooks/useWarehouses';
+import { usePerfumeRealTimeUpdates } from '@/hooks/usePerfumeRealTime';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const AdminLots = () => {
+  // Ativar atualizações em tempo real
+  usePerfumeRealTimeUpdates();
   const { data: lots, isLoading: lotsLoading } = useInventoryLots();
   const { data: perfumes, isLoading: perfumesLoading } = usePerfumes();
   const { data: warehouses, isLoading: warehousesLoading } = useWarehouses();

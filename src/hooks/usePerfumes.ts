@@ -2,8 +2,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DatabasePerfume } from '@/types';
+import { usePerfumeRealTimeUpdates } from './usePerfumeRealTime';
 
 export const usePerfumes = () => {
+  // Ativar atualizações em tempo real
+  usePerfumeRealTimeUpdates();
+  
   return useQuery({
     queryKey: ['perfumes'],
     queryFn: async () => {
@@ -15,9 +19,9 @@ export const usePerfumes = () => {
       if (error) throw error;
       return data as (DatabasePerfume & { target_margin_percentage?: number; avg_cost_per_ml?: number })[];
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes cache - perfumes don't change often
-    gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
-    refetchOnWindowFocus: false, // Don't refetch on window focus
+    staleTime: 5 * 60 * 1000, // Reduzido para 5 minutos por causa das mudanças de preço
+    gcTime: 10 * 60 * 1000, // Reduzido para 10 minutos
+    refetchOnWindowFocus: true, // Reativado para pegar mudanças de preço
   });
 };
 

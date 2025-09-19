@@ -32,10 +32,13 @@ import {
 } from '@/hooks/useMaterials';
 import MaterialSetupAssistant from '@/components/admin/MaterialSetupAssistant';
 import MaterialDetectionCard from '@/components/admin/MaterialDetectionCard';
+import { usePerfumeRealTimeUpdates } from '@/hooks/usePerfumeRealTime';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export default function AdminMaterialsSimplified() {
+  // Ativar atualizações em tempo real para perfumes
+  usePerfumeRealTimeUpdates();
   const [isCreateMaterialOpen, setIsCreateMaterialOpen] = useState(false);
   const [isCreateLotOpen, setIsCreateLotOpen] = useState(false);
   const [isCreateRuleOpen, setIsCreateRuleOpen] = useState(false);
