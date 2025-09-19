@@ -7,7 +7,7 @@ export const useRecalculateAllPrices = () => {
 
   return useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('recalculate_all_perfume_prices');
+      const { data, error } = await supabase.rpc('recalculate_all_prices');
       
       if (error) {
         console.error('Erro ao recalcular todos os preços:', error);
