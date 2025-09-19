@@ -358,20 +358,22 @@ const PerfumeDetails = () => {
                             <span className="text-xs opacity-75">(miniatura)</span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          {hasDiscount ? (
-                            <>
-                              <span className="text-red-600 font-semibold">
-                                R$ {promotionalPrice.toFixed(2).replace('.', ',')}
-                              </span>
-                              <span className="text-muted-foreground line-through text-xs">
-                                R$ {originalPrice.toFixed(2).replace('.', ',')}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-foreground">R$ {originalPrice.toFixed(2).replace('.', ',')}</span>
-                          )}
-                        </div>
+                         <div className="flex items-center gap-2 text-sm">
+                           {hasDiscount ? (
+                             <>
+                               <span className={selectedSize === size ? "text-red-200 font-semibold" : "text-red-600 font-semibold"}>
+                                 R$ {promotionalPrice.toFixed(2).replace('.', ',')}
+                               </span>
+                               <span className={selectedSize === size ? "text-muted line-through text-xs" : "text-muted-foreground line-through text-xs"}>
+                                 R$ {originalPrice.toFixed(2).replace('.', ',')}
+                               </span>
+                             </>
+                           ) : (
+                             <span className={selectedSize === size ? "text-primary-foreground" : "text-foreground"}>
+                               R$ {originalPrice.toFixed(2).replace('.', ',')}
+                             </span>
+                           )}
+                         </div>
                       </Button>
                     );
                   })}
