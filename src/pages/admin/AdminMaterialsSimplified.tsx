@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Package, AlertTriangle, Boxes, Tags, Edit2, Trash2, Settings } from 'lucide-react';
+import { Plus, Package, AlertTriangle, Boxes, Tags, Edit2, Trash2, Settings, Calculator } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import {
   useCreatePackagingRule,
   useUpdatePackagingRule,
   useDeletePackagingRule,
+  useRecalculateAllMaterialCosts,
   Material,
   MaterialLot,
   PackagingRule
@@ -57,6 +58,7 @@ export default function AdminMaterialsSimplified() {
   const createPackagingRule = useCreatePackagingRule();
   const updatePackagingRule = useUpdatePackagingRule();
   const deletePackagingRule = useDeletePackagingRule();
+  const recalculateAllMaterialCosts = useRecalculateAllMaterialCosts();
 
   const [materialForm, setMaterialForm] = useState({
     name: '',
@@ -276,6 +278,20 @@ export default function AdminMaterialsSimplified() {
   const packagingMaterials = materials.filter(m => ['frasco', 'etiqueta', 'caixa'].includes(m.category));
   const lowStockMaterials = materials.filter(m => m.current_stock <= m.min_stock_alert);
 
+  const handleRecalculateAllCosts = async () => {
+    try {
+      const result = await recalculateAllMaterialCosts.mutateAsync();
+      if (result && typeof result === 'object' && (result as any)?.message) {
+        toast.success(`✅ ${(result as any).message}`);
+      } else {
+        toast.success('✅ Custos dos materiais recalculados com sucesso');
+      }
+    } catch (error) {
+      console.error('Erro ao recalcular custos:', error);
+      toast.error('❌ Erro ao recalcular custos dos materiais');
+    }
+  };
+
   if (materialsLoading || lotsLoading || rulesLoading) {
     return <div className="p-6">Carregando...</div>;
   }
@@ -289,6 +305,14 @@ export default function AdminMaterialsSimplified() {
             Sistema simplificado de gestão de materiais
           </p>
         </div>
+        <Button 
+          onClick={handleRecalculateAllCosts}
+          disabled={recalculateAllMaterialCosts.isPending}
+          variant="outline"
+        >
+          <Calculator className="h-4 w-4 mr-2" />
+          {recalculateAllMaterialCosts.isPending ? 'Recalculando...' : 'Recalcular Custos'}
+        </Button>
       </div>
 
       {/* Alert for Low Stock */}

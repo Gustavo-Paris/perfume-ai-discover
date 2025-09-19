@@ -418,4 +418,32 @@ export const useDeletePackagingRule = () => {
   });
 };
 
+export const useRecalculateAllMaterialCosts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc('recalculate_all_material_costs');
+      
+      if (error) {
+        console.error('Erro ao recalcular custos dos materiais:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data && typeof data === 'object' && (data as any)?.message) {
+        // Toast será mostrado pelo componente que chama
+      }
+      
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['material-lots'] });
+      queryClient.invalidateQueries({ queryKey: ['perfumes'] });
+      queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
+    },
+  });
+};
+
 // Hooks de automação removidos na simplificação conservadora

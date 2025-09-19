@@ -3391,6 +3391,10 @@ export type Database = {
         Args: { affiliate_code: string; order_id: string; order_total: number }
         Returns: boolean
       }
+      recalculate_all_material_costs: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       recalculate_all_perfume_prices: {
         Args: Record<PropertyKey, never>
         Returns: Json
