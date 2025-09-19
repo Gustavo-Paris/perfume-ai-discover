@@ -64,18 +64,10 @@ const Auth = () => {
     try {
       console.log('🟡 Initiating Google OAuth...');
       
-      // Get the current URL to determine the correct redirect
-      const currentUrl = window.location.origin;
-      const redirectUrl = currentUrl.includes('lovableproject.com') 
-        ? currentUrl  // Production environment
-        : `${currentUrl}/auth`; // Development or other environments
-        
-      console.log('🔗 Redirect URL:', redirectUrl);
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: window.location.origin,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
@@ -92,9 +84,10 @@ const Auth = () => {
             : error.message,
           variant: "destructive"
         });
+        setIsLoading(false);
       } else {
         console.log('✅ Google OAuth initiated, redirecting...');
-        // The user will be redirected to Google, no need for additional action
+        // Don't set loading to false here, let the redirect happen
       }
     } catch (error) {
       console.error('Google login error:', error);
@@ -103,8 +96,8 @@ const Auth = () => {
         description: "Não foi possível fazer login com Google. Verifique se o Google OAuth está configurado.",
         variant: "destructive"
       });
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // Login com email/senha
