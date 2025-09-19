@@ -322,6 +322,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cart_items_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       cart_recovery_attempts: {
@@ -1063,6 +1070,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventory_lots_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventory_lots_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
@@ -1454,6 +1468,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "order_items_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       orders: {
@@ -1679,6 +1700,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "perfume_interactions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       perfume_prices: {
@@ -1712,6 +1740,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfume_prices_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1762,10 +1797,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "perfume_similarities_perfume_a_id_fkey"
+            columns: ["perfume_a_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "perfume_similarities_perfume_b_id_fkey"
             columns: ["perfume_b_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfume_similarities_perfume_b_id_fkey"
+            columns: ["perfume_b_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2024,6 +2073,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_fiscal_data_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: true
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       product_recipes: {
@@ -2064,6 +2120,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recipes_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2159,6 +2222,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotions_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2267,6 +2337,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reservations_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       review_helpfulness: {
@@ -2347,6 +2424,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2632,6 +2716,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "stock_alert_configs_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: true
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       stock_alert_history: {
@@ -2677,6 +2768,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alert_history_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2725,6 +2823,13 @@ export type Database = {
             columns: ["perfume_id"]
             isOneToOne: false
             referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2966,6 +3071,13 @@ export type Database = {
             referencedRelation: "perfumes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "wishlist_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       wishlist_collections: {
@@ -3003,7 +3115,72 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      perfumes_public: {
+        Row: {
+          available_sizes: Json | null
+          base_notes: string[] | null
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          family: string | null
+          gender: string | null
+          heart_notes: string[] | null
+          id: string | null
+          image_url: string | null
+          name: string | null
+          price_10ml: number | null
+          price_2ml: number | null
+          price_5ml: number | null
+          price_full: number | null
+          product_type: string | null
+          source_size_ml: number | null
+          top_notes: string[] | null
+        }
+        Insert: {
+          available_sizes?: Json | null
+          base_notes?: string[] | null
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          family?: string | null
+          gender?: string | null
+          heart_notes?: string[] | null
+          id?: string | null
+          image_url?: string | null
+          name?: string | null
+          price_10ml?: number | null
+          price_2ml?: number | null
+          price_5ml?: number | null
+          price_full?: number | null
+          product_type?: string | null
+          source_size_ml?: number | null
+          top_notes?: string[] | null
+        }
+        Update: {
+          available_sizes?: Json | null
+          base_notes?: string[] | null
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          family?: string | null
+          gender?: string | null
+          heart_notes?: string[] | null
+          id?: string | null
+          image_url?: string | null
+          name?: string | null
+          price_10ml?: number | null
+          price_2ml?: number | null
+          price_5ml?: number | null
+          price_full?: number | null
+          product_type?: string | null
+          source_size_ml?: number | null
+          top_notes?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_points_transaction: {
@@ -3225,6 +3402,30 @@ export type Database = {
         Returns: {
           price: number
           size_ml: number
+        }[]
+      }
+      get_perfume_public_details: {
+        Args: { perfume_uuid: string }
+        Returns: {
+          available_sizes: Json
+          base_notes: string[]
+          brand: string
+          category: string
+          created_at: string
+          description: string
+          family: string
+          gender: string
+          heart_notes: string[]
+          id: string
+          image_url: string
+          name: string
+          price_10ml: number
+          price_2ml: number
+          price_5ml: number
+          price_full: number
+          product_type: string
+          source_size_ml: number
+          top_notes: string[]
         }[]
       }
       get_perfume_recommendations: {
