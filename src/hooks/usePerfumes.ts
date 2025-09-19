@@ -3,22 +3,74 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DatabasePerfume } from '@/types';
 import { usePerfumeRealTimeUpdates } from './usePerfumeRealTime';
+import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+
+// Hook to check if user is admin
+const useAdminCheck = () => {
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .single();
+        
+        setIsAdmin(!!data);
+      } catch (error) {
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminRole();
+  }, [user]);
+
+  return { isAdmin, loading };
+};
 
 export const usePerfumes = () => {
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  
   // Ativar atualizações em tempo real
   usePerfumeRealTimeUpdates();
   
   return useQuery({
-    queryKey: ['perfumes'],
+    queryKey: ['perfumes', isAdmin],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('perfumes')
-        .select('*, target_margin_percentage, avg_cost_per_ml')
-        .order('created_at', { ascending: false });
+      let data, error;
+      
+      if (isAdmin) {
+        // Admin users get full access including sensitive data
+        ({ data, error } = await supabase
+          .from('perfumes')
+          .select('*, target_margin_percentage, avg_cost_per_ml')
+          .order('created_at', { ascending: false }));
+      } else {
+        // Non-admin users get public data only (no sensitive business data)
+        ({ data, error } = await supabase
+          .from('perfumes_public' as any)
+          .select('*')
+          .order('created_at', { ascending: false }));
+      }
       
       if (error) throw error;
       return data as (DatabasePerfume & { target_margin_percentage?: number; avg_cost_per_ml?: number })[];
     },
+    enabled: !adminLoading, // Wait for admin check to complete
     staleTime: 5 * 60 * 1000, // Reduzido para 5 minutos por causa das mudanças de preço
     gcTime: 10 * 60 * 1000, // Reduzido para 10 minutos
     refetchOnWindowFocus: true, // Reativado para pegar mudanças de preço
@@ -33,9 +85,23 @@ export interface PerfumeWithCosts extends DatabasePerfume {
 }
 
 export const usePerfumesWithCosts = () => {
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  
   return useQuery({
-    queryKey: ['perfumes-with-costs'],
+    queryKey: ['perfumes-with-costs', isAdmin],
     queryFn: async () => {
+      if (!isAdmin) {
+        // Non-admin users don't get cost data - redirect to public data
+        const { data, error } = await supabase
+          .from('perfumes_public' as any)
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return (data as any[]) as PerfumeWithCosts[];
+      }
+      
+      // Admin users get full cost data
       const { data, error } = await supabase
         .from('perfumes')
         .select('*')
@@ -44,6 +110,7 @@ export const usePerfumesWithCosts = () => {
       if (error) throw error;
       return data as PerfumeWithCosts[];
     },
+    enabled: !adminLoading, // Wait for admin check to complete
     staleTime: 5 * 60 * 1000, // 5 minutes cache for cost data
     refetchOnWindowFocus: false,
   });

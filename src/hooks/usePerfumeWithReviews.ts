@@ -1,19 +1,73 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DatabasePerfume } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+
+// Hook to check if user is admin
+const useAdminCheck = () => {
+  const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .single();
+        
+        setIsAdmin(!!data);
+      } catch (error) {
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAdminRole();
+  }, [user]);
+
+  return { isAdmin, loading };
+};
 
 // Optimized hook to fetch perfume with aggregated review stats
 export const usePerfumeWithReviews = (perfumeId: string) => {
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  
   return useQuery({
-    queryKey: ['perfume-with-reviews', perfumeId],
+    queryKey: ['perfume-with-reviews', perfumeId, isAdmin],
     queryFn: async () => {
       // Batch fetch perfume and review stats
-      const [perfumeResult, statsResult] = await Promise.all([
-        supabase
+      let perfumeQuery;
+      
+      if (isAdmin) {
+        // Admin users get full access including sensitive business data
+        perfumeQuery = supabase
           .from('perfumes')
           .select('*')
           .eq('id', perfumeId)
-          .single(),
+          .single();
+      } else {
+        // Non-admin users get public data only (no sensitive business data)
+        perfumeQuery = supabase
+          .from('perfumes_public' as any)
+          .select('*')
+          .eq('id', perfumeId)
+          .single();
+      }
+      
+      const [perfumeResult, statsResult] = await Promise.all([
+        perfumeQuery,
         supabase
           .from('reviews')
           .select('rating')
@@ -40,7 +94,7 @@ export const usePerfumeWithReviews = (perfumeId: string) => {
         }
       };
     },
-    enabled: !!perfumeId,
+    enabled: !!perfumeId && !adminLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
     gcTime: 20 * 60 * 1000, // 20 minutes garbage collection
   });
@@ -48,16 +102,31 @@ export const usePerfumeWithReviews = (perfumeId: string) => {
 
 // Batch fetch multiple perfumes with their stats
 export const usePerfumesWithReviews = (perfumeIds: string[]) => {
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  
   return useQuery({
-    queryKey: ['perfumes-with-reviews', perfumeIds.sort()],
+    queryKey: ['perfumes-with-reviews', perfumeIds.sort(), isAdmin],
     queryFn: async () => {
       if (perfumeIds.length === 0) return [];
 
       // Batch query to get all perfumes and their review stats
-      const { data: perfumes, error: perfumesError } = await supabase
-        .from('perfumes')
-        .select('*')
-        .in('id', perfumeIds);
+      let perfumesQuery;
+      
+      if (isAdmin) {
+        // Admin users get full access including sensitive business data
+        perfumesQuery = supabase
+          .from('perfumes')
+          .select('*')
+          .in('id', perfumeIds);
+      } else {
+        // Non-admin users get public data only (no sensitive business data)
+        perfumesQuery = supabase
+          .from('perfumes_public' as any)
+          .select('*')
+          .in('id', perfumeIds);
+      }
+      
+      const { data: perfumes, error: perfumesError } = await perfumesQuery;
 
       if (perfumesError) throw perfumesError;
 
@@ -96,7 +165,7 @@ export const usePerfumesWithReviews = (perfumeIds: string[]) => {
         };
       });
     },
-    enabled: perfumeIds.length > 0,
+    enabled: perfumeIds.length > 0 && !adminLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes cache
     gcTime: 20 * 60 * 1000, // 20 minutes garbage collection
   });
