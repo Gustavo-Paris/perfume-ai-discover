@@ -208,9 +208,9 @@ const PerfumeDetails = () => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Badge className="bg-blue-100 text-blue-800 border-blue-300">Decant</Badge>
-                          <span className="text-sm text-blue-700">
-                            Frasco original de {databasePerfume.source_size_ml}ml dividido em frascos menores
-                          </span>
+                           <span className="text-sm text-blue-700">
+                             Frasco original dividido em frascos menores
+                           </span>
                         </div>
                         <p className="text-xs text-blue-600">
                           Você recebe o perfume em um frasco menor, permitindo experimentar a fragrância 

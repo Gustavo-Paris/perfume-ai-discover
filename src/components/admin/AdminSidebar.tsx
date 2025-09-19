@@ -50,8 +50,6 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     defaultOpen: true,
     items: [
       { title: 'Cadastrar Produto', url: '/admin/produto-cadastro', icon: Package },
-      { title: 'Upload de Imagens', url: '/admin/perfume-images', icon: Upload },
-      { title: 'Importar CSV', url: '/admin/csv-import', icon: Upload },
       { title: 'Gerenciar Perfumes', url: '/admin/perfumes', icon: Package },
       { title: 'Lotes de Estoque', url: '/admin/lots', icon: Boxes },
       { title: 'Materiais', url: '/admin/materials-simplified', icon: Boxes },
@@ -92,6 +90,8 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     icon: Settings,
     defaultOpen: false,
     items: [
+      { title: 'Upload de Imagens', url: '/admin/perfume-images', icon: Upload },
+      { title: 'Importar CSV', url: '/admin/csv-import', icon: Upload },
       { title: 'Configurações', url: '/admin/config', icon: Settings },
       { title: 'Empresa', url: '/admin/company', icon: Settings },
       { title: 'Entrega Local', url: '/admin/local-delivery', icon: Truck },
