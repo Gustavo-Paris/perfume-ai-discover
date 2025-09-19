@@ -456,6 +456,39 @@ export const useDeletePackagingRule = () => {
   });
 };
 
+export const useRecalculateAllPerfumePrices = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc('recalculate_all_perfume_prices');
+      
+      if (error) {
+        console.error('Erro ao recalcular preços dos perfumes:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data && typeof data === 'object' && (data as any)?.message) {
+        toast.success(`✅ ${(data as any).message}`);
+      } else {
+        toast.success('✅ Preços de todos os perfumes recalculados com sucesso');
+      }
+      
+      // Invalidar todas as queries relacionadas aos perfumes
+      queryClient.invalidateQueries({ queryKey: ['perfumes'] });
+      queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
+      queryClient.invalidateQueries({ queryKey: ['perfume-prices'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao recalcular preços dos perfumes:', error);
+      toast.error('❌ Erro ao recalcular preços dos perfumes. Verifique o console.');
+    },
+  });
+};
+
 export const useRecalculateAllMaterialCosts = () => {
   const queryClient = useQueryClient();
   

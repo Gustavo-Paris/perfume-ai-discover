@@ -13,6 +13,7 @@ import { usePerfumes, useCreatePerfume, useUpdatePerfume, useDeletePerfume } fro
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { useAvailableSizes, usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 import { useMaterialConfigurations } from '@/hooks/useMaterialConfigurations';
+import { useRecalculateAllPerfumePrices } from '@/hooks/useMaterials';
 import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
@@ -28,6 +29,7 @@ const AdminPerfumes = () => {
   const updatePerfume = useUpdatePerfume();
   const deletePerfume = useDeletePerfume();
   const updateMargin = useUpdatePerfumeMargin();
+  const recalculateAllPerfumePrices = useRecalculateAllPerfumePrices();
   const recalculateAll = useRecalculateAllPrices();
   const updateAllMargins = useUpdateAllMargins();
   const { data: materialConfig } = useMaterialConfigurations();
@@ -234,13 +236,14 @@ const AdminPerfumes = () => {
             {updateAllMargins.isPending ? 'Atualizando...' : 'Definir Margem 80% p/ Todos'}
           </Button>
           <Button
-            onClick={() => recalculateAll.mutate()}
-            disabled={recalculateAll.isPending}
+            onClick={() => recalculateAllPerfumePrices.mutate()}
+            disabled={recalculateAllPerfumePrices.isPending}
             variant="outline"
             size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
-            <Calculator className={`mr-2 h-4 w-4 ${recalculateAll.isPending ? 'animate-spin' : ''}`} />
-            {recalculateAll.isPending ? 'Recalculando...' : 'Recalcular Todos os Preços'}
+            <RefreshCw className={`mr-2 h-4 w-4 ${recalculateAllPerfumePrices.isPending ? 'animate-spin' : ''}`} />
+            {recalculateAllPerfumePrices.isPending ? 'Sincronizando...' : 'Sincronizar Preços AGORA'}
           </Button>
           <Button
             onClick={handleSyncToAlgolia}
