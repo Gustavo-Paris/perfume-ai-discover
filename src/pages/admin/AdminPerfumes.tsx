@@ -226,26 +226,6 @@ const AdminPerfumes = () => {
         <h1 className="text-3xl font-bold">Gerenciar Perfumes</h1>
         <div className="flex gap-2">
           <Button
-            onClick={() => updateAllMargins.mutate(80)}
-            disabled={updateAllMargins.isPending}
-            variant="default"
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Calculator className={`mr-2 h-4 w-4 ${updateAllMargins.isPending ? 'animate-spin' : ''}`} />
-            {updateAllMargins.isPending ? 'Atualizando...' : 'Definir Margem 80% p/ Todos'}
-          </Button>
-          <Button
-            onClick={() => recalculateAll.mutate()}
-            disabled={recalculateAll.isPending}
-            variant="outline"
-            size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${recalculateAll.isPending ? 'animate-spin' : ''}`} />
-            {recalculateAll.isPending ? 'Recalculando...' : 'Recalcular Todos os Preços'}
-          </Button>
-           <Button
             onClick={handleSyncToAlgolia}
             disabled={isSyncing}
             variant="outline"
