@@ -63,13 +63,22 @@ const Auth = () => {
     setIsLoading(true);
     try {
       console.log('🟡 Initiating Google OAuth...');
+      
+      // Get the current URL to determine the correct redirect
+      const currentUrl = window.location.origin;
+      const redirectUrl = currentUrl.includes('lovableproject.com') 
+        ? currentUrl  // Production environment
+        : `${currentUrl}/auth`; // Development or other environments
+        
+      console.log('🔗 Redirect URL:', redirectUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           }
         }
       });
