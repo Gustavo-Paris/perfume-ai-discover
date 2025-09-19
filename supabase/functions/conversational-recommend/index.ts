@@ -129,53 +129,56 @@ serve(async (req) => {
     const isContinuation = message.includes('viu as 3 recomendações') || 
                           message.includes('Continue a conversa');
 
-// System prompt for conversational curation
-    const systemPrompt = `Você é um especialista em perfumaria brasileiro que faz curadoria personalizada através de conversas naturais e fluidas.
+    // System prompt for conversational curation
+    const systemPrompt = `Você é um especialista mundial em perfumaria com décadas de experiência, conhecido por fazer curadorias perfeitas que impressionam os clientes.
 
-SEU OBJETIVO: Descobrir as preferências do cliente através de uma conversa envolvente e recomendar entre 1 a 5 perfumes ideais baseados nas suas necessidades.
+SEU OBJETIVO: Descobrir profundamente as preferências do cliente através de uma conversa envolvente e recomendar entre 1 a 5 perfumes PERFEITOS baseados nas suas necessidades específicas.
 
 ESTILO DE CONVERSA:
-- Seja caloroso, acolhedor e genuinamente interessado
+- Seja caloroso, acolhedor e genuinamente interessado nas preferências
 - Faça perguntas que fluem naturalmente da resposta anterior
 - Use linguagem brasileira informal mas sofisticada
-- Seja um consultor experiente, não um robô
+- Seja um consultor experiente e perspicaz, não um robô
 
-PROCESSO DE DESCOBERTA:
+PROCESSO DE DESCOBERTA INTELIGENTE:
 1. INÍCIO: Cumprimente e pergunte sobre a busca (para si ou presente)
-2. EXPLORAR GRADUALMENTE (PERGUNTAS ESSENCIAIS):
+2. MAPEAMENTO PROFUNDO (PERGUNTAS ESSENCIAIS):
    - Gênero da pessoa que vai usar (masculino/feminino/unissex)
-   - Faixa etária aproximada (jovem, adulto, maduro)
-   - Ocasiões de uso (trabalho, festa, dia a dia, especiais)
-   - Preferências de intensidade (suave, moderado, marcante)
-   - Famílias olfativas que gosta/não gosta
-   - IMPORTANTE: Pergunte sobre perfumes que já provou e gostou/não gostou
-   - Personalidade e estilo
-3. APROFUNDAR: Faça perguntas específicas baseadas nas respostas
-4. ANÁLISE: Quando tiver informações SUFICIENTES (gênero, pelo menos 2 preferências e contexto de uso), diga EXATAMENTE: "Perfeito! Com base em tudo que me contou, vou agora fazer uma análise completa das suas preferências e buscar as melhores opções no nosso catálogo. Isso levará apenas alguns instantes..." e PARE.
+   - Faixa etária e personalidade (jovem, adulto, maduro, estilo)
+   - Ocasiões de uso (trabalho, festa, dia a dia, especiais, estações)
+   - Preferências de intensidade (suave, moderado, marcante, projeção)
+   - Famílias olfativas preferidas E NÃO GOSTADAS (crucial!)
+   - **CRÍTICO**: Pergunte sobre perfumes que já provou, gostou ou não gostou
+   - **CRUCIAL**: Se mencionar perfumes específicos, explore PROFUNDAMENTE o QUE gostou neles
+   - Orçamento aproximado (se relevante para escolhas)
+   - Personalidade, estilo de vida, profissão se relevante
+3. ANÁLISE INTELIGENTE: Quando tiver informações SUFICIENTES para fazer recomendações precisas, diga EXATAMENTE: "Perfeito! Com base em tudo que me contou, vou agora fazer uma análise completa das suas preferências e buscar as melhores opções no nosso catálogo. Isso levará apenas alguns instantes..." e PARE.
 
-IMPORTANTE: NUNCA liste perfumes ou recomendações no texto da conversa. Apenas diga que vai analisar e parar.
+EXPERTISE EM PERFUMARIA:
+- Conheça famílias olfativas, notas, DNA olfativo de perfumes famosos
+- Identifique inspirações, clones, versões similares entre marcas
+- Entenda progressão olfativa (saída, coração, fundo)
+- Reconheça características de diferentes casas perfumísticas
+- Saiba combinar preferências pessoais com perfis olfativos
 
 REGRAS CRÍTICAS:
-- NUNCA pergunte sobre orçamento - isso será tratado nos combos inteligentes
-- NUNCA finalize a conversa sem ter informações ESSENCIAIS (gênero, preferências básicas, contexto)
-- NUNCA liste perfumes específicos ou numerados (1., 2., 3.) na conversa
-- NUNCA use formato markdown (**texto**) para mencionar perfumes
-- NUNCA diga "aqui estão" ou "vou recomendar" seguido de lista
-- Se o usuário perguntar sobre continuar de onde parou, responda de forma natural e continue o processo
-- Mantenha conversas fluidas e personalizadas
-- Baseie recomendações nas informações coletadas
-- Use nomes de perfumes reais do banco de dados
-- Seja prestativo e educativo sobre fragrâncias
+- NUNCA liste perfumes ou recomendações no texto da conversa
+- NUNCA pergunte sobre orçamento diretamente - descubra indiretamente através do contexto
+- NUNCA finalize sem ter informações ESSENCIAIS para recomendações precisas
+- Se o usuário mencionar perfumes específicos, EXPLORE profundamente o que gostou
+- Se mencionar não gostar de algo, entenda EXATAMENTE o que incomoda
+- ADAPTE suas perguntas baseado nas respostas anteriores
+- Seja GENUINAMENTE curioso sobre as preferências olfativas
 
 APÓS AS RECOMENDAÇÕES:
-- O cliente pode continuar a conversa se não gostar das sugestões
-- Pergunte especificamente o que não agradou nas recomendações anteriores
-- Explore novos aspectos do perfil do cliente
-- Faça novas recomendações baseadas no feedback
-- Mantenha o tom consultivo e acolhedor
+- O cliente pode continuar se não gostar das sugestões
+- Pergunte especificamente o que não agradou
+- Explore aspectos que podem ter passado despercebidos
+- Use feedback para refinar ainda mais o perfil
+- Demonstre conhecimento profundo sobre alternativas
 
-${availablePerfumes.length > 0 ? `CATÁLOGO DISPONÍVEL:
-${JSON.stringify(availablePerfumes.slice(0, 20).map(p => ({
+${availablePerfumes.length > 0 ? `CATÁLOGO DISPONÍVEL COM DETALHES COMPLETOS:
+${JSON.stringify(availablePerfumes.slice(0, 30).map(p => ({
   id: p.id,
   name: p.name,
   brand: p.brand,
@@ -184,17 +187,29 @@ ${JSON.stringify(availablePerfumes.slice(0, 20).map(p => ({
   description: p.description,
   top_notes: p.top_notes,
   heart_notes: p.heart_notes,
-  base_notes: p.base_notes
+  base_notes: p.base_notes,
+  category: p.category,
+  intensity: p.intensity,
+  longevity: p.longevity,
+  sillage: p.sillage,
+  price_5ml: p.price_5ml,
+  price_10ml: p.price_10ml
 })), null, 2)}` : 'CATÁLOGO: Temporariamente indisponível, mas posso ajudar com recomendações gerais.'}
 
-REGRAS:
-- NUNCA mencione que é uma IA
-- Não faça listas de perguntas
-- Uma pergunta por vez
-- Seja genuinamente curioso
-- SEMPRE pergunte sobre experiências passadas
-- Adapte-se às respostas
-- Se o cliente não gostou das recomendações, explore mais profundamente suas preferências`;
+INTELIGÊNCIA AVANÇADA:
+- Analise o perfil completo antes de recomendar
+- Considere compatibilidade entre notas, intensidade, ocasiões
+- Identifique padrões nas preferências mencionadas
+- Reconheça inspirações e similaridades entre perfumes
+- Priorize QUALIDADE e PRECISÃO sobre quantidade
+- Se o perfil for muito específico, recomende apenas 1-2 perfumes perfeitos
+- Se houver múltiplas preferências válidas, ofereça até 5 opções bem justificadas
+
+REGRAS FINAIS:
+- NUNCA mencione ser uma IA
+- Uma pergunta por vez, bem contextualizada
+- Demonstre expertise real em perfumaria
+- Faça recomendações que IMPRESSIONEM pela precisão`;
 
     // Prepare messages for OpenAI
     let messages = [
@@ -267,16 +282,42 @@ REGRAS:
           const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
           
           const recommendationMessages = [
-            { role: 'system', content: 'Você é um especialista em perfumaria que DEVE respeitar rigorosamente as preferências de gênero e família olfativa do usuário. NUNCA recomende perfumes femininos para usuários masculinos, ou perfumes florais para quem pediu amadeirados. Responda APENAS com um JSON array de IDs dos perfumes recomendados.' },
-            { role: 'user', content: `Perfil do usuário baseado na conversa: ${userProfile}
+            { role: 'system', content: `Você é um mestre perfumista com conhecimento enciclopédico sobre fragrâncias. Sua expertise inclui:
+
+CONHECIMENTO AVANÇADO:
+- DNA olfativo de perfumes clássicos e modernos
+- Inspirações, clones, versões similares entre marcas
+- Progressão olfativa (saída, coração, fundo) 
+- Características de diferentes casas perfumísticas
+- Compatibilidade entre notas e famílias olfativas
+- Perfumes que "lembram" ou são similares a outros
+
+ANÁLISE INTELIGENTE:
+- Identifique PADRÕES nas preferências do usuário
+- Se mencionar perfumes específicos, encontre similares ou inspirações
+- Considere personalidade, idade, ocasiões, intensidade desejada
+- Analise o que o usuário GOSTA vs. o que NÃO GOSTA
+- Priorize QUALIDADE da combinação sobre quantidade
 
 INSTRUÇÕES CRÍTICAS:
-- Se o usuário mencionou preferências masculinas/unissex, NUNCA inclua perfumes femininos
-- Se o usuário mencionou gostar de amadeirados/orientais, priorize essas famílias
-- Se o usuário disse não gostar de florais, NUNCA inclua perfumes florais
-- Respeite RIGOROSAMENTE as preferências de gênero e família olfativa
+- Analise profundamente o perfil completo do usuário
+- Se mencionar gostar de um perfume específico, procure similares/inspirações
+- Considere notas, família, intensidade, ocasiões mencionadas
+- NUNCA ignore preferências explícitas (ex: se não gosta de floral, NUNCA recomende)
+- Recomende apenas perfumes que fazem SENTIDO PERFEITO para o perfil
+- Responda APENAS com JSON array de IDs: ["id1", "id2", "id3"]` },
+            { role: 'user', content: `PERFIL COMPLETO DO USUÁRIO:
+${userProfile}
 
-Perfumes disponíveis: ${JSON.stringify(availablePerfumes.map(p => ({ 
+ANÁLISE REQUERIDA:
+1. Extraia TODAS as preferências mencionadas (gênero, famílias, intensidade, ocasiões)
+2. Identifique perfumes específicos mencionados como referência
+3. Note o que o usuário NÃO GOSTA (elimine essas opções)
+4. Considere personalidade, idade, estilo de vida mencionados
+5. Busque perfumes que "casem" perfeitamente com o perfil
+
+CATÁLOGO COMPLETO COM DETALHES:
+${JSON.stringify(availablePerfumes.map(p => ({ 
   id: p.id, 
   name: p.name, 
   brand: p.brand, 
@@ -285,10 +326,14 @@ Perfumes disponíveis: ${JSON.stringify(availablePerfumes.map(p => ({
   gender: p.gender,
   top_notes: p.top_notes,
   heart_notes: p.heart_notes,
-  base_notes: p.base_notes
-})))}
+  base_notes: p.base_notes,
+  category: p.category,
+  intensity: p.intensity,
+  longevity: p.longevity,
+  sillage: p.sillage
+})), null, 2)}
 
-Analise cuidadosamente o perfil e retorne APENAS os IDs dos perfumes mais adequados (1-5 perfumes) em formato JSON array. PRIORIZE PRECISÃO E COMPATIBILIDADE com as preferências mencionadas.` }
+RESPOSTA: Analise o perfil e retorne APENAS um JSON array com 1-5 IDs dos perfumes mais PRECISOS e COERENTES. Priorize QUALIDADE absoluta da recomendação.` }
           ];
 
           const recommendationData = await callOpenAI(recommendationMessages);
@@ -393,14 +438,25 @@ Analise cuidadosamente o perfil e retorne APENAS os IDs dos perfumes mais adequa
 
     if ((isRecommendationRequest || conversationSeemsComplete) && availablePerfumes.length > 0) {
       try {
-        // Generate recommendations based on conversation
-        const recommendationPrompt = `Baseado nesta conversa detalhada sobre preferências de perfume, escolha entre 1 a 5 perfumes que mais precisamente combinam com o cliente.
+        // Generate recommendations based on conversation with advanced intelligence
+        const recommendationPrompt = `Você é um mestre perfumista com décadas de experiência, conhecido mundialmente pela precisão das suas recomendações.
 
-Conversa completa:
+MISSÃO: Analisar profundamente esta conversa e escolher entre 1 a 5 perfumes que mais PRECISAMENTE combinam com o cliente.
+
+ANÁLISE COMPLETA DA CONVERSA:
 ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
 ${!isContinuation ? `Última mensagem: ${message}` : ''}
 
-Catálogo disponível:
+EXPERTISE AVANÇADA:
+- Identifique PADRÕES e PREFERÊNCIAS específicas mencionadas
+- Reconheça perfumes de referência mencionados e encontre similares
+- Analise personalidade, estilo de vida, ocasiões de uso
+- Considere idade, gênero, faixa etária mencionada
+- Note o que o cliente GOSTA vs. o que NÃO GOSTA
+- Identifique inspirações, clones, versões similares
+- Considere compatibilidade entre notas e famílias
+
+CATÁLOGO COMPLETO COM ANÁLISE DETALHADA:
 ${JSON.stringify(availablePerfumes.map(p => ({
   id: p.id,
   name: p.name,
@@ -410,24 +466,43 @@ ${JSON.stringify(availablePerfumes.map(p => ({
   description: p.description,
   top_notes: p.top_notes,
   heart_notes: p.heart_notes,
-  base_notes: p.base_notes
+  base_notes: p.base_notes,
+  category: p.category,
+  intensity: p.intensity,
+  longevity: p.longevity,
+  sillage: p.sillage,
+  price_5ml: p.price_5ml,
+  price_10ml: p.price_10ml
 })), null, 2)}
 
-CRITÉRIOS DE SELEÇÃO:
-- Máxima precisão baseada nas preferências reveladas
-- Considere experiências passadas mencionadas
-- Priorize qualidade da combinação sobre quantidade
-- Se o perfil é muito específico, pode retornar apenas 1-2 perfumes perfeitos
-- Se há múltiplas preferências válidas, pode retornar até 5 opções
-- Ordene do mais adequado para o menos adequado
-- QUALIDADE > QUANTIDADE sempre
+CRITÉRIOS DE SELEÇÃO INTELIGENTE:
+✓ MÁXIMA PRECISÃO baseada no perfil completo revelado
+✓ Considere TODAS as preferências e aversões mencionadas
+✓ Se mencionar perfumes específicos, encontre similares ou inspirações
+✓ Analise compatibilidade: notas + família + intensidade + ocasiões
+✓ Considere personalidade e estilo de vida mencionados
+✓ PRIORIZE QUALIDADE ABSOLUTA sobre quantidade
+✓ Se perfil muito específico: 1-2 perfumes PERFEITOS
+✓ Se múltiplas preferências válidas: até 5 opções EXCEPCIONAIS
+✓ Ordene do mais adequado para o menos adequado
+✓ NUNCA ignore preferências explícitas do cliente
 
-Responda APENAS com um array JSON de 1-5 IDs dos perfumes mais precisos. Exemplo: ["id1"] ou ["id1", "id2", "id3"]`;
+INTELIGÊNCIA COMPARATIVA:
+- Se cliente gosta de "Baccarat Rouge", procure orientais gourmands similares
+- Se gosta de "Sauvage", procure frescas amadeiradas masculinas
+- Se menciona "elegante", priorize sofisticados e atemporais
+- Se menciona "jovem", considere modernos e dinâmicos
+- Se fala em "trabalho", priorize discretos e profissionais
+
+RESPOSTA FINAL: Retorne APENAS um array JSON de 1-5 IDs dos perfumes mais INTELIGENTEMENTE selecionados.
+Exemplo: ["id1"] ou ["id1", "id2", "id3"]
+
+LEMBRE-SE: Esta recomendação deve IMPRESSIONAR o cliente pela precisão e inteligência da seleção!`;
 
         const recData = await callOpenAI([
-          { role: 'system', content: 'Você é um especialista em perfumaria que escolhe perfumes com máxima precisão baseado em conversas. Responda apenas com arrays JSON de IDs.' },
+          { role: 'system', content: 'Você é um mestre perfumista que faz recomendações com PRECISÃO ABSOLUTA baseado em conversas detalhadas. Analise o perfil completo e responda APENAS com arrays JSON de IDs. Sua reputação depende da QUALIDADE das recomendações.' },
           { role: 'user', content: recommendationPrompt }
-        ], 0.2, 150);
+        ], 0.1, 200);
         
         const recContent = recData.choices[0].message.content.trim();
         
@@ -439,81 +514,118 @@ Responda APENAS com um array JSON de 1-5 IDs dos perfumes mais precisos. Exemplo
             console.log('Recommendations generated:', recommendations);
           }
         } catch (e) {
-          console.log('Failed to parse recommendations, using smart fallback');
-          // Smart fallback based on conversation with enhanced filtering
+          console.log('Failed to parse recommendations, using intelligent fallback');
+          
+          // Intelligent fallback based on comprehensive conversation analysis
           const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n').toLowerCase();
           
-          // Enhanced gender detection
-          const isMasculine = userProfile.includes('masculino') || 
-                             userProfile.includes('homem') || 
-                             userProfile.includes('para mim') && !userProfile.includes('feminino');
-          const isFeminine = userProfile.includes('feminino') || 
-                            userProfile.includes('mulher') || 
-                            userProfile.includes('para ela');
-          const wantsUnisex = userProfile.includes('unissex');
+          // Advanced preference detection with semantic analysis
+          const preferences = {
+            // Gender preferences
+            masculine: userProfile.match(/\b(masculino|homem|para mim|pra mim|pra ele|para ele)\b/g) && !userProfile.includes('feminino'),
+            feminine: userProfile.match(/\b(feminino|mulher|para ela|pra ela|feminina)\b/g),
+            unisex: userProfile.includes('unissex') || userProfile.includes('tanto faz'),
+            
+            // Family preferences - expanded analysis
+            woody: userProfile.match(/\b(amadeirado|madeira|woody|sândalo|cedro|oud|agarwood)\b/g),
+            oriental: userProfile.match(/\b(oriental|âmbar|amber|baunilha|especiado|incenso)\b/g),
+            fresh: userProfile.match(/\b(fresco|fresh|cítrico|bergamota|limão|lavanda|aquático)\b/g),
+            floral: userProfile.match(/\b(floral|flores|rosa|jasmim|peônia|lírio)\b/g),
+            gourmand: userProfile.match(/\b(gourmand|doce|chocolate|caramelo|café|mel)\b/g),
+            
+            // Intensity preferences
+            subtle: userProfile.match(/\b(suave|sutil|discreto|leve|delicado)\b/g),
+            moderate: userProfile.match(/\b(moderado|médio|equilibrado|na medida)\b/g),
+            strong: userProfile.match(/\b(marcante|forte|intenso|poderoso|projection)\b/g),
+            
+            // Occasion preferences
+            daily: userProfile.match(/\b(dia a dia|trabalho|escritório|diário|cotidiano)\b/g),
+            evening: userProfile.match(/\b(noite|festa|balada|jantar|evento)\b/g),
+            formal: userProfile.match(/\b(formal|elegante|sofisticado|executivo)\b/g),
+            casual: userProfile.match(/\b(casual|relaxado|descontraído|fim de semana)\b/g),
+            
+            // Age/style preferences
+            young: userProfile.match(/\b(jovem|moderno|atual|trendy|youth)\b/g),
+            mature: userProfile.match(/\b(maduro|clássico|tradicional|atemporal)\b/g),
+            
+            // Negative preferences - what they DON'T want
+            dislikes: {
+              floral: userProfile.match(/\b(não gosto.*floral|detesto.*floral|odeio.*floral|não curto.*floral)\b/g),
+              sweet: userProfile.match(/\b(não gosto.*doce|muito doce|enjoativo|sicativo)\b/g),
+              strong: userProfile.match(/\b(não gosto.*forte|muito forte|exagerado|pesado demais)\b/g),
+              synthetic: userProfile.match(/\b(sintético|artificial|químico|ruim)\b/g)
+            }
+          };
           
-          // Family preferences detection
-          const wantsWoody = userProfile.includes('amadeirado') || 
-                            userProfile.includes('madeira') || 
-                            userProfile.includes('woody');
-          const wantsOriental = userProfile.includes('oriental') || 
-                               userProfile.includes('âmbar') || 
-                               userProfile.includes('amber');
-          const avoidFloral = userProfile.includes('não gosto') && userProfile.includes('floral') ||
-                             isMasculine && !userProfile.includes('floral'); // Avoid floral for masculine unless explicitly mentioned
+          console.log('Intelligent preference analysis:', preferences);
           
-          let filteredPerfumes = availablePerfumes;
+          // Smart filtering based on comprehensive analysis
+          let filteredPerfumes = [...availablePerfumes];
           
-          // Filter by gender preferences
-          if (isMasculine || wantsUnisex) {
+          // Apply gender filtering intelligently
+          if (preferences.masculine && !preferences.feminine) {
             filteredPerfumes = filteredPerfumes.filter(p => 
               p.gender === 'masculino' || p.gender === 'unissex'
             );
-          } else if (isFeminine) {
+          } else if (preferences.feminine && !preferences.masculine) {
             filteredPerfumes = filteredPerfumes.filter(p => 
               p.gender === 'feminino' || p.gender === 'unissex'
             );
+          } else if (preferences.unisex) {
+            filteredPerfumes = filteredPerfumes.filter(p => p.gender === 'unissex');
           }
           
-          // Filter by family preferences
-          if (wantsWoody) {
-            filteredPerfumes = filteredPerfumes.filter(p => 
-              p.family?.toLowerCase().includes('amadeirado') || 
-              p.family?.toLowerCase().includes('woody') ||
-              p.description?.toLowerCase().includes('amadeirado') ||
-              p.description?.toLowerCase().includes('madeira')
-            );
+          // Apply family preferences with intelligent scoring
+          let scoredPerfumes = filteredPerfumes.map(perfume => {
+            let score = 0;
+            const perfumeData = (perfume.family?.toLowerCase() + ' ' + 
+                               perfume.description?.toLowerCase() + ' ' +
+                               (perfume.top_notes?.join(' ') || '') + ' ' +
+                               (perfume.heart_notes?.join(' ') || '') + ' ' +
+                               (perfume.base_notes?.join(' ') || '')).toLowerCase();
+            
+            // Score based on family preferences
+            if (preferences.woody && perfumeData.match(/\b(amadeirado|woody|sândalo|cedro|oud|madeira)\b/)) score += 3;
+            if (preferences.oriental && perfumeData.match(/\b(oriental|âmbar|amber|especiado|baunilha)\b/)) score += 3;
+            if (preferences.fresh && perfumeData.match(/\b(fresco|fresh|cítrico|aquático|lavanda)\b/)) score += 3;
+            if (preferences.floral && perfumeData.match(/\b(floral|rosa|jasmim|peônia)\b/) && !preferences.dislikes.floral) score += 3;
+            if (preferences.gourmand && perfumeData.match(/\b(gourmand|doce|chocolate|caramelo|baunilha)\b/)) score += 3;
+            
+            // Score based on intensity preferences
+            if (preferences.subtle && (perfume.intensity === 'light' || perfume.sillage === 'intimate')) score += 2;
+            if (preferences.strong && (perfume.intensity === 'strong' || perfume.sillage === 'enormous')) score += 2;
+            
+            // Negative scoring for dislikes
+            if (preferences.dislikes.floral && perfumeData.includes('floral')) score -= 5;
+            if (preferences.dislikes.sweet && perfumeData.match(/\b(doce|sweet|gourmand)\b/)) score -= 3;
+            
+            // Bonus for specific brand/style preferences
+            if (preferences.young && (perfume.category === 'designer' || perfume.brand?.match(/\b(versace|dolce|one million|invictus)\b/i))) score += 1;
+            if (preferences.mature && (perfume.category === 'niche' || perfume.brand?.match(/\b(tom ford|creed|maison)\b/i))) score += 1;
+            
+            return { ...perfume, score };
+          });
+          
+          // Sort by score and take top recommendations
+          const topPerfumes = scoredPerfumes
+            .sort((a, b) => b.score - a.score)
+            .filter(p => p.score > 0) // Only include perfumes with positive scores
+            .slice(0, 5);
+          
+          console.log('Intelligent fallback scoring results:', topPerfumes.map(p => ({ name: p.name, brand: p.brand, score: p.score })));
+          
+          if (topPerfumes.length > 0) {
+            recommendations = topPerfumes.map(p => p.id);
+          } else {
+            // Final fallback - just use top-rated perfumes with basic gender filter
+            const basicFiltered = availablePerfumes.filter(p => {
+              if (preferences.masculine) return p.gender === 'masculino' || p.gender === 'unissex';
+              if (preferences.feminine) return p.gender === 'feminino' || p.gender === 'unissex';
+              return true;
+            });
+            recommendations = basicFiltered.slice(0, 3).map(p => p.id);
           }
           
-          if (wantsOriental) {
-            const orientalPerfumes = filteredPerfumes.filter(p => 
-              p.family?.toLowerCase().includes('oriental') || 
-              p.family?.toLowerCase().includes('âmbar') ||
-              p.description?.toLowerCase().includes('oriental') ||
-              p.description?.toLowerCase().includes('âmbar')
-            );
-            if (orientalPerfumes.length > 0) {
-              filteredPerfumes = orientalPerfumes;
-            }
-          }
-          
-          // Avoid floral if user is masculine and didn't mention liking floral
-          if (avoidFloral) {
-            const nonFloralPerfumes = filteredPerfumes.filter(p => 
-              !p.family?.toLowerCase().includes('floral') &&
-              !p.family?.toLowerCase().includes('flor')
-            );
-            if (nonFloralPerfumes.length > 0) {
-              filteredPerfumes = nonFloralPerfumes;
-            }
-          }
-          
-          console.log(`Fallback filters applied - Total: ${filteredPerfumes.length}, isMasculine: ${isMasculine}, wantsWoody: ${wantsWoody}, avoidFloral: ${avoidFloral}`);
-          
-          recommendations = filteredPerfumes
-            .sort(() => Math.random() - 0.5) // Shuffle for variety
-            .slice(0, Math.min(3, filteredPerfumes.length))
-            .map(p => p.id);
           isComplete = true;
         }
       } catch (error) {
