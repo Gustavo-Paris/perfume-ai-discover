@@ -91,8 +91,8 @@ const Catalogo = () => {
       // Family filter
       const matchesFamily = selectedFamilies.length === 0 || selectedFamilies.includes(perfume.family);
 
-      // Price filter (using 5ml price as reference)
-      const referencePrice = perfume.price_5ml || perfume.price_full / 10; // Fallback calculation
+      // Price filter (using full bottle price to match DynamicFilters)
+      const referencePrice = perfume.price_full;
       const matchesPrice = referencePrice >= priceRange[0] && referencePrice <= priceRange[1];
 
       return matchesBrand && matchesGender && matchesFamily && matchesPrice;
@@ -219,12 +219,12 @@ const Catalogo = () => {
       {/* Price Range */}
       <div>
         <h3 className="font-display font-semibold mb-3 text-gray-900">
-          Preço (5ml): R$ {priceRange[0]} - R$ {priceRange[1]}
+          Preço: R$ {priceRange[0]} - R$ {priceRange[1]}
         </h3>
         <Slider
           value={priceRange}
           onValueChange={setPriceRange}
-          max={200}
+          max={1000}
           min={0}
           step={10}
           className="w-full [&_[role=slider]]:bg-navy-900 [&_[role=slider]]:border-navy-900"
