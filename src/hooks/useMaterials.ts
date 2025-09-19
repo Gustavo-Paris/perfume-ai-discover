@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface Material {
   id: string;
@@ -420,7 +421,7 @@ export const useDeletePackagingRule = () => {
 
 export const useRecalculateAllMaterialCosts = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.rpc('recalculate_all_material_costs');
@@ -434,16 +435,20 @@ export const useRecalculateAllMaterialCosts = () => {
     },
     onSuccess: (data) => {
       if (data && typeof data === 'object' && (data as any)?.message) {
-        // Toast será mostrado pelo componente que chama
+        toast.success(`✅ ${(data as any).message}`);
+      } else {
+        toast.success('✅ Custos dos materiais recalculados com sucesso');
       }
       
-      // Invalidar queries relacionadas
+      // Invalidar todas as queries relacionadas aos materiais
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['material-lots'] });
       queryClient.invalidateQueries({ queryKey: ['perfumes'] });
       queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
     },
+    onError: (error) => {
+      console.error('Erro ao recalcular custos dos materiais:', error);
+      toast.error('❌ Erro ao recalcular custos. Verifique o console.');
+    },
   });
 };
-
-// Hooks de automação removidos na simplificação conservadora

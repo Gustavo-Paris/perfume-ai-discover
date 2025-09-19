@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Package, AlertTriangle, Boxes, Tags, Edit2, Trash2, Settings, Calculator } from 'lucide-react';
+import { Plus, Package, AlertTriangle, Boxes, Tags, Edit2, Trash2, Settings, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -306,11 +306,12 @@ export default function AdminMaterialsSimplified() {
           </p>
         </div>
         <Button 
-          onClick={handleRecalculateAllCosts}
+          onClick={() => recalculateAllMaterialCosts.mutate()}
           disabled={recalculateAllMaterialCosts.isPending}
           variant="outline"
+          className="flex items-center gap-2"
         >
-          <Calculator className="h-4 w-4 mr-2" />
+          <RefreshCw className={`h-4 w-4 ${recalculateAllMaterialCosts.isPending ? 'animate-spin' : ''}`} />
           {recalculateAllMaterialCosts.isPending ? 'Recalculando...' : 'Recalcular Custos'}
         </Button>
       </div>
