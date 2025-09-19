@@ -235,16 +235,16 @@ const AdminPerfumes = () => {
             <Calculator className={`mr-2 h-4 w-4 ${updateAllMargins.isPending ? 'animate-spin' : ''}`} />
             {updateAllMargins.isPending ? 'Atualizando...' : 'Definir Margem 80% p/ Todos'}
           </Button>
-           <Button
-             onClick={() => recalculateAll.mutate()}
-             disabled={recalculateAll.isPending}
-             variant="outline"
-             size="sm"
-             className="bg-green-600 hover:bg-green-700 text-white"
-           >
-             <RefreshCw className={`mr-2 h-4 w-4 ${recalculateAll.isPending ? 'animate-spin' : ''}`} />
-             {recalculateAll.isPending ? 'Sincronizando...' : 'Sincronizar Preços AGORA'}
-           </Button>
+          <Button
+            onClick={() => recalculateAllPerfumePrices.mutate()}
+            disabled={recalculateAllPerfumePrices.isPending}
+            variant="outline"
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${recalculateAllPerfumePrices.isPending ? 'animate-spin' : ''}`} />
+            {recalculateAllPerfumePrices.isPending ? 'Recalculando...' : 'Recalcular Todos os Preços'}
+          </Button>
            <Button
             onClick={handleSyncToAlgolia}
             disabled={isSyncing}
