@@ -106,13 +106,9 @@ const Catalogo = () => {
         case 'brand':
           return a.brand.localeCompare(b.brand);
         case 'price-low':
-          const priceA = a.price_5ml || a.price_full / 10;
-          const priceB = b.price_5ml || b.price_full / 10;
-          return priceA - priceB;
+          return a.price_full - b.price_full;
         case 'price-high':
-          const priceA2 = a.price_5ml || a.price_full / 10;
-          const priceB2 = b.price_5ml || b.price_full / 10;
-          return priceB2 - priceA2;
+          return b.price_full - a.price_full;
         default:
           return 0;
       }
@@ -166,7 +162,6 @@ const Catalogo = () => {
                 id={`brand-${brand}`}
                 checked={selectedBrands.includes(brand)}
                 onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
-                className="border-gray-300 data-[state=checked]:bg-navy-900 data-[state=checked]:border-navy-900"
               />
               <Label htmlFor={`brand-${brand}`} className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer">
                 {brand}
@@ -186,7 +181,6 @@ const Catalogo = () => {
                 id={`gender-${gender}`}
                 checked={selectedGenders.includes(gender)}
                 onCheckedChange={(checked) => handleGenderChange(gender, checked as boolean)}
-                className="border-gray-300 data-[state=checked]:bg-navy-900 data-[state=checked]:border-navy-900"
               />
               <Label htmlFor={`gender-${gender}`} className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer capitalize">
                 {gender}
@@ -206,7 +200,6 @@ const Catalogo = () => {
                 id={`family-${family}`}
                 checked={selectedFamilies.includes(family)}
                 onCheckedChange={(checked) => handleFamilyChange(family, checked as boolean)}
-                className="border-gray-300 data-[state=checked]:bg-navy-900 data-[state=checked]:border-navy-900"
               />
               <Label htmlFor={`family-${family}`} className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer">
                 {family}
@@ -227,7 +220,7 @@ const Catalogo = () => {
           max={1000}
           min={0}
           step={10}
-          className="w-full [&_[role=slider]]:bg-navy-900 [&_[role=slider]]:border-navy-900"
+          className="w-full [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
         />
       </div>
 
@@ -323,10 +316,10 @@ const Catalogo = () => {
 
             {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-48 bg-white border-gray-300 text-gray-800 focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/40 rounded-xl">
+              <SelectTrigger className="w-full md:w-48 bg-white border-gray-300 text-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary/40 rounded-xl shadow-sm">
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
+              <SelectContent className="bg-white border-gray-200 shadow-lg z-50">
                 <SelectItem value="name">Nome A-Z</SelectItem>
                 <SelectItem value="brand">Marca A-Z</SelectItem>
                 <SelectItem value="price-low">Menor Preço</SelectItem>
