@@ -32,9 +32,9 @@ export interface SearchFilters {
   categories: string[];
 }
 
-export const useAdvancedSearch = () => {
+export const useAdvancedSearch = (initialQuery: string = '') => {
   const { user } = useAuth();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -51,12 +51,23 @@ export const useAdvancedSearch = () => {
 
   const debouncedQuery = useDebounce(query, 300);
 
+  // Execute initial search if initialQuery is provided
+  useEffect(() => {
+    if (initialQuery && initialQuery.trim() && initialQuery !== query) {
+      setQuery(initialQuery);
+      // The search will be triggered by the debouncedQuery effect
+    }
+  }, [initialQuery, query]);
+
   // Buscar sugestões quando o usuário digita
   useEffect(() => {
     if (debouncedQuery.length >= 2) {
       fetchSuggestions(debouncedQuery);
     } else {
       setSuggestions([]);
+      if (debouncedQuery.length === 0) {
+        setResults([]);
+      }
     }
   }, [debouncedQuery]);
 
@@ -325,6 +336,13 @@ export const useAdvancedSearch = () => {
       performSearch(query, clearedFilters);
     }
   }, [query, performSearch]);
+
+  // Execute search when debouncedQuery changes
+  useEffect(() => {
+    if (debouncedQuery.length >= 2) {
+      performSearch(debouncedQuery);
+    }
+  }, [debouncedQuery, performSearch]);
 
   // Estatísticas úteis
   const searchStats = useMemo(() => ({

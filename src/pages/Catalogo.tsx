@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const Catalogo = () => {
   const { data: databasePerfumes, isLoading } = usePerfumes();
   const { data: availableSizes } = useAvailableSizes();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [sortBy, setSortBy] = useState('name');
@@ -32,6 +34,15 @@ const Catalogo = () => {
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedFamilies, setSelectedFamilies] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState([0, 1000]);
+
+  // Check for search query in URL params on mount
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      // The query will be passed as initialQuery to AdvancedSearchBox
+      console.log('URL query found:', query);
+    }
+  }, [searchParams]);
 
   // Use search results if available, otherwise show all perfumes
   const perfumesToShow = useMemo(() => {
@@ -140,6 +151,7 @@ const Catalogo = () => {
     setSelectedFamilies([]);
     setPriceRange([0, 1000]);
     setSearchResults([]); // Clear search results to show all perfumes
+    setSearchParams({}); // Clear URL params
   };
 
   const FilterContent = () => (
@@ -304,6 +316,8 @@ const Catalogo = () => {
                 onResultsChange={setSearchResults}
                 onFiltersOpen={() => setShowAdvancedFilters(true)}
                 size="md"
+                className="w-full"
+                initialQuery={searchParams.get('q') || ''}
               />
             </div>
 

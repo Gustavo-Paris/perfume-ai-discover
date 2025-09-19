@@ -17,6 +17,7 @@ interface AdvancedSearchBoxProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showImageSearch?: boolean;
+  initialQuery?: string;
 }
 
 const AdvancedSearchBox = ({ 
@@ -25,7 +26,8 @@ const AdvancedSearchBox = ({
   onFiltersOpen,
   className,
   size = 'md',
-  showImageSearch = true
+  showImageSearch = true,
+  initialQuery = ''
 }: AdvancedSearchBoxProps) => {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +48,7 @@ const AdvancedSearchBox = ({
     performSearch,
     setShowSuggestions,
     clearRecentSearches
-  } = useAdvancedSearch();
+  } = useAdvancedSearch(initialQuery);
 
   const {
     isRecording,
