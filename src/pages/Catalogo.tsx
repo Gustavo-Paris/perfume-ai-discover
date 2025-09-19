@@ -354,6 +354,39 @@ const Catalogo = () => {
           </motion.div>
 
           <div className="flex gap-8">
+            {/* Advanced Filters Modal */}
+            <Sheet open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+              <SheetContent side="right" className="w-96 bg-white overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="font-display text-gray-900">Filtros Avançados</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <DynamicFilters
+                    filters={{
+                      brands: selectedBrands,
+                      families: selectedFamilies,
+                      genders: selectedGenders,
+                      priceRange: priceRange as [number, number],
+                      categories: []
+                    }}
+                    onFiltersChange={(newFilters) => {
+                      if (newFilters.brands) setSelectedBrands(newFilters.brands);
+                      if (newFilters.families) setSelectedFamilies(newFilters.families);
+                      if (newFilters.genders) setSelectedGenders(newFilters.genders);
+                      if (newFilters.priceRange) setPriceRange(newFilters.priceRange);
+                    }}
+                    onClearFilters={() => {
+                      setSelectedBrands([]);
+                      setSelectedFamilies([]);
+                      setSelectedGenders([]);
+                      setPriceRange([0, 1000]);
+                    }}
+                    searchQuery={searchParams.get('q') || ''}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+
             {/* Desktop Filters */}
             <motion.aside 
               className="hidden md:block w-64 shrink-0"

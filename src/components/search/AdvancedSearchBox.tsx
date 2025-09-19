@@ -119,7 +119,11 @@ const AdvancedSearchBox = ({
         performSearch(result);
       }
     } else {
-      startRecording();
+      const started = await startRecording();
+      if (!started) {
+        // Show toast about permission or error
+        console.warn('Could not start voice recording');
+      }
     }
   };
 
