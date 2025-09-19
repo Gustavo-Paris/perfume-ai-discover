@@ -79,13 +79,6 @@ const Catalogo = () => {
   const genders = [...new Set(perfumesToShow.map(p => p.gender))];
   const families = [...new Set(perfumesToShow.map(p => p.family))];
 
-  // Debug Jo Malone issue
-  console.log('Debug - perfumesToShow length:', perfumesToShow.length);
-  console.log('Debug - Jo Malone in perfumesToShow:', perfumesToShow.find(p => p.brand === 'Jo Malone'));
-  console.log('Debug - brands available:', brands);
-  console.log('Debug - selectedBrands:', selectedBrands);
-  console.log('Debug - priceRange:', priceRange);
-
   // Filter and sort perfumes
   const filteredPerfumes = useMemo(() => {
     let filtered = perfumesToShow.filter(perfume => {

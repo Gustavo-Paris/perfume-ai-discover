@@ -38,6 +38,7 @@ import AdminPromotions from "./pages/admin/AdminPromotions";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
 import Notificacoes from "./pages/Notificacoes";
+import Configuracoes from "./pages/Configuracoes";
 import Wishlist from "./pages/Wishlist";
 import ComparisonPage from "./pages/ComparisonPage";
 import PerfumeDetails from "./pages/PerfumeDetails";
@@ -88,6 +89,7 @@ const AppContent = () => {
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/notificacoes" element={<Notificacoes />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="/notas-fiscais" element={<MinhasNotasFiscais />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/comparacao/:id" element={<ComparisonPage />} />

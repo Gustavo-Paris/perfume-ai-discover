@@ -1,7 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, UserCircle, Trash2, AlertTriangle, Shield, Users, Package, Heart, CreditCard, FileText } from 'lucide-react';
+import { 
+  User, LogOut, Settings, UserCircle, Trash2, AlertTriangle, Shield, Users, 
+  Package, Heart, CreditCard, FileText, Bell, HelpCircle, Star, MapPin 
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,6 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -144,85 +148,126 @@ const HeaderUserMenu = ({ disabled = false }: HeaderUserMenuProps) => {
           </Button>
         </DropdownMenuTrigger>
         {!disabled && (
-          <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">
-                {user.user_metadata?.name || 'Usuário'}
-              </p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {user.email}
-              </p>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          
-            <DropdownMenuItem asChild>
-              <Link to="/pedidos">
-                <Package className="h-4 w-4" />
-                <span>Meus Pedidos</span>
-              </Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem asChild>
-              <Link to="/wishlist">
-                <Heart className="h-4 w-4" />
-                <span>Lista de Desejos</span>
-              </Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem asChild>
-              <Link to="/notas-fiscais">
-                <FileText className="h-4 w-4" />
-                <span>Minhas Notas Fiscais</span>
-              </Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem asChild>
-              <Link to="/fidelidade">
-                <CreditCard className="h-4 w-4" />
-                <span>Programa de Fidelidade</span>
-              </Link>
-            </DropdownMenuItem>
-          
-          {user && affiliate && affiliate.status === 'active' && (
-            <DropdownMenuItem asChild>
-              <Link to="/afiliados">
-                <Users className="h-4 w-4" />
-                <span>Programa de Afiliados</span>
-              </Link>
-            </DropdownMenuItem>
-          )}
-          
-          {isAdmin && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/admin">
-                  <Shield className="h-4 w-4" />
-                  <span>Administração</span>
+          <DropdownMenuContent align="end" className="w-64 z-50 bg-white shadow-lg">
+            {/* User Info Header */}
+            <DropdownMenuLabel className="font-normal p-4 bg-gradient-to-r from-primary/5 to-primary/10">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-semibold leading-none text-primary">
+                  {user.user_metadata?.name || 'Usuário'}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            
+            <DropdownMenuSeparator />
+            
+            {/* Main Account Actions */}
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild className="py-3 px-4">
+                <Link to="/pedidos" className="flex items-center gap-3">
+                  <Package className="h-4 w-4 text-primary" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">Meus Pedidos</span>
+                    <span className="text-xs text-muted-foreground">Acompanhe seus pedidos</span>
+                  </div>
                 </Link>
               </DropdownMenuItem>
-            </>
-          )}
-          
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </DropdownMenuItem>
-          
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuItem 
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-red-600 focus:text-red-600 focus:bg-red-50"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Excluir Conta
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+
+              <DropdownMenuItem asChild className="py-3 px-4">
+                <Link to="/wishlist" className="flex items-center gap-3">
+                  <Heart className="h-4 w-4 text-red-500" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">Lista de Desejos</span>
+                    <span className="text-xs text-muted-foreground">Seus favoritos salvos</span>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild className="py-3 px-4">
+                <Link to="/notificacoes" className="flex items-center gap-3">
+                  <Bell className="h-4 w-4 text-blue-500" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">Notificações</span>
+                    <span className="text-xs text-muted-foreground">Mensagens e alertas</span>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            
+            <DropdownMenuSeparator />
+            
+            {/* Finance & Programs */}
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild className="py-2 px-4">
+                <Link to="/fidelidade" className="flex items-center gap-3">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  <span className="font-medium">Fidelidade</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild className="py-2 px-4">
+                <Link to="/notas-fiscais" className="flex items-center gap-3">
+                  <FileText className="h-4 w-4 text-green-600" />
+                  <span className="font-medium">Notas Fiscais</span>
+                </Link>
+              </DropdownMenuItem>
+              
+              {user && affiliate && affiliate.status === 'active' && (
+                <DropdownMenuItem asChild className="py-2 px-4">
+                  <Link to="/afiliados" className="flex items-center gap-3">
+                    <Users className="h-4 w-4 text-purple-600" />
+                    <span className="font-medium">Afiliados</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuGroup>
+            
+            <DropdownMenuSeparator />
+            
+            {/* Support & Help */}
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild className="py-2 px-4">
+                <Link to="/sac" className="flex items-center gap-3">
+                  <HelpCircle className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium">Suporte</span>
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild className="py-2 px-4">
+                <Link to="/configuracoes" className="flex items-center gap-3">
+                  <Settings className="h-4 w-4 text-gray-600" />
+                  <span className="font-medium">Configurações</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            
+            {/* Admin Section */}
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild className="py-2 px-4">
+                    <Link to="/admin" className="flex items-center gap-3">
+                      <Shield className="h-4 w-4 text-orange-600" />
+                      <span className="font-medium text-orange-700">Administração</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            )}
+            
+            <DropdownMenuSeparator />
+            
+            {/* Account Actions */}
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={handleSignOut} className="py-2 px-4">
+                <LogOut className="mr-3 h-4 w-4 text-gray-600" />
+                <span className="font-medium">Sair</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
         )}
       </DropdownMenu>
 
