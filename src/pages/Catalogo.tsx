@@ -33,7 +33,7 @@ const Catalogo = () => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedFamilies, setSelectedFamilies] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([0, 2000]);
 
   // Check for search query in URL params on mount
   useEffect(() => {
@@ -78,6 +78,13 @@ const Catalogo = () => {
   const brands = [...new Set(perfumesToShow.map(p => p.brand))];
   const genders = [...new Set(perfumesToShow.map(p => p.gender))];
   const families = [...new Set(perfumesToShow.map(p => p.family))];
+
+  // Debug Jo Malone issue
+  console.log('Debug - perfumesToShow length:', perfumesToShow.length);
+  console.log('Debug - Jo Malone in perfumesToShow:', perfumesToShow.find(p => p.brand === 'Jo Malone'));
+  console.log('Debug - brands available:', brands);
+  console.log('Debug - selectedBrands:', selectedBrands);
+  console.log('Debug - priceRange:', priceRange);
 
   // Filter and sort perfumes
   const filteredPerfumes = useMemo(() => {
@@ -145,7 +152,7 @@ const Catalogo = () => {
     setSelectedBrands([]);
     setSelectedGenders([]);
     setSelectedFamilies([]);
-    setPriceRange([0, 1000]);
+    setPriceRange([0, 2000]);
     setSearchResults([]); // Clear search results to show all perfumes
     setSearchParams({}); // Clear URL params
   };
@@ -217,7 +224,7 @@ const Catalogo = () => {
         <Slider
           value={priceRange}
           onValueChange={setPriceRange}
-          max={1000}
+          max={2000}
           min={0}
           step={10}
           className="w-full [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
@@ -372,7 +379,7 @@ const Catalogo = () => {
                       setSelectedBrands([]);
                       setSelectedFamilies([]);
                       setSelectedGenders([]);
-                      setPriceRange([0, 1000]);
+                      setPriceRange([0, 2000]);
                     }}
                     searchQuery={searchParams.get('q') || ''}
                   />
