@@ -267,8 +267,28 @@ REGRAS:
           const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
           
           const recommendationMessages = [
-            { role: 'system', content: 'Você é um especialista em perfumaria. Com base no perfil do usuário, recomende entre 1 a 5 perfumes da lista fornecida, priorizando qualidade das combinações sobre quantidade. Responda APENAS com um JSON array de IDs dos perfumes recomendados, exemplo: ["id1", "id2"] ou ["id1", "id2", "id3", "id4"]' },
-            { role: 'user', content: `Perfil do usuário baseado na conversa: ${userProfile}\n\nPerfumes disponíveis: ${JSON.stringify(availablePerfumes.map(p => ({ id: p.id, name: p.name, brand: p.brand, description: p.description, family: p.family, gender: p.gender })))}\n\nAnalise cuidadosamente o perfil e retorne APENAS os IDs dos perfumes mais adequados (1-5 perfumes) em formato JSON array. Priorize precisão sobre quantidade.` }
+            { role: 'system', content: 'Você é um especialista em perfumaria que DEVE respeitar rigorosamente as preferências de gênero e família olfativa do usuário. NUNCA recomende perfumes femininos para usuários masculinos, ou perfumes florais para quem pediu amadeirados. Responda APENAS com um JSON array de IDs dos perfumes recomendados.' },
+            { role: 'user', content: `Perfil do usuário baseado na conversa: ${userProfile}
+
+INSTRUÇÕES CRÍTICAS:
+- Se o usuário mencionou preferências masculinas/unissex, NUNCA inclua perfumes femininos
+- Se o usuário mencionou gostar de amadeirados/orientais, priorize essas famílias
+- Se o usuário disse não gostar de florais, NUNCA inclua perfumes florais
+- Respeite RIGOROSAMENTE as preferências de gênero e família olfativa
+
+Perfumes disponíveis: ${JSON.stringify(availablePerfumes.map(p => ({ 
+  id: p.id, 
+  name: p.name, 
+  brand: p.brand, 
+  description: p.description, 
+  family: p.family, 
+  gender: p.gender,
+  top_notes: p.top_notes,
+  heart_notes: p.heart_notes,
+  base_notes: p.base_notes
+})))}
+
+Analise cuidadosamente o perfil e retorne APENAS os IDs dos perfumes mais adequados (1-5 perfumes) em formato JSON array. PRIORIZE PRECISÃO E COMPATIBILIDADE com as preferências mencionadas.` }
           ];
 
           const recommendationData = await callOpenAI(recommendationMessages);
@@ -293,14 +313,48 @@ REGRAS:
         } catch (error) {
           console.error('Error generating recommendations:', error);
           // Fallback to smart recommendations based on conversation
-          const genderMatch = userProfile.toLowerCase().includes('masculino') ? 'masculino' : 
-                             userProfile.toLowerCase().includes('feminino') ? 'feminino' : null;
+          const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n').toLowerCase();
+          
+          // Enhanced preference detection
+          const isMasculine = userProfile.includes('masculino') || 
+                             userProfile.includes('homem') || 
+                             userProfile.includes('para mim') && !userProfile.includes('feminino');
+          const wantsUnisex = userProfile.includes('unissex');
+          const wantsWoody = userProfile.includes('amadeirado') || 
+                            userProfile.includes('madeira') || 
+                            userProfile.includes('woody');
+          const wantsOriental = userProfile.includes('oriental') || 
+                               userProfile.includes('âmbar');
           
           let filteredPerfumes = availablePerfumes;
-          if (genderMatch) {
+          
+          // Apply gender filter
+          if (isMasculine || wantsUnisex) {
             filteredPerfumes = availablePerfumes.filter(p => 
-              p.gender === genderMatch || p.gender === 'unissex'
+              p.gender === 'masculino' || p.gender === 'unissex'
             );
+          }
+          
+          // Apply family filter
+          if (wantsWoody) {
+            const woodyPerfumes = filteredPerfumes.filter(p => 
+              p.family?.toLowerCase().includes('amadeirado') || 
+              p.family?.toLowerCase().includes('woody') ||
+              p.description?.toLowerCase().includes('amadeirado')
+            );
+            if (woodyPerfumes.length > 0) {
+              filteredPerfumes = woodyPerfumes;
+            }
+          }
+          
+          // Remove floral perfumes for masculine preferences
+          if (isMasculine) {
+            const nonFloralPerfumes = filteredPerfumes.filter(p => 
+              !p.family?.toLowerCase().includes('floral')
+            );
+            if (nonFloralPerfumes.length > 0) {
+              filteredPerfumes = nonFloralPerfumes;
+            }
           }
           
           recommendations = filteredPerfumes
@@ -386,19 +440,80 @@ Responda APENAS com um array JSON de 1-5 IDs dos perfumes mais precisos. Exemplo
           }
         } catch (e) {
           console.log('Failed to parse recommendations, using smart fallback');
-          // Smart fallback based on conversation
-          const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
-          const genderMatch = userProfile.toLowerCase().includes('masculino') ? 'masculino' : 
-                             userProfile.toLowerCase().includes('feminino') ? 'feminino' : null;
+          // Smart fallback based on conversation with enhanced filtering
+          const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n').toLowerCase();
+          
+          // Enhanced gender detection
+          const isMasculine = userProfile.includes('masculino') || 
+                             userProfile.includes('homem') || 
+                             userProfile.includes('para mim') && !userProfile.includes('feminino');
+          const isFeminine = userProfile.includes('feminino') || 
+                            userProfile.includes('mulher') || 
+                            userProfile.includes('para ela');
+          const wantsUnisex = userProfile.includes('unissex');
+          
+          // Family preferences detection
+          const wantsWoody = userProfile.includes('amadeirado') || 
+                            userProfile.includes('madeira') || 
+                            userProfile.includes('woody');
+          const wantsOriental = userProfile.includes('oriental') || 
+                               userProfile.includes('âmbar') || 
+                               userProfile.includes('amber');
+          const avoidFloral = userProfile.includes('não gosto') && userProfile.includes('floral') ||
+                             isMasculine && !userProfile.includes('floral'); // Avoid floral for masculine unless explicitly mentioned
           
           let filteredPerfumes = availablePerfumes;
-          if (genderMatch) {
-            filteredPerfumes = availablePerfumes.filter(p => 
-              p.gender === genderMatch || p.gender === 'unissex'
+          
+          // Filter by gender preferences
+          if (isMasculine || wantsUnisex) {
+            filteredPerfumes = filteredPerfumes.filter(p => 
+              p.gender === 'masculino' || p.gender === 'unissex'
+            );
+          } else if (isFeminine) {
+            filteredPerfumes = filteredPerfumes.filter(p => 
+              p.gender === 'feminino' || p.gender === 'unissex'
             );
           }
           
-          recommendations = filteredPerfumes.slice(0, Math.min(3, filteredPerfumes.length)).map(p => p.id);
+          // Filter by family preferences
+          if (wantsWoody) {
+            filteredPerfumes = filteredPerfumes.filter(p => 
+              p.family?.toLowerCase().includes('amadeirado') || 
+              p.family?.toLowerCase().includes('woody') ||
+              p.description?.toLowerCase().includes('amadeirado') ||
+              p.description?.toLowerCase().includes('madeira')
+            );
+          }
+          
+          if (wantsOriental) {
+            const orientalPerfumes = filteredPerfumes.filter(p => 
+              p.family?.toLowerCase().includes('oriental') || 
+              p.family?.toLowerCase().includes('âmbar') ||
+              p.description?.toLowerCase().includes('oriental') ||
+              p.description?.toLowerCase().includes('âmbar')
+            );
+            if (orientalPerfumes.length > 0) {
+              filteredPerfumes = orientalPerfumes;
+            }
+          }
+          
+          // Avoid floral if user is masculine and didn't mention liking floral
+          if (avoidFloral) {
+            const nonFloralPerfumes = filteredPerfumes.filter(p => 
+              !p.family?.toLowerCase().includes('floral') &&
+              !p.family?.toLowerCase().includes('flor')
+            );
+            if (nonFloralPerfumes.length > 0) {
+              filteredPerfumes = nonFloralPerfumes;
+            }
+          }
+          
+          console.log(`Fallback filters applied - Total: ${filteredPerfumes.length}, isMasculine: ${isMasculine}, wantsWoody: ${wantsWoody}, avoidFloral: ${avoidFloral}`);
+          
+          recommendations = filteredPerfumes
+            .sort(() => Math.random() - 0.5) // Shuffle for variety
+            .slice(0, Math.min(3, filteredPerfumes.length))
+            .map(p => p.id);
           isComplete = true;
         }
       } catch (error) {
