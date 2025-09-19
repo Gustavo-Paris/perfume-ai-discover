@@ -16,7 +16,7 @@ import { useMaterialConfigurations } from '@/hooks/useMaterialConfigurations';
 import { useRecalculateAllPerfumePrices } from '@/hooks/useMaterials';
 import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { syncPerfumesToAlgolia } from '@/utils/algoliaSync';
+
 import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
 import { PricesDisplayModal } from '@/components/admin/PricesDisplayModal';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
@@ -40,7 +40,7 @@ const AdminPerfumes = () => {
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingPerfume, setEditingPerfume] = useState<DatabasePerfume | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
+  
   const [newMargin, setNewMargin] = useState<number>(50);
   const [formData, setFormData] = useState({
     brand: '',
@@ -60,29 +60,6 @@ const AdminPerfumes = () => {
     price_full: 0,
   });
 
-  const handleSyncToAlgolia = async () => {
-    setIsSyncing(true);
-    try {
-      const success = await syncPerfumesToAlgolia();
-      if (success) {
-        toast({ title: "Perfumes sincronizados com Algolia com sucesso!" });
-      } else {
-        toast({ 
-          title: "Erro", 
-          description: "Falha ao sincronizar com Algolia.",
-          variant: "destructive" 
-        });
-      }
-    } catch (error) {
-      toast({ 
-        title: "Erro", 
-        description: "Erro ao sincronizar com Algolia.",
-        variant: "destructive" 
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const resetForm = () => {
     setFormData({
@@ -225,14 +202,6 @@ const AdminPerfumes = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Gerenciar Perfumes</h1>
         <div className="flex gap-2">
-          <Button
-            onClick={handleSyncToAlgolia}
-            disabled={isSyncing}
-            variant="outline"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? 'Sincronizando...' : 'Sincronizar Algolia'}
-          </Button>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button onClick={resetForm}>

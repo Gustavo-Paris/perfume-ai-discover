@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import HeaderUserMenu from './HeaderUserMenu';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
-import AlgoliaAutocomplete from '@/components/search/AlgoliaAutocomplete';
+import AdvancedSearchBox from '@/components/search/AdvancedSearchBox';
 import { useRecovery } from '@/contexts/RecoveryContext';
 
 interface HeaderActionsProps {
@@ -82,7 +82,11 @@ const HeaderActions = ({ isSearchOpen, setIsSearchOpen, disabled = false }: Head
         <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-gray-200 shadow-lg animate-fade-in z-40">
           <div className="container mx-auto px-4 py-4">
             <div className="max-w-2xl mx-auto">
-              <AlgoliaAutocomplete />
+              <AdvancedSearchBox 
+                placeholder="Buscar perfumes, marcas ou notas..."
+                size="md"
+                showImageSearch={false}
+              />
             </div>
           </div>
         </div>
