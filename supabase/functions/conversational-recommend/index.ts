@@ -299,11 +299,15 @@ ANÁLISE INTELIGENTE:
 - Analise o que o usuário GOSTA vs. o que NÃO GOSTA
 - Priorize QUALIDADE da combinação sobre quantidade
 
-INSTRUÇÕES CRÍTICAS:
+INSTRUÇÕES CRÍTICAS OBRIGATÓRIAS:
 - Analise profundamente o perfil completo do usuário
 - Se mencionar gostar de um perfume específico, procure similares/inspirações
 - Considere notas, família, intensidade, ocasiões mencionadas
-- NUNCA ignore preferências explícitas (ex: se não gosta de floral, NUNCA recomende)
+- **REGRA ABSOLUTA**: RESPEITE RIGOROSAMENTE as preferências de gênero
+- **NUNCA** recomende perfumes femininos se usuário quer masculino/unissex
+- **NUNCA** ignore famílias olfativas que o usuário NÃO GOSTA
+- **NUNCA** recomende florais se usuário especificamente não gosta
+- Verifique DUAS VEZES o gender do perfume antes de recomendar
 - Recomende apenas perfumes que fazem SENTIDO PERFEITO para o perfil
 - Responda APENAS com JSON array de IDs: ["id1", "id2", "id3"]` },
             { role: 'user', content: `PERFIL COMPLETO DO USUÁRIO:
@@ -360,10 +364,13 @@ RESPOSTA: Analise o perfil e retorne APENAS um JSON array com 1-5 IDs dos perfum
           // Fallback to smart recommendations based on conversation
           const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n').toLowerCase();
           
-          // Enhanced preference detection
-          const isMasculine = userProfile.includes('masculino') || 
-                             userProfile.includes('homem') || 
-                             userProfile.includes('para mim') && !userProfile.includes('feminino');
+          // Enhanced preference detection with strict gender filtering
+          const mentionsFeminine = userProfile.includes('feminino') || 
+                                  userProfile.includes('feminina') || 
+                                  userProfile.includes('mulher');
+          const mentionsMasculine = userProfile.includes('masculino') || 
+                                   userProfile.includes('homem') || 
+                                   (userProfile.includes('para mim') && !mentionsFeminine);
           const wantsUnisex = userProfile.includes('unissex');
           const wantsWoody = userProfile.includes('amadeirado') || 
                             userProfile.includes('madeira') || 
@@ -373,11 +380,18 @@ RESPOSTA: Analise o perfil e retorne APENAS um JSON array com 1-5 IDs dos perfum
           
           let filteredPerfumes = availablePerfumes;
           
-          // Apply gender filter
-          if (isMasculine || wantsUnisex) {
+          // Apply STRICT gender filter - NEVER include feminino if user wants masculino/unissex
+          if (mentionsMasculine && !mentionsFeminine) {
             filteredPerfumes = availablePerfumes.filter(p => 
               p.gender === 'masculino' || p.gender === 'unissex'
             );
+            console.log(`Filtered to ${filteredPerfumes.length} masculine/unisex perfumes (original: ${availablePerfumes.length})`);
+          } else if (mentionsFeminine && !mentionsMasculine) {
+            filteredPerfumes = availablePerfumes.filter(p => 
+              p.gender === 'feminino' || p.gender === 'unissex'
+            );
+          } else if (wantsUnisex) {
+            filteredPerfumes = availablePerfumes.filter(p => p.gender === 'unissex');
           }
           
           // Apply family filter
@@ -392,10 +406,11 @@ RESPOSTA: Analise o perfil e retorne APENAS um JSON array com 1-5 IDs dos perfum
             }
           }
           
-          // Remove floral perfumes for masculine preferences
-          if (isMasculine) {
+          // Remove floral perfumes for masculine preferences or if user dislikes floral
+          if (mentionsMasculine || userProfile.includes('não gosto') && userProfile.includes('floral')) {
             const nonFloralPerfumes = filteredPerfumes.filter(p => 
-              !p.family?.toLowerCase().includes('floral')
+              !p.family?.toLowerCase().includes('floral') &&
+              !p.description?.toLowerCase().includes('floral')
             );
             if (nonFloralPerfumes.length > 0) {
               filteredPerfumes = nonFloralPerfumes;
@@ -562,17 +577,25 @@ LEMBRE-SE: Esta recomendação deve IMPRESSIONAR o cliente pela precisão e inte
           // Smart filtering based on comprehensive analysis
           let filteredPerfumes = [...availablePerfumes];
           
-          // Apply gender filtering intelligently
+          // Apply STRICT gender filtering - NEVER mix genders if user specified
           if (preferences.masculine && !preferences.feminine) {
+            const originalCount = filteredPerfumes.length;
             filteredPerfumes = filteredPerfumes.filter(p => 
               p.gender === 'masculino' || p.gender === 'unissex'
             );
+            console.log(`STRICT GENDER FILTER: ${originalCount} -> ${filteredPerfumes.length} (removed all feminine)`);
           } else if (preferences.feminine && !preferences.masculine) {
             filteredPerfumes = filteredPerfumes.filter(p => 
               p.gender === 'feminino' || p.gender === 'unissex'
             );
           } else if (preferences.unisex) {
             filteredPerfumes = filteredPerfumes.filter(p => p.gender === 'unissex');
+          }
+          
+          // DOUBLE CHECK: Remove any feminine perfumes if user wants masculine/unisex only
+          if (preferences.masculine && !preferences.feminine) {
+            filteredPerfumes = filteredPerfumes.filter(p => p.gender !== 'feminino');
+            console.log(`DOUBLE CHECK: Ensured no feminine perfumes in final list`);
           }
           
           // Apply family preferences with intelligent scoring
@@ -617,12 +640,18 @@ LEMBRE-SE: Esta recomendação deve IMPRESSIONAR o cliente pela precisão e inte
           if (topPerfumes.length > 0) {
             recommendations = topPerfumes.map(p => p.id);
           } else {
-            // Final fallback - just use top-rated perfumes with basic gender filter
+            // Final fallback with STRICT gender filtering
             const basicFiltered = availablePerfumes.filter(p => {
-              if (preferences.masculine) return p.gender === 'masculino' || p.gender === 'unissex';
-              if (preferences.feminine) return p.gender === 'feminino' || p.gender === 'unissex';
+              if (preferences.masculine && !preferences.feminine) {
+                // NEVER include feminine if user wants masculine
+                return p.gender === 'masculino' || p.gender === 'unissex';
+              }
+              if (preferences.feminine && !preferences.masculine) {
+                return p.gender === 'feminino' || p.gender === 'unissex';
+              }
               return true;
             });
+            console.log(`FINAL FALLBACK: ${basicFiltered.length} perfumes after strict gender filter`);
             recommendations = basicFiltered.slice(0, 3).map(p => p.id);
           }
           
