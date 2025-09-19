@@ -158,10 +158,10 @@ const HeaderSearchBox = ({
 
       {/* Dropdown de sugestões */}
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto animate-in slide-in-from-top-2">
           {hasContent ? (
             // Mostrar sugestões de busca
-            <div className="p-2">
+            <div className="p-3">
               {loading && (
                 <div className="flex items-center justify-center py-4 text-muted-foreground">
                   <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
@@ -171,16 +171,19 @@ const HeaderSearchBox = ({
               
               {!loading && suggestions.length > 0 && (
                 <div className="space-y-1">
+                  <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                    <Search className="h-3 w-3" />
+                    Sugestões
+                  </div>
                   {suggestions.map((suggestion) => (
                     <button
                       key={suggestion.id}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left px-3 py-2 rounded-sm hover:bg-muted flex items-center space-x-2 text-sm"
+                      className="w-full text-left px-3 py-2 rounded-md hover:bg-muted flex items-center justify-between text-sm group"
                     >
-                      <Search className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      <span>{suggestion.text}</span>
+                      <span className="truncate">{suggestion.text}</span>
                       {suggestion.type === 'product' && (
-                        <span className="text-xs text-muted-foreground ml-auto">Produto</span>
+                        <span className="text-xs text-muted-foreground ml-2 opacity-60 group-hover:opacity-100">Produto</span>
                       )}
                     </button>
                   ))}
@@ -195,22 +198,21 @@ const HeaderSearchBox = ({
             </div>
           ) : (
             // Mostrar buscas populares e recentes
-            <div className="p-2">
+            <div className="p-3">
               {recentSearches.length > 0 && (
                 <div className="mb-4">
-                  <div className="flex items-center space-x-2 px-3 py-2 text-xs font-medium text-muted-foreground">
+                  <div className="flex items-center space-x-2 mb-2 text-xs font-medium text-muted-foreground">
                     <Clock className="h-3 w-3" />
-                    <span>Buscas Recentes</span>
+                    <span>Recentes</span>
                   </div>
                   <div className="space-y-1">
                     {recentSearches.slice(0, 3).map((search, index) => (
                       <button
                         key={`recent-${index}`}
                         onClick={() => handleQuickSearchClick(search)}
-                        className="w-full text-left px-3 py-2 rounded-sm hover:bg-muted flex items-center space-x-2 text-sm"
+                        className="w-full text-left px-3 py-2 rounded-md hover:bg-muted text-sm text-muted-foreground hover:text-foreground"
                       >
-                        <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                        <span>{search}</span>
+                        {search}
                       </button>
                     ))}
                   </div>
@@ -219,19 +221,18 @@ const HeaderSearchBox = ({
 
               {popularSearches.length > 0 && (
                 <div>
-                  <div className="flex items-center space-x-2 px-3 py-2 text-xs font-medium text-muted-foreground">
+                  <div className="flex items-center space-x-2 mb-2 text-xs font-medium text-muted-foreground">
                     <TrendingUp className="h-3 w-3" />
-                    <span>Buscas Populares</span>
+                    <span>Populares</span>
                   </div>
                   <div className="space-y-1">
                     {popularSearches.slice(0, 3).map((search, index) => (
                       <button
                         key={`popular-${index}`}
                         onClick={() => handleQuickSearchClick(search)}
-                        className="w-full text-left px-3 py-2 rounded-sm hover:bg-muted flex items-center space-x-2 text-sm"
+                        className="w-full text-left px-3 py-2 rounded-md hover:bg-muted text-sm text-muted-foreground hover:text-foreground"
                       >
-                        <TrendingUp className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                        <span>{search}</span>
+                        {search}
                       </button>
                     ))}
                   </div>

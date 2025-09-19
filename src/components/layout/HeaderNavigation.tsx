@@ -1,19 +1,22 @@
 
 import { Link } from 'react-router-dom';
 import { useRecovery } from '@/contexts/RecoveryContext';
-
-const navigation = [
-  { name: 'Curadoria', href: '/curadoria' },
-  { name: 'Catálogo', href: '/catalogo' },
-  { name: 'Fidelidade', href: '/fidelidade' },
-];
+import { useAuth } from '@/contexts/AuthContext';
 
 const HeaderNavigation = () => {
   const { isRecoveryMode } = useRecovery();
+  const { user } = useAuth();
 
   if (isRecoveryMode) {
     return null;
   }
+
+  // Navigation items based on authentication status
+  const navigation = [
+    { name: 'Curadoria', href: '/curadoria' },
+    { name: 'Catálogo', href: '/catalogo' },
+    ...(user ? [{ name: 'Fidelidade', href: '/fidelidade' }] : []), // Only show if logged in
+  ];
 
   return (
     <nav className="hidden md:flex items-center space-x-8">
