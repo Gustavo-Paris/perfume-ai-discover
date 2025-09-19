@@ -236,7 +236,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                   </p>
                 </div>
               ) : (
-                <p className="font-display font-bold text-lg text-navy">
+                <p className="font-display font-bold text-lg text-foreground">
                   A partir de R$ {basePrice.toFixed(2).replace('.', ',')}
                 </p>
               )}

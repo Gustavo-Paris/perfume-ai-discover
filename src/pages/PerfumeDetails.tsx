@@ -369,7 +369,7 @@ const PerfumeDetails = () => {
                               </span>
                             </>
                           ) : (
-                            <span>R$ {originalPrice.toFixed(2).replace('.', ',')}</span>
+                            <span className="text-foreground">R$ {originalPrice.toFixed(2).replace('.', ',')}</span>
                           )}
                         </div>
                       </Button>
@@ -409,7 +409,7 @@ const PerfumeDetails = () => {
             {/* Price and Actions */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <div className="text-2xl font-bold text-red-600">
+                <div className={`text-2xl font-bold ${activePromotion ? 'text-red-600' : 'text-foreground'}`}>
                   R$ {(finalPrice * quantity).toFixed(2).replace('.', ',')}
                 </div>
                 {activePromotion && selectedSize && (
