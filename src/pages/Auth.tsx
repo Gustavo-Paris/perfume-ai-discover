@@ -62,25 +62,36 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('🟡 Initiating Google OAuth...');
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
       if (error) {
+        console.error('❌ Google OAuth error:', error);
         toast({
           title: "Erro no login com Google",
-          description: error.message,
+          description: error.message === 'To signup the same user from different providers'
+            ? 'Esta conta já existe com email/senha. Use a opção de login com email.'
+            : error.message,
           variant: "destructive"
         });
+      } else {
+        console.log('✅ Google OAuth initiated, redirecting...');
+        // The user will be redirected to Google, no need for additional action
       }
     } catch (error) {
       console.error('Google login error:', error);
       toast({
         title: "Erro no login",
-        description: "Não foi possível fazer login com Google",
+        description: "Não foi possível fazer login com Google. Verifique se o Google OAuth está configurado.",
         variant: "destructive"
       });
     }
