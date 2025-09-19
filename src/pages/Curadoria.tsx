@@ -16,6 +16,7 @@ import { useConversationalSessions, ConversationalSession } from '@/hooks/useCon
 import { usePrivacyConsent } from '@/hooks/usePrivacyConsent';
 import { useRouteLogger } from '@/hooks/useAccessLog';
 import { supabase } from '@/integrations/supabase/client';
+import CuradoriaDebug from '@/components/debug/CuradoriaDebug';
 
 const Curadoria = () => {
   const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
