@@ -51,7 +51,6 @@ import EmailPreferences from "./components/notifications/EmailPreferences";
 import Unsubscribe from "./pages/Unsubscribe";
 import Search from "./pages/Search";
 import Afiliados from "./pages/Afiliados";
-import ImageSearchDemo from "./pages/ImageSearchDemo";
 import AdminFiscal from './pages/admin/AdminFiscal';
 import MinhasNotasFiscais from './pages/MinhasNotasFiscais';
 import AdminSupport from "./pages/admin/AdminSupport";
@@ -92,7 +91,6 @@ const AppContent = () => {
           <Route path="/notas-fiscais" element={<MinhasNotasFiscais />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/comparacao/:id" element={<ComparisonPage />} />
-          <Route path="/busca-imagem" element={<ImageSearchDemo />} />
           <Route path="/perfume/:id" element={<PerfumeDetails />} />
           
           {/* Admin Routes */}
