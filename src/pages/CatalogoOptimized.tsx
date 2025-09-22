@@ -1,0 +1,442 @@
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Card, CardContent } from '@/components/ui/card';
+import PerfumeCard from '@/components/perfume/PerfumeCard';
+import { useInfinitePerfumes } from '@/hooks/useInfiniteScroll';
+import { InfiniteScrollList } from '@/components/ui/InfiniteScrollList';
+import { DatabasePerfume } from '@/types';
+import { useAvailableSizes } from '@/hooks/usePerfumePrices';
+import AdvancedSearchBox from '@/components/search/AdvancedSearchBox';
+import DynamicFilters from '@/components/search/DynamicFilters';
+import { SearchFilters } from '@/hooks/useAdvancedSearch';
+import { LoadingState, EmptyState } from '@/components/ui/loading-states';
+import { ProductCardSkeleton } from '@/components/ui/content-loader';
+import { Skeleton } from '@/components/ui/skeleton';
+import { debugLog } from '@/utils/removeDebugLogs';
+
+const CatalogoOptimized = () => {
+  const { data: availableSizes } = useAvailableSizes();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [sortBy, setSortBy] = useState('name');
+  
+  // Filter states
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
+  const [selectedFamilies, setSelectedFamilies] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState([0, 2000]);
+
+  // Build filters for infinite query
+  const filters = useMemo(() => ({
+    search: searchParams.get('q') || '',
+    brands: selectedBrands,
+    genders: selectedGenders,
+    families: selectedFamilies,
+    priceRange,
+    sortBy
+  }), [searchParams, selectedBrands, selectedGenders, selectedFamilies, priceRange, sortBy]);
+
+  // Use infinite scroll hook
+  const {
+    data: infinitePerfumes,
+    loadMore,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+    isEmpty
+  } = useInfinitePerfumes(filters);
+
+  debugLog('Catalog performance - Infinite perfumes loaded:', infinitePerfumes.length);
+
+  // Check for search query in URL params on mount
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      debugLog('URL query found:', query);
+    }
+  }, [searchParams]);
+
+  // Transform data for PerfumeCard compatibility
+  const transformedPerfumes = useMemo(() => {
+    const baseResults = searchResults.length > 0 ? searchResults : infinitePerfumes;
+    
+    return baseResults.map((dbPerfume: DatabasePerfume) => ({
+      id: dbPerfume.id,
+      name: dbPerfume.name,
+      brand: dbPerfume.brand,
+      family: dbPerfume.family,
+      gender: dbPerfume.gender,
+      size_ml: availableSizes || [5, 10],
+      price_full: Number(dbPerfume.price_full),
+      price_2ml: dbPerfume.price_2ml ? Number(dbPerfume.price_2ml) : null,
+      price_5ml: dbPerfume.price_5ml ? Number(dbPerfume.price_5ml) : 0,
+      price_10ml: dbPerfume.price_10ml ? Number(dbPerfume.price_10ml) : 0,
+      stock_full: 10,
+      stock_5ml: 50,
+      stock_10ml: 30,
+      description: dbPerfume.description || '',
+      image_url: dbPerfume.image_url || '',
+      top_notes: dbPerfume.top_notes,
+      heart_notes: dbPerfume.heart_notes,
+      base_notes: dbPerfume.base_notes,
+      created_at: dbPerfume.created_at,
+      availableSizes: availableSizes || [5, 10]
+    }));
+  }, [searchResults, infinitePerfumes, availableSizes]);
+
+  // Get unique values for filters from transformed data
+  const brands = [...new Set(transformedPerfumes.map(p => p.brand))];
+  const genders = [...new Set(transformedPerfumes.map(p => p.gender))];
+  const families = [...new Set(transformedPerfumes.map(p => p.family))];
+
+  const handleBrandChange = (brand: string, checked: boolean) => {
+    if (checked) {
+      setSelectedBrands(prev => [...prev, brand]);
+    } else {
+      setSelectedBrands(prev => prev.filter(b => b !== brand));
+    }
+  };
+
+  const handleGenderChange = (gender: string, checked: boolean) => {
+    if (checked) {
+      setSelectedGenders(prev => [...prev, gender]);
+    } else {
+      setSelectedGenders(prev => prev.filter(g => g !== gender));
+    }
+  };
+
+  const handleFamilyChange = (family: string, checked: boolean) => {
+    if (checked) {
+      setSelectedFamilies(prev => [...prev, family]);
+    } else {
+      setSelectedFamilies(prev => prev.filter(f => f !== family));
+    }
+  };
+
+  const clearFilters = () => {
+    setSelectedBrands([]);
+    setSelectedGenders([]);
+    setSelectedFamilies([]);
+    setPriceRange([0, 2000]);
+    setSearchResults([]);
+    setSearchParams({});
+  };
+
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {/* Brands */}
+      <div>
+        <h3 className="font-display font-semibold mb-3 text-gray-900">Marcas</h3>
+        <div className="space-y-2">
+          {brands.map(brand => (
+            <div key={brand} className="flex items-center space-x-2">
+              <Checkbox
+                id={`brand-${brand}`}
+                checked={selectedBrands.includes(brand)}
+                onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
+              />
+              <Label htmlFor={`brand-${brand}`} className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer">
+                {brand}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Gender */}
+      <div>
+        <h3 className="font-display font-semibold mb-3 text-gray-900">Gênero</h3>
+        <div className="space-y-2">
+          {genders.map(gender => (
+            <div key={gender} className="flex items-center space-x-2">
+              <Checkbox
+                id={`gender-${gender}`}
+                checked={selectedGenders.includes(gender)}
+                onCheckedChange={(checked) => handleGenderChange(gender, checked as boolean)}
+              />
+              <Label htmlFor={`gender-${gender}`} className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer capitalize">
+                {gender}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Fragrance Family */}
+      <div>
+        <h3 className="font-display font-semibold mb-3 text-gray-900">Família Olfativa</h3>
+        <div className="space-y-2">
+          {families.map(family => (
+            <div key={family} className="flex items-center space-x-2">
+              <Checkbox
+                id={`family-${family}`}
+                checked={selectedFamilies.includes(family)}
+                onCheckedChange={(checked) => handleFamilyChange(family, checked as boolean)}
+              />
+              <Label htmlFor={`family-${family}`} className="text-sm text-gray-700 hover:text-gray-900 cursor-pointer">
+                {family}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div>
+        <h3 className="font-display font-semibold mb-3 text-gray-900">
+          Preço: R$ {priceRange[0]} - R$ {priceRange[1]}
+        </h3>
+        <Slider
+          value={priceRange}
+          onValueChange={setPriceRange}
+          max={2000}
+          min={0}
+          step={10}
+          className="w-full [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
+        />
+      </div>
+
+      <Button onClick={clearFilters} className="w-full btn-secondary">
+        Limpar Filtros
+      </Button>
+    </div>
+  );
+
+  const renderPerfumeCard = (perfume: any, index: number) => (
+    <motion.div
+      key={perfume.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <PerfumeCard perfume={perfume} />
+    </motion.div>
+  );
+
+  return (
+    <div className="min-h-screen bg-white py-12">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <LoadingState
+          isLoading={isLoading}
+          isEmpty={isEmpty}
+          loadingComponent={
+            <div className="space-y-8">
+              {/* Header Skeleton */}
+              <div className="text-center space-y-4">
+                <Skeleton className="h-16 w-96 mx-auto" />
+                <Skeleton className="h-6 w-128 mx-auto" />
+              </div>
+              
+              {/* Search Controls Skeleton */}
+              <div className="flex gap-4">
+                <Skeleton className="h-12 flex-1" />
+                <Skeleton className="h-12 w-48" />
+              </div>
+              
+              <div className="flex gap-8">
+                {/* Sidebar Skeleton */}
+                <div className="hidden md:block w-64 space-y-4">
+                  <Skeleton className="h-96 w-full" />
+                </div>
+                
+                {/* Products Grid Skeleton */}
+                <div className="flex-1">
+                  <Skeleton className="h-6 w-48 mb-6" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <ProductCardSkeleton key={i} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+          emptyComponent={
+            <EmptyState
+              icon={<Search className="h-16 w-16" />}
+              title="Nenhum produto encontrado"
+              description="Tente ajustar os filtros ou buscar por outros termos"
+              action={{
+                label: "Limpar Filtros",
+                onClick: clearFilters
+              }}
+            />
+          }
+        >
+          {/* Header */}
+          <motion.div 
+            className="mb-12 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="font-display text-5xl md:text-6xl font-bold mb-4 text-gray-900">
+              Catálogo de <span className="text-brand-gradient">Fragrâncias</span>
+            </h1>
+            <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
+              Explore nossa coleção completa de perfumes premium selecionados
+            </p>
+          </motion.div>
+
+          {/* Search and Controls */}
+          <motion.div 
+            className="flex flex-col md:flex-row gap-4 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            {/* Advanced Search */}
+            <div className="flex-1">
+              <AdvancedSearchBox
+                placeholder="Buscar perfumes, marcas ou notas..."
+                onResultsChange={setSearchResults}
+                onFiltersOpen={() => setShowAdvancedFilters(true)}
+                size="md"
+                className="w-full"
+                initialQuery={searchParams.get('q') || ''}
+              />
+            </div>
+
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-48 bg-white border-gray-300 text-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary/40 rounded-xl shadow-sm">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-200 shadow-lg z-50">
+                <SelectItem value="name">Nome A-Z</SelectItem>
+                <SelectItem value="brand">Marca A-Z</SelectItem>
+                <SelectItem value="price-low">Menor Preço</SelectItem>
+                <SelectItem value="price-high">Maior Preço</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Mobile Filters */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button className="md:hidden btn-secondary">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Filtros
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80 bg-white">
+                <SheetHeader>
+                  <SheetTitle className="font-display text-gray-900">Filtros</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <FilterContent />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </motion.div>
+
+          <div className="flex gap-8">
+            {/* Advanced Filters Modal */}
+            <Sheet open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+              <SheetContent side="right" className="w-96 bg-white overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="font-display text-gray-900">Filtros Avançados</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <DynamicFilters
+                    filters={{
+                      brands: selectedBrands,
+                      families: selectedFamilies,
+                      genders: selectedGenders,
+                      priceRange: priceRange as [number, number],
+                      categories: []
+                    }}
+                    onFiltersChange={(newFilters) => {
+                      if (newFilters.brands) setSelectedBrands(newFilters.brands);
+                      if (newFilters.families) setSelectedFamilies(newFilters.families);
+                      if (newFilters.genders) setSelectedGenders(newFilters.genders);
+                      if (newFilters.priceRange) setPriceRange(newFilters.priceRange);
+                    }}
+                    onClearFilters={() => {
+                      setSelectedBrands([]);
+                      setSelectedFamilies([]);
+                      setSelectedGenders([]);
+                      setPriceRange([0, 2000]);
+                    }}
+                    searchQuery={searchParams.get('q') || ''}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Desktop Filters */}
+            <motion.aside 
+              className="hidden md:block w-64 shrink-0"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="glass rounded-2xl sticky top-24">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-display font-semibold text-lg text-gray-900">Filtros</h2>
+                    <Filter className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <FilterContent />
+                </CardContent>
+              </Card>
+            </motion.aside>
+
+            {/* Products Grid with Infinite Scroll */}
+            <motion.main 
+              className="flex-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-gray-600 font-medium">
+                  {transformedPerfumes.length} produto{transformedPerfumes.length !== 1 ? 's' : ''} encontrado{transformedPerfumes.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+
+              <InfiniteScrollList
+                items={transformedPerfumes}
+                loadMore={loadMore}
+                hasNextPage={hasNextPage}
+                isLoading={isLoading}
+                isFetchingNextPage={isFetchingNextPage}
+                renderItem={renderPerfumeCard}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                loadingComponent={
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <ProductCardSkeleton key={i} />
+                    ))}
+                  </div>
+                }
+                emptyComponent={
+                  <EmptyState
+                    icon={<Search className="h-16 w-16" />}
+                    title="Nenhum produto encontrado"
+                    description="Tente ajustar os filtros ou buscar por outros termos"
+                    action={{
+                      label: "Limpar Filtros",
+                      onClick: clearFilters
+                    }}
+                  />
+                }
+              />
+            </motion.main>
+          </div>
+        </LoadingState>
+      </div>
+    </div>
+  );
+};
+
+export default CatalogoOptimized;

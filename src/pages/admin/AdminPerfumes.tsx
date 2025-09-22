@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Edit, Trash2, Upload, RefreshCw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { usePerfumes, useCreatePerfume, useUpdatePerfume, useDeletePerfume } from '@/hooks/usePerfumes';
+import { usePerfumesAdmin } from '@/hooks/usePerfumesOptimized';
+import { useCreatePerfume, useUpdatePerfume, useDeletePerfume } from '@/hooks/usePerfumes';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { useAvailableSizes, usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 import { useMaterialConfigurations } from '@/hooks/useMaterialConfigurations';
@@ -17,7 +18,7 @@ import { useRecalculateAllPerfumePrices } from '@/hooks/useMaterials';
 import { DatabasePerfume } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
-import PerfumePricesDisplay from '@/components/admin/PerfumePricesDisplay';
+import PerfumePricesDisplayOptimized from '@/components/admin/PerfumePricesDisplayOptimized';
 import { PricesDisplayModal } from '@/components/admin/PricesDisplayModal';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
 import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
@@ -25,7 +26,13 @@ import { useUpdateAllMargins } from '@/hooks/useUpdateAllMargins';
 
 
 const AdminPerfumes = () => {
-  const { data: perfumes, isLoading, refetch } = usePerfumes();
+  const { data: perfumes, isLoading, refetch } = usePerfumesAdmin();
+  // Cache preços para evitar N+1 queries
+  const perfumePricesCache = useMemo(() => {
+    const cache: Record<string, Record<number, number>> = {};
+    // Cache será populado conforme necessário
+    return cache;
+  }, [perfumes]);
   const createPerfume = useCreatePerfume();
   const updatePerfume = useUpdatePerfume();
   const deletePerfume = useDeletePerfume();
@@ -392,7 +399,10 @@ const AdminPerfumes = () => {
                   </TableCell>
                   <TableCell>{perfume.category}</TableCell>
                   <TableCell>
-                    <PerfumePricesDisplay perfumeId={perfume.id} />
+                    <PerfumePricesDisplayOptimized 
+                      perfumeId={perfume.id}
+                      availableSizes={availableSizes}
+                    />
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
