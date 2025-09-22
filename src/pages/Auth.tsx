@@ -64,6 +64,9 @@ const Auth = () => {
     try {
       console.log('🟡 Initiating Google OAuth...');
       
+      // Detectar se está rodando no preview do Lovable (dentro de iframe)
+      const isInPreview = window.location.hostname.includes('lovableproject.com');
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -71,7 +74,9 @@ const Auth = () => {
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
-          }
+          },
+          // Use popup no preview para evitar problema do X-Frame-Options
+          skipBrowserRedirect: isInPreview
         }
       });
       
@@ -85,6 +90,20 @@ const Auth = () => {
           variant: "destructive"
         });
         setIsLoading(false);
+      } else if (isInPreview && data?.url) {
+        // No preview, abre em popup
+        console.log('🪟 Opening Google OAuth in popup...');
+        const popup = window.open(data.url, 'google-oauth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+        
+        // Monitora o popup para detectar quando fecha
+        const checkClosed = setInterval(() => {
+          if (popup?.closed) {
+            clearInterval(checkClosed);
+            setIsLoading(false);
+            // Recarrega a página para verificar se o login foi bem-sucedido
+            window.location.reload();
+          }
+        }, 1000);
       } else {
         console.log('✅ Google OAuth initiated, redirecting...');
         // Don't set loading to false here, let the redirect happen
