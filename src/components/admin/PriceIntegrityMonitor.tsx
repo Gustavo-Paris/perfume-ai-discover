@@ -5,15 +5,24 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertTriangle, CheckCircle, RefreshCw, Zap, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, RefreshCw, Zap, Clock, Settings } from 'lucide-react';
 import { usePriceIntegrity, useAutoFixPrices, useDailyIntegrityCheck } from '@/hooks/usePriceIntegrity';
 import { usePriceLogs } from '@/hooks/usePriceLogs';
+import { useFixPerfumeMargin } from '@/hooks/useFixPerfumeMargin';
 
 const PriceIntegrityMonitor = () => {
   const { data: integrityIssues, isLoading: isLoadingIntegrity, refetch: refetchIntegrity } = usePriceIntegrity();
   const { data: logs, isLoading: isLoadingLogs } = usePriceLogs(50);
   const autoFixMutation = useAutoFixPrices();
   const dailyCheckMutation = useDailyIntegrityCheck();
+  const fixMarginMutation = useFixPerfumeMargin();
+
+  const handleFixMargin = (perfumeId: string) => {
+    fixMarginMutation.mutate({
+      perfumeId,
+      newMarginPercentage: 2.0 // 100% margem (preço = 2x custo)
+    });
+  };
 
   const getIssueColor = (issueType: string) => {
     switch (issueType) {
@@ -38,6 +47,8 @@ const PriceIntegrityMonitor = () => {
         return <RefreshCw className="h-4 w-4" />;
       case 'manual_fix':
         return <CheckCircle className="h-4 w-4" />;
+      case 'margin_auto_fix':
+        return <Settings className="h-4 w-4" />;
       default:
         return <Clock className="h-4 w-4" />;
     }
@@ -58,7 +69,9 @@ const PriceIntegrityMonitor = () => {
             Sistema de Integridade dos Preços
           </CardTitle>
           <CardDescription>
-            Monitore e corrija automaticamente problemas nos preços dos perfumes
+            Monitore e corrija automaticamente problemas nos preços dos perfumes. 
+            <br />
+            <strong>Novo:</strong> Agora corrige margens baixas e altas automaticamente!
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,7 +114,7 @@ const PriceIntegrityMonitor = () => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                {integrityIssues.length} problema(s) detectado(s) nos preços. Clique em "Correção Automática" para resolver.
+                {integrityIssues.length} problema(s) detectado(s) nos preços. Use "Correção Automática" ou corrija individualmente.
               </AlertDescription>
             </Alert>
           ) : (
@@ -121,7 +134,7 @@ const PriceIntegrityMonitor = () => {
           <CardHeader>
             <CardTitle>Problemas Detectados</CardTitle>
             <CardDescription>
-              Lista de perfumes com problemas nos preços que precisam de correção
+              Lista de perfumes com problemas nos preços. Use correção individual ou em lote.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -133,6 +146,7 @@ const PriceIntegrityMonitor = () => {
                     <TableHead>Marca</TableHead>
                     <TableHead>Problema</TableHead>
                     <TableHead>Ação Sugerida</TableHead>
+                    <TableHead>Correção</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -142,11 +156,30 @@ const PriceIntegrityMonitor = () => {
                       <TableCell>{issue.brand}</TableCell>
                       <TableCell>
                         <Badge variant={getIssueColor(issue.issue_type)}>
-                          {issue.issue_type}
+                          {issue.issue_type === 'low_margin' ? 'Margem Baixa' :
+                           issue.issue_type === 'high_margin' ? 'Margem Alta' :
+                           issue.issue_type === 'zero_prices' ? 'Preços Zerados' :
+                           issue.issue_type === 'zero_cost' ? 'Sem Custo' :
+                           issue.issue_type}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {issue.suggested_action}
+                      </TableCell>
+                      <TableCell>
+                        {issue.issue_type === 'low_margin' || issue.issue_type === 'high_margin' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleFixMargin(issue.perfume_id)}
+                            disabled={fixMarginMutation.isPending}
+                          >
+                            <Settings className="h-3 w-3 mr-1" />
+                            {fixMarginMutation.isPending ? 'Corrigindo...' : 'Aplicar 100%'}
+                          </Button>
+                        ) : (
+                          <span className="text-sm text-gray-500">Usar correção automática</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -193,7 +226,11 @@ const PriceIntegrityMonitor = () => {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getActionTypeIcon(log.action_type)}
-                          <span className="text-sm">{log.action_type}</span>
+                          <span className="text-sm">
+                            {log.action_type === 'margin_auto_fix' ? 'Correção de Margem' :
+                             log.action_type === 'batch_auto_fix' ? 'Correção em Lote' :
+                             log.action_type}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm">{log.trigger_source}</TableCell>

@@ -3391,6 +3391,10 @@ export type Database = {
         Args: { material_name: string }
         Returns: Json
       }
+      fix_perfume_margin: {
+        Args: { new_margin_percentage?: number; perfume_uuid: string }
+        Returns: boolean
+      }
       generate_affiliate_code: {
         Args: { user_name?: string }
         Returns: string
