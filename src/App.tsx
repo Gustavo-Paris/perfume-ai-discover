@@ -3,20 +3,20 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import ErrorBoundaryOptimized from "@/components/ui/ErrorBoundaryOptimized";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useUserAnalytics } from "@/hooks/useUserAnalytics";
 import { useOrderTracking } from "@/hooks/useOrderTracking";
 import { usePageView } from "@/hooks/usePageView";
 import { AuthProvider } from "./contexts/AuthContext";
-import { CartProvider } from "./contexts/CartContext";
+import { CartProvider } from "./contexts/CartContextOptimized";
 import { RecoveryProvider } from "./contexts/RecoveryContext";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/Home";
 import Curadoria from "./pages/Curadoria";
 import Fidelidade from "./pages/Fidelidade";
-import Catalogo from "./pages/Catalogo";
+import CatalogoOptimized from "./pages/CatalogoOptimized";
 import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -81,7 +81,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/curadoria" element={<Curadoria />} />
           <Route path="/fidelidade" element={<Fidelidade />} />
-          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/catalogo" element={<CatalogoOptimized />} />
           <Route path="/carrinho" element={<Carrinho />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
@@ -140,7 +140,7 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <ErrorBoundary>
+    <ErrorBoundaryOptimized>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -157,7 +157,7 @@ const App = () => {
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
-    </ErrorBoundary>
+    </ErrorBoundaryOptimized>
   );
 };
 
