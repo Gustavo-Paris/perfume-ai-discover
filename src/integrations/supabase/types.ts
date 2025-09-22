@@ -1995,6 +1995,45 @@ export type Database = {
         }
         Relationships: []
       }
+      price_calculation_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          created_by: string | null
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          new_prices: Json | null
+          old_prices: Json | null
+          perfume_id: string | null
+          trigger_source: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          new_prices?: Json | null
+          old_prices?: Json | null
+          perfume_id?: string | null
+          trigger_source?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          new_prices?: Json | null
+          old_prices?: Json | null
+          perfume_id?: string | null
+          trigger_source?: string | null
+        }
+        Relationships: []
+      }
       privacy_consents: {
         Row: {
           browser_fingerprint: string | null
@@ -3218,6 +3257,10 @@ export type Database = {
         Args: { coupon_code: string; order_uuid: string }
         Returns: boolean
       }
+      auto_fix_perfume_prices: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       calculate_dynamic_product_costs: {
         Args: { perfume_uuid: string; sizes_array: number[] }
         Returns: {
@@ -3276,6 +3319,17 @@ export type Database = {
           stock_ml: number
         }[]
       }
+      check_price_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brand: string
+          current_prices: Json
+          issue_type: string
+          perfume_id: string
+          perfume_name: string
+          suggested_action: string
+        }[]
+      }
       check_rate_limit: {
         Args:
           | {
@@ -3315,6 +3369,10 @@ export type Database = {
           subject_param?: string
         }
         Returns: string
+      }
+      daily_price_integrity_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       detect_abandoned_carts: {
         Args: Record<PropertyKey, never>
@@ -3629,6 +3687,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      recalculate_perfume_prices_for_sizes: {
+        Args: { perfume_uuid: string; sizes: number[] }
+        Returns: boolean
+      }
       set_perfume_price: {
         Args: {
           perfume_uuid: string
@@ -3648,6 +3710,10 @@ export type Database = {
       update_perfume_avg_cost: {
         Args: { perfume_uuid: string }
         Returns: undefined
+      }
+      update_perfume_avg_cost_safe: {
+        Args: { perfume_uuid: string }
+        Returns: boolean
       }
       update_perfume_margin: {
         Args: { new_margin_percentage: number; perfume_uuid: string }
