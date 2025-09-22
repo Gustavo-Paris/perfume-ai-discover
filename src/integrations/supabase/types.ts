@@ -3564,6 +3564,14 @@ export type Database = {
         Args: { perfume_uuid: string; sizes: number[] }
         Returns: boolean
       }
+      sanitize_search_input: {
+        Args: { input_text: string }
+        Returns: string
+      }
+      secure_perfume_access: {
+        Args: { perfume_id: string }
+        Returns: boolean
+      }
       set_perfume_price: {
         Args: {
           perfume_uuid: string
@@ -3571,6 +3579,14 @@ export type Database = {
           size_ml_param: number
         }
         Returns: string
+      }
+      track_query_performance: {
+        Args: {
+          execution_time_ms: number
+          query_type: string
+          rows_affected?: number
+        }
+        Returns: undefined
       }
       trigger_email_notification: {
         Args: { notification_type: string; record_id: string }
