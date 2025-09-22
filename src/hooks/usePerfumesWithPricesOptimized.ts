@@ -2,7 +2,28 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DatabasePerfume } from '@/types';
 
-export interface PerfumeWithPrices extends DatabasePerfume {
+export interface PerfumeWithPrices {
+  id: string;
+  name: string;
+  brand: string;
+  family: string;
+  gender: 'masculino' | 'feminino' | 'unissex';
+  description?: string | null;
+  image_url?: string | null;
+  top_notes?: string[] | null;
+  heart_notes?: string[] | null;
+  base_notes?: string[] | null;
+  category?: string | null;
+  product_type?: 'decant' | 'miniature' | 'both' | null;
+  source_size_ml?: number | null;
+  available_sizes?: number[] | null;
+  price_2ml?: number | null;
+  price_5ml?: number | null;
+  price_10ml?: number | null;
+  price_full?: number | null;
+  avg_cost_per_ml?: number | null;
+  target_margin_percentage?: number | null;
+  created_at: string;
   dynamicPrices: Record<number, number>;
   availableSizes: number[];
 }
@@ -45,10 +66,15 @@ export const usePerfumesWithPricesOptimized = () => {
         pricesByPerfume[price.perfume_id][price.size_ml] = price.price;
       });
 
-      // 5. Combinar perfumes com preços
+      // 5. Combinar perfumes com preços (cast types para evitar erros TypeScript)
       return perfumes.map(perfume => ({
         ...perfume,
         gender: perfume.gender as 'masculino' | 'feminino' | 'unissex',
+        product_type: perfume.product_type as 'decant' | 'miniature' | 'both' | null,
+        available_sizes: perfume.available_sizes as number[] | null,
+        top_notes: perfume.top_notes as string[] | null,
+        heart_notes: perfume.heart_notes as string[] | null,
+        base_notes: perfume.base_notes as string[] | null,
         dynamicPrices: pricesByPerfume[perfume.id] || {},
         availableSizes: defaultSizes
       }));
