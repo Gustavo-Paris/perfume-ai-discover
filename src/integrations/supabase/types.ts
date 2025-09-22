@@ -3089,6 +3089,15 @@ export type Database = {
         Args: { coupon_code: string; order_uuid: string }
         Returns: boolean
       }
+      audit_query_performance: {
+        Args: {
+          additional_info?: Json
+          execution_time_ms: number
+          operation_name: string
+          rows_processed?: number
+        }
+        Returns: undefined
+      }
       auto_fix_perfume_prices: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -3429,6 +3438,10 @@ export type Database = {
           total_tickets: number
         }[]
       }
+      get_security_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_user_points_balance: {
         Args: { user_uuid: string }
         Returns: number
@@ -3625,6 +3638,14 @@ export type Database = {
       user_has_purchased_perfume: {
         Args: { perfume_uuid: string; user_uuid: string }
         Returns: boolean
+      }
+      validate_and_sanitize_input: {
+        Args: {
+          allow_special_chars?: boolean
+          input_text: string
+          max_length?: number
+        }
+        Returns: string
       }
       validate_coupon: {
         Args: { coupon_code: string; order_total: number; user_uuid: string }
