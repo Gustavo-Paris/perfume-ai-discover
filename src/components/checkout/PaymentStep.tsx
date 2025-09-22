@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/contexts/CartContextOptimized';
 
 interface PaymentStepProps {
   onBack: () => void;

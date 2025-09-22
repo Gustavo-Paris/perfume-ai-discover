@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/contexts/CartContextOptimized';
 import { toast } from 'sonner';
 import { usePerfumes } from '@/hooks/usePerfumes';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';

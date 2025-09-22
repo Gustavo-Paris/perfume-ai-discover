@@ -6,7 +6,7 @@ import { Perfume } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/contexts/CartContextOptimized';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { LazyImage } from '@/components/ui/lazy-image';

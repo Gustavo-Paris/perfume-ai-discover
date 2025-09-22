@@ -5,7 +5,7 @@ import { useWishlist, useRemoveFromWishlist } from '@/hooks/useWishlist';
 import { useWishlistCollections, useCollectionItems, useMoveToCollection } from '@/hooks/useWishlistCollections';
 import { useCreateComparison } from '@/hooks/usePerfumeComparisons';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
+import { useCart } from '@/contexts/CartContextOptimized';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
