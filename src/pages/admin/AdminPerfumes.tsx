@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, Upload, RefreshCw, Settings, Calculator, Shield } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, RefreshCw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePerfumes, useCreatePerfume, useUpdatePerfume, useDeletePerfume } from '@/hooks/usePerfumes';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { useAvailableSizes, usePerfumePricesObject } from '@/hooks/usePerfumePrices';
@@ -23,7 +22,7 @@ import { PricesDisplayModal } from '@/components/admin/PricesDisplayModal';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
 import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
 import { useUpdateAllMargins } from '@/hooks/useUpdateAllMargins';
-import PriceIntegrityMonitor from '@/components/admin/PriceIntegrityMonitor';
+
 
 const AdminPerfumes = () => {
   const { data: perfumes, isLoading, refetch } = usePerfumes();
@@ -43,7 +42,7 @@ const AdminPerfumes = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingPerfume, setEditingPerfume] = useState<DatabasePerfume | null>(null);
   
-  const [activeTab, setActiveTab] = useState<'perfumes' | 'monitoring'>('perfumes');
+  
   const [newMargin, setNewMargin] = useState<number>(50);
   const [formData, setFormData] = useState({
     brand: '',
@@ -206,19 +205,7 @@ const AdminPerfumes = () => {
         <h1 className="text-3xl font-bold">Gerenciar Perfumes</h1>
       </div>
 
-      <Tabs defaultValue="perfumes" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="perfumes" className="flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            Perfumes
-          </TabsTrigger>
-          <TabsTrigger value="monitoring" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Monitoramento de Preços
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="perfumes">
+      <div className="space-y-6">
           <div className="flex justify-between items-center mb-6">
             <div className="flex gap-2">
               <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -437,11 +424,6 @@ const AdminPerfumes = () => {
         </CardContent>
       </Card>
 
-      {/* Sistema de Monitoramento de Integridade dos Preços */}
-      <div className="mt-8">
-        <PriceIntegrityMonitor />
-      </div>
-
       {/* Edit Dialog */}
       <Dialog open={!!editingPerfume} onOpenChange={() => setEditingPerfume(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -591,12 +573,7 @@ const AdminPerfumes = () => {
           </form>
         </DialogContent>
       </Dialog>
-        </TabsContent>
-
-        <TabsContent value="monitoring">
-          <PriceIntegrityMonitor />
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>
   );
 };
