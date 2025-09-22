@@ -8,16 +8,19 @@ export const useFixPerfumeMargin = () => {
   return useMutation({
     mutationFn: async ({ 
       perfumeId, 
-      newMarginPercentage = 2.0 
+      newMarginPercentage = 100 
     }: { 
       perfumeId: string; 
-      newMarginPercentage?: number; 
-    }): Promise<boolean> => {
-      console.log('🔧 Corrigindo margem do perfume:', perfumeId, 'Nova margem:', newMarginPercentage);
+      newMarginPercentage?: number;
+    }) => {
+      console.log(`🔧 Corrigindo margem do perfume ${perfumeId} para ${newMarginPercentage}%`);
+      
+      // Converter porcentagem para multiplicador (100% = 2.0)
+      const marginMultiplier = 1 + (newMarginPercentage / 100);
       
       const { data, error } = await supabase.rpc('fix_perfume_margin', {
         perfume_uuid: perfumeId,
-        new_margin_percentage: newMarginPercentage
+        new_margin_percentage: marginMultiplier
       });
       
       if (error) {
@@ -28,10 +31,9 @@ export const useFixPerfumeMargin = () => {
       console.log('✅ Margem corrigida com sucesso:', data);
       return data;
     },
-    onSuccess: (result, variables) => {
-      const marginPercent = ((variables.newMarginPercentage || 2.0) - 1) * 100;
+    onSuccess: (_, variables) => {
       toast.success(
-        `✅ Margem corrigida! Nova margem: ${marginPercent.toFixed(0)}% - Preços recalculados automaticamente`
+        `✅ Margem ajustada para ${variables.newMarginPercentage}%! Preços recalculados automaticamente.`
       );
       
       // Invalidar queries relacionadas
