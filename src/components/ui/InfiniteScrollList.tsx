@@ -55,9 +55,9 @@ export function InfiniteScrollList<T>({
   return (
     <div className={className}>
       {items.map((item, index) => (
-        <React.Fragment key={index}>
+        <div key={index}>
           {renderItem(item, index)}
-        </React.Fragment>
+        </div>
       ))}
       
       {/* Intersection observer target */}

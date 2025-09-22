@@ -60,8 +60,8 @@ export const usePerfumeWithReviews = (perfumeId: string) => {
       } else {
         // Non-admin users get public data only (no sensitive business data)
         perfumeQuery = supabase
-          .from('perfumes_public' as any)
-          .select('*')
+          .from('perfumes')
+          .select('id, name, brand, description, image_url, gender, family, top_notes, heart_notes, base_notes, category, price_2ml, price_5ml, price_10ml, price_full, created_at')
           .eq('id', perfumeId)
           .single();
       }
@@ -121,8 +121,8 @@ export const usePerfumesWithReviews = (perfumeIds: string[]) => {
       } else {
         // Non-admin users get public data only (no sensitive business data)
         perfumesQuery = supabase
-          .from('perfumes_public' as any)
-          .select('*')
+          .from('perfumes')
+          .select('id, name, brand, description, image_url, gender, family, top_notes, heart_notes, base_notes, category, price_2ml, price_5ml, price_10ml, price_full, created_at')
           .in('id', perfumeIds);
       }
       
