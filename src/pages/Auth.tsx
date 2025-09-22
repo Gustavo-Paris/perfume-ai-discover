@@ -389,15 +389,20 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full font-display"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Conectando...' : 'Entrar com Google'}
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full font-display"
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Conectando...' : 'Entrar com Google'}
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center">
+                    Você será redirecionado para o Google de forma segura
+                  </p>
+                </div>
                 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -454,15 +459,20 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full font-display"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Conectando...' : 'Cadastrar com Google'}
-                </Button>
+                <div className="space-y-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full font-display"
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Conectando...' : 'Cadastrar com Google'}
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center">
+                    Você será redirecionado para o Google de forma segura
+                  </p>
+                </div>
                 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
