@@ -249,12 +249,20 @@ const PaymentSuccess = () => {
                   <span>Subtotal:</span>
                   <span>R$ {Number(orderData.subtotal || 0).toFixed(2).replace('.', ',')}</span>
                 </div>
-                {(orderData.shipping_cost || 0) > 0 && (
+                {orderData.shipping_service?.toLowerCase().includes('retirada') || 
+                 orderData.shipping_service?.toLowerCase().includes('pickup') ? (
                   <div className="flex justify-between">
-                    <span>Entrega Local:</span>
+                    <span>Retirada:</span>
+                    <span>Gratuita</span>
+                  </div>
+                ) : (orderData.shipping_cost && orderData.shipping_cost > 0) ? (
+                  <div className="flex justify-between">
+                    <span>
+                      {orderData.shipping_service?.toLowerCase().includes('local') ? 'Entrega Local:' : 'Frete:'}
+                    </span>
                     <span>R$ {Number(orderData.shipping_cost || 0).toFixed(2).replace('.', ',')}</span>
                   </div>
-                )}
+                ) : null}
                 <div className="border-t pt-2">
                   <div className="flex justify-between font-medium">
                     <span>Total:</span>

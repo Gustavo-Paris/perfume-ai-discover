@@ -331,7 +331,11 @@ serve(async (req) => {
           status: order.status,
           payment_status: order.payment_status,
           total_amount: order.total_amount,
-          payment_method: order.payment_method
+          subtotal: order.subtotal,
+          shipping_cost: order.shipping_cost,
+          shipping_service: order.shipping_service,
+          payment_method: order.payment_method,
+          address_data: completeAddressData
         }
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
