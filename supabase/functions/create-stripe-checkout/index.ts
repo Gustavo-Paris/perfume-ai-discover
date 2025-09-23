@@ -322,7 +322,7 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
 
     // Optionally create order draft in Supabase for tracking
     // Avoid duplicate orders when we already have an order_draft_id (webhook/confirm-order will finalize it)
-    if (user?.id && !order_draft_id) {
+    if (user?.id && !order_draft_id && session) {
       try {
         const supabaseService = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
@@ -358,6 +358,11 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
     }
 
     logStep("Stripe checkout completed successfully");
+
+    // Ensure session was created successfully
+    if (!session) {
+      throw new Error('Falha na criação da sessão de checkout');
+    }
 
     return new Response(
       JSON.stringify({ 
