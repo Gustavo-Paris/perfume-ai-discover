@@ -161,10 +161,8 @@ serve(async (req) => {
         receipt: false,
         own_hand: false,
         reverse: false,
-        non_commercial: false,
-        invoice: {
-          key: generateNFeKey(order.order_number)
-        }
+        non_commercial: true // Para sandbox, marcando como não comercial para evitar validação NFe
+        // Removendo invoice temporariamente para sandbox
       }
     }
 
