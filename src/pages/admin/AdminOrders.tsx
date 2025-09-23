@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Search, Filter, FileText, Send, CheckCircle, Printer } from 'lucide-react';
+import { useBuyLabel, useShipments } from '@/hooks/useShipments';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,6 +49,7 @@ const statusColors = {
 
 const AdminOrders = () => {
   const { toast } = useToast();
+  const buyLabelMutation = useBuyLabel();
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -250,6 +252,44 @@ const AdminOrders = () => {
   const closeDetails = () => {
     setDetailsOpen(false);
     setDetailOrder(null);
+  };
+
+  const handlePrintLabel = async (orderId: string) => {
+    try {
+      // First check if there's already a shipment with PDF
+      const { data: shipments } = await supabase
+        .from('shipments')
+        .select('pdf_url, tracking_code, status')
+        .eq('order_id', orderId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (shipments && shipments.length > 0 && shipments[0].pdf_url) {
+        // If there's already a PDF, download it directly
+        window.open(shipments[0].pdf_url, '_blank');
+        return;
+      }
+
+      // If no shipment or no PDF, create the label
+      toast({
+        title: "Gerando etiqueta...",
+        description: "Criando etiqueta de envio, aguarde...",
+      });
+
+      await buyLabelMutation.mutateAsync({ orderId });
+      
+      toast({
+        title: "Etiqueta gerada!",
+        description: "A etiqueta foi gerada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error handling label:', error);
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao processar etiqueta.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -499,13 +539,12 @@ const AdminOrders = () => {
                         <Button 
                           size="sm" 
                           variant="secondary"
-                          onClick={() => {
-                            window.open(`/admin/print-label/${order.id}`, '_blank');
-                          }}
+                          onClick={() => handlePrintLabel(order.id)}
+                          disabled={buyLabelMutation.isPending}
                           className="w-full text-xs"
                         >
                           <Printer className="mr-1 h-3 w-3" />
-                          Etiqueta
+                          {buyLabelMutation.isPending ? 'Gerando...' : 'Etiqueta'}
                         </Button>
                       )}
                       
