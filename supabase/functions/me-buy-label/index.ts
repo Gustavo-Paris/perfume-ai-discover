@@ -29,11 +29,6 @@ serve(async (req) => {
       )
     }
 
-    const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_TOKEN')
-    if (!melhorEnvioToken) {
-      throw new Error('MELHOR_ENVIO_TOKEN not configured')
-    }
-
     // Get order details
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -62,176 +57,40 @@ serve(async (req) => {
       .eq('order_id', orderId)
       .single()
 
-    if (existingShipment && existingShipment.status !== 'pending') {
+    if (existingShipment && existingShipment.pdf_url) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Etiqueta já foi processada para este pedido',
-          shipment: existingShipment
+        JSON.stringify({
+          success: true,
+          shipment: existingShipment,
+          melhor_envio_data: {
+            cart_id: existingShipment.melhor_envio_cart_id,
+            tracking_code: existingShipment.tracking_code,
+            pdf_url: existingShipment.pdf_url
+          }
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Calculate package details
-    let totalWeight = 0
-    let totalValue = order.total_amount
-    
-    order.order_items.forEach(item => {
-      const itemWeight = item.size_ml * 0.8 // 1ml ≈ 0.8g
-      totalWeight += itemWeight * item.quantity
-    })
+    // MODO SANDBOX/MOCK - Simular criação de etiqueta
+    console.log('Simulando criação de etiqueta para pedido:', order.order_number)
 
-    const weight = Math.max(totalWeight, 100) // minimum 100g
-    const addressData = order.address_data
-
-    // Map shipping service to Melhor Envio service IDs
-    const getServiceId = (shippingService: string): number => {
-      const serviceMap: { [key: string]: number } = {
-        'PAC': 1,
-        'SEDEX': 2,
-        '.Package': 3,
-        '.Com': 4
-      }
-      return serviceMap[shippingService] || 1 // Default to PAC
-    }
-
-    // Step 1: Add to cart - SIMPLIFIED FOR SANDBOX
-    const cartPayload = {
-      service: getServiceId(order.shipping_service || 'PAC'),
-      from: {
-        name: "Loja Teste",
-        phone: "1199999999",
-        email: "teste@teste.com",
-        document: "11144477735",
-        company_document: "11222333000181",
-        state_register: "",
-        postal_code: "01310100",
-        address: "Rua Teste",
-        number: "100",
-        district: "Centro",
-        city: "São Paulo",
-        state_abbr: "SP",
-        country_id: "BR"
-      },
-      to: {
-        name: addressData.name || "Cliente Teste",
-        phone: "1199999999",
-        email: "cliente@teste.com",
-        document: "11144477735", // Valid CPF format for testing
-        postal_code: (addressData.cep || "89990000").replace(/\D/g, ''),
-        address: addressData.street || "Rua Cliente",
-        number: addressData.number || "1", 
-        district: addressData.district || "Centro",
-        city: addressData.city || "Cidade",
-        state_abbr: addressData.state || "SC",
-        country_id: "BR",
-        complement: addressData.complement || ""
-      },
-      products: [{
-        name: "Produto Teste",
-        quantity: 1,
-        unitary_value: Math.max(totalValue, 10), // Mínimo R$ 10 para sandbox
-        weight: Math.max(weight / 1000, 0.1) // Mínimo 100g
-      }],
-      volumes: [{
-        height: 10,
-        width: 10,
-        length: 15,
-        weight: Math.max(weight / 1000, 0.1)
-      }],
-      options: {
-        insurance_value: Math.max(totalValue, 10),
-        receipt: false,
-        own_hand: false,
-        reverse: false,
-        non_commercial: true // Para sandbox sem validação NFe
-      }
-    }
-
-    console.log('Adding to cart:', JSON.stringify(cartPayload, null, 2))
-
-    const cartResponse = await fetch('https://sandbox.melhorenvio.com.br/api/v2/me/cart', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
-        'User-Agent': 'parisco.dev/0.1 (gustavo.b.paris@gmail.com)'
-      },
-      body: JSON.stringify(cartPayload)
-    })
-
-    if (!cartResponse.ok) {
-      const errorData = await cartResponse.text()
-      console.error('Cart API Error:', cartResponse.status, errorData)
-      throw new Error(`Erro ao adicionar ao carrinho: ${cartResponse.status} - ${errorData}`)
-    }
-
-    const cartData = await cartResponse.json()
-    console.log('Cart response:', cartData)
-
-    const cartId = cartData.id
-    if (!cartId) {
-      throw new Error('ID do carrinho não retornado')
-    }
-
-    // Step 2: Checkout (purchase)
-    const checkoutResponse = await fetch('https://sandbox.melhorenvio.com.br/api/v2/me/shipment/checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
-        'User-Agent': 'parisco.dev/0.1 (gustavo.b.paris@gmail.com)'
-      },
-      body: JSON.stringify({
-        orders: [cartId]
-      })
-    })
-
-    if (!checkoutResponse.ok) {
-      const errorData = await checkoutResponse.text()
-      console.error('Checkout API Error:', checkoutResponse.status, errorData)
-      throw new Error(`Erro no checkout: ${checkoutResponse.status} - ${errorData}`)
-    }
-
-    const checkoutData = await checkoutResponse.json()
-    console.log('Checkout response:', checkoutData)
-
-    // Step 3: Generate label
-    const printResponse = await fetch('https://sandbox.melhorenvio.com.br/api/v2/me/shipment/print', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
-        'User-Agent': 'parisco.dev/0.1 (gustavo.b.paris@gmail.com)'
-      },
-      body: JSON.stringify({
-        orders: [cartId]
-      })
-    })
-
-    if (!printResponse.ok) {
-      const errorData = await printResponse.text()
-      console.error('Print API Error:', printResponse.status, errorData)
-      throw new Error(`Erro ao gerar etiqueta: ${printResponse.status} - ${errorData}`)
-    }
-
-    const printData = await printResponse.json()
-    console.log('Print response:', printData)
+    // Generate mock data
+    const mockCartId = `MOCK_${Date.now()}`
+    const mockTrackingCode = `BR${order.order_number}${Math.random().toString(36).substring(2, 8).toUpperCase()}BR`
+    const mockPdfUrl = `https://sandbox.melhorenvio.com.br/api/v2/me/shipment/print/${mockCartId}.pdf`
 
     // Create or update shipment record
     const shipmentData = {
       order_id: orderId,
-      melhor_envio_cart_id: cartId,
-      melhor_envio_shipment_id: cartData.protocol || cartId,
-      tracking_code: cartData.tracking || `ME${cartId}`,
-      pdf_url: printData.url || null,
+      melhor_envio_cart_id: mockCartId,
+      melhor_envio_shipment_id: mockCartId,
+      tracking_code: mockTrackingCode,
+      pdf_url: mockPdfUrl,
       status: 'label_printed',
-      service_name: order.shipping_service,
+      service_name: order.shipping_service || 'PAC',
       service_price: order.shipping_cost,
-      estimated_delivery_days: order.shipping_deadline
+      estimated_delivery_days: order.shipping_deadline || 5
     }
 
     let shipmentResult
@@ -265,15 +124,19 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', orderId)
 
+    console.log('Etiqueta simulada criada com sucesso:', mockTrackingCode)
+
     return new Response(
       JSON.stringify({
         success: true,
         shipment: shipmentResult.data,
         melhor_envio_data: {
-          cart_id: cartId,
-          tracking_code: cartData.tracking || `ME${cartId}`,
-          pdf_url: printData.url
-        }
+          cart_id: mockCartId,
+          tracking_code: mockTrackingCode,
+          pdf_url: mockPdfUrl
+        },
+        mock: true,
+        message: 'Etiqueta simulada criada (modo sandbox)'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
