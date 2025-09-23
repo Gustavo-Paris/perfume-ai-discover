@@ -269,14 +269,15 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
     cancelUrl = `${cancelUrl}${sep2}payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
     
     // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : customerEmail,
-      line_items: lineItems,
-      mode: 'payment',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      payment_method_types: method === 'pix' ? ['pix'] : ['card'],
+    try {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : customerEmail,
+        line_items: lineItems,
+        mode: 'payment',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        payment_method_types: method === 'pix' ? ['pix'] : ['card'],
       billing_address_collection: addressData ? 'auto' : 'required',
       shipping_address_collection: addressData ? undefined : {
         allowed_countries: ['BR'],
@@ -301,13 +302,22 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
         checkout_type: 'stripe_checkout',
         selected_payment_method: method,
         ...(order_draft_id ? { order_draft_id } : {}),
-      }
-    });
+        }
+      });
 
-    logStep("Stripe checkout session created", { 
-      sessionId: session.id, 
-      url: session.url 
-    });
+      logStep("Stripe checkout session created", { 
+        sessionId: session.id, 
+        url: session.url 
+      });
+    } catch (stripeError: any) {
+      // Handle specific PIX activation error
+      if (stripeError.message && stripeError.message.includes('pix is invalid')) {
+        logStep("PIX payment method not activated in Stripe dashboard");
+        throw new Error('PIX não está ativado no Stripe. Ative PIX no dashboard do Stripe em: Configurações > Métodos de Pagamento > PIX');
+      }
+      // Re-throw other Stripe errors
+      throw stripeError;
+    }
 
     // Optionally create order draft in Supabase for tracking
     // Avoid duplicate orders when we already have an order_draft_id (webhook/confirm-order will finalize it)
