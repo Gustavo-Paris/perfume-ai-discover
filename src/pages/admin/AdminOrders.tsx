@@ -58,7 +58,7 @@ const AdminOrders = () => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const itemsPerPage = 10;
 
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: ordersResult, isLoading } = useQuery({
     queryKey: ['admin-orders', searchTerm, statusFilter, dateFilter, currentPage],
     queryFn: async () => {
       let query = supabase
@@ -98,7 +98,8 @@ const AdminOrders = () => {
     },
   });
 
-  const totalPages = Math.ceil((orders.count || 0) / itemsPerPage);
+  const orders = ordersResult?.data || [];
+  const totalPages = Math.ceil((ordersResult?.count || 0) / itemsPerPage);
 
   const handleSelectOrder = (orderId: string, checked: boolean) => {
     if (checked) {
@@ -353,7 +354,7 @@ const AdminOrders = () => {
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox
-                    checked={selectedOrders.length === orders.data?.length && orders.data?.length > 0}
+                    checked={selectedOrders.length === orders.length && orders.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
@@ -367,7 +368,7 @@ const AdminOrders = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.data?.map((order) => (
+              {orders?.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>
                     <Checkbox
@@ -380,8 +381,8 @@ const AdminOrders = () => {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{order.profiles?.name || 'N/A'}</div>
-                      <div className="text-sm text-muted-foreground">{order.profiles?.email || 'N/A'}</div>
+                      <div className="font-medium">{(order.profiles as any)?.name || 'N/A'}</div>
+                      <div className="text-sm text-muted-foreground">{(order.profiles as any)?.email || 'N/A'}</div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -396,14 +397,14 @@ const AdminOrders = () => {
                         <>
                           <div className="text-sm font-medium text-green-700">🚚 Entrega Local</div>
                           <div className="text-xs text-gray-600">
-                            {order.address_data?.city} - {order.address_data?.state}
+                            {(order.address_data as any)?.city} - {(order.address_data as any)?.state}
                           </div>
                         </>
                       ) : (
                         <>
                           <div className="text-sm font-medium">📦 Correios</div>
                           <div className="text-xs text-gray-600">
-                            {order.address_data?.city} - {order.address_data?.state}
+                            {(order.address_data as any)?.city} - {(order.address_data as any)?.state}
                           </div>
                         </>
                       )}
