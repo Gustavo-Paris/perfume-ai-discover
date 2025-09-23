@@ -84,15 +84,43 @@ serve(async (req) => {
     const weight = Math.max(totalWeight, 100) // minimum 100g
     const addressData = order.address_data
 
+    // Map shipping service to Melhor Envio service IDs
+    const getServiceId = (shippingService: string): number => {
+      const serviceMap: { [key: string]: number } = {
+        'PAC': 1,
+        'SEDEX': 2,
+        '.Package': 3,
+        '.Com': 4
+      }
+      return serviceMap[shippingService] || 1 // Default to PAC
+    }
+
+    // Generate a valid NFe key (44 digits) - using a mock pattern for sandbox
+    const generateNFeKey = (orderNumber: string): string => {
+      // Format: UFAAMMNNCCCNNNSSSSSSSSSSSSDV
+      // For sandbox purposes, we'll generate a valid format but fictional key
+      const year = new Date().getFullYear().toString().slice(-2)
+      const month = String(new Date().getMonth() + 1).padStart(2, '0')
+      const cnpj = '11222333000181' // Valid CNPJ format for testing
+      const model = '55' // NFe model
+      const series = '001'
+      const number = orderNumber.replace(/\D/g, '').padStart(9, '0').slice(-9)
+      
+      const key = `42${year}${month}${cnpj}${model}${series}${number}000000001`
+      // Add a simple check digit (not real NFe algorithm but valid format)
+      const checkDigit = (parseInt(key.slice(-1)) + 1) % 10
+      return key + checkDigit
+    }
+
     // Step 1: Add to cart
     const cartPayload = {
-      service: order.shipping_service || 1, // Default to Correios PAC
+      service: getServiceId(order.shipping_service || 'PAC'),
       from: {
         name: "Paris & Co Teste",
         phone: "11999990000",
         email: "gustavo.b.paris@gmail.com",
-        document: "00000000000100",
-        company_document: "00000000000100",
+        document: "11144477735", // Valid CPF format for testing
+        company_document: "11222333000181", // Valid CNPJ format for testing
         state_register: "",
         postal_code: "01310100",
         address: "Avenida Paulista",
@@ -106,7 +134,7 @@ serve(async (req) => {
         name: addressData.name || "Cliente",
         phone: addressData.phone || "11999999999",
         email: addressData.email || "cliente@example.com",
-        document: "00000000000",
+        document: "11144477735", // Valid CPF format for testing
         postal_code: addressData.cep.replace(/\D/g, ''),
         address: addressData.street,
         number: addressData.number,
@@ -135,7 +163,7 @@ serve(async (req) => {
         reverse: false,
         non_commercial: false,
         invoice: {
-          key: order.order_number
+          key: generateNFeKey(order.order_number)
         }
       }
     }
