@@ -90,6 +90,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     icon: Settings,
     defaultOpen: false,
     items: [
+      { title: '🚀 Configuração de Lançamento', url: '/admin/launch-setup', icon: Megaphone },
       { title: 'Upload de Imagens', url: '/admin/perfume-images', icon: Upload },
       { title: 'Importar CSV', url: '/admin/csv-import', icon: Upload },
       { title: 'Configurações', url: '/admin/config', icon: Settings },
