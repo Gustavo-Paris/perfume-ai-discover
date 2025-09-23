@@ -91,6 +91,18 @@ export const usePerfumesAdmin = () => {
         throw error;
       }
 
+      // Debug dos primeiros perfumes para verificar campos de preço
+      if (perfumes && perfumes.length > 0) {
+        debugLog('🔍 Primeiro perfume retornado:', {
+          name: perfumes[0].name,
+          price_2ml: perfumes[0].price_2ml,
+          price_5ml: perfumes[0].price_5ml,
+          price_10ml: perfumes[0].price_10ml,
+          price_full: perfumes[0].price_full,
+          target_margin_percentage: perfumes[0].target_margin_percentage
+        });
+      }
+
       return perfumes?.map(perfume => ({
         ...perfume,
         gender: perfume.gender as 'masculino' | 'feminino' | 'unissex',

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Edit, Trash2, Upload, RefreshCw, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,10 @@ import { useUpdateAllMargins } from '@/hooks/useUpdateAllMargins';
 
 const AdminPerfumes = () => {
   const { data: perfumes, isLoading, refetch } = usePerfumesAdmin();
+  // Forçar refetch para ver os dados atualizados
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
   // Cache preços para evitar N+1 queries
   const perfumePricesCache = useMemo(() => {
     const cache: Record<string, Record<number, number>> = {};
@@ -398,12 +402,18 @@ const AdminPerfumes = () => {
                     <Badge variant="secondary">{perfume.gender}</Badge>
                   </TableCell>
                   <TableCell>{perfume.category}</TableCell>
-                  <TableCell>
-                    <PerfumePricesDisplayOptimized 
-                      perfumeId={perfume.id}
-                      availableSizes={availableSizes}
-                    />
-                  </TableCell>
+                   <TableCell>
+                     <PerfumePricesDisplayOptimized 
+                       perfumeId={perfume.id}
+                       prices={{
+                         2: perfume.price_2ml || 0,
+                         5: perfume.price_5ml || 0,
+                         10: perfume.price_10ml || 0,
+                         50: perfume.price_full || 0
+                       }}
+                       availableSizes={availableSizes}
+                     />
+                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
                       {formatMarginDisplay((perfume as any).target_margin_percentage)}
