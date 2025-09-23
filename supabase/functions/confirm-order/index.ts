@@ -8,7 +8,7 @@ interface ConfirmOrderRequest {
   paymentData: {
     transaction_id: string;
     payment_method: 'pix' | 'credit_card';
-    status: string;
+    status?: string; // Make status optional
   };
 }
 
@@ -23,7 +23,11 @@ serve(async (req) => {
   }
 
   try {
-    const { orderDraftId, paymentData }: ConfirmOrderRequest = await req.json();
+    console.log('=== CONFIRM ORDER REQUEST START ===');
+    const requestBody = await req.json();
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    
+    const { orderDraftId, paymentData }: ConfirmOrderRequest = requestBody;
 
     if (!orderDraftId || !paymentData) {
       return new Response(
@@ -35,6 +39,18 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    console.log('Environment check:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseKey,
+      urlLength: supabaseUrl?.length || 0,
+      keyLength: supabaseKey?.length || 0
+    });
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase environment variables not configured');
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log('=== CONFIRMING ORDER ===');
@@ -131,8 +147,10 @@ serve(async (req) => {
 
     // Verify payment with Stripe if transaction_id is a Checkout Session
     const txnId = paymentData.transaction_id;
-    let verifiedStatus: string = paymentData.status;
+    let verifiedStatus: string = paymentData.status || 'pending';
     let verifiedMethod: 'pix' | 'credit_card' = paymentData.payment_method;
+
+    console.log('Payment verification starting:', { txnId, status: verifiedStatus, method: verifiedMethod });
 
     try {
       if (txnId && txnId.startsWith('cs_')) {
@@ -339,12 +357,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in confirm-order function:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      details: error.details
+    });
     
     return new Response(
       JSON.stringify({ 
         success: false,
         error: 'Erro interno do servidor',
-        message: error.message
+        message: error.message,
+        errorName: error.name,
+        errorCode: error.code
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
