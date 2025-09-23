@@ -32,7 +32,7 @@ serve(async (req) => {
       )
     }
 
-    // Get order details
+    // Get order details WITH address details
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -53,12 +53,27 @@ serve(async (req) => {
       throw new Error('Pedido não encontrado')
     }
 
+    // Get customer profile for additional data
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, email')
+      .eq('id', order.user_id)
+      .single()
+
+    // Get company settings for valid CNPJ/CPF
+    const { data: companySettings } = await supabase
+      .from('company_settings')
+      .select('*')
+      .limit(1)
+      .single()
+
     // Check if shipment already exists
     const { data: existingShipment } = await supabase
       .from('shipments')
       .select('*')
       .eq('order_id', orderId)
       .single()
+
     const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_API_TOKEN')
     if (!melhorEnvioToken) {
       throw new Error('Token do Melhor Envio não configurado')
@@ -114,16 +129,19 @@ serve(async (req) => {
       }
     }
 
+    // Parse address data from order
+    const addressData = order.address_data || {}
+    
     // Step 1: Create a cart
     const cartPayload = {
       service: 1, // Correios PAC
       from: {
-        name: "Perfumaria do Chapecó",
+        name: companySettings?.razao_social || "Perfumaria do Chapecó",
         phone: "(49) 99999-9999",
         email: "contato@perfumariadochapeco.com.br",
         document: "11144477735", // CPF válido para sandbox
-        company_document: "11222333000181", // CNPJ válido para sandbox
-        state_register: "123456789",
+        company_document: companySettings?.cnpj || "11222333000181", // CNPJ válido para sandbox
+        state_register: companySettings?.inscricao_estadual || "123456789",
         postal_code: "89814000",
         address: "Rua Florianópolis - D",
         number: "828",
@@ -133,16 +151,16 @@ serve(async (req) => {
         country_id: "BR"
       },
       to: {
-        name: order.shipping_name || "Cliente",
-        phone: order.shipping_phone || "(00) 00000-0000",
-        email: order.customer_email || "cliente@email.com",
+        name: profile?.name || addressData.name || "Cliente",
+        phone: "(00) 00000-0000",
+        email: profile?.email || "cliente@email.com",
         document: "11144477735", // CPF válido para sandbox
-        postal_code: order.shipping_zipcode?.replace(/\D/g, '') || "00000000",
-        address: order.shipping_address || "Endereço não informado",
-        number: order.shipping_number || "S/N",
-        district: order.shipping_district || "Centro",
-        city: order.shipping_city || "Cidade",
-        state_abbr: order.shipping_state || "SC",
+        postal_code: addressData.cep?.replace(/\D/g, '') || "00000000",
+        address: addressData.street || "Endereço não informado",
+        number: addressData.number || "S/N",
+        district: addressData.district || "Centro",
+        city: addressData.city || "Cidade",
+        state_abbr: addressData.state || "SC",
         country_id: "BR"
       },
       products: order.order_items?.map(item => ({
