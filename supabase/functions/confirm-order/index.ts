@@ -310,8 +310,25 @@ serve(async (req) => {
       );
     }
 
-    // Step 8: Clear cart and order draft
-    console.log('Step 8: Cleaning up cart and order draft');
+    // Step 8: Process stock movement
+    console.log('Step 8: Processing stock movement');
+    try {
+      const { data: stockResult, error: stockError } = await supabase
+        .rpc('process_order_stock_movement', { order_uuid: order.id });
+      
+      if (stockError) {
+        console.warn('Stock movement error:', stockError);
+        // Don't fail the order for stock movement issues
+      } else {
+        console.log('Stock movement result:', stockResult);
+      }
+    } catch (stockError) {
+      console.warn('Stock movement processing failed:', stockError);
+      // Don't fail the request for stock movement issues
+    }
+
+    // Step 9: Clear cart and order draft
+    console.log('Step 9: Cleaning up cart and order draft');
     try {
       await supabase.from('cart_items').delete().eq('user_id', orderDraft.user_id);
       await supabase.from('order_drafts').delete().eq('id', orderDraftId);

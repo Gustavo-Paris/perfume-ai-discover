@@ -138,10 +138,22 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               {order.order_items?.map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                      {item.perfume?.image_url ? (
+                        <img 
+                          src={item.perfume.image_url} 
+                          alt={item.perfume.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="h-6 w-6 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
                     <div>
-                      <h4 className="font-medium">{item.perfume?.name}</h4>
-                      <p className="text-sm text-gray-600">{item.perfume?.brand}</p>
+                      <h4 className="font-medium">{item.perfume?.name || 'Produto'}</h4>
+                      <p className="text-sm text-gray-600">{item.perfume?.brand || 'Marca não informada'}</p>
                       <p className="text-sm text-gray-600">
                         {item.size_ml}ml • Quantidade: {item.quantity}
                       </p>

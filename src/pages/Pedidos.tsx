@@ -167,11 +167,23 @@ const Pedidos = () => {
                       <div className="space-y-3">
                         {order.order_items?.slice(0, 3).map((item) => (
                           <div key={item.id} className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0"></div>
+                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                              {item.perfume?.image_url ? (
+                                <img 
+                                  src={item.perfume.image_url} 
+                                  alt={item.perfume.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Package className="h-4 w-4 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
                             <div className="flex-1">
-                              <p className="font-medium text-sm">{item.perfume?.name}</p>
+                              <p className="font-medium text-sm">{item.perfume?.name || 'Produto'}</p>
                               <p className="text-xs text-gray-600">
-                                {item.perfume?.brand} • {item.size_ml}ml • Qty: {item.quantity}
+                                {item.perfume?.brand || 'Marca não informada'} • {item.size_ml}ml • Qty: {item.quantity}
                               </p>
                             </div>
                             <p className="font-medium text-sm">
