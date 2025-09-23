@@ -1319,6 +1319,61 @@ export type Database = {
           },
         ]
       }
+      material_movements: {
+        Row: {
+          change_quantity: number
+          created_at: string | null
+          id: string
+          material_id: string
+          material_lot_id: string | null
+          movement_type: string
+          notes: string | null
+          order_id: string | null
+        }
+        Insert: {
+          change_quantity: number
+          created_at?: string | null
+          id?: string
+          material_id: string
+          material_lot_id?: string | null
+          movement_type: string
+          notes?: string | null
+          order_id?: string | null
+        }
+        Update: {
+          change_quantity?: number
+          created_at?: string | null
+          id?: string
+          material_id?: string
+          material_lot_id?: string | null
+          movement_type?: string
+          notes?: string | null
+          order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_movements_material_lot_id_fkey"
+            columns: ["material_lot_id"]
+            isOneToOne: false
+            referencedRelation: "material_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materials: {
         Row: {
           category: string
@@ -3240,6 +3295,15 @@ export type Database = {
       cleanup_old_access_logs: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      consume_material: {
+        Args: {
+          material_uuid: string
+          movement_notes?: string
+          order_uuid: string
+          quantity_needed: number
+        }
+        Returns: boolean
       }
       create_cart_recovery_attempt: {
         Args: {
