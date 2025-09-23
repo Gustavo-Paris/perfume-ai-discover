@@ -269,8 +269,9 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
     cancelUrl = `${cancelUrl}${sep2}payment_method=${method}${order_draft_id ? `&order_draft_id=${order_draft_id}` : ''}`;
     
     // Create Stripe checkout session
+    let session;
     try {
-      const session = await stripe.checkout.sessions.create({
+      session = await stripe.checkout.sessions.create({
         customer: customerId,
         customer_email: customerId ? undefined : customerEmail,
         line_items: lineItems,
