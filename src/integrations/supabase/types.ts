@@ -3660,10 +3660,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      trigger_email_notification: {
-        Args: { notification_type: string; record_id: string }
-        Returns: undefined
-      }
       update_material_avg_cost: {
         Args: { material_uuid: string }
         Returns: undefined
