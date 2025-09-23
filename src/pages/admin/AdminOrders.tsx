@@ -516,37 +516,36 @@ const AdminOrders = () => {
                   <TableCell>
                     {format(new Date(order.created_at), 'dd/MM/yy HH:mm', { locale: ptBR })}
                   </TableCell>
-                  <TableCell>
-                    <div className="space-y-2">
-                      {!order.shipping_service?.toLowerCase().includes('correio') && 
-                       !order.shipping_service?.toLowerCase().includes('pac') &&
-                       !order.shipping_service?.toLowerCase().includes('mail') ? (
-                        <Button 
-                          size="sm" 
-                          variant="default"
-                          onClick={() => {
-                            toast({
-                              title: "Marcar como Entregue",
-                              description: "Funcionalidade em desenvolvimento",
-                            });
-                          }}
-                          className="w-full text-xs"
-                        >
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Entregue
-                        </Button>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          variant="secondary"
-                          onClick={() => handlePrintLabel(order.id)}
-                          disabled={buyLabelMutation.isPending}
-                          className="w-full text-xs"
-                        >
-                          <Printer className="mr-1 h-3 w-3" />
-                          {buyLabelMutation.isPending ? 'Gerando...' : 'Etiqueta'}
-                        </Button>
-                      )}
+                   <TableCell>
+                     <div className="space-y-2">
+                       {order.shipping_service?.toLowerCase().includes('retirada') || 
+                        order.shipping_service?.toLowerCase().includes('pickup') ? (
+                         <Button 
+                           size="sm" 
+                           variant="default"
+                           onClick={() => {
+                             toast({
+                               title: "Marcar como Entregue",
+                               description: "Funcionalidade em desenvolvimento",
+                             });
+                           }}
+                           className="w-full text-xs"
+                         >
+                           <CheckCircle className="mr-1 h-3 w-3" />
+                           Entregue
+                         </Button>
+                       ) : (
+                         <Button 
+                           size="sm" 
+                           variant="secondary"
+                           onClick={() => handlePrintLabel(order.id)}
+                           disabled={buyLabelMutation.isPending}
+                           className="w-full text-xs"
+                         >
+                           <Printer className="mr-1 h-3 w-3" />
+                           {buyLabelMutation.isPending ? 'Gerando...' : 'Etiqueta'}
+                         </Button>
+                       )}
                       
                       <Button 
                         size="sm" 
