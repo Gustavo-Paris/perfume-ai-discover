@@ -31,29 +31,29 @@ const Pedidos = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (
-            *,
-            perfumes (
-              id,
-              name,
-              brand,
-              image_url
-            )
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Usar a função RPC que faz JOIN explícito com perfumes
+      const { data, error } = await supabase.rpc('get_user_orders_with_perfumes', {
+        p_user_id: user.id
+      });
 
       if (error) {
         console.error('Error loading orders:', error);
         return;
       }
 
-      setOrders(data || []);
+      // Transformar os dados para manter compatibilidade com o tipo Order
+      const transformedOrders = data?.map(order => ({
+        ...order,
+        address_data: order.address_data as any,
+        order_items: Array.isArray(order.order_items) 
+          ? (order.order_items as any[]).map(item => ({
+              ...item,
+              perfume: item.perfume || null
+            }))
+          : []
+      })) || [];
+
+      setOrders(transformedOrders as Order[]);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {

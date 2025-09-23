@@ -3543,6 +3543,27 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_user_orders_with_perfumes: {
+        Args: { p_user_id: string }
+        Returns: {
+          address_data: Json
+          created_at: string
+          id: string
+          order_items: Json
+          order_number: string
+          payment_method: string
+          payment_status: string
+          shipping_cost: number
+          shipping_deadline: number
+          shipping_service: string
+          status: string
+          subtotal: number
+          total_amount: number
+          transaction_id: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_user_points_balance: {
         Args: { user_uuid: string }
         Returns: number
