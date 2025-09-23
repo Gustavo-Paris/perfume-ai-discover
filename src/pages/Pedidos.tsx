@@ -192,13 +192,35 @@ const Pedidos = () => {
                       <div className="flex items-start space-x-2">
                         <MapPin className="h-4 w-4 text-gray-400 mt-1" />
                         <div className="text-sm">
-                          <p className="font-medium">Endereço de Entrega</p>
-                          <p className="text-gray-600">
-                            {order.address_data?.street}, {order.address_data?.number}
+                          <p className="font-medium">
+                            {order.shipping_service?.toLowerCase().includes('retirada') || 
+                             order.shipping_service?.toLowerCase().includes('pickup') 
+                              ? 'Retirada Local' 
+                              : order.shipping_service?.toLowerCase().includes('local')
+                              ? 'Entrega Local'
+                              : 'Endereço de Entrega'}
                           </p>
-                          <p className="text-gray-600">
-                            {order.address_data?.city} - {order.address_data?.state}
-                          </p>
+                          {order.shipping_service?.toLowerCase().includes('retirada') || 
+                           order.shipping_service?.toLowerCase().includes('pickup') ? (
+                            <div className="text-gray-600">
+                              <p className="font-medium">Local de Retirada:</p>
+                              <p>Rua Florianópolis - D, 828</p>
+                              <p>Jardim Itália, Chapecó - SC</p>
+                              <p className="text-xs text-blue-600 mt-1">
+                                Segunda a sexta: 8h às 18h
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-gray-600">
+                              <p>{order.address_data?.street}, {order.address_data?.number}</p>
+                              {order.address_data?.complement && (
+                                <p>{order.address_data.complement}</p>
+                              )}
+                              <p>{order.address_data?.district}</p>
+                              <p>{order.address_data?.city} - {order.address_data?.state}</p>
+                              {order.address_data?.cep && <p>CEP: {order.address_data.cep}</p>}
+                            </div>
+                          )}
                         </div>
                       </div>
 

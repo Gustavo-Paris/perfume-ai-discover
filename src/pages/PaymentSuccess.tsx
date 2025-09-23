@@ -232,32 +232,79 @@ const PaymentSuccess = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 text-center">
-          <div className="space-y-2">
-            <p className="text-muted-foreground">
-              Seu pedido foi processado com sucesso e já está sendo preparado.
-            </p>
-            {orderData && (
-              <div className="p-4 bg-gray-50 rounded-lg text-left">
-                <div className="space-y-2 text-sm">
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span>Pedido:</span>
+                  <span className="font-medium">#{orderData.order_number}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Pagamento:</span>
+                  <span className="font-medium">
+                    {(orderData?.payment_method || paymentMethod) === 'pix' ? '💰 PIX' : '💳 Cartão de Crédito'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>R$ {Number(orderData.subtotal || 0).toFixed(2).replace('.', ',')}</span>
+                </div>
+                {(orderData.shipping_cost || 0) > 0 && (
                   <div className="flex justify-between">
-                    <span>Pedido:</span>
-                    <span className="font-medium">#{orderData.order_number}</span>
+                    <span>Frete:</span>
+                    <span>R$ {Number(orderData.shipping_cost || 0).toFixed(2).replace('.', ',')}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Pagamento:</span>
-                    <span className="font-medium">
-                      {(orderData?.payment_method || paymentMethod) === 'pix' ? 'PIX' : 'Cartão de Crédito'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
+                )}
+                <div className="border-t pt-2">
+                  <div className="flex justify-between font-medium">
                     <span>Total:</span>
-                    <span className="font-medium">
-                      R$ {Number(orderData.total_amount || 0).toFixed(2).replace('.', ',')}
-                    </span>
+                    <span>R$ {Number(orderData.total_amount || 0).toFixed(2).replace('.', ',')}</span>
+                  </div>
+                </div>
+                
+                {/* Informações de Entrega */}
+                <div className="border-t pt-3 mt-3">
+                  <div className="space-y-2">
+                    {orderData.shipping_service?.toLowerCase().includes('retirada') || 
+                     orderData.shipping_service?.toLowerCase().includes('pickup') ? (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <Package className="h-4 w-4 text-blue-600" />
+                          <span className="font-medium text-blue-700">Retirada Local</span>
+                        </div>
+                        <div className="text-xs text-gray-600 ml-6">
+                          <p>📍 Rua Florianópolis - D, 828</p>
+                          <p>Jardim Itália, Chapecó - SC</p>
+                          <p>⏰ Segunda a sexta: 8h às 18h</p>
+                        </div>
+                      </>
+                    ) : orderData.shipping_service?.toLowerCase().includes('local') ? (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <Package className="h-4 w-4 text-green-600" />
+                          <span className="font-medium text-green-700">Entrega Local</span>
+                        </div>
+                        <div className="text-xs text-gray-600 ml-6">
+                          <p>🚚 Entrega em até 2 dias úteis</p>
+                          <p>📍 {orderData.address_data?.city} - {orderData.address_data?.state}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <Package className="h-4 w-4 text-purple-600" />
+                          <span className="font-medium text-purple-700">Envio pelos Correios</span>
+                        </div>
+                        <div className="text-xs text-gray-600 ml-6">
+                          <p>📦 Você receberá o código de rastreamento</p>
+                          <p>📍 {orderData.address_data?.city} - {orderData.address_data?.state}</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           <div className="space-y-4">

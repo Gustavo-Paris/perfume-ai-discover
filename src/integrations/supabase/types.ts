@@ -2756,6 +2756,7 @@ export type Database = {
           created_at: string | null
           id: string
           lot_id: string | null
+          material_id: string | null
           movement_type: string
           notes: string | null
           perfume_id: string
@@ -2766,6 +2767,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           lot_id?: string | null
+          material_id?: string | null
           movement_type: string
           notes?: string | null
           perfume_id: string
@@ -2776,6 +2778,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           lot_id?: string | null
+          material_id?: string | null
           movement_type?: string
           notes?: string | null
           perfume_id?: string
@@ -2787,6 +2790,13 @@ export type Database = {
             columns: ["lot_id"]
             isOneToOne: false
             referencedRelation: "inventory_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
             referencedColumns: ["id"]
           },
           {
@@ -3191,6 +3201,19 @@ export type Database = {
               p_window_minutes?: number
             }
         Returns: boolean
+      }
+      check_stock_availability: {
+        Args: {
+          perfume_uuid: string
+          quantity_requested: number
+          size_ml_param: number
+        }
+        Returns: {
+          available: boolean
+          available_ml: number
+          available_units: number
+          message: string
+        }[]
       }
       check_user_rate_limit: {
         Args: { endpoint_name?: string; max_requests?: number }

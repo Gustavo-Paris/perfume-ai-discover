@@ -206,8 +206,50 @@ serve(async (req) => {
       }
     }
 
-    // Step 6: Create order
-    console.log('Step 6: Creating new order');
+    // Step 6: Get complete address data and create order
+    console.log('Step 6: Getting complete address data and creating order');
+    
+    let completeAddressData = orderDraft.address_data || {};
+    
+    // Se temos address_id, buscar dados completos do endereço
+    if (orderDraft.address_id) {
+      console.log('Fetching complete address data for:', orderDraft.address_id);
+      const { data: addressData, error: addressError } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('id', orderDraft.address_id)
+        .maybeSingle();
+      
+      if (addressData && !addressError) {
+        completeAddressData = {
+          id: addressData.id,
+          name: addressData.name,
+          street: addressData.street,
+          number: addressData.number,
+          complement: addressData.complement,
+          district: addressData.district,
+          city: addressData.city,
+          state: addressData.state,
+          cep: addressData.cep,
+          country: addressData.country || 'Brasil'
+        };
+        console.log('Complete address data loaded:', completeAddressData);
+      } else {
+        console.warn('Could not load address data:', addressError);
+      }
+    }
+    
+    // Determinar tipo de entrega
+    let deliveryType = 'standard';
+    if (orderDraft.shipping_service) {
+      if (orderDraft.shipping_service.toLowerCase().includes('local')) {
+        deliveryType = 'local_delivery';
+      } else if (orderDraft.shipping_service.toLowerCase().includes('retirada') || 
+                 orderDraft.shipping_service.toLowerCase().includes('pickup')) {
+        deliveryType = 'pickup';
+      }
+    }
+    
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -220,7 +262,8 @@ serve(async (req) => {
         payment_status: verifiedStatus === 'paid' ? 'paid' : 'pending',
         transaction_id: txnId,
         shipping_service: orderDraft.shipping_service,
-        address_data: orderDraft.address_data || {}
+        shipping_deadline: orderDraft.shipping_deadline,
+        address_data: completeAddressData
       })
       .select()
       .single();

@@ -23,7 +23,11 @@ interface Order {
   order_number: string;
   user_id: string;
   total_amount: number;
+  subtotal?: number;
+  shipping_cost?: number;
   payment_status: string;
+  payment_method?: string;
+  shipping_service?: string;
   status: string;
   created_at: string;
   address_data: any;
@@ -393,7 +397,8 @@ const AdminOrders = () => {
                 </TableHead>
                 <TableHead>Nº Pedido</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead>Endereço/Entrega</TableHead>
+                <TableHead>Valores</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead className="w-12">Ações</TableHead>
@@ -418,10 +423,58 @@ const AdminOrders = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(order.total_amount)}
+                    <div className="space-y-1">
+                      {order.shipping_service?.toLowerCase().includes('retirada') || 
+                       order.shipping_service?.toLowerCase().includes('pickup') ? (
+                        <>
+                          <div className="text-sm font-medium text-blue-700">🏪 Retirada Local</div>
+                          <div className="text-xs text-gray-600">Loja - Chapecó/SC</div>
+                        </>
+                      ) : order.shipping_service?.toLowerCase().includes('local') ? (
+                        <>
+                          <div className="text-sm font-medium text-green-700">🚚 Entrega Local</div>
+                          <div className="text-xs text-gray-600">
+                            {order.address_data?.city} - {order.address_data?.state}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-sm font-medium">📦 Correios</div>
+                          <div className="text-xs text-gray-600">
+                            {order.address_data?.city} - {order.address_data?.state}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="font-medium">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL'
+                        }).format(order.total_amount)}
+                      </div>
+                      {order.subtotal !== order.total_amount && (
+                        <div className="text-xs text-gray-600">
+                          Sub: {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(order.subtotal || 0)}
+                          {(order.shipping_cost || 0) > 0 && (
+                            <> + Frete: {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(order.shipping_cost || 0)}</>
+                          )}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        {order.payment_method === 'pix' ? '💰 PIX' : '💳 Cartão'}
+                        {' • '}
+                        {order.payment_status === 'paid' ? '✅ Pago' : '⏳ Pendente'}
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge className={cn("text-xs", statusColors[order.status as keyof typeof statusColors] || "bg-gray-100 text-gray-800")}>

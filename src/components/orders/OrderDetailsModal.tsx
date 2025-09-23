@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Order } from '@/types/order';
-import { ShipmentCard } from './ShipmentCard';
+import { EnhancedShipmentCard } from './EnhancedShipmentCard';
 
 interface OrderDetailsModalProps {
   order: Order;
@@ -87,16 +87,42 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-gray-400 mt-1" />
                 <div>
-                  <p className="font-medium">Endereço de Entrega</p>
-                  <div className="text-sm text-gray-600">
-                    <p>{order.address_data?.street}, {order.address_data?.number}</p>
-                    {order.address_data?.complement && (
-                      <p>{order.address_data.complement}</p>
-                    )}
-                    <p>{order.address_data?.district}</p>
-                    <p>{order.address_data?.city} - {order.address_data?.state}</p>
-                    <p>CEP: {order.address_data?.cep}</p>
-                  </div>
+                  <p className="font-medium">
+                    {order.shipping_service?.toLowerCase().includes('retirada') || 
+                     order.shipping_service?.toLowerCase().includes('pickup') 
+                      ? 'Local de Retirada' 
+                      : order.shipping_service?.toLowerCase().includes('local')
+                      ? 'Entrega Local'
+                      : 'Endereço de Entrega'}
+                  </p>
+                  {order.shipping_service?.toLowerCase().includes('retirada') || 
+                   order.shipping_service?.toLowerCase().includes('pickup') ? (
+                    <div className="text-sm text-gray-600">
+                      <p className="font-medium text-blue-700">🏪 Retirada no Local</p>
+                      <p>Rua Florianópolis - D, 828</p>
+                      <p>Jardim Itália, Chapecó - SC</p>
+                      <p>CEP: 89814-000</p>
+                      <p className="text-xs text-blue-600 mt-2 font-medium">
+                        📅 Horário: Segunda a sexta, 8h às 18h
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Traga um documento com foto para retirada
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-600">
+                      {order.shipping_service?.toLowerCase().includes('local') && (
+                        <p className="text-blue-700 font-medium mb-1">🚚 Entrega Local</p>
+                      )}
+                      <p>{order.address_data?.name && `${order.address_data.name} - `}{order.address_data?.street}, {order.address_data?.number}</p>
+                      {order.address_data?.complement && (
+                        <p>{order.address_data.complement}</p>
+                      )}
+                      <p>{order.address_data?.district}</p>
+                      <p>{order.address_data?.city} - {order.address_data?.state}</p>
+                      {order.address_data?.cep && <p>CEP: {order.address_data.cep}</p>}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -135,22 +161,50 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </div>
 
           {/* Shipping Information */}
-          <ShipmentCard order={order} />
+          <EnhancedShipmentCard order={order} />
 
           {/* Total */}
           <div className="border-t pt-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Subtotal:</span>
-                <span>R$ {order.subtotal.toFixed(2).replace('.', ',')}</span>
+                <span>R$ {(order.subtotal || 0).toFixed(2).replace('.', ',')}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Frete:</span>
-                <span>R$ {order.shipping_cost.toFixed(2).replace('.', ',')}</span>
+                <span>
+                  {order.shipping_service?.toLowerCase().includes('retirada') || 
+                   order.shipping_service?.toLowerCase().includes('pickup') 
+                    ? 'Taxa de Processamento:' 
+                    : order.shipping_service?.toLowerCase().includes('local')
+                    ? 'Entrega Local:'
+                    : 'Frete:'}
+                </span>
+                <span>
+                  {(order.shipping_cost || 0) === 0 ? 'Grátis' : 
+                   `R$ ${(order.shipping_cost || 0).toFixed(2).replace('.', ',')}`}
+                </span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total:</span>
                 <span>R$ {order.total_amount.toFixed(2).replace('.', ',')}</span>
+              </div>
+              
+              {/* Método de Pagamento */}
+              <div className="flex justify-between text-sm pt-2 border-t">
+                <span>Método de Pagamento:</span>
+                <span className="font-medium">
+                  {order.payment_method === 'pix' ? '💰 PIX' : '💳 Cartão de Crédito'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Status do Pagamento:</span>
+                <span className={`font-medium ${
+                  order.payment_status === 'paid' 
+                    ? 'text-green-600' 
+                    : 'text-yellow-600'
+                }`}>
+                  {order.payment_status === 'paid' ? '✅ Pago' : '⏳ Pendente'}
+                </span>
               </div>
             </div>
           </div>
