@@ -2759,6 +2759,7 @@ export type Database = {
           material_id: string | null
           movement_type: string
           notes: string | null
+          order_id: string | null
           perfume_id: string
           related_order_id: string | null
         }
@@ -2770,6 +2771,7 @@ export type Database = {
           material_id?: string | null
           movement_type: string
           notes?: string | null
+          order_id?: string | null
           perfume_id: string
           related_order_id?: string | null
         }
@@ -2781,6 +2783,7 @@ export type Database = {
           material_id?: string | null
           movement_type?: string
           notes?: string | null
+          order_id?: string | null
           perfume_id?: string
           related_order_id?: string | null
         }
@@ -2797,6 +2800,13 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
