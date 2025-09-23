@@ -56,6 +56,7 @@ const PaymentSuccess = () => {
           paymentData: {
             transaction_id: paymentTxnId,
             payment_method: paymentMethod === 'pix' ? 'pix' : 'credit_card',
+            status: 'pending'
           }
         }
       });

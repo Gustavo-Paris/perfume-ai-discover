@@ -259,7 +259,7 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
     // Get origin for redirect URLs and build success/cancel
     const origin = req.headers.get('origin') || 'http://localhost:5173';
     let successUrl = success_url || `${origin}/payment-success`;
-    let cancelUrl = cancel_url || `${origin}/payment-cancel`;
+    let cancelUrl = cancel_url || `${origin}/checkout`;
     if (!successUrl.includes('{CHECKOUT_SESSION_ID}')) {
       const sep = successUrl.includes('?') ? '&' : '?';
       successUrl = `${successUrl}${sep}session_id={CHECKOUT_SESSION_ID}`;

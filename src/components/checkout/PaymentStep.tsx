@@ -69,24 +69,14 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
         
         // Show loading message before redirect
         toast({ 
-          title: 'Abrindo checkout...', 
-          description: 'O pagamento será aberto em uma nova aba.' 
+          title: 'Redirecionando para pagamento...', 
+          description: 'Você será direcionado para o checkout seguro.' 
         });
         
-        // Open Stripe checkout in a new tab to avoid iframe restrictions
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-        
-        // Check if popup was blocked
-        if (!newWindow) {
-          toast({
-            title: 'Popup bloqueado',
-            description: 'Por favor, permita popups e tente novamente.',
-            variant: 'destructive',
-          });
-        } else {
-          // Focus on the new window
-          newWindow.focus();
-        }
+        // Redirect in the same tab for smoother experience
+        setTimeout(() => {
+          window.location.href = url;
+        }, 1000); // Small delay to show the toast message
       } else {
         throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
       }
