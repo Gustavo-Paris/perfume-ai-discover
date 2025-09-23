@@ -58,14 +58,56 @@ serve(async (req) => {
       .single()
 
     if (existingShipment && existingShipment.pdf_url) {
+      // Create new HTML label for existing shipment
+      const mockLabelHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Etiqueta de Envio - ${existingShipment.tracking_code}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
+    .label { border: 2px solid #000; padding: 20px; max-width: 400px; margin: 0 auto; }
+    .header { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
+    .field { margin: 10px 0; }
+    .tracking { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; }
+    @media print { body { margin: 0; } .label { border: none; } }
+  </style>
+</head>
+<body>
+  <div class="label">
+    <div class="header">ETIQUETA DE ENVIO - MODO SANDBOX</div>
+    <div class="tracking">${existingShipment.tracking_code}</div>
+    <div class="field"><strong>Pedido:</strong> ${order.order_number}</div>
+    <div class="field"><strong>Serviço:</strong> ${order.shipping_service || 'PAC'}</div>
+    <div class="field"><strong>Prazo:</strong> ${order.shipping_deadline || 5} dias úteis</div>
+    <div class="field"><strong>Destinatário:</strong><br>
+      ${order.shipping_address || 'Endereço não disponível'}
+    </div>
+    <div class="field" style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
+      Esta é uma etiqueta simulada para testes.<br>
+      Pressione Ctrl+P para imprimir.
+    </div>
+  </div>
+</body>
+</html>`
+      
+      const updatedPdfUrl = `data:text/html;charset=utf-8,${encodeURIComponent(mockLabelHtml)}`
+      
+      // Update the existing shipment with working PDF URL
+      await supabase
+        .from('shipments')
+        .update({ pdf_url: updatedPdfUrl })
+        .eq('id', existingShipment.id)
+
       return new Response(
         JSON.stringify({
           success: true,
-          shipment: existingShipment,
+          shipment: { ...existingShipment, pdf_url: updatedPdfUrl },
           melhor_envio_data: {
             cart_id: existingShipment.melhor_envio_cart_id,
             tracking_code: existingShipment.tracking_code,
-            pdf_url: existingShipment.pdf_url
+            pdf_url: updatedPdfUrl
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
