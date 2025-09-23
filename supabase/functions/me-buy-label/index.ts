@@ -95,74 +95,56 @@ serve(async (req) => {
       return serviceMap[shippingService] || 1 // Default to PAC
     }
 
-    // Generate a valid NFe key (44 digits) - using a mock pattern for sandbox
-    const generateNFeKey = (orderNumber: string): string => {
-      // Format: UFAAMMNNCCCNNNSSSSSSSSSSSSDV
-      // For sandbox purposes, we'll generate a valid format but fictional key
-      const year = new Date().getFullYear().toString().slice(-2)
-      const month = String(new Date().getMonth() + 1).padStart(2, '0')
-      const cnpj = '11222333000181' // Valid CNPJ format for testing
-      const model = '55' // NFe model
-      const series = '001'
-      const number = orderNumber.replace(/\D/g, '').padStart(9, '0').slice(-9)
-      
-      const key = `42${year}${month}${cnpj}${model}${series}${number}000000001`
-      // Add a simple check digit (not real NFe algorithm but valid format)
-      const checkDigit = (parseInt(key.slice(-1)) + 1) % 10
-      return key + checkDigit
-    }
-
-    // Step 1: Add to cart
+    // Step 1: Add to cart - SIMPLIFIED FOR SANDBOX
     const cartPayload = {
       service: getServiceId(order.shipping_service || 'PAC'),
       from: {
-        name: "Paris & Co Teste",
-        phone: "11999990000",
-        email: "gustavo.b.paris@gmail.com",
-        document: "11144477735", // Valid CPF format for testing
-        company_document: "11222333000181", // Valid CNPJ format for testing
+        name: "Loja Teste",
+        phone: "1199999999",
+        email: "teste@teste.com",
+        document: "11144477735",
+        company_document: "11222333000181",
         state_register: "",
         postal_code: "01310100",
-        address: "Avenida Paulista",
-        number: "1000",
-        district: "Bela Vista",
+        address: "Rua Teste",
+        number: "100",
+        district: "Centro",
         city: "São Paulo",
         state_abbr: "SP",
         country_id: "BR"
       },
       to: {
-        name: addressData.name || "Cliente",
-        phone: addressData.phone || "11999999999",
-        email: addressData.email || "cliente@example.com",
+        name: addressData.name || "Cliente Teste",
+        phone: "1199999999",
+        email: "cliente@teste.com",
         document: "11144477735", // Valid CPF format for testing
-        postal_code: addressData.cep.replace(/\D/g, ''),
-        address: addressData.street,
-        number: addressData.number,
-        district: addressData.district,
-        city: addressData.city,
-        state_abbr: addressData.state,
+        postal_code: (addressData.cep || "89990000").replace(/\D/g, ''),
+        address: addressData.street || "Rua Cliente",
+        number: addressData.number || "1", 
+        district: addressData.district || "Centro",
+        city: addressData.city || "Cidade",
+        state_abbr: addressData.state || "SC",
         country_id: "BR",
         complement: addressData.complement || ""
       },
       products: [{
-        name: "Perfumes",
+        name: "Produto Teste",
         quantity: 1,
-        unitary_value: totalValue,
-        weight: weight / 1000 // convert to kg
+        unitary_value: Math.max(totalValue, 10), // Mínimo R$ 10 para sandbox
+        weight: Math.max(weight / 1000, 0.1) // Mínimo 100g
       }],
       volumes: [{
         height: 10,
         width: 10,
         length: 15,
-        weight: weight / 1000
+        weight: Math.max(weight / 1000, 0.1)
       }],
       options: {
-        insurance_value: totalValue,
+        insurance_value: Math.max(totalValue, 10),
         receipt: false,
         own_hand: false,
         reverse: false,
-        non_commercial: true // Para sandbox, marcando como não comercial para evitar validação NFe
-        // Removendo invoice temporariamente para sandbox
+        non_commercial: true // Para sandbox sem validação NFe
       }
     }
 
