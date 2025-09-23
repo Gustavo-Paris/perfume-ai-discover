@@ -22,13 +22,13 @@ interface OrderProfile {
   email: string;
 }
 
-interface Order {
+interface OrderWithProfile {
   id: string;
   order_number: string;
   user_id: string;
   total_amount: number;
   subtotal: number;
-  shipping_cost: number;
+  shipping_cost: number;  
   status: string;
   payment_method: string;  
   payment_status: string;
@@ -61,20 +61,30 @@ const AdminOrders = () => {
   const { data: ordersResult, isLoading } = useQuery({
     queryKey: ['admin-orders', searchTerm, statusFilter, dateFilter, currentPage],
     queryFn: async () => {
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      
+      // Build the base query
       let query = supabase
         .from('orders')
         .select(`
-          *,
-          profiles(name, email),
-          order_items(
-            *,
-            perfumes(id, name, brand, image_url)
-          )
-        `)
+          id,
+          order_number,
+          user_id,
+          total_amount,
+          subtotal,
+          shipping_cost,
+          status,
+          payment_method,
+          payment_status,
+          shipping_service,
+          address_data,
+          created_at
+        `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        query = query.or(`order_number.ilike.%${searchTerm}%`);
+        query = query.ilike('order_number', `%${searchTerm}%`);
       }
 
       if (statusFilter && statusFilter !== 'all') {
@@ -92,13 +102,28 @@ const AdminOrders = () => {
                     .lte('created_at', endOfDay.toISOString());
       }
 
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
-      
-      const { data, error, count } = await query.range(from, to);
+      const { data: orders, error, count } = await query.range(from, to);
       
       if (error) throw error;
-      return { data: data || [], count: count || 0 };
+      
+      // Get profiles separately
+      if (orders && orders.length > 0) {
+        const userIds = orders.map(order => order.user_id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, email')
+          .in('id', userIds);
+        
+        // Attach profiles to orders
+        const ordersWithProfiles = orders.map(order => ({
+          ...order,
+          profiles: profiles?.find(p => p.id === order.user_id)
+        }));
+        
+        return { data: ordersWithProfiles, count: count || 0 };
+      }
+      
+      return { data: orders || [], count: count || 0 };
     },
   });
 
@@ -384,10 +409,10 @@ const AdminOrders = () => {
                     {order.order_number}
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">{(order.profiles as any)?.name || 'N/A'}</div>
-                      <div className="text-sm text-muted-foreground">{(order.profiles as any)?.email || 'N/A'}</div>
-                    </div>
+                     <div>
+                       <div className="font-medium">{(order as any).profiles?.name || 'N/A'}</div>
+                       <div className="text-sm text-muted-foreground">{(order as any).profiles?.email || 'N/A'}</div>
+                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
