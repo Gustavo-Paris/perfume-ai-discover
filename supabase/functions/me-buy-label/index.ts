@@ -7,6 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Melhor Envio API Base URL (Sandbox)
+const MELHOR_ENVIO_API_URL = 'https://sandbox.melhorenvio.com.br/api/v2/me'
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -56,121 +59,204 @@ serve(async (req) => {
       .select('*')
       .eq('order_id', orderId)
       .single()
-
-    if (existingShipment && existingShipment.pdf_url) {
-      // Create new HTML label for existing shipment
-      const mockLabelHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Etiqueta de Envio - ${existingShipment.tracking_code}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-    .label { border: 2px solid #000; padding: 20px; max-width: 400px; margin: 0 auto; }
-    .header { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
-    .field { margin: 10px 0; }
-    .tracking { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; }
-    @media print { body { margin: 0; } .label { border: none; } }
-  </style>
-</head>
-<body>
-  <div class="label">
-    <div class="header">ETIQUETA DE ENVIO - MODO SANDBOX</div>
-    <div class="tracking">${existingShipment.tracking_code}</div>
-    <div class="field"><strong>Pedido:</strong> ${order.order_number}</div>
-    <div class="field"><strong>Serviço:</strong> ${order.shipping_service || 'PAC'}</div>
-    <div class="field"><strong>Prazo:</strong> ${order.shipping_deadline || 5} dias úteis</div>
-    <div class="field"><strong>Destinatário:</strong><br>
-      ${order.shipping_address || 'Endereço não disponível'}
-    </div>
-    <div class="field" style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
-      Esta é uma etiqueta simulada para testes.<br>
-      Pressione Ctrl+P para imprimir.
-    </div>
-  </div>
-</body>
-</html>`
-      
-      const updatedPdfUrl = `data:text/html;charset=utf-8,${encodeURIComponent(mockLabelHtml)}`
-      
-      // Update the existing shipment with working PDF URL
-      await supabase
-        .from('shipments')
-        .update({ pdf_url: updatedPdfUrl })
-        .eq('id', existingShipment.id)
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          shipment: { ...existingShipment, pdf_url: updatedPdfUrl },
-          melhor_envio_data: {
-            cart_id: existingShipment.melhor_envio_cart_id,
-            tracking_code: existingShipment.tracking_code,
-            pdf_url: updatedPdfUrl
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_API_TOKEN')
+    if (!melhorEnvioToken) {
+      throw new Error('Token do Melhor Envio não configurado')
     }
 
-    // MODO SANDBOX/MOCK - Simular criação de etiqueta
-    console.log('Simulando criação de etiqueta para pedido:', order.order_number)
+    const apiHeaders = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${melhorEnvioToken}`,
+    }
 
-    // Generate mock data
-    const mockCartId = `MOCK_${Date.now()}`
-    const mockTrackingCode = `BR${order.order_number}${Math.random().toString(36).substring(2, 8).toUpperCase()}BR`
-    
-    // Create a simple HTML page as mock PDF
-    const mockLabelHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Etiqueta de Envio - ${mockTrackingCode}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .label { border: 2px solid #000; padding: 20px; max-width: 400px; }
-    .header { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
-    .field { margin: 10px 0; }
-    .tracking { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; }
-    @media print { body { margin: 0; } .label { border: none; } }
-  </style>
-</head>
-<body>
-  <div class="label">
-    <div class="header">ETIQUETA DE ENVIO - MODO SANDBOX</div>
-    <div class="tracking">${mockTrackingCode}</div>
-    <div class="field"><strong>Pedido:</strong> ${order.order_number}</div>
-    <div class="field"><strong>Serviço:</strong> ${order.shipping_service || 'PAC'}</div>
-    <div class="field"><strong>Prazo:</strong> ${order.shipping_deadline || 5} dias úteis</div>
-    <div class="field"><strong>Destinatário:</strong><br>
-      ${order.shipping_name}<br>
-      ${order.shipping_address}<br>
-      ${order.shipping_city} - ${order.shipping_state}<br>
-      CEP: ${order.shipping_zipcode}
-    </div>
-    <div class="field" style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
-      Esta é uma etiqueta simulada para testes.<br>
-      Pressione Ctrl+P para imprimir.
-    </div>
-  </div>
-</body>
-</html>`
-    
-    const mockPdfUrl = `data:text/html;charset=utf-8,${encodeURIComponent(mockLabelHtml)}`
+    console.log('Iniciando processo de criação de etiqueta via Melhor Envio API para pedido:', order.order_number)
+
+    // Check if shipment already exists and has a cart_id
+    if (existingShipment?.melhor_envio_cart_id) {
+      try {
+        // Try to get existing labels
+        const labelsResponse = await fetch(`${MELHOR_ENVIO_API_URL}/shipment/print`, {
+          method: 'POST',
+          headers: apiHeaders,
+          body: JSON.stringify({
+            orders: [existingShipment.melhor_envio_cart_id]
+          })
+        })
+
+        if (labelsResponse.ok) {
+          const labelsData = await labelsResponse.json()
+          const pdfUrl = labelsData.url || labelsData.pdf || labelsData
+
+          if (pdfUrl) {
+            // Update shipment with new PDF URL
+            await supabase
+              .from('shipments')
+              .update({ pdf_url: pdfUrl })
+              .eq('id', existingShipment.id)
+
+            return new Response(
+              JSON.stringify({
+                success: true,
+                shipment: { ...existingShipment, pdf_url: pdfUrl },
+                melhor_envio_data: {
+                  cart_id: existingShipment.melhor_envio_cart_id,
+                  tracking_code: existingShipment.tracking_code,
+                  pdf_url: pdfUrl
+                }
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+        }
+      } catch (error) {
+        console.log('Erro ao recuperar etiqueta existente, criando nova:', error.message)
+      }
+    }
+
+    // Step 1: Create a cart
+    const cartPayload = {
+      service: 1, // Correios PAC
+      from: {
+        name: "Perfumaria do Chapecó",
+        phone: "(49) 99999-9999",
+        email: "contato@perfumariadochapeco.com.br",
+        document: "12345678901234",
+        company_document: "12345678901234",
+        state_register: "123456789",
+        postal_code: "89814000",
+        address: "Rua Florianópolis - D",
+        number: "828",
+        district: "Jardim Itália",
+        city: "Chapecó",
+        state_abbr: "SC",
+        country_id: "BR"
+      },
+      to: {
+        name: order.shipping_name || "Cliente",
+        phone: order.shipping_phone || "(00) 00000-0000",
+        email: order.customer_email || "cliente@email.com",
+        document: "00000000000",
+        postal_code: order.shipping_zipcode?.replace(/\D/g, '') || "00000000",
+        address: order.shipping_address || "Endereço não informado",
+        number: order.shipping_number || "S/N",
+        district: order.shipping_district || "Centro",
+        city: order.shipping_city || "Cidade",
+        state_abbr: order.shipping_state || "SC",
+        country_id: "BR"
+      },
+      products: order.order_items?.map(item => ({
+        name: `${item.perfumes.brand} - ${item.perfumes.name} (${item.size_ml}ml)`,
+        quantity: item.quantity,
+        unitary_value: parseFloat(item.unit_price)
+      })) || [],
+      volumes: [{
+        height: 10,
+        width: 15,
+        length: 20,
+        weight: 0.3
+      }],
+      options: {
+        insurance_value: parseFloat(order.subtotal || 0),
+        receipt: false,
+        own_hand: false
+      }
+    }
+
+    console.log('Criando carrinho no Melhor Envio com payload:', JSON.stringify(cartPayload, null, 2))
+
+    // Create cart
+    const cartResponse = await fetch(`${MELHOR_ENVIO_API_URL}/cart`, {
+      method: 'POST',
+      headers: apiHeaders,
+      body: JSON.stringify(cartPayload)
+    })
+
+    if (!cartResponse.ok) {
+      const errorText = await cartResponse.text()
+      console.error('Erro ao criar carrinho:', errorText)
+      throw new Error(`Erro ao criar carrinho no Melhor Envio: ${cartResponse.status} - ${errorText}`)
+    }
+
+    const cartData = await cartResponse.json()
+    console.log('Carrinho criado:', cartData)
+
+    const cartId = cartData.id
+    if (!cartId) {
+      throw new Error('ID do carrinho não retornado pela API')
+    }
+
+    // Step 2: Purchase the cart
+    console.log('Comprando carrinho:', cartId)
+    const purchaseResponse = await fetch(`${MELHOR_ENVIO_API_URL}/shipment/checkout`, {
+      method: 'POST',
+      headers: apiHeaders,
+      body: JSON.stringify({
+        orders: [cartId]
+      })
+    })
+
+    if (!purchaseResponse.ok) {
+      const errorText = await purchaseResponse.text()
+      console.error('Erro ao comprar carrinho:', errorText)
+      throw new Error(`Erro ao comprar carrinho: ${purchaseResponse.status} - ${errorText}`)
+    }
+
+    const purchaseData = await purchaseResponse.json()
+    console.log('Carrinho comprado:', purchaseData)
+
+    // Step 3: Generate labels
+    console.log('Gerando etiquetas para carrinho:', cartId)
+    const labelsResponse = await fetch(`${MELHOR_ENVIO_API_URL}/shipment/generate`, {
+      method: 'POST',
+      headers: apiHeaders,
+      body: JSON.stringify({
+        orders: [cartId]
+      })
+    })
+
+    if (!labelsResponse.ok) {
+      const errorText = await labelsResponse.text()
+      console.error('Erro ao gerar etiquetas:', errorText)
+      throw new Error(`Erro ao gerar etiquetas: ${labelsResponse.status} - ${errorText}`)
+    }
+
+    const labelsData = await labelsResponse.json()
+    console.log('Etiquetas geradas:', labelsData)
+
+    // Step 4: Get PDF URL
+    console.log('Obtendo URL do PDF das etiquetas')
+    const printResponse = await fetch(`${MELHOR_ENVIO_API_URL}/shipment/print`, {
+      method: 'POST',
+      headers: apiHeaders,
+      body: JSON.stringify({
+        orders: [cartId]
+      })
+    })
+
+    if (!printResponse.ok) {
+      const errorText = await printResponse.text()
+      console.error('Erro ao obter PDF:', errorText)
+      throw new Error(`Erro ao obter PDF: ${printResponse.status} - ${errorText}`)
+    }
+
+    const printData = await printResponse.json()
+    console.log('Dados do PDF:', printData)
+
+    const pdfUrl = printData.url || printData.pdf || printData
+    const trackingCode = cartData.tracking || `ME${cartId}`
 
     // Create or update shipment record
     const shipmentData = {
       order_id: orderId,
-      melhor_envio_cart_id: mockCartId,
-      melhor_envio_shipment_id: mockCartId,
-      tracking_code: mockTrackingCode,
-      pdf_url: mockPdfUrl,
+      melhor_envio_cart_id: cartId,
+      melhor_envio_shipment_id: cartId,
+      tracking_code: trackingCode,
+      pdf_url: pdfUrl,
       status: 'label_printed',
-      service_name: order.shipping_service || 'PAC',
+      service_name: 'PAC',
       service_price: order.shipping_cost,
-      estimated_delivery_days: order.shipping_deadline || 5
+      estimated_delivery_days: 5
     }
 
     let shipmentResult
@@ -204,19 +290,18 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', orderId)
 
-    console.log('Etiqueta simulada criada com sucesso:', mockTrackingCode)
+    console.log('Etiqueta criada com sucesso via Melhor Envio API:', trackingCode)
 
     return new Response(
       JSON.stringify({
         success: true,
         shipment: shipmentResult.data,
         melhor_envio_data: {
-          cart_id: mockCartId,
-          tracking_code: mockTrackingCode,
-          pdf_url: mockPdfUrl
+          cart_id: cartId,
+          tracking_code: trackingCode,
+          pdf_url: pdfUrl
         },
-        mock: true,
-        message: 'Etiqueta simulada criada (modo sandbox)'
+        message: 'Etiqueta criada com sucesso (Melhor Envio Sandbox)'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

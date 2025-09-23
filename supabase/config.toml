@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.me-delete]
 verify_jwt = false
 
+[functions.me-buy-label]
+verify_jwt = true
+
 [functions.create-stripe-checkout]
 verify_jwt = true
 
