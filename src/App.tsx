@@ -4,10 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundaryOptimized from "@/components/ui/ErrorBoundaryOptimized";
-import { useAnalytics } from "@/hooks/useAnalytics";
-import { useUserAnalytics } from "@/hooks/useUserAnalytics";
-import { useOrderTracking } from "@/hooks/useOrderTracking";
-import { usePageView } from "@/hooks/usePageView";
+import { useAnalytics } from '@/hooks/useAnalytics';
+import PerformanceOptimizer from '@/components/analytics/PerformanceOptimizer';
+import { Suspense, lazy } from 'react';
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContextOptimized";
 import { RecoveryProvider } from "./contexts/RecoveryContext";
@@ -61,20 +60,21 @@ import AdminLocalDelivery from "./pages/admin/AdminLocalDelivery";
 import AdminCsvImport from './pages/admin/AdminCsvImport';
 
 import AdminMaterialsSimplified from "./pages/admin/AdminMaterialsSimplified";
-
 import AdminProductCadastro from './pages/admin/AdminProductCadastro';
+
+// Lazy load the launch setup component
+const AdminLaunchSetup = lazy(() => import('./pages/admin/AdminLaunchSetup'));
+
 import { SupportChat } from "./components/support/SupportChat";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   useAnalytics();
-  useUserAnalytics();
-  useOrderTracking();
-  usePageView();
   
   return (
     <div className="min-h-screen flex flex-col">
+      <PerformanceOptimizer />
       <Header />
       <main className="flex-1">
         <Routes>
@@ -117,6 +117,11 @@ const AppContent = () => {
             <Route path="produto-cadastro" element={<AdminProductCadastro />} />
             <Route path="perfume-images" element={<AdminPerfumeImages />} />
             <Route path="csv-import" element={<AdminCsvImport />} />
+            <Route path="launch-setup" element={
+              <Suspense fallback={<div>Carregando...</div>}>
+                <AdminLaunchSetup />
+              </Suspense>
+            } />
             {/* Legacy admin routes */}
             <Route path="perfumes" element={<AdminPerfumes />} />
             <Route path="inventory" element={<AdminInventory />} />

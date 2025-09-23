@@ -9,10 +9,10 @@ interface SEOProps {
 }
 
 const SEO = ({ 
-  title = 'Perfumaria Online - Os Melhores Perfumes', 
-  description = 'Descubra os melhores perfumes com nossa curadoria especializada. Fragrâncias únicas para todos os gostos.',
+  title = 'Paris & Co - Perfumaria Premium Online', 
+  description = 'Descubra perfumes exclusivos com nossa curadoria especializada. Fragrâncias de alta qualidade, entrega rápida e garantia "Amou ou Troca". Milhares de clientes satisfeitos.',
   image = '/og-image.jpg',
-  url = 'https://sua-perfumaria.com',
+  url = typeof window !== 'undefined' ? window.location.origin : 'https://paris-co.com',
   type = 'website'
 }: SEOProps) => {
   return (
@@ -34,7 +34,34 @@ const SEO = ({
       <meta name="twitter:image" content={image} />
       
       {/* Additional SEO */}
+      <meta name="robots" content="index, follow" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="author" content="Paris & Co" />
+      <meta name="keywords" content="perfumes, fragrâncias, perfumaria online, perfume importado, perfume nacional, eau de parfum, eau de toilette" />
       <link rel="canonical" href={url} />
+      
+      {/* Performance hints */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      
+      {/* Structured data for SEO */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Store",
+          "name": "Paris & Co",
+          "description": "Perfumaria premium online especializada em fragrâncias exclusivas",
+          "url": url,
+          "logo": `${url}/logo.png`,
+          "sameAs": [
+            "https://instagram.com/pariseco",
+            "https://facebook.com/pariseco"
+          ],
+          "priceRange": "$$",
+          "paymentAccepted": ["Credit Card", "Pix", "Bank Transfer"],
+          "currenciesAccepted": "BRL"
+        })}
+      </script>
     </Helmet>
   );
 };
