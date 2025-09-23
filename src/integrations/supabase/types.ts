@@ -3635,6 +3635,10 @@ export type Database = {
         Args: { affiliate_code: string; order_id: string; order_total: number }
         Returns: boolean
       }
+      process_order_stock_movement: {
+        Args: { order_uuid: string }
+        Returns: Json
+      }
       recalculate_all_material_costs: {
         Args: Record<PropertyKey, never>
         Returns: Json

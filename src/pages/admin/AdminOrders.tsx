@@ -401,7 +401,7 @@ const AdminOrders = () => {
                 <TableHead>Valores</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Data</TableHead>
-                <TableHead className="w-12">Ações</TableHead>
+                <TableHead className="w-32">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -485,9 +485,48 @@ const AdminOrders = () => {
                     {format(new Date(order.created_at), 'dd/MM/yy HH:mm', { locale: ptBR })}
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="ghost" onClick={() => openDetails(order.id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <div className="space-y-2">
+                      {!order.shipping_service?.toLowerCase().includes('correio') && 
+                       !order.shipping_service?.toLowerCase().includes('pac') &&
+                       !order.shipping_service?.toLowerCase().includes('mail') ? (
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={() => {
+                            toast({
+                              title: "Marcar como Entregue",
+                              description: "Funcionalidade em desenvolvimento",
+                            });
+                          }}
+                          className="w-full text-xs"
+                        >
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          Entregue
+                        </Button>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          variant="secondary"
+                          onClick={() => {
+                            window.open(`/admin/print-label/${order.id}`, '_blank');
+                          }}
+                          className="w-full text-xs"
+                        >
+                          <Printer className="mr-1 h-3 w-3" />
+                          Etiqueta
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => openDetails(order.id)}
+                        className="w-full text-xs"
+                      >
+                        <Eye className="mr-1 h-3 w-3" />
+                        Detalhes
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
