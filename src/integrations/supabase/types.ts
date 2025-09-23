@@ -3723,7 +3723,7 @@ export type Database = {
       }
       recalculate_all_prices: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: Json
       }
       recalculate_perfume_prices_after_material_change: {
         Args: Record<PropertyKey, never>
