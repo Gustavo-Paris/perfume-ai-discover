@@ -1,143 +1,104 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Eye, Search, Filter, FileText, Send, CheckCircle, Printer } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Calendar as CalendarIcon, Filter, Printer, Mail, Search } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Order as OrderFull } from '@/types/order';
+import { useToast } from '@/hooks/use-toast';
 import { OrderDetailsModal } from '@/components/orders/OrderDetailsModal';
+
+interface OrderProfile {
+  name: string;
+  email: string;
+}
 
 interface Order {
   id: string;
   order_number: string;
   user_id: string;
   total_amount: number;
-  subtotal?: number;
-  shipping_cost?: number;
-  payment_status: string;
-  payment_method?: string;
-  shipping_service?: string;
+  subtotal: number;
+  shipping_cost: number;
   status: string;
-  created_at: string;
+  payment_method: string;  
+  payment_status: string;
+  shipping_service?: string;
   address_data: any;
-  profiles?: {
-    name: string;
-    email: string;
-  } | null;
+  created_at: string;
+  profiles?: OrderProfile;
 }
 
 const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  paid: 'bg-green-100 text-green-800',
-  shipped: 'bg-blue-100 text-blue-800',
-  delivered: 'bg-purple-100 text-purple-800',
-  cancelled: 'bg-red-100 text-red-800',
+  pending: "bg-yellow-100 text-yellow-800",
+  paid: "bg-green-100 text-green-800", 
+  shipped: "bg-blue-100 text-blue-800",
+  delivered: "bg-purple-100 text-purple-800",
+  cancelled: "bg-red-100 text-red-800"
 };
 
 const AdminOrders = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
-  const [dateRange, setDateRange] = useState<{from?: Date; to?: Date} | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<Date | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  const pageSize = 20;
-
-  const [detailOrder, setDetailOrder] = useState<OrderFull | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailOrder, setDetailOrder] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const itemsPerPage = 10;
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      // First get orders
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ['admin-orders', searchTerm, statusFilter, dateFilter, currentPage],
+    queryFn: async () => {
       let query = supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          profiles!inner(name, email)
+        `)
         .order('created_at', { ascending: false });
 
-      // Apply filters
-      if (statusFilter !== 'all') {
+      if (searchTerm) {
+        query = query.or(`order_number.ilike.%${searchTerm}%,profiles.name.ilike.%${searchTerm}%,profiles.email.ilike.%${searchTerm}%`);
+      }
+
+      if (statusFilter && statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
 
-      if (searchTerm) {
-        query = query.ilike('order_number', `%${searchTerm}%`);
-      }
-
-      if (dateRange?.from) {
-        query = query.gte('created_at', dateRange.from.toISOString());
-      }
-
-      if (dateRange?.to) {
-        query = query.lte('created_at', dateRange.to.toISOString());
-      }
-
-      // Pagination
-      const from = (currentPage - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data: ordersData, error } = await query
-        .range(from, to);
-
-      if (error) throw error;
-
-      // Get user profiles for the orders
-      if (ordersData && ordersData.length > 0) {
-        const userIds = [...new Set(ordersData.map(order => order.user_id))];
+      if (dateFilter) {
+        const startOfDay = new Date(dateFilter);
+        startOfDay.setHours(0, 0, 0, 0);
         
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, name, email')
-          .in('id', userIds);
-
-        // Merge profiles with orders
-        const ordersWithProfiles = ordersData.map(order => ({
-          ...order,
-          profiles: profilesData?.find(profile => profile.id === order.user_id) || null
-        }));
-
-        setOrders(ordersWithProfiles);
-      } else {
-        setOrders([]);
+        const endOfDay = new Date(dateFilter);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        query = query.gte('created_at', startOfDay.toISOString())
+                    .lte('created_at', endOfDay.toISOString());
       }
+
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
       
-      setTotalPages(Math.ceil(ordersData?.length || 0 / pageSize));
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar pedidos.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      const { data, error, count } = await query.range(from, to);
+      
+      if (error) throw error;
+      return { data: data || [], count: count || 0 };
+    },
+  });
 
-  useEffect(() => {
-    fetchOrders();
-  }, [currentPage, statusFilter, searchTerm, dateRange]);
-
-  const handleSearch = () => {
-    setCurrentPage(1);
-    fetchOrders();
-  };
+  const totalPages = Math.ceil((orders.count || 0) / itemsPerPage);
 
   const handleSelectOrder = (orderId: string, checked: boolean) => {
     if (checked) {
@@ -249,8 +210,10 @@ const AdminOrders = () => {
       } : undefined,
     }));
 
-    const fullOrder: OrderFull = { ...data, order_items: mappedItems, shipments: data.shipments || [] } as OrderFull;
-    setDetailOrder(fullOrder);
+    setDetailOrder({
+      ...data,
+      order_items: mappedItems,
+    });
     setLoadingDetails(false);
   };
 
@@ -259,18 +222,12 @@ const AdminOrders = () => {
     setDetailOrder(null);
   };
 
-  if (loading && orders.length === 0) {
+  if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight">Pedidos</h1>
-        </div>
+      <div className="p-6">
         <Card>
           <CardContent className="p-6">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-muted-foreground">Carregando pedidos...</p>
-            </div>
+            <div className="text-center">Carregando pedidos...</div>
           </CardContent>
         </Card>
       </div>
@@ -278,13 +235,11 @@ const AdminOrders = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pedidos</h1>
-          <p className="text-muted-foreground">
-            Gerencie todos os pedidos da loja
-          </p>
+          <h1 className="text-2xl font-bold">Pedidos</h1>
+          <p className="text-muted-foreground">Gerencie todos os pedidos da loja</p>
         </div>
       </div>
 
@@ -292,72 +247,77 @@ const AdminOrders = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
+            <Filter className="h-5 w-5" />
             Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Buscar por Nº ou Cliente</label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar por nº do pedido, cliente ou email..."
+                  placeholder="Buscar por nº do pedido ou cliente"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Status</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="paid">Pago</SelectItem>
-                <SelectItem value="shipped">Enviado</SelectItem>
-                <SelectItem value="delivered">Entregue</SelectItem>
-                <SelectItem value="cancelled">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Todos os Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="shipped">Enviado</SelectItem>
+                  <SelectItem value="delivered">Entregue</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "dd/MM/yy", { locale: ptBR })} -{" "}
-                        {format(dateRange.to, "dd/MM/yy", { locale: ptBR })}
-                      </>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Período</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateFilter && "text-muted-foreground"
+                    )}
+                  >
+                    {dateFilter ? (
+                      format(dateFilter, "dd/MM/yyyy", { locale: ptBR })
                     ) : (
-                      format(dateRange.from, "dd/MM/yy", { locale: ptBR })
-                    )
-                  ) : (
-                    <span>Período</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange as any}
-                  onSelect={(range) => setDateRange(range as any)}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
+                      "Selecionar data"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dateFilter}
+                    onSelect={setDateFilter}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
 
-            <Button onClick={handleSearch}>
-              Buscar
-            </Button>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Ações</label>
+              <Button onClick={() => setCurrentPage(1)} className="w-full">
+                Buscar
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -366,18 +326,20 @@ const AdminOrders = () => {
       {selectedOrders.length > 0 && (
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
                 {selectedOrders.length} pedido(s) selecionado(s)
               </span>
-              <Button size="sm" onClick={handleBulkPrintLabels} className="gap-2">
-                <Printer className="h-4 w-4" />
-                Imprimir Etiquetas
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleBulkSendEmail} className="gap-2">
-                <Mail className="h-4 w-4" />
-                Enviar Atualização
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={handleBulkPrintLabels}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Imprimir Etiquetas
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleBulkSendEmail}>
+                  <Send className="mr-2 h-4 w-4" />
+                  Enviar Atualização
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -391,7 +353,7 @@ const AdminOrders = () => {
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox
-                    checked={selectedOrders.length === orders.length && orders.length > 0}
+                    checked={selectedOrders.length === orders.data?.length && orders.data?.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
@@ -405,7 +367,7 @@ const AdminOrders = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
+              {orders.data?.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>
                     <Checkbox
