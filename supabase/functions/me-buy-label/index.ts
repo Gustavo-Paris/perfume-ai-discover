@@ -78,7 +78,45 @@ serve(async (req) => {
     // Generate mock data
     const mockCartId = `MOCK_${Date.now()}`
     const mockTrackingCode = `BR${order.order_number}${Math.random().toString(36).substring(2, 8).toUpperCase()}BR`
-    const mockPdfUrl = `https://sandbox.melhorenvio.com.br/api/v2/me/shipment/print/${mockCartId}.pdf`
+    
+    // Create a simple HTML page as mock PDF
+    const mockLabelHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Etiqueta de Envio - ${mockTrackingCode}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .label { border: 2px solid #000; padding: 20px; max-width: 400px; }
+    .header { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
+    .field { margin: 10px 0; }
+    .tracking { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0; }
+    @media print { body { margin: 0; } .label { border: none; } }
+  </style>
+</head>
+<body>
+  <div class="label">
+    <div class="header">ETIQUETA DE ENVIO - MODO SANDBOX</div>
+    <div class="tracking">${mockTrackingCode}</div>
+    <div class="field"><strong>Pedido:</strong> ${order.order_number}</div>
+    <div class="field"><strong>Serviço:</strong> ${order.shipping_service || 'PAC'}</div>
+    <div class="field"><strong>Prazo:</strong> ${order.shipping_deadline || 5} dias úteis</div>
+    <div class="field"><strong>Destinatário:</strong><br>
+      ${order.shipping_name}<br>
+      ${order.shipping_address}<br>
+      ${order.shipping_city} - ${order.shipping_state}<br>
+      CEP: ${order.shipping_zipcode}
+    </div>
+    <div class="field" style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
+      Esta é uma etiqueta simulada para testes.<br>
+      Pressione Ctrl+P para imprimir.
+    </div>
+  </div>
+</body>
+</html>`
+    
+    const mockPdfUrl = `data:text/html;charset=utf-8,${encodeURIComponent(mockLabelHtml)}`
 
     // Create or update shipment record
     const shipmentData = {
