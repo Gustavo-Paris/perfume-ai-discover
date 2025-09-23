@@ -251,7 +251,7 @@ const PaymentSuccess = () => {
                 </div>
                 {(orderData.shipping_cost || 0) > 0 && (
                   <div className="flex justify-between">
-                    <span>Frete:</span>
+                    <span>Entrega Local:</span>
                     <span>R$ {Number(orderData.shipping_cost || 0).toFixed(2).replace('.', ',')}</span>
                   </div>
                 )}
