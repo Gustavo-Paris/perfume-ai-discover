@@ -65,12 +65,16 @@ const AdminOrders = () => {
         .from('orders')
         .select(`
           *,
-          profiles!inner(name, email)
+          profiles(name, email),
+          order_items(
+            *,
+            perfumes(id, name, brand, image_url)
+          )
         `)
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        query = query.or(`order_number.ilike.%${searchTerm}%,profiles.name.ilike.%${searchTerm}%,profiles.email.ilike.%${searchTerm}%`);
+        query = query.or(`order_number.ilike.%${searchTerm}%`);
       }
 
       if (statusFilter && statusFilter !== 'all') {
