@@ -519,7 +519,8 @@ const AdminOrders = () => {
                    <TableCell>
                      <div className="space-y-2">
                        {order.shipping_service?.toLowerCase().includes('retirada') || 
-                        order.shipping_service?.toLowerCase().includes('pickup') ? (
+                        order.shipping_service?.toLowerCase().includes('pickup') ||
+                        order.shipping_service?.toLowerCase().includes('local') ? (
                          <Button 
                            size="sm" 
                            variant="default"
