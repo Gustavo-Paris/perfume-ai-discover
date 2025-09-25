@@ -53,19 +53,19 @@ serve(async (req) => {
       throw new Error('Pedido não encontrado')
     }
 
-    // Get customer profile for additional data
+    // Get customer profile for additional data (optional)
     const { data: profile } = await supabase
       .from('profiles')
       .select('name, email')
       .eq('id', order.user_id)
-      .single()
+      .maybeSingle()
 
-    // Get company settings for valid CNPJ/CPF
+    // Get company settings for valid CNPJ/CPF (optional)
     const { data: companySettings } = await supabase
       .from('company_settings')
       .select('*')
       .limit(1)
-      .single()
+      .maybeSingle()
 
     // Check if shipment already exists
     const { data: existingShipment } = await supabase
