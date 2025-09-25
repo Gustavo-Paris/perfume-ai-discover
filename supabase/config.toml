@@ -55,3 +55,16 @@ verify_jwt = false
 # Allow webhook to call confirm-order without JWT
 [functions.confirm-order]
 verify_jwt = false
+
+# New automation functions
+[functions.generate-nfe]
+verify_jwt = true
+
+[functions.schedule-collection]
+verify_jwt = true
+
+[functions.download-label]
+verify_jwt = true
+
+[functions.process-payment-automation]
+verify_jwt = true

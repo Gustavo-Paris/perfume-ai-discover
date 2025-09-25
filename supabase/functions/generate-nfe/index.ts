@@ -8,7 +8,12 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const focusNfeUrl = 'https://api.focusnfe.com.br/v2/nfe';
+
+// Environment detection - use homologation for testing
+const isProduction = Deno.env.get('FOCUS_NFE_ENVIRONMENT') === 'production';
+const focusNfeUrl = isProduction 
+  ? 'https://api.focusnfe.com.br/v2/nfe'
+  : 'https://homologacao.focusnfe.com.br/v2/nfe';
 
 interface GenerateNFERequest {
   order_id: string;
@@ -73,8 +78,13 @@ serve(async (req) => {
       throw new Error('Configurações da empresa não encontradas');
     }
 
-    if (!company.focus_nfe_token) {
-      throw new Error('Token Focus NFe não configurado');
+    // Get appropriate token based on environment
+    const focusToken = isProduction 
+      ? company.focus_nfe_token 
+      : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN');
+    
+    if (!focusToken) {
+      throw new Error(`Token Focus NFe não configurado para ambiente ${isProduction ? 'produção' : 'homologação'}`);
     }
 
     // Gerar número da nota
@@ -144,7 +154,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(company.focus_nfe_token + ':')}`
+        'Authorization': `Basic ${btoa(focusToken + ':')}`
       },
       body: JSON.stringify(nfeData)
     });

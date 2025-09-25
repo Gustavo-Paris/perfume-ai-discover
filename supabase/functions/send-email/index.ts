@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-// import { Resend } from "npm:resend@4.0.0";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import Handlebars from "npm:handlebars@4.7.8";
 
 const corsHeaders = {
@@ -7,7 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+// Temporarily disable Resend until proper setup
+const resend = null;
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'Perfumes Paris <noreply@perfumesparis.com>';
 
 // Email templates
@@ -447,8 +448,11 @@ const handler = async (req: Request): Promise<Response> => {
       html: html.substring(0, 100) + '...'
     });
     
-    const emailResponse = { data: { id: 'temp-disabled' }, error: null };
+    // Activate Resend email sending - currently disabled for testing
+    console.log('Email function called but Resend temporarily disabled');
+    const emailResponse = { data: { id: 'resend-disabled' }, error: null };
     
+    // When ready to activate, uncomment and configure:
     // const emailResponse = await resend.emails.send({
     //   from: EMAIL_FROM,
     //   to: [to],

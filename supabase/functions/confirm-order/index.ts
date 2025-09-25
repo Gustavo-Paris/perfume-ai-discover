@@ -337,6 +337,26 @@ serve(async (req) => {
       // Don't fail the request for cleanup issues
     }
 
+    // Step 10: Auto-generate NF-e if payment is confirmed
+    if (verifiedStatus === 'paid') {
+      console.log('Step 10: Auto-generating NF-e for paid order');
+      try {
+        const { data: nfeResult, error: nfeError } = await supabase.functions.invoke('generate-nfe', {
+          body: { order_id: order.id }
+        });
+
+        if (nfeError) {
+          console.warn('NF-e auto-generation failed:', nfeError);
+          // Don't fail the order confirmation for NF-e issues
+        } else {
+          console.log('NF-e auto-generated successfully:', nfeResult);
+        }
+      } catch (nfeError) {
+        console.warn('NF-e auto-generation error:', nfeError);
+        // Don't fail the order confirmation for NF-e issues
+      }
+    }
+
     console.log('Order confirmation completed successfully');
 
     return new Response(
