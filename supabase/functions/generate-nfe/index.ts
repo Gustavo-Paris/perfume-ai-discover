@@ -70,7 +70,7 @@ serve(async (req) => {
 
     // Buscar configurações da empresa
     const { data: company, error: companyError } = await supabase
-      .from('company_settings')
+      .from('company_info')
       .select('*')
       .single();
 

@@ -10,6 +10,9 @@ const AdminCoupons = lazy(() => import('@/pages/admin/AdminCoupons'));
 const AdminReviews = lazy(() => import('@/pages/admin/AdminReviews'));
 const AdminInventory = lazy(() => import('@/pages/admin/AdminInventory'));
 const AdminConfig = lazy(() => import('@/pages/admin/AdminConfig'));
+const AdminShipments = lazy(() => import('@/pages/admin/AdminShipments'));
+const AdminCompanyConfig = lazy(() => import('@/pages/admin/AdminCompanyConfig'));
+const AdminOrderAutomation = lazy(() => import('@/pages/admin/AdminOrderAutomation'));
 
 const AdminRoutes = () => {
   return (
@@ -22,6 +25,9 @@ const AdminRoutes = () => {
       <Route path="/admin/reviews" element={<AdminReviews />} />
       <Route path="/admin/inventory" element={<AdminInventory />} />
       <Route path="/admin/config" element={<AdminConfig />} />
+      <Route path="/admin/shipments" element={<AdminShipments />} />
+      <Route path="/admin/company" element={<AdminCompanyConfig />} />
+      <Route path="/admin/automation" element={<AdminOrderAutomation />} />
     </>
   );
 };
