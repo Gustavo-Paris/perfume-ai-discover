@@ -201,7 +201,7 @@ serve(async (req) => {
 
     const quotePayload = {
       from: {
-        postal_code: "01310-100" // São Paulo - SP (sandbox origin)
+        postal_code: "89814000" // Chapecó - SC (company origin)
       },
       to: {
         postal_code: address.cep.replace(/\D/g, '') // Remove non-digits
@@ -236,6 +236,18 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('Melhor Envio API Error:', response.status, responseText)
+      
+      // If it's a 401 error, provide specific message about token
+      if (response.status === 401) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Token do Melhor Envio inválido ou expirado. Verifique a configuração.',
+            details: 'Unauthenticated' 
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       return new Response(
         JSON.stringify({ 
           error: 'Erro na API do Melhor Envio',
