@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +12,7 @@ interface CartRecoveryPayload {
   recovery_type?: 'first_reminder' | 'discount_offer' | 'final_reminder';
 }
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+// const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -161,16 +160,18 @@ async function sendRecoveryEmail(cartSessionId: string, recoveryType: string) {
   }
 
   // Enviar email
-  const emailResult = await resend.emails.send({
-    from: 'Petit Charm <noreply@petitcharm.com>',
-    to: [userEmail],
-    subject,
-    html: emailContent,
-  });
+  // const emailResult = await resend.emails.send({
+  //   from: 'Petit Charm <noreply@petitcharm.com>',
+  //   to: [userEmail],
+  //   subject,
+  //   html: emailContent,
+  // });
 
-  if (emailResult.error) {
-    throw new Error(`Failed to send email: ${emailResult.error.message}`);
-  }
+  // if (emailResult.error) {
+  //   throw new Error(`Failed to send email: ${emailResult.error.message}`);
+  // }
+
+  console.log('Email sending temporarily disabled - would send:', { userEmail, subject });
 
   // Registrar tentativa de recuperação
   const { error: attemptError } = await supabase

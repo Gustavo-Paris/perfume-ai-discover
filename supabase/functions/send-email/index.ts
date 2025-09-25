@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@4.0.0";
+// import { Resend } from "npm:resend@4.0.0";
 import Handlebars from "npm:handlebars@4.7.8";
 
 const corsHeaders = {
@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+// const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'Perfumes Paris <noreply@perfumesparis.com>';
 
 // Email templates
