@@ -137,7 +137,8 @@ serve(async (req) => {
           }
         }
       } catch (error) {
-        console.log('Erro ao recuperar etiqueta existente, criando nova:', error.message)
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.log('Erro ao recuperar etiqueta existente, criando nova:', errorMessage)
       }
     }
 
@@ -175,7 +176,7 @@ serve(async (req) => {
         state_abbr: addressData.state || "SC",
         country_id: "BR"
       },
-      products: order.order_items?.map(item => ({
+      products: order.order_items?.map((item: any) => ({
         name: `${item.perfumes.brand} - ${item.perfumes.name} (${item.size_ml}ml)`,
         quantity: item.quantity,
         unitary_value: parseFloat(item.unit_price)
@@ -337,10 +338,11 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Error in me-buy-label:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: errorMessage,
         details: 'Verifique os logs para mais detalhes'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

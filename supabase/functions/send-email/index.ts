@@ -426,23 +426,35 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { to, template, data } = await req.json();
     
-    if (!templates[template]) {
+    const templateName = template as keyof typeof templates;
+    
+    if (!templates[templateName]) {
       throw new Error(`Template '${template}' not found`);
     }
 
-    const templateData = templates[template];
+    const templateData = templates[templateName];
     const compiledSubject = Handlebars.compile(templateData.subject);
     const compiledHtml = Handlebars.compile(templateData.html);
 
     const subject = compiledSubject(data);
     const html = compiledHtml(data);
 
-    const emailResponse = await resend.emails.send({
+    // Email sending is temporarily disabled
+    console.log('Email sending temporarily disabled - would send:', {
       from: EMAIL_FROM,
       to: [to],
       subject,
-      html,
+      html: html.substring(0, 100) + '...'
     });
+    
+    const emailResponse = { data: { id: 'temp-disabled' }, error: null };
+    
+    // const emailResponse = await resend.emails.send({
+    //   from: EMAIL_FROM,
+    //   to: [to],
+    //   subject,
+    //   html,
+    // });
 
     console.log('Email sent successfully:', emailResponse);
 

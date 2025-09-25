@@ -93,12 +93,14 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
     console.error('❌ Error in check-secrets function:', error);
-    console.error('Error stack:', error.stack);
+    console.error('Error stack:', errorStack);
     
     return new Response(JSON.stringify({ 
       error: 'Erro ao verificar status dos secrets',
-      details: error.message,
+      details: errorMessage,
       timestamp: new Date().toISOString()
     }), {
       status: 500,

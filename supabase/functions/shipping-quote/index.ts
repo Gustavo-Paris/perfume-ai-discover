@@ -260,8 +260,8 @@ serve(async (req) => {
     
     // Transform quotes to our format
     const formattedQuotes = quotes
-      .filter(quote => !quote.error)
-      .map(quote => ({
+      .filter((quote: any) => !quote.error)
+      .map((quote: any) => ({
         service: quote.name,
         company: quote.company.name,
         price: parseFloat(quote.price),
@@ -278,11 +278,12 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Error in shipping-quote function:', error)
     return new Response(
       JSON.stringify({ 
         error: 'Erro interno do servidor',
-        message: error.message 
+        message: errorMessage
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

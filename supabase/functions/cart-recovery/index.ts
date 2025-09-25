@@ -116,7 +116,7 @@ async function processAbandonedCart(supabase: any, cart: any) {
   }
 
   // Preparar dados dos itens
-  const items = cartItems.map(item => ({
+  const items = cartItems.map((item: any) => ({
     name: item.perfumes.name,
     brand: item.perfumes.brand,
     size: `${item.size_ml}ml`,
@@ -125,7 +125,7 @@ async function processAbandonedCart(supabase: any, cart: any) {
     originalPrice: getItemPrice(item.perfumes, item.size_ml).toFixed(2).replace('.', ',')
   }));
 
-  const totalValue = cartItems.reduce((sum, item) => 
+  const totalValue = cartItems.reduce((sum: number, item: any) => 
     sum + (getItemPrice(item.perfumes, item.size_ml) * item.quantity), 0
   );
 
@@ -170,7 +170,7 @@ async function processAbandonedCart(supabase: any, cart: any) {
         originalTotal: totalValue.toFixed(2).replace('.', ','),
         discountTotal: (totalValue * 0.9).toFixed(2).replace('.', ','),
         savings: (totalValue * 0.1).toFixed(2).replace('.', ','),
-        items: items.map(item => ({
+        items: items.map((item: any) => ({
           ...item,
           discountPrice: (parseFloat(item.price.replace(',', '.')) * 0.9).toFixed(2).replace('.', ',')
         }))
@@ -180,7 +180,7 @@ async function processAbandonedCart(supabase: any, cart: any) {
     case 'final_reminder':
       emailTemplate = 'cart_abandoned_final';
       // Adicionar informações de estoque baixo (simulado)
-      emailData.items = items.map(item => ({
+      emailData.items = items.map((item: any) => ({
         ...item,
         lowStock: Math.random() > 0.7, // 30% chance de estoque baixo
         stockLeft: Math.floor(Math.random() * 5) + 1

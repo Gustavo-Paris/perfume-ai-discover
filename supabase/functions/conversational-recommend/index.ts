@@ -20,7 +20,8 @@ async function retryWithBackoff(fn: () => Promise<any>, maxRetries = 3, baseDela
     try {
       return await fn();
     } catch (error) {
-      console.log(`Attempt ${attempt + 1} failed:`, error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`Attempt ${attempt + 1} failed:`, errorMessage);
       
       if (attempt === maxRetries - 1) {
         throw error;
@@ -351,7 +352,7 @@ RESPOSTA: Analise o perfil e retorne APENAS um JSON array com 1-5 IDs dos perfum
             // If parsing fails, try to extract IDs from text
             const matches = recommendationResponse.match(/"([^"]+)"/g);
             if (matches) {
-              parsedRecommendations = matches.map(match => match.replace(/"/g, ''));
+              parsedRecommendations = matches.map((match: string) => match.replace(/"/g, ''));
             }
           }
 
@@ -436,7 +437,7 @@ RESPOSTA: Analise o perfil e retorne APENAS um JSON array com 1-5 IDs dos perfum
 
     // Check if this is a follow-up request for actual recommendations
     const isRecommendationRequest = message === 'gerar recomendações' || 
-                                   conversationHistory.some(msg => 
+                                   conversationHistory.some((msg: any) => 
                                      msg.content?.toLowerCase().includes('gerar recomendações') ||
                                      msg.content?.toLowerCase().includes('fazer recomendações')
                                    );
@@ -686,14 +687,15 @@ LEMBRE-SE: Esta recomendação deve IMPRESSIONAR o cliente pela precisão e inte
     // Determine error type and provide appropriate message
     let errorMessage = 'Erro interno do servidor. Tente novamente.';
     let statusCode = 500;
+    const errorString = error instanceof Error ? error.message : String(error);
     
-    if (error.message.includes('Rate limit exceeded')) {
+    if (errorString.includes('Rate limit exceeded')) {
       errorMessage = 'Muitas solicitações. Aguarde um momento e tente novamente.';
       statusCode = 429;
-    } else if (error.message.includes('Invalid API key')) {
+    } else if (errorString.includes('Invalid API key')) {
       errorMessage = 'Configuração da IA inválida. Entre em contato com o suporte.';
       statusCode = 401;
-    } else if (error.message.includes('service temporarily unavailable')) {
+    } else if (errorString.includes('service temporarily unavailable')) {
       errorMessage = 'Serviço de IA temporariamente indisponível. Tente novamente em alguns minutos.';
       statusCode = 503;
     }

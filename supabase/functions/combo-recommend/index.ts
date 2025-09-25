@@ -20,7 +20,8 @@ async function retryWithBackoff(fn: () => Promise<any>, maxRetries = 3, baseDela
     try {
       return await fn();
     } catch (error) {
-      console.log(`Attempt ${attempt + 1} failed:`, error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`Attempt ${attempt + 1} failed:`, errorMessage);
       
       if (attempt === maxRetries - 1) {
         throw error;
@@ -232,7 +233,7 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
           };
         }).filter((combo: any) => combo.items.length >= 2 && combo.total <= budget);
 
-        const maxComboValue = enrichedCombos.length > 0 ? Math.max(...enrichedCombos.map(c => c.total)) : 0;
+        const maxComboValue = enrichedCombos.length > 0 ? Math.max(...enrichedCombos.map((c: any) => c.total)) : 0;
         console.log('Generated combos successfully:', enrichedCombos.length);
 
         return new Response(JSON.stringify({ 
@@ -308,14 +309,15 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
     
     let errorMessage = 'Erro interno do servidor. Tente novamente.';
     let statusCode = 500;
+    const errorString = error instanceof Error ? error.message : String(error);
     
-    if (error.message.includes('Rate limit exceeded')) {
+    if (errorString.includes('Rate limit exceeded')) {
       errorMessage = 'Muitas solicitações. Aguarde um momento e tente novamente.';
       statusCode = 429;
-    } else if (error.message.includes('Invalid API key')) {
+    } else if (errorString.includes('Invalid API key')) {
       errorMessage = 'Configuração da IA inválida. Entre em contato com o suporte.';
       statusCode = 401;
-    } else if (error.message.includes('service temporarily unavailable')) {
+    } else if (errorString.includes('service temporarily unavailable')) {
       errorMessage = 'Serviço de IA temporariamente indisponível. Tente novamente em alguns minutos.';
       statusCode = 503;
     }

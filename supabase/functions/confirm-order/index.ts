@@ -359,17 +359,21 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorName = error instanceof Error ? error.name : 'Unknown';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
     console.error('Unexpected error in confirm-order function:', error);
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
+    console.error('Error name:', errorName);
+    console.error('Error message:', errorMessage);
+    console.error('Error stack:', errorStack);
     
     return new Response(
       JSON.stringify({ 
         success: false,
         error: 'Internal server error',
-        message: error.message,
-        errorName: error.name
+        message: errorMessage,
+        errorName: errorName
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

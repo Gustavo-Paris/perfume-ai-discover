@@ -176,6 +176,11 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
           currency: 'brl',
           product_data: {
             name: `Frete${shippingService ? ` - ${shippingService}` : ''}`,
+            description: 'Serviço de entrega',
+            metadata: {
+              perfume_id: 'shipping',
+              size_ml: '0'
+            }
           },
           unit_amount: Math.round(shippingCost * 100),
         },
