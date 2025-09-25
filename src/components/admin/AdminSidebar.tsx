@@ -27,7 +27,8 @@ import {
   Zap,
   FileText,
   Calendar,
-  Building
+  Building,
+  Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -74,9 +75,19 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     defaultOpen: false,
     items: [
       { title: 'Pedidos', url: '/admin/orders', icon: ShoppingBag },
+      { title: 'Gestão de Pedidos', url: '/admin/order-management', icon: Package },
       { title: 'Automação de Pedidos', url: '/admin/automation', icon: Zap },
       { title: 'Promoções', url: '/admin/promotions', icon: Percent },
       { title: 'Cupons', url: '/admin/coupons', icon: Tag },
+    ]
+  },
+  {
+    title: 'Fiscal & NF-e',
+    icon: FileText,
+    defaultOpen: false,
+    items: [
+      { title: 'Notas Fiscais', url: '/admin/fiscal-notes', icon: FileText },
+      { title: 'Dados Fiscais', url: '/admin/fiscal', icon: Receipt },
     ]
   },
   {

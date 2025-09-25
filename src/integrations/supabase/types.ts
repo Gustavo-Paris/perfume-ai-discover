@@ -974,6 +974,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fiscal_note_items_fiscal_note_id_fkey"
+            columns: ["fiscal_note_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_notes_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fiscal_note_items_order_item_id_fkey"
             columns: ["order_item_id"]
             isOneToOne: false
@@ -2669,9 +2676,12 @@ export type Database = {
       }
       shipments: {
         Row: {
+          collection_date: string | null
+          collection_scheduled_at: string | null
           created_at: string
           estimated_delivery_days: number | null
           id: string
+          label_downloaded_at: string | null
           melhor_envio_cart_id: string | null
           melhor_envio_shipment_id: string | null
           order_id: string
@@ -2683,9 +2693,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          collection_date?: string | null
+          collection_scheduled_at?: string | null
           created_at?: string
           estimated_delivery_days?: number | null
           id?: string
+          label_downloaded_at?: string | null
           melhor_envio_cart_id?: string | null
           melhor_envio_shipment_id?: string | null
           order_id: string
@@ -2697,9 +2710,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          collection_date?: string | null
+          collection_scheduled_at?: string | null
           created_at?: string
           estimated_delivery_days?: number | null
           id?: string
+          label_downloaded_at?: string | null
           melhor_envio_cart_id?: string | null
           melhor_envio_shipment_id?: string | null
           order_id?: string
@@ -3162,7 +3178,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      fiscal_notes_view: {
+        Row: {
+          chave_acesso: string | null
+          created_at: string | null
+          data_autorizacao: string | null
+          data_emissao: string | null
+          erro_message: string | null
+          focus_nfe_ref: string | null
+          id: string | null
+          items_count: number | null
+          numero: number | null
+          order_created_at: string | null
+          order_id: string | null
+          order_number: string | null
+          order_total: number | null
+          pdf_url: string | null
+          protocolo_autorizacao: string | null
+          serie: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          valor_cofins: number | null
+          valor_icms: number | null
+          valor_ipi: number | null
+          valor_pis: number | null
+          valor_produtos: number | null
+          valor_total: number | null
+          xml_content: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       add_points_transaction: {

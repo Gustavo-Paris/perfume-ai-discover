@@ -116,7 +116,7 @@ serve(async (req) => {
         email: addressData.email || ''
       },
       itens: order.order_items.map((item: any, index: number) => {
-        const fiscalData = item.perfume.fiscal_data[0];
+        const fiscalData = item.perfume?.fiscal_data?.[0];
         return {
           numero_item: index + 1,
           codigo_produto: item.perfume.id,
@@ -194,23 +194,26 @@ serve(async (req) => {
     }
 
     // Criar itens da nota fiscal
-    const noteItems = order.order_items.map((item: any, index: number) => ({
-      fiscal_note_id: fiscalNote.id,
-      order_item_id: item.id,
-      numero_item: index + 1,
-      codigo_produto: item.perfume.id,
-      descricao: `${item.perfume.brand} - ${item.perfume.name} ${item.size_ml}ml`,
-      ncm: item.perfume.fiscal_data[0]?.ncm || '3303.00.10',
-      cfop: item.perfume.fiscal_data[0]?.cfop || '5102',
-      unidade_comercial: 'UN',
-      quantidade: item.quantity,
-      valor_unitario: parseFloat(item.unit_price),
-      valor_total: parseFloat(item.total_price),
-      valor_icms: 0,
-      valor_pis: 0,
-      valor_cofins: 0,
-      valor_ipi: 0
-    }));
+    const noteItems = order.order_items.map((item: any, index: number) => {
+      const fiscalData = item.perfume?.fiscal_data?.[0];
+      return {
+        fiscal_note_id: fiscalNote.id,
+        order_item_id: item.id,
+        numero_item: index + 1,
+        codigo_produto: item.perfume.id,
+        descricao: `${item.perfume.brand} - ${item.perfume.name} ${item.size_ml}ml`,
+        ncm: fiscalData?.ncm || '3303.00.10',
+        cfop: fiscalData?.cfop || '5102',
+        unidade_comercial: 'UN',
+        quantidade: item.quantity,
+        valor_unitario: parseFloat(item.unit_price),
+        valor_total: parseFloat(item.total_price),
+        valor_icms: 0,
+        valor_pis: 0,
+        valor_cofins: 0,
+        valor_ipi: 0
+      };
+    });
 
     const { error: itemsError } = await supabase
       .from('fiscal_note_items')

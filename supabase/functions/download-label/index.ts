@@ -70,16 +70,28 @@ serve(async (req) => {
     const labelResponse = await fetch(shipment.pdf_url, {
       headers: {
         'Authorization': `Bearer ${melhorEnvioToken}`,
-        'Accept': 'application/pdf'
+        'Accept': 'application/pdf',
+        'User-Agent': 'ParisCoApp/1.0'
       }
     });
 
     if (!labelResponse.ok) {
-      throw new Error(`Failed to download label: ${labelResponse.statusText}`);
+      console.error('Label response error:', labelResponse.status, labelResponse.statusText);
+      throw new Error(`Failed to download label: ${labelResponse.status} ${labelResponse.statusText}`);
     }
 
-    const labelBlob = await labelResponse.blob();
-    const labelArrayBuffer = await labelBlob.arrayBuffer();
+    // Check content type
+    const contentType = labelResponse.headers.get('content-type');
+    if (contentType && !contentType.includes('application/pdf')) {
+      console.error('Invalid content type received:', contentType);
+      throw new Error('Received invalid file format from Melhor Envio');
+    }
+
+    const labelArrayBuffer = await labelResponse.arrayBuffer();
+    if (!labelArrayBuffer || labelArrayBuffer.byteLength === 0) {
+      throw new Error('Empty response from Melhor Envio');
+    }
+    
     const labelData = new Uint8Array(labelArrayBuffer);
 
     // Cache the label in Supabase storage

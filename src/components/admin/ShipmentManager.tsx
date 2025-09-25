@@ -192,6 +192,14 @@ export const ShipmentManager = () => {
                       size="sm"
                       variant="outline"
                       className="flex items-center gap-2"
+                      onClick={() => {
+                        if (shipment.tracking_code) {
+                          // Open tracking in Melhor Envio
+                          const trackingUrl = `https://melhorrastreio.com.br/rastreio/${shipment.tracking_code}`;
+                          window.open(trackingUrl, '_blank');
+                        }
+                      }}
+                      disabled={!shipment.tracking_code}
                     >
                       <Package className="w-4 h-4" />
                       Rastrear
