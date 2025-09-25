@@ -167,7 +167,7 @@ serve(async (req) => {
         name: profile?.name || addressData.name || "Cliente",
         phone: addressData.phone || "(00) 00000-0000",
         email: profile?.email || "cliente@email.com",
-        document: addressData.cpf || "22255566677", // CPF diferente para destinatário
+        document: addressData.cpf || "12345678909", // CPF válido para sandbox (diferente do remetente)
         postal_code: addressData.cep?.replace(/\D/g, '') || "00000000",
         address: addressData.street || "Endereço não informado",
         number: addressData.number || "S/N",
