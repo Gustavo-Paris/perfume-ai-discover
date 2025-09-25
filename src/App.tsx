@@ -58,6 +58,9 @@ import AdminSupportMacros from "./pages/admin/AdminSupportMacros";
 import AdminCompany from "./pages/admin/AdminCompany";
 import AdminLocalDelivery from "./pages/admin/AdminLocalDelivery";
 import AdminCsvImport from './pages/admin/AdminCsvImport';
+import AdminShipments from "./pages/admin/AdminShipments";
+import AdminCompanyConfig from "./pages/admin/AdminCompanyConfig";
+import AdminOrderAutomation from "./pages/admin/AdminOrderAutomation";
 
 import AdminMaterialsSimplified from "./pages/admin/AdminMaterialsSimplified";
 import AdminProductCadastro from './pages/admin/AdminProductCadastro';
@@ -109,7 +112,9 @@ const AppContent = () => {
             <Route path="support" element={<AdminSupport />} />
             <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
-            <Route path="company" element={<AdminCompany />} />
+            <Route path="company" element={<AdminCompanyConfig />} />
+            <Route path="automation" element={<AdminOrderAutomation />} />
+            <Route path="shipments" element={<AdminShipments />} />
             <Route path="local-delivery" element={<AdminLocalDelivery />} />
             
             <Route path="materials-simplified" element={<AdminMaterialsSimplified />} />
