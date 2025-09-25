@@ -47,10 +47,10 @@ export function CollectionScheduler({ selectedShipments, onScheduled }: Collecti
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Agendar Coleta
-          </CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5" />
+          Agendar Coleta
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
@@ -65,7 +65,7 @@ export function CollectionScheduler({ selectedShipments, onScheduled }: Collecti
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
+          <CalendarIcon className="h-5 w-5" />
           Agendar Coleta ({selectedShipments.length} embarques)
         </CardTitle>
       </CardHeader>

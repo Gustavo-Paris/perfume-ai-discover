@@ -151,8 +151,8 @@ export const ShipmentManager = () => {
                 <div className="flex items-center gap-4">
                   <input
                     type="checkbox"
-                    checked={selectedShipments.includes(shipment.melhor_envio_shipment_id)}
-                    onChange={() => handleSelectShipment(shipment.melhor_envio_shipment_id)}
+                    checked={selectedShipments.includes(shipment.id)}
+                    onChange={() => handleSelectShipment(shipment.id)}
                     className="rounded"
                   />
                   <div>
@@ -179,7 +179,7 @@ export const ShipmentManager = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDownloadLabel(shipment.melhor_envio_shipment_id)}
+                        onClick={() => handleDownloadLabel(shipment.id)}
                         disabled={downloadLoading}
                         className="flex items-center gap-2"
                       >
