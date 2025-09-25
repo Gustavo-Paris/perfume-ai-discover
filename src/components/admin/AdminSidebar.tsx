@@ -23,7 +23,11 @@ import {
   Boxes,
   Warehouse,
   Truck,
-  Upload
+  Upload,
+  Zap,
+  FileText,
+  Calendar,
+  Building
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -70,8 +74,19 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     defaultOpen: false,
     items: [
       { title: 'Pedidos', url: '/admin/orders', icon: ShoppingBag },
+      { title: 'Automação de Pedidos', url: '/admin/automation', icon: Zap },
       { title: 'Promoções', url: '/admin/promotions', icon: Percent },
       { title: 'Cupons', url: '/admin/coupons', icon: Tag },
+    ]
+  },
+  {
+    title: 'Logística',
+    icon: Truck,
+    defaultOpen: false,
+    items: [
+      { title: 'Gerenciar Envios', url: '/admin/shipments', icon: Package },
+      { title: 'Agendar Coletas', url: '/admin/shipments', icon: Calendar },
+      { title: 'Entrega Local', url: '/admin/local-delivery', icon: Truck },
     ]
   },
   {
@@ -91,11 +106,10 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     defaultOpen: false,
     items: [
       { title: '🚀 Configuração de Lançamento', url: '/admin/launch-setup', icon: Megaphone },
+      { title: 'Dados da Empresa', url: '/admin/company', icon: Building },
       { title: 'Upload de Imagens', url: '/admin/perfume-images', icon: Upload },
       { title: 'Importar CSV', url: '/admin/csv-import', icon: Upload },
       { title: 'Configurações', url: '/admin/config', icon: Settings },
-      { title: 'Empresa', url: '/admin/company', icon: Settings },
-      { title: 'Entrega Local', url: '/admin/local-delivery', icon: Truck },
       { title: 'Monitoramento', url: '/admin/monitoring', icon: TrendingUp },
     ]
   },
