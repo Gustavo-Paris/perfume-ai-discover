@@ -80,7 +80,7 @@ serve(async (req) => {
 
     // Get appropriate token based on environment
     const focusToken = isProduction 
-      ? company.focus_nfe_token 
+      ? (company.focus_nfe_token || Deno.env.get('FOCUS_NFE_TOKEN'))
       : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN');
     
     if (!focusToken) {

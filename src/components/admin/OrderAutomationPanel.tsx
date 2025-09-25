@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw, FileText, Mail, Package, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AutomationExplainer } from './AutomationExplainer';
 
 interface Order {
   id: string;
@@ -111,13 +112,7 @@ export const OrderAutomationPanel = () => {
         </Button>
       </div>
 
-      <Alert>
-        <AlertCircle className="w-4 h-4" />
-        <AlertDescription>
-          Esta página mostra o status da automação pós-pagamento para pedidos recentes. 
-          Você pode reprocessar manualmente pedidos que falharam na automação.
-        </AlertDescription>
-      </Alert>
+      <AutomationExplainer />
 
       <div className="grid gap-4">
         {orders.map((order) => {

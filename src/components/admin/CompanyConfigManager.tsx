@@ -23,6 +23,12 @@ interface CompanyInfo {
   email_contato: string;
   email_sac: string;
   responsavel_tecnico: string;
+  // Campos para NF-e
+  regime_tributario?: string;
+  certificado_a1_base64?: string;
+  certificado_senha?: string;
+  ambiente_nfe?: string;
+  focus_nfe_token?: string;
 }
 
 export const CompanyConfigManager = () => {
@@ -40,6 +46,11 @@ export const CompanyConfigManager = () => {
     email_contato: '',
     email_sac: '',
     responsavel_tecnico: '',
+    regime_tributario: 'simples_nacional',
+    certificado_a1_base64: '',
+    certificado_senha: '',
+    ambiente_nfe: 'homologacao',
+    focus_nfe_token: '',
   });
   
   const [loading, setLoading] = useState(true);
@@ -271,6 +282,75 @@ export const CompanyConfigManager = () => {
               value={companyInfo.responsavel_tecnico}
               onChange={(e) => handleInputChange('responsavel_tecnico', e.target.value)}
               placeholder="Nome do responsável técnico"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações Nota Fiscal Eletrônica</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="regime_tributario">Regime Tributário</Label>
+              <select
+                id="regime_tributario"
+                value={companyInfo.regime_tributario || 'simples_nacional'}
+                onChange={(e) => handleInputChange('regime_tributario', e.target.value)}
+                className="w-full px-3 py-2 border border-input bg-background rounded-md"
+              >
+                <option value="simples_nacional">Simples Nacional</option>
+                <option value="lucro_presumido">Lucro Presumido</option>
+                <option value="lucro_real">Lucro Real</option>
+              </select>
+            </div>
+            
+            <div>
+              <Label htmlFor="ambiente_nfe">Ambiente NFe</Label>
+              <select
+                id="ambiente_nfe"
+                value={companyInfo.ambiente_nfe || 'homologacao'}
+                onChange={(e) => handleInputChange('ambiente_nfe', e.target.value)}
+                className="w-full px-3 py-2 border border-input bg-background rounded-md"
+              >
+                <option value="homologacao">Homologação</option>
+                <option value="producao">Produção</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="focus_nfe_token">Token Focus NFe</Label>
+            <Input
+              id="focus_nfe_token"
+              type="password"
+              value={companyInfo.focus_nfe_token || ''}
+              onChange={(e) => handleInputChange('focus_nfe_token', e.target.value)}
+              placeholder="Token da API Focus NFe"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="certificado_senha">Senha do Certificado A1</Label>
+            <Input
+              id="certificado_senha"
+              type="password"
+              value={companyInfo.certificado_senha || ''}
+              onChange={(e) => handleInputChange('certificado_senha', e.target.value)}
+              placeholder="Senha do certificado digital"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="certificado_a1_base64">Certificado A1 (Base64)</Label>
+            <textarea
+              id="certificado_a1_base64"
+              value={companyInfo.certificado_a1_base64 || ''}
+              onChange={(e) => handleInputChange('certificado_a1_base64', e.target.value)}
+              placeholder="Cole aqui o certificado A1 em formato Base64"
+              className="w-full px-3 py-2 border border-input bg-background rounded-md min-h-[100px]"
             />
           </div>
 
