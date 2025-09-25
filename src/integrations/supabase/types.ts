@@ -538,7 +538,10 @@ export type Database = {
       }
       company_info: {
         Row: {
+          ambiente_nfe: string | null
           cep: string
+          certificado_a1_base64: string | null
+          certificado_senha: string | null
           cidade: string
           cnpj: string
           created_at: string
@@ -546,17 +549,22 @@ export type Database = {
           email_sac: string
           endereco_completo: string
           estado: string
+          focus_nfe_token: string | null
           id: string
           inscricao_estadual: string | null
           inscricao_municipal: string | null
           nome_fantasia: string | null
           razao_social: string
+          regime_tributario: string | null
           responsavel_tecnico: string | null
           telefone: string
           updated_at: string
         }
         Insert: {
+          ambiente_nfe?: string | null
           cep: string
+          certificado_a1_base64?: string | null
+          certificado_senha?: string | null
           cidade: string
           cnpj: string
           created_at?: string
@@ -564,17 +572,22 @@ export type Database = {
           email_sac: string
           endereco_completo: string
           estado: string
+          focus_nfe_token?: string | null
           id?: string
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           nome_fantasia?: string | null
           razao_social: string
+          regime_tributario?: string | null
           responsavel_tecnico?: string | null
           telefone: string
           updated_at?: string
         }
         Update: {
+          ambiente_nfe?: string | null
           cep?: string
+          certificado_a1_base64?: string | null
+          certificado_senha?: string | null
           cidade?: string
           cnpj?: string
           created_at?: string
@@ -582,11 +595,13 @@ export type Database = {
           email_sac?: string
           endereco_completo?: string
           estado?: string
+          focus_nfe_token?: string | null
           id?: string
           inscricao_estadual?: string | null
           inscricao_municipal?: string | null
           nome_fantasia?: string | null
           razao_social?: string
+          regime_tributario?: string | null
           responsavel_tecnico?: string | null
           telefone?: string
           updated_at?: string
