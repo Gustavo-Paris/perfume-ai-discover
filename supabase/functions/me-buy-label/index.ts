@@ -152,7 +152,7 @@ serve(async (req) => {
         name: companySettings?.razao_social || "Perfumaria do Chapecó",
         phone: "(49) 99999-9999",
         email: "contato@perfumariadochapeco.com.br",
-        document: "11144477735", // CPF válido para sandbox
+        document: companySettings?.cpf || "11144477735", // CPF da empresa
         company_document: companySettings?.cnpj || "11222333000181", // CNPJ válido para sandbox
         state_register: companySettings?.inscricao_estadual || "123456789",
         postal_code: "89814000",
@@ -165,9 +165,9 @@ serve(async (req) => {
       },
       to: {
         name: profile?.name || addressData.name || "Cliente",
-        phone: "(00) 00000-0000",
+        phone: addressData.phone || "(00) 00000-0000",
         email: profile?.email || "cliente@email.com",
-        document: "11144477735", // CPF válido para sandbox
+        document: addressData.cpf || "22255566677", // CPF diferente para destinatário
         postal_code: addressData.cep?.replace(/\D/g, '') || "00000000",
         address: addressData.street || "Endereço não informado",
         number: addressData.number || "S/N",
