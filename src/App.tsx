@@ -61,6 +61,8 @@ import AdminCsvImport from './pages/admin/AdminCsvImport';
 import AdminShipments from "./pages/admin/AdminShipments";
 import AdminCompanyConfig from "./pages/admin/AdminCompanyConfig";
 import AdminOrderAutomation from "./pages/admin/AdminOrderAutomation";
+import AdminFiscalNotes from "./pages/admin/AdminFiscalNotes";
+import AdminOrderManagement from "./pages/admin/AdminOrderManagement";
 
 import AdminMaterialsSimplified from "./pages/admin/AdminMaterialsSimplified";
 import AdminProductCadastro from './pages/admin/AdminProductCadastro';
@@ -102,7 +104,9 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="order-management" element={<AdminOrderManagement />} />
             <Route path="fiscal" element={<AdminFiscal />} />
+            <Route path="fiscal-notes" element={<AdminFiscalNotes />} />
             <Route path="stock" element={<AdminStock />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="reviews" element={<AdminReviews />} />
