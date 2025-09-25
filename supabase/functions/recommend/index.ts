@@ -176,7 +176,7 @@ Respond ONLY with a JSON array of perfume IDs sorted by best match (best match f
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error' 
+        error: (error as Error).message || 'Internal server error' 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

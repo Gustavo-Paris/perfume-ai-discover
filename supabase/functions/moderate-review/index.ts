@@ -86,12 +86,13 @@ serve(async (req) => {
         .single();
 
       if (review) {
+        const perfumeName = (review.perfumes as any)?.name || 'perfume';
         await supabase
           .from('notifications')
           .insert({
             user_id: review.user_id,
             type: 'review_approved',
-            message: `Sua avaliação do perfume ${review.perfumes?.name} foi aprovada!`,
+            message: `Sua avaliação do perfume ${perfumeName} foi aprovada!`,
             metadata: {
               review_id: reviewId,
               perfume_id: review.perfume_id
@@ -111,7 +112,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in moderate-review function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: (error as Error).message,
       success: false 
     }), {
       status: 500,

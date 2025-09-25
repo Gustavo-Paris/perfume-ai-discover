@@ -225,7 +225,9 @@ async function uploadToS3(
   
   // Create hash of payload
   const encoder = new TextEncoder();
-  const payloadHash = await crypto.subtle.digest('SHA-256', data);
+  const hashDataBuffer = new ArrayBuffer(data.byteLength);
+  new Uint8Array(hashDataBuffer).set(data);
+  const payloadHash = await crypto.subtle.digest('SHA-256', hashDataBuffer);
   const payloadHashHex = Array.from(new Uint8Array(payloadHash))
     .map(b => b.toString(16).padStart(2, '0')).join('');
   
@@ -252,6 +254,8 @@ async function uploadToS3(
   const authorization = `${algorithm} Credential=${accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
   
   // Make request
+  const requestDataBuffer = new ArrayBuffer(data.byteLength);
+  new Uint8Array(requestDataBuffer).set(data);
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -260,7 +264,7 @@ async function uploadToS3(
       'X-Amz-Date': timeStamp,
       'Authorization': authorization,
     },
-    body: data,
+    body: requestDataBuffer,
   });
   
   if (!response.ok) {
@@ -273,9 +277,11 @@ async function uploadToS3(
 }
 
 async function hmacSha256(key: Uint8Array, message: string): Promise<Uint8Array> {
+  const keyBuffer = new ArrayBuffer(key.byteLength);
+  new Uint8Array(keyBuffer).set(key);
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    key,
+    keyBuffer,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']
@@ -305,31 +311,19 @@ async function sendBackupNotification(
       return;
     }
 
-    const resend = new Resend(resendApiKey);
+    // Email functionality disabled - uncomment when dependencies are available
+    // const resend = new Resend(resendApiKey);
 
     // Send email to each admin
     for (const admin of adminUsers) {
       if (admin.profiles?.email) {
-        const emailHtml = await renderAsync(
-          React.createElement(BackupNotificationEmail, {
-            adminName: admin.profiles.name || 'Admin',
-            backupDate: new Date().toLocaleDateString('pt-BR'),
-            filename: result.filename || '',
-            size: formatBytes(result.size || 0),
-            status: result.success ? 'success' : 'failed',
-            url: result.url,
-            error: result.error
-          })
-        );
-
-        await resend.emails.send({
-          from: 'Sistema <noreply@sua-perfumaria.com>',
-          to: [admin.profiles.email],
-          subject: `Backup do Banco de Dados - ${result.success ? 'Sucesso' : 'Falha'}`,
-          html: emailHtml,
-        });
-
-        console.log(`Backup notification sent to: ${admin.profiles.email}`);
+        // Simple notification - email functionality disabled
+        console.log(`Backup notification would be sent to: ${admin.profiles.email}`);
+        console.log(`Backup status: ${result.success ? 'Success' : 'Failed'}`);
+        if (result.filename) console.log(`Filename: ${result.filename}`);
+        if (result.size) console.log(`Size: ${formatBytes(result.size)}`);
+        if (result.url) console.log(`URL: ${result.url}`);
+        if (result.error) console.log(`Error: ${result.error}`);
       }
     }
   } catch (error) {
