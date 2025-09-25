@@ -54,18 +54,30 @@ serve(async (req) => {
     }
 
     // Get customer profile for additional data (optional)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, email')
-      .eq('id', order.user_id)
-      .maybeSingle()
+    let profile = null;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('name, email')
+        .eq('id', order.user_id)
+        .single();
+      profile = data;
+    } catch (error) {
+      console.log('Profile not found, using fallback data');
+    }
 
     // Get company settings for valid CNPJ/CPF (optional)
-    const { data: companySettings } = await supabase
-      .from('company_settings')
-      .select('*')
-      .limit(1)
-      .maybeSingle()
+    let companySettings = null;
+    try {
+      const { data } = await supabase
+        .from('company_settings')
+        .select('*')
+        .limit(1)
+        .single();
+      companySettings = data;
+    } catch (error) {
+      console.log('Company settings not found, using fallback data');
+    }
 
     // Check if shipment already exists
     const { data: existingShipment } = await supabase
