@@ -86,7 +86,6 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     defaultOpen: false,
     items: [
       { title: 'Notas Fiscais', url: '/admin/fiscal-notes', icon: FileText },
-      { title: 'Dados Fiscais', url: '/admin/fiscal', icon: Receipt },
     ]
   },
   {
