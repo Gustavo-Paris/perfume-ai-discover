@@ -100,6 +100,13 @@ serve(async (req) => {
       ? (company.focus_nfe_token || Deno.env.get('FOCUS_NFE_TOKEN'))
       : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN');
     
+    console.log('Debug token info:', {
+      isProduction,
+      companyToken: company.focus_nfe_token ? '[REDACTED]' : null,
+      envToken: focusToken ? '[REDACTED]' : null,
+      hasToken: !!focusToken
+    });
+    
     if (!focusToken) {
       throw new Error(`Token Focus NFe não configurado para ambiente ${isProduction ? 'produção' : 'homologação'}`);
     }
