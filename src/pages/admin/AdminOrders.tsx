@@ -190,9 +190,27 @@ const AdminOrders = () => {
         body: { order_id: orderId }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`Erro na função: ${error.message}`);
+      }
 
-      if (data.success) {
+      console.log('NF-e response:', data);
+
+      if (data?.success === false) {
+        // Se já existe NF-e, não é erro
+        if (data.error?.includes('já existe')) {
+          toast({
+            title: "ℹ️ NF-e Já Existe",
+            description: "Este pedido já possui uma NF-e gerada.",
+          });
+          refetch();
+          return;
+        }
+        throw new Error(data.error || 'Erro desconhecido ao gerar NF-e');
+      }
+
+      if (data?.success !== false) {
         toast({
           title: "🤖 NF-e Gerada Automaticamente",
           description: "A nota fiscal foi gerada e o sistema prosseguirá com a etiqueta.",
@@ -202,13 +220,11 @@ const AdminOrders = () => {
         setTimeout(() => handleAutomaticLabel(orderId), 2000);
         
         refetch();
-      } else {
-        throw new Error(data.error || 'Erro ao gerar NF-e');
       }
     } catch (error) {
       console.error('Error generating NF-e:', error);
       toast({
-        title: "❌ Erro na Automação",
+        title: "❌ Erro na Geração de NF-e",
         description: error instanceof Error ? error.message : "Falha na geração automática de NF-e",
         variant: "destructive",
       });

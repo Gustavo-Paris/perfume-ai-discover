@@ -45,24 +45,36 @@ serve(async (req) => {
         )
       `)
       .eq('id', order_id)
-      .single();
+      .maybeSingle();
 
-    if (orderError || !order) {
+    if (orderError) {
+      console.error('Erro ao buscar pedido:', orderError);
+      throw new Error('Erro ao buscar dados do pedido: ' + orderError.message);
+    }
+    
+    if (!order) {
       throw new Error('Pedido não encontrado');
     }
+
+    console.log('Pedido encontrado:', order.order_number);
 
     // Verificar se já existe NF-e para este pedido
     const { data: existingNote } = await supabase
       .from('fiscal_notes')
       .select('*')
       .eq('order_id', order_id)
-      .single();
+      .maybeSingle();
 
     if (existingNote) {
+      console.log('NF-e já existe para este pedido');
       return new Response(
-        JSON.stringify({ error: 'NF-e já existe para este pedido' }),
+        JSON.stringify({ 
+          success: false,
+          error: 'NF-e já existe para este pedido',
+          existing_note: existingNote 
+        }),
         { 
-          status: 400, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
@@ -72,10 +84,15 @@ serve(async (req) => {
     const { data: company, error: companyError } = await supabase
       .from('company_info')
       .select('*')
-      .single();
+      .maybeSingle();
 
-    if (companyError || !company) {
-      throw new Error('Configurações da empresa não encontradas');
+    if (companyError) {
+      console.error('Erro ao buscar empresa:', companyError);
+      throw new Error('Erro ao buscar configurações da empresa: ' + companyError.message);
+    }
+    
+    if (!company) {
+      throw new Error('Configurações da empresa não encontradas - configure primeiro em Admin > Sistema > Dados da Empresa');
     }
 
     // Get appropriate token based on environment
@@ -150,6 +167,7 @@ serve(async (req) => {
     console.log('Enviando dados para Focus NFe:', JSON.stringify(nfeData, null, 2));
 
     // Enviar para Focus NFe
+    console.log('Enviando para Focus NFe URL:', focusNfeUrl);
     const focusResponse = await fetch(focusNfeUrl, {
       method: 'POST',
       headers: {
@@ -158,6 +176,13 @@ serve(async (req) => {
       },
       body: JSON.stringify(nfeData)
     });
+
+    if (!focusResponse.ok) {
+      console.error('Focus NFe response not ok:', focusResponse.status, focusResponse.statusText);
+      const errorText = await focusResponse.text();
+      console.error('Focus NFe error body:', errorText);
+      throw new Error(`Focus NFe API error: ${focusResponse.status} - ${errorText}`);
+    }
 
     const focusResult = await focusResponse.json();
     console.log('Resposta Focus NFe:', focusResult);
@@ -257,9 +282,18 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Erro ao gerar NF-e:', error);
+    console.error('Erro detalhado ao gerar NF-e:', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      order_id: (error as any)?.order_id || 'unknown'
+    });
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        success: false,
+        error: errorMessage,
+        details: 'Verifique os logs da função para mais detalhes' 
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
