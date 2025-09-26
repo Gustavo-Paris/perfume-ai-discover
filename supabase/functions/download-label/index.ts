@@ -59,45 +59,32 @@ serve(async (req) => {
       });
     }
 
-    // Validate PDF URL format
-    if (!shipment.pdf_url || (!shipment.pdf_url.includes('/print') && !shipment.pdf_url.includes('/imprimir'))) {
-      console.error('Invalid PDF URL format:', shipment.pdf_url);
-      throw new Error('URL de etiqueta inválida. Pode ser necessário gerar uma nova etiqueta.');
-    }
-
-    // Download label from Melhor Envio
-    console.log('Downloading label from Melhor Envio:', shipment.pdf_url);
-    
     const melhorEnvioToken = Deno.env.get('MELHOR_ENVIO_TOKEN');
     if (!melhorEnvioToken) {
       throw new Error('Melhor Envio token not configured');
     }
 
-    let labelResponse;
-    
-    // Handle different URL formats from Melhor Envio
-    if (shipment.pdf_url.includes('/imprimir/')) {
-      // Public download URLs don't need auth headers
-      console.log('Using public download URL approach');
-      labelResponse = await fetch(shipment.pdf_url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-          'Cache-Control': 'no-cache'
-        }
-      });
-    } else {
-      // API endpoints need authorization
-      console.log('Using API endpoint approach');
-      labelResponse = await fetch(shipment.pdf_url, {
-        headers: {
-          'Authorization': `Bearer ${melhorEnvioToken}`,
-          'Accept': 'application/pdf',
-          'User-Agent': 'Aplicacao loja@email.com.br'
-        }
-      });
+    // Get shipment ID for API call - prefer melhor_envio_shipment_id over cart_id
+    const shipmentId = shipment.melhor_envio_shipment_id || shipment.melhor_envio_cart_id;
+    if (!shipmentId) {
+      throw new Error('ID de envio do Melhor Envio não encontrado');
     }
+
+    // Use the correct API endpoint to download PDF directly
+    const melhorEnvioUrl = Deno.env.get('MELHOR_ENVIO_ENVIRONMENT') === 'production' 
+      ? `https://melhorenvio.com.br/api/v2/me/shipment/${shipmentId}/print/pdf`
+      : `https://sandbox.melhorenvio.com.br/api/v2/me/shipment/${shipmentId}/print/pdf`;
+
+    console.log('Using API endpoint for label download:', melhorEnvioUrl);
+
+    // Download label using API endpoint
+    const labelResponse = await fetch(melhorEnvioUrl, {
+      headers: {
+        'Accept': 'application/pdf',
+        'Authorization': `Bearer ${melhorEnvioToken}`,
+        'User-Agent': 'Aplicacao loja@email.com.br'
+      }
+    });
 
     if (!labelResponse.ok) {
       console.error('Label response error:', labelResponse.status, labelResponse.statusText);

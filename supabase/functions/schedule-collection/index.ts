@@ -72,8 +72,8 @@ serve(async (req) => {
 
     // Call Melhor Envio API to schedule collection - using correct endpoint
     const melhorEnvioUrl = Deno.env.get('MELHOR_ENVIO_ENVIRONMENT') === 'production' 
-      ? 'https://melhorenvio.com.br/api/v2/me/shipment/collect'
-      : 'https://sandbox.melhorenvio.com.br/api/v2/me/shipment/collect';
+      ? 'https://melhorenvio.com.br/api/v2/me/cart/request-collect'
+      : 'https://sandbox.melhorenvio.com.br/api/v2/me/cart/request-collect';
 
     console.log('Using collection endpoint:', melhorEnvioUrl);
 
