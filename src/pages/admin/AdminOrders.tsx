@@ -5,25 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Search, Filter, FileText, Send, CheckCircle, Printer } from 'lucide-react';
-import { useBuyLabel, useShipments } from '@/hooks/useShipments';
+import { 
+  Eye, 
+  Search, 
+  Filter, 
+  FileText, 
+  Package, 
+  CheckCircle, 
+  AlertCircle, 
+  Clock,
+  RefreshCw,
+  Zap,
+  Download,
+  Truck,
+  Bot
+} from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { OrderDetailsModal } from '@/components/orders/OrderDetailsModal';
+import { SystemNotifications } from '@/components/admin/SystemNotifications';
 
 interface OrderProfile {
   name: string;
   email: string;
 }
 
-interface OrderWithProfile {
+interface OrderWithAutomation {
   id: string;
   order_number: string;
   user_id: string;
@@ -36,37 +44,29 @@ interface OrderWithProfile {
   shipping_service?: string;
   address_data: any;
   created_at: string;
-  profiles?: OrderProfile;
+  profiles?: OrderProfile | null;
+  fiscal_notes?: any[];
+  shipments?: any[];
 }
-
-const statusColors = {
-  pending: "bg-yellow-100 text-yellow-800",
-  paid: "bg-green-100 text-green-800", 
-  shipped: "bg-blue-100 text-blue-800",
-  delivered: "bg-purple-100 text-purple-800",
-  cancelled: "bg-red-100 text-red-800"
-};
 
 const AdminOrders = () => {
   const { toast } = useToast();
-  const buyLabelMutation = useBuyLabel();
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<Date | undefined>();
+  const [automationFilter, setAutomationFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailOrder, setDetailOrder] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const itemsPerPage = 10;
+  const [processingOrder, setProcessingOrder] = useState<string | null>(null);
+  const itemsPerPage = 15;
 
-  const { data: ordersResult, isLoading } = useQuery({
-    queryKey: ['admin-orders', searchTerm, statusFilter, dateFilter, currentPage],
+  const { data: ordersResult, isLoading, refetch } = useQuery({
+    queryKey: ['unified-orders', searchTerm, statusFilter, automationFilter, currentPage],
     queryFn: async () => {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
       
-      // Build the base query
       let query = supabase
         .from('orders')
         .select(`
@@ -81,7 +81,9 @@ const AdminOrders = () => {
           payment_status,
           shipping_service,
           address_data,
-          created_at
+          created_at,
+          fiscal_notes (*),
+          shipments (*)
         `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
@@ -90,18 +92,11 @@ const AdminOrders = () => {
       }
 
       if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
-      }
-
-      if (dateFilter) {
-        const startOfDay = new Date(dateFilter);
-        startOfDay.setHours(0, 0, 0, 0);
-        
-        const endOfDay = new Date(dateFilter);
-        endOfDay.setHours(23, 59, 59, 999);
-        
-        query = query.gte('created_at', startOfDay.toISOString())
-                    .lte('created_at', endOfDay.toISOString());
+        if (statusFilter === 'paid_only') {
+          query = query.eq('payment_status', 'paid');
+        } else {
+          query = query.eq('status', statusFilter);
+        }
       }
 
       const { data: orders, error, count } = await query.range(from, to);
@@ -116,87 +111,151 @@ const AdminOrders = () => {
           .select('id, name, email')
           .in('id', userIds);
         
-        // Attach profiles to orders
-        const ordersWithProfiles = orders.map(order => ({
+        // Attach profiles to orders and filter by automation status
+        let ordersWithProfiles = orders.map(order => ({
           ...order,
-          profiles: profiles?.find(p => p.id === order.user_id)
+          profiles: profiles?.find(p => p.id === order.user_id) || null
         }));
+
+        // Apply automation filter
+        if (automationFilter !== 'all') {
+          ordersWithProfiles = ordersWithProfiles.filter(order => {
+            const hasNFE = order.fiscal_notes && order.fiscal_notes.length > 0;
+            const hasShipment = order.shipments && order.shipments.length > 0;
+            
+            switch (automationFilter) {
+              case 'complete':
+                return hasNFE && hasShipment;
+              case 'needs_action':
+                return !hasNFE || !hasShipment;
+              case 'nfe_missing':
+                return !hasNFE;
+              case 'label_missing':
+                return hasNFE && !hasShipment;
+              default:
+                return true;
+            }
+          });
+        }
         
         return { data: ordersWithProfiles, count: count || 0 };
       }
       
       return { data: orders || [], count: count || 0 };
     },
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
   const orders = ordersResult?.data || [];
   const totalPages = Math.ceil((ordersResult?.count || 0) / itemsPerPage);
 
-  const handleSelectOrder = (orderId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedOrders([...selectedOrders, orderId]);
+  // Get automation statistics
+  const automationStats = {
+    total: orders.length,
+    complete: orders.filter(order => {
+      const hasNFE = order.fiscal_notes && order.fiscal_notes.length > 0;
+      const hasShipment = order.shipments && order.shipments.length > 0;
+      return hasNFE && hasShipment;
+    }).length,
+    needsAction: orders.filter(order => {
+      const hasNFE = order.fiscal_notes && order.fiscal_notes.length > 0;
+      const hasShipment = order.shipments && order.shipments.length > 0;
+      return !hasNFE || !hasShipment;
+    }).length,
+    paidOrders: orders.filter(order => order.payment_status === 'paid').length
+  };
+
+  const getAutomationStatus = (order: OrderWithAutomation) => {
+    const hasNFE = order.fiscal_notes && order.fiscal_notes.length > 0;
+    const hasShipment = order.shipments && order.shipments.length > 0;
+    const isPaid = order.payment_status === 'paid';
+    
+    if (!isPaid) {
+      return { status: 'pending_payment', text: 'Aguardando Pagamento', color: 'bg-gray-500', icon: Clock };
+    } else if (hasNFE && hasShipment) {
+      return { status: 'complete', text: 'Completo ✓', color: 'bg-green-500', icon: CheckCircle };
+    } else if (hasNFE && !hasShipment) {
+      return { status: 'need_label', text: 'Precisa Etiqueta', color: 'bg-yellow-500', icon: Package };
+    } else if (!hasNFE) {
+      return { status: 'need_nfe', text: 'Precisa NF-e', color: 'bg-orange-500', icon: FileText };
     } else {
-      setSelectedOrders(selectedOrders.filter(id => id !== orderId));
+      return { status: 'processing', text: 'Processando', color: 'bg-blue-500', icon: Zap };
     }
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedOrders(orders.map(order => order.id));
+  const handleAutomaticNFE = async (orderId: string) => {
+    setProcessingOrder(orderId);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-nfe', {
+        body: { order_id: orderId }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "🤖 NF-e Gerada Automaticamente",
+          description: "A nota fiscal foi gerada e o sistema prosseguirá com a etiqueta.",
+        });
+        
+        // Trigger automatic label creation after NF-e
+        setTimeout(() => handleAutomaticLabel(orderId), 2000);
+        
+        refetch();
+      } else {
+        throw new Error(data.error || 'Erro ao gerar NF-e');
+      }
+    } catch (error) {
+      console.error('Error generating NF-e:', error);
+      toast({
+        title: "❌ Erro na Automação",
+        description: error instanceof Error ? error.message : "Falha na geração automática de NF-e",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingOrder(null);
+    }
+  };
+
+  const handleAutomaticLabel = async (orderId: string) => {
+    if (processingOrder && processingOrder !== orderId) return;
+    
+    setProcessingOrder(orderId);
+    try {
+      const { data, error } = await supabase.functions.invoke('me-buy-label', {
+        body: { orderId }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "🤖 Etiqueta Criada Automaticamente",
+          description: "Etiqueta gerada! Pedido processado completamente.",
+        });
+        refetch();
+      } else {
+        throw new Error(data.error || 'Erro ao criar etiqueta');
+      }
+    } catch (error) {
+      console.error('Error creating label:', error);
+      toast({
+        title: "❌ Erro na Automação",
+        description: error instanceof Error ? error.message : "Falha na criação automática de etiqueta",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingOrder(null);
+    }
+  };
+
+  const handleDownloadLabel = async (order: OrderWithAutomation) => {
+    if (order.shipments && order.shipments.length > 0 && order.shipments[0].pdf_url) {
+      window.open(order.shipments[0].pdf_url, '_blank');
     } else {
-      setSelectedOrders([]);
-    }
-  };
-
-  const handleBulkPrintLabels = async () => {
-    if (selectedOrders.length === 0) {
       toast({
-        title: "Nenhum pedido selecionado",
-        description: "Selecione pelo menos um pedido para imprimir etiquetas.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Here you would call the bulk print labels API
-      toast({
-        title: "Etiquetas enviadas",
-        description: `${selectedOrders.length} etiquetas enviadas para impressão.`,
-      });
-      setSelectedOrders([]);
-    } catch (error) {
-      console.error('Error printing labels:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao imprimir etiquetas.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleBulkSendEmail = async () => {
-    if (selectedOrders.length === 0) {
-      toast({
-        title: "Nenhum pedido selecionado",
-        description: "Selecione pelo menos um pedido para enviar emails.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Here you would call the bulk send email API
-      toast({
-        title: "Emails enviados",
-        description: `Emails de atualização enviados para ${selectedOrders.length} pedidos.`,
-      });
-      setSelectedOrders([]);
-    } catch (error) {
-      console.error('Error sending emails:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar emails.",
+        title: "PDF não disponível",
+        description: "Etiqueta ainda não foi gerada ou PDF não está disponível.",
         variant: "destructive",
       });
     }
@@ -210,24 +269,18 @@ const AdminOrders = () => {
       .select(`
         *,
         order_items(*, perfumes(id, name, brand, image_url)),
-        shipments(*)
+        shipments(*),
+        fiscal_notes(*)
       `)
       .eq('id', orderId)
       .maybeSingle();
 
-    if (error) {
-      console.error('Erro ao carregar detalhes do pedido:', error);
+    if (error || !data) {
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os detalhes do pedido.',
         variant: 'destructive',
       });
-      setLoadingDetails(false);
-      return;
-    }
-
-    if (!data) {
-      toast({ title: 'Pedido não encontrado', description: 'Tente novamente mais tarde.' });
       setLoadingDetails(false);
       return;
     }
@@ -249,55 +302,15 @@ const AdminOrders = () => {
     setLoadingDetails(false);
   };
 
-  const closeDetails = () => {
-    setDetailsOpen(false);
-    setDetailOrder(null);
-  };
-
-  const handlePrintLabel = async (orderId: string) => {
-    try {
-      // First check if there's already a shipment with PDF
-      const { data: shipments } = await supabase
-        .from('shipments')
-        .select('pdf_url, tracking_code, status')
-        .eq('order_id', orderId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (shipments && shipments.length > 0 && shipments[0].pdf_url) {
-        // If there's already a PDF, download it directly
-        window.open(shipments[0].pdf_url, '_blank');
-        return;
-      }
-
-      // If no shipment or no PDF, create the label
-      toast({
-        title: "Gerando etiqueta...",
-        description: "Criando etiqueta de envio, aguarde...",
-      });
-
-      await buyLabelMutation.mutateAsync({ orderId });
-      
-      toast({
-        title: "Etiqueta gerada!",
-        description: "A etiqueta foi gerada com sucesso.",
-      });
-    } catch (error) {
-      console.error('Error handling label:', error);
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao processar etiqueta.",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="p-6">
         <Card>
           <CardContent className="p-6">
-            <div className="text-center">Carregando pedidos...</div>
+            <div className="text-center">
+              <Zap className="w-8 h-8 mx-auto mb-4 text-primary animate-pulse" />
+              <div>Carregando sistema inteligente de pedidos...</div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -308,27 +321,89 @@ const AdminOrders = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Pedidos</h1>
-          <p className="text-muted-foreground">Gerencie todos os pedidos da loja</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Bot className="w-6 h-6 text-primary" />
+            Sistema Inteligente de Pedidos
+          </h1>
+          <p className="text-muted-foreground">
+            Gestão automatizada e unificada de pedidos, NF-e e logística
+          </p>
         </div>
+        <Button onClick={() => refetch()} variant="outline" className="flex items-center gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Atualizar
+        </Button>
       </div>
 
-      {/* Filters */}
+      <SystemNotifications />
+
+      {/* Automation Stats Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total de Pedidos</p>
+                <p className="text-2xl font-bold">{automationStats.total}</p>
+              </div>
+              <Package className="w-8 h-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pedidos Pagos</p>
+                <p className="text-2xl font-bold text-green-600">{automationStats.paidOrders}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Processados</p>
+                <p className="text-2xl font-bold text-green-600">{automationStats.complete}</p>
+              </div>
+              <Bot className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Precisam Ação</p>
+                <p className="text-2xl font-bold text-orange-600">{automationStats.needsAction}</p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Smart Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filtros
+            Filtros Inteligentes
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Buscar por Nº ou Cliente</label>
+              <label className="text-sm font-medium">Buscar Pedido</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar por nº do pedido ou cliente"
+                  placeholder="Nº do pedido ou cliente"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -337,54 +412,41 @@ const AdminOrders = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Todos os Status</label>
+              <label className="text-sm font-medium">Status do Pedido</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="paid_only">🔥 Apenas Pagos</SelectItem>
                   <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="paid">Pago</SelectItem>
                   <SelectItem value="shipped">Enviado</SelectItem>
                   <SelectItem value="delivered">Entregue</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Período</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dateFilter && "text-muted-foreground"
-                    )}
-                  >
-                    {dateFilter ? (
-                      format(dateFilter, "dd/MM/yyyy", { locale: ptBR })
-                    ) : (
-                      "Selecionar data"
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateFilter}
-                    onSelect={setDateFilter}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <label className="text-sm font-medium">Status da Automação</label>
+              <Select value={automationFilter} onValueChange={setAutomationFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="complete">✅ Completos</SelectItem>
+                  <SelectItem value="needs_action">⚠️ Precisam Ação</SelectItem>
+                  <SelectItem value="nfe_missing">📄 Falta NF-e</SelectItem>
+                  <SelectItem value="label_missing">📦 Falta Etiqueta</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Ações</label>
               <Button onClick={() => setCurrentPage(1)} className="w-full">
+                <Search className="w-4 h-4 mr-2" />
                 Buscar
               </Button>
             </div>
@@ -392,208 +454,184 @@ const AdminOrders = () => {
         </CardContent>
       </Card>
 
-      {/* Bulk Actions */}
-      {selectedOrders.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {selectedOrders.length} pedido(s) selecionado(s)
-              </span>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={handleBulkPrintLabels}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Imprimir Etiquetas
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleBulkSendEmail}>
-                  <Send className="mr-2 h-4 w-4" />
-                  Enviar Atualização
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Orders Table */}
+      {/* Smart Orders Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedOrders.length === orders.length && orders.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>Nº Pedido</TableHead>
+                <TableHead>Pedido & Status</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead>Endereço/Entrega</TableHead>
+                <TableHead>Automação</TableHead>
                 <TableHead>Valores</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="w-32">Ações</TableHead>
+                <TableHead>Ações Inteligentes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders?.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedOrders.includes(order.id)}
-                      onCheckedChange={(checked) => handleSelectOrder(order.id, checked as boolean)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {order.order_number}
-                  </TableCell>
-                  <TableCell>
-                     <div>
-                       <div className="font-medium">{(order as any).profiles?.name || 'N/A'}</div>
-                       <div className="text-sm text-muted-foreground">{(order as any).profiles?.email || 'N/A'}</div>
-                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {order.shipping_service?.toLowerCase().includes('retirada') || 
-                       order.shipping_service?.toLowerCase().includes('pickup') ? (
-                        <>
-                          <div className="text-sm font-medium text-blue-700">🏪 Retirada Local</div>
-                          <div className="text-xs text-gray-600">Loja - Chapecó/SC</div>
-                        </>
-                      ) : order.shipping_service?.toLowerCase().includes('local') ? (
-                        <>
-                          <div className="text-sm font-medium text-green-700">🚚 Entrega Local</div>
-                          <div className="text-xs text-gray-600">
-                            {(order.address_data as any)?.city} - {(order.address_data as any)?.state}
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-sm font-medium">📦 Correios</div>
-                          <div className="text-xs text-gray-600">
-                            {(order.address_data as any)?.city} - {(order.address_data as any)?.state}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="font-medium">
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL'
-                        }).format(order.total_amount)}
+              {orders?.map((order) => {
+                const automationStatus = getAutomationStatus(order);
+                const isProcessing = processingOrder === order.id;
+                const hasNFE = order.fiscal_notes && order.fiscal_notes.length > 0;
+                const hasShipment = order.shipments && order.shipments.length > 0;
+                const isPaid = order.payment_status === 'paid';
+                const StatusIcon = automationStatus.icon;
+                
+                return (
+                  <TableRow key={order.id} className={isPaid ? "bg-green-50/30" : ""}>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium flex items-center gap-2">
+                          <StatusIcon className="w-4 h-4" />
+                          {order.order_number}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(order.created_at).toLocaleDateString('pt-BR')}
+                        </div>
+                        <Badge className={automationStatus.color + " text-white text-xs"}>
+                          {automationStatus.text}
+                        </Badge>
                       </div>
-                      {order.subtotal !== order.total_amount && (
-                        <div className="text-xs text-gray-600">
-                          Sub: {new Intl.NumberFormat('pt-BR', {
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{(order as OrderWithAutomation).profiles?.name || 'N/A'}</div>
+                        <div className="text-sm text-muted-foreground">{(order as OrderWithAutomation).profiles?.email || 'N/A'}</div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className={`flex items-center gap-1 text-sm ${hasNFE ? 'text-green-600' : 'text-red-600'}`}>
+                          <FileText className="w-4 h-4" />
+                          {hasNFE ? '✓ NF-e' : '✗ NF-e'}
+                        </div>
+                        <div className={`flex items-center gap-1 text-sm ${hasShipment ? 'text-green-600' : 'text-red-600'}`}>
+                          <Package className="w-4 h-4" />
+                          {hasShipment ? '✓ Etiqueta' : '✗ Etiqueta'}
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium">
+                          {new Intl.NumberFormat('pt-BR', {
                             style: 'currency',
                             currency: 'BRL'
-                          }).format(order.subtotal || 0)}
-                          {(order.shipping_cost || 0) > 0 && (
-                            <> + Frete: {new Intl.NumberFormat('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL'
-                            }).format(order.shipping_cost || 0)}</>
-                          )}
+                          }).format(order.total_amount)}
                         </div>
-                      )}
-                      <div className="text-xs text-gray-500">
-                        {order.payment_method === 'pix' ? '💰 PIX' : '💳 Cartão'}
-                        {' • '}
-                        {order.payment_status === 'paid' ? '✅ Pago' : '⏳ Pendente'}
+                        <div className="text-xs text-muted-foreground">
+                          {order.payment_status === 'paid' ? '✓ Pago' : 'Pendente'}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={cn("text-xs", statusColors[order.status as keyof typeof statusColors] || "bg-gray-100 text-gray-800")}>
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(order.created_at), 'dd/MM/yy HH:mm', { locale: ptBR })}
-                  </TableCell>
-                   <TableCell>
-                     <div className="space-y-2">
-                       {order.shipping_service?.toLowerCase().includes('retirada') || 
-                        order.shipping_service?.toLowerCase().includes('pickup') ||
-                        order.shipping_service?.toLowerCase().includes('local') ? (
-                         <Button 
-                           size="sm" 
-                           variant="default"
-                           onClick={() => {
-                             toast({
-                               title: "Marcar como Entregue",
-                               description: "Funcionalidade em desenvolvimento",
-                             });
-                           }}
-                           className="w-full text-xs"
-                         >
-                           <CheckCircle className="mr-1 h-3 w-3" />
-                           Entregue
-                         </Button>
-                       ) : (
-                         <Button 
-                           size="sm" 
-                           variant="secondary"
-                           onClick={() => handlePrintLabel(order.id)}
-                           disabled={buyLabelMutation.isPending}
-                           className="w-full text-xs"
-                         >
-                           <Printer className="mr-1 h-3 w-3" />
-                           {buyLabelMutation.isPending ? 'Gerando...' : 'Etiqueta'}
-                         </Button>
-                       )}
-                      
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => openDetails(order.id)}
-                        className="w-full text-xs"
-                      >
-                        <Eye className="mr-1 h-3 w-3" />
-                        Detalhes
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {isPaid && !hasNFE && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleAutomaticNFE(order.id)}
+                            disabled={isProcessing}
+                            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                          >
+                            {isProcessing ? (
+                              <Zap className="w-4 h-4 animate-pulse" />
+                            ) : (
+                              <>
+                                <Bot className="w-4 h-4" />
+                                NF-e
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        
+                        {isPaid && hasNFE && !hasShipment && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleAutomaticLabel(order.id)}
+                            disabled={isProcessing}
+                            className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white"
+                          >
+                            {isProcessing ? (
+                              <Zap className="w-4 h-4 animate-pulse" />
+                            ) : (
+                              <>
+                                <Bot className="w-4 h-4" />
+                                Etiqueta
+                              </>
+                            )}
+                          </Button>
+                        )}
+
+                        {hasShipment && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadLabel(order)}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        )}
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openDetails(order.id)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
+      {orders.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Bot className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Sistema Pronto para Automação</h3>
+            <p className="text-muted-foreground">
+              Assim que houver pedidos pagos, o sistema processará automaticamente NF-e e etiquetas.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center space-x-2">
+        <div className="flex justify-center gap-2">
           <Button
             variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(currentPage - 1)}
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
           >
             Anterior
           </Button>
-          <span className="text-sm text-muted-foreground flex items-center">
+          <span className="flex items-center px-4">
             Página {currentPage} de {totalPages}
           </span>
           <Button
             variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(currentPage + 1)}
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
           >
-            Próxima
+            Próximo
           </Button>
         </div>
       )}
 
-      {detailsOpen && detailOrder && (
-        <OrderDetailsModal order={detailOrder} isOpen={detailsOpen} onClose={closeDetails} />
-      )}
+      <OrderDetailsModal
+        order={detailOrder}
+        isOpen={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+      />
     </div>
   );
 };

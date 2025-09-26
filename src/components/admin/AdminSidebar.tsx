@@ -28,7 +28,8 @@ import {
   FileText,
   Calendar,
   Building,
-  Receipt
+  Receipt,
+  Bot
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -74,9 +75,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     icon: ShoppingBag,
     defaultOpen: false,
     items: [
-      { title: 'Pedidos', url: '/admin/orders', icon: ShoppingBag },
-      { title: 'Gestão de Pedidos', url: '/admin/order-management', icon: Package },
-      { title: 'Automação de Pedidos', url: '/admin/automation', icon: Zap },
+      { title: '🤖 Pedidos Inteligentes', url: '/admin/orders', icon: Bot },
       { title: 'Promoções', url: '/admin/promotions', icon: Percent },
       { title: 'Cupons', url: '/admin/coupons', icon: Tag },
     ]

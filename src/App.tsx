@@ -104,7 +104,6 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="orders" element={<AdminOrders />} />
-            <Route path="order-management" element={<AdminOrderManagement />} />
             <Route path="fiscal" element={<AdminFiscal />} />
             <Route path="fiscal-notes" element={<AdminFiscalNotes />} />
             <Route path="stock" element={<AdminStock />} />
