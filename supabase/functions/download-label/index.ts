@@ -67,68 +67,37 @@ serve(async (req) => {
       throw new Error('ID de envio do Melhor Envio não encontrado');
     }
 
-    // Use the correct API endpoint to generate and download PDF
+    // Use the correct GET endpoint to get the PDF directly
     const melhorEnvioUrl = Deno.env.get('MELHOR_ENVIO_ENVIRONMENT') === 'production' 
       ? `https://melhorenvio.com.br/api/v2/me/orders/${cartId}/print`
       : `https://sandbox.melhorenvio.com.br/api/v2/me/orders/${cartId}/print`;
 
-    console.log('Requesting label generation from Melhor Envio:', melhorEnvioUrl);
+    console.log('Getting label PDF from Melhor Envio:', melhorEnvioUrl);
 
-    // First, generate the label (this might be needed)
-    const generateResponse = await fetch(melhorEnvioUrl.replace('/print', '/generate'), {
-      method: 'POST',
+    // Use GET method to download the PDF directly
+    const labelResponse = await fetch(melhorEnvioUrl, {
+      method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
+        'Accept': 'application/pdf',
         'Authorization': `Bearer ${melhorEnvioToken}`,
         'User-Agent': 'Aplicacao loja@email.com.br'
-      }
-    });
-
-    console.log('Generate response status:', generateResponse.status);
-    
-    if (generateResponse.ok) {
-      const generateResult = await generateResponse.json();
-      console.log('Label generated:', generateResult);
-    }
-
-    // Now get the print URL
-    const printResponse = await fetch(melhorEnvioUrl, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${melhorEnvioToken}`,
-        'User-Agent': 'Aplicacao loja@email.com.br'
-      },
-      body: JSON.stringify({
-        mode: 'private',
-        orders: [cartId]
-      })
-    });
-
-    if (!printResponse.ok) {
-      const errorText = await printResponse.text();
-      console.error('Print response error:', printResponse.status, errorText);
-      throw new Error(`Erro ao gerar link de impressão: ${printResponse.status}`);
-    }
-
-    const printResult = await printResponse.json();
-    console.log('Print result:', printResult);
-
-    if (!printResult.url) {
-      throw new Error('URL de impressão não retornada pela API');
-    }
-
-    // Download the PDF from the returned URL
-    const labelResponse = await fetch(printResult.url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
 
     if (!labelResponse.ok) {
-      throw new Error(`Erro ao baixar etiqueta: ${labelResponse.status}`);
+      const errorText = await labelResponse.text();
+      console.error('Label download error:', labelResponse.status, errorText);
+      throw new Error(`Erro ao baixar etiqueta: ${labelResponse.status} - ${errorText}`);
+    }
+
+    // Check content type to ensure we got a PDF
+    const contentType = labelResponse.headers.get('content-type');
+    console.log('Response content type:', contentType);
+    
+    if (!contentType?.includes('application/pdf')) {
+      const responseText = await labelResponse.text();
+      console.error('Expected PDF but got:', contentType, responseText.substring(0, 500));
+      throw new Error('API não retornou um PDF válido');
     }
 
     const labelArrayBuffer = await labelResponse.arrayBuffer();
@@ -161,7 +130,7 @@ serve(async (req) => {
       .from('shipments')
       .update({ 
         label_downloaded_at: new Date().toISOString(),
-        pdf_url: printResult.url,
+        pdf_url: melhorEnvioUrl,
         updated_at: new Date().toISOString()
       })
       .eq('id', shipment_id);

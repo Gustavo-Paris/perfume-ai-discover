@@ -64,14 +64,16 @@ serve(async (req) => {
 
     console.log('Scheduling collection with Melhor Envio:', JSON.stringify(collectionData, null, 2));
 
-    // Call Melhor Envio API - correct endpoint for collection requests
-    const melhorEnvioUrl = Deno.env.get('MELHOR_ENVIO_ENVIRONMENT') === 'production' 
-      ? 'https://melhorenvio.com.br/api/v2/me/cart/request-collect'
-      : 'https://sandbox.melhorenvio.com.br/api/v2/me/cart/request-collect';
+    // Try different endpoints for collection scheduling
+    const melhorEnvioBaseUrl = Deno.env.get('MELHOR_ENVIO_ENVIRONMENT') === 'production' 
+      ? 'https://melhorenvio.com.br/api/v2/me'
+      : 'https://sandbox.melhorenvio.com.br/api/v2/me';
 
-    console.log('Using collection endpoint:', melhorEnvioUrl);
+    // First try the orders endpoint for scheduling collection
+    const collectEndpoint = `${melhorEnvioBaseUrl}/orders/request-collect`;
+    console.log('Using collection endpoint:', collectEndpoint);
 
-    const response = await fetch(melhorEnvioUrl, {
+    let response = await fetch(collectEndpoint, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -79,8 +81,30 @@ serve(async (req) => {
         'Authorization': `Bearer ${melhorEnvioToken}`,
         'User-Agent': 'Aplicacao loja@email.com.br'
       },
-      body: JSON.stringify(collectionData)
+      body: JSON.stringify({
+        orders: cartIds,
+        date: collection_date,
+        ...(collection_time_start && { time_start: collection_time_start }),
+        ...(collection_time_end && { time_end: collection_time_end })
+      })
     });
+
+    // If that fails, try the cart endpoint with different structure
+    if (!response.ok) {
+      console.log('First endpoint failed, trying cart endpoint...');
+      const cartEndpoint = `${melhorEnvioBaseUrl}/cart/request-collect`;
+      
+      response = await fetch(cartEndpoint, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${melhorEnvioToken}`,
+          'User-Agent': 'Aplicacao loja@email.com.br'
+        },
+        body: JSON.stringify(collectionData)
+      });
+    }
 
     const result = await response.json();
     console.log('Melhor Envio collection response:', result);
