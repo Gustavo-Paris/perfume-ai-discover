@@ -106,13 +106,69 @@ export const ShipmentManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header com Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Envios</p>
+                <p className="text-2xl font-bold">{shipments.length}</p>
+              </div>
+              <Package className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Aguardando Coleta</p>
+                <p className="text-2xl font-bold">
+                  {shipments.filter(s => s.status === 'label_printed').length}
+                </p>
+              </div>
+              <Calendar className="h-8 w-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Em Transporte</p>
+                <p className="text-2xl font-bold">
+                  {shipments.filter(s => s.status === 'shipped').length}
+                </p>
+              </div>
+              <Truck className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Entregues</p>
+                <p className="text-2xl font-bold">
+                  {shipments.filter(s => s.status === 'delivered').length}
+                </p>
+              </div>
+              <Package className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Gerenciar Envios</h2>
+        <h2 className="text-2xl font-bold">Envios & Coletas</h2>
         <div className="flex gap-2">
           {selectedShipments.length > 0 && (
             <Button
               onClick={() => setShowScheduler(true)}
-              variant="outline"
               className="flex items-center gap-2"
             >
               <Calendar className="w-4 h-4" />

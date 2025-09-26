@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Order } from '@/types/order';
 import { OrderDetailsModal } from '@/components/orders/OrderDetailsModal';
+import { ShipmentStatus } from '@/components/orders/ShipmentStatus';
 
 const Pedidos = () => {
   const navigate = useNavigate();
@@ -250,11 +251,16 @@ const Pedidos = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setSelectedOrder(order)}
-                        className="w-full"
+                        className="w-full mb-3"
                       >
                         <Eye className="mr-2 h-4 w-4" />
                         Ver Detalhes
                       </Button>
+                      
+                      {/* Status do Envio */}
+                      {order.status === 'paid' && (
+                        <ShipmentStatus orderId={order.id} />
+                      )}
                     </div>
                   </div>
                 </CardContent>

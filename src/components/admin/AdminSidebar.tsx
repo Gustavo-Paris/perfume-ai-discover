@@ -93,8 +93,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     icon: Truck,
     defaultOpen: false,
     items: [
-      { title: 'Gerenciar Envios', url: '/admin/shipments', icon: Package },
-      { title: 'Agendar Coletas', url: '/admin/shipments', icon: Calendar },
+      { title: 'Envios & Coletas', url: '/admin/shipments', icon: Package },
       { title: 'Entrega Local', url: '/admin/local-delivery', icon: Truck },
     ]
   },
