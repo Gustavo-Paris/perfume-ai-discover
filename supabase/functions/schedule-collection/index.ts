@@ -52,13 +52,17 @@ serve(async (req) => {
       throw new Error('Melhor Envio token not configured');
     }
 
-    // Prepare collection request data
-    const melhorEnvioCartIds = shipments
-      .map(s => s.melhor_envio_cart_id)
+    // Prepare collection request data - use shipment IDs instead of cart IDs
+    const melhorEnvioShipmentIds = shipments
+      .map(s => s.melhor_envio_shipment_id || s.melhor_envio_cart_id)
       .filter(Boolean);
 
+    if (!melhorEnvioShipmentIds.length) {
+      throw new Error('Nenhum ID de envio válido encontrado nos pedidos selecionados');
+    }
+
     const collectionData: MelhorEnvioCollectionRequest = {
-      orders: melhorEnvioCartIds,
+      orders: melhorEnvioShipmentIds,
       date: collection_date,
       ...(collection_time_start && { time_start: collection_time_start }),
       ...(collection_time_end && { time_end: collection_time_end })

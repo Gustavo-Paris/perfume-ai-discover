@@ -73,23 +73,26 @@ serve(async (req) => {
       throw new Error('Melhor Envio token not configured');
     }
 
-    // Try different approaches for downloading the label
     let labelResponse;
     
-    // First try: Direct URL with token
-    labelResponse = await fetch(shipment.pdf_url, {
-      headers: {
-        'Authorization': `Bearer ${melhorEnvioToken}`,
-        'Accept': 'application/pdf',
-        'User-Agent': 'Aplicacao loja@email.com.br'
-      }
-    });
-
-    // If first attempt fails, try without authorization header (some URLs are public)
-    if (!labelResponse.ok && labelResponse.status === 401) {
-      console.log('Trying without authorization header...');
+    // Handle different URL formats from Melhor Envio
+    if (shipment.pdf_url.includes('/imprimir/')) {
+      // Public download URLs don't need auth headers
+      console.log('Using public download URL approach');
       labelResponse = await fetch(shipment.pdf_url, {
         headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+          'Cache-Control': 'no-cache'
+        }
+      });
+    } else {
+      // API endpoints need authorization
+      console.log('Using API endpoint approach');
+      labelResponse = await fetch(shipment.pdf_url, {
+        headers: {
+          'Authorization': `Bearer ${melhorEnvioToken}`,
           'Accept': 'application/pdf',
           'User-Agent': 'Aplicacao loja@email.com.br'
         }
@@ -110,18 +113,53 @@ serve(async (req) => {
       }
     }
 
-    // Check content type
+    // Check content type and handle HTML responses
     const contentType = labelResponse.headers.get('content-type');
     console.log('Content type received:', contentType);
     
+    // If we get HTML, it might be a login page or error page
     if (contentType && contentType.includes('text/html')) {
-      console.error('Received HTML instead of PDF - URL may be invalid');
-      throw new Error('A URL da etiqueta está inválida. Tente gerar uma nova etiqueta.');
-    }
-    
-    if (contentType && !contentType.includes('application/pdf') && !contentType.includes('application/octet-stream')) {
-      console.error('Invalid content type received:', contentType);
-      throw new Error('Formato de arquivo inválido recebido do Melhor Envio');
+      const responseText = await labelResponse.text();
+      
+      // Check if it's actually a PDF disguised as HTML
+      if (responseText.startsWith('%PDF-')) {
+        console.log('PDF content found despite HTML content-type');
+        // Convert string back to binary
+        const labelData = new Uint8Array(responseText.split('').map(char => char.charCodeAt(0)));
+        
+        // Cache and return the label
+        const labelFileName = `labels/${shipment.id}.pdf`;
+        try {
+          await supabase.storage
+            .from('shipment-labels')
+            .upload(labelFileName, labelData, {
+              contentType: 'application/pdf',
+              upsert: true
+            });
+        } catch (cacheError) {
+          console.warn('Error caching label:', cacheError);
+        }
+
+        await supabase
+          .from('shipments')
+          .update({ 
+            label_downloaded_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', shipment_id);
+
+        return new Response(labelData, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="etiqueta-${shipment.order_id}.pdf"`
+          }
+        });
+      } else {
+        console.error('Received HTML instead of PDF - URL may be invalid');
+        console.error('HTML content preview:', responseText.substring(0, 200));
+        throw new Error('A URL da etiqueta retornou uma página web ao invés do PDF. Tente gerar uma nova etiqueta.');
+      }
     }
 
     const labelArrayBuffer = await labelResponse.arrayBuffer();
