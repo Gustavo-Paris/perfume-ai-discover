@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Save, Upload, CheckCircle, AlertCircle, Eye } from 'lucide-react';
+import { Building2, Save, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,16 +16,14 @@ interface CompanyData {
   nome_fantasia: string;
   inscricao_estadual: string;
   inscricao_municipal: string;
-  endereco_logradouro: string;
-  endereco_numero: string;
-  endereco_complemento: string;
-  endereco_bairro: string;
-  endereco_cep: string;
-  endereco_cidade: string;
-  endereco_uf: string;
-  endereco_codigo_municipio: string;
+  endereco_completo: string;
+  cep: string;
+  cidade: string;
+  estado: string;
   telefone: string;
-  email: string;
+  email_contato: string;
+  email_sac: string;
+  responsavel_tecnico: string;
   regime_tributario: string;
   certificado_a1_base64: string;
   certificado_senha: string;
@@ -40,16 +38,14 @@ const AdminCompany = () => {
     nome_fantasia: '',
     inscricao_estadual: '',
     inscricao_municipal: '',
-    endereco_logradouro: '',
-    endereco_numero: '',
-    endereco_complemento: '',
-    endereco_bairro: '',
-    endereco_cep: '',
-    endereco_cidade: '',
-    endereco_uf: '',
-    endereco_codigo_municipio: '',
+    endereco_completo: '',
+    cep: '',
+    cidade: '',
+    estado: '',
     telefone: '',
-    email: '',
+    email_contato: '',
+    email_sac: '',
+    responsavel_tecnico: '',
     regime_tributario: 'simples_nacional',
     certificado_a1_base64: '',
     certificado_senha: '',
@@ -68,7 +64,7 @@ const AdminCompany = () => {
   const loadCompanyData = async () => {
     try {
       const { data, error } = await supabase
-        .from('company_settings')
+        .from('company_info')
         .select('*')
         .single();
 
@@ -77,7 +73,7 @@ const AdminCompany = () => {
       }
 
       if (data) {
-        setCompanyData(data);
+        setCompanyData(data as CompanyData);
         setHasData(true);
       }
     } catch (error) {
@@ -97,10 +93,11 @@ const AdminCompany = () => {
     try {
       const { error } = hasData
         ? await supabase
-            .from('company_settings')
+            .from('company_info')
             .update(companyData)
+            .eq('cnpj', companyData.cnpj)
         : await supabase
-            .from('company_settings')
+            .from('company_info')
             .insert([companyData]);
 
       if (error) throw error;
@@ -139,9 +136,8 @@ const AdminCompany = () => {
 
   const isProductionReady = () => {
     const required = [
-      'cnpj', 'razao_social', 'nome_fantasia', 'endereco_logradouro',
-      'endereco_numero', 'endereco_bairro', 'endereco_cep', 'endereco_cidade',
-      'endereco_uf', 'telefone', 'email'
+      'cnpj', 'razao_social', 'nome_fantasia', 'endereco_completo',
+      'cep', 'cidade', 'estado', 'telefone', 'email_contato'
     ];
     
     return required.every(field => companyData[field as keyof CompanyData]);
@@ -254,14 +250,24 @@ const AdminCompany = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email_contato">Email de Contato *</Label>
                 <Input
-                  id="email"
+                  id="email_contato"
                   type="email"
-                  value={companyData.email}
-                  onChange={(e) => setCompanyData({ ...companyData, email: e.target.value })}
+                  value={companyData.email_contato}
+                  onChange={(e) => setCompanyData({ ...companyData, email_contato: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="email_sac">Email SAC</Label>
+              <Input
+                id="email_sac"
+                type="email"
+                value={companyData.email_sac}
+                onChange={(e) => setCompanyData({ ...companyData, email_sac: e.target.value })}
+              />
             </div>
 
             <div>
@@ -289,69 +295,33 @@ const AdminCompany = () => {
             <CardTitle>Endereço</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="endereco_logradouro">Logradouro *</Label>
-                <Input
-                  id="endereco_logradouro"
-                  value={companyData.endereco_logradouro}
-                  onChange={(e) => setCompanyData({ ...companyData, endereco_logradouro: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endereco_numero">Número *</Label>
-                <Input
-                  id="endereco_numero"
-                  value={companyData.endereco_numero}
-                  onChange={(e) => setCompanyData({ ...companyData, endereco_numero: e.target.value })}
-                />
-              </div>
-            </div>
-
             <div>
-              <Label htmlFor="endereco_complemento">Complemento</Label>
-              <Input
-                id="endereco_complemento"
-                value={companyData.endereco_complemento}
-                onChange={(e) => setCompanyData({ ...companyData, endereco_complemento: e.target.value })}
+              <Label htmlFor="endereco_completo">Endereço Completo *</Label>
+              <Textarea
+                id="endereco_completo"
+                value={companyData.endereco_completo}
+                onChange={(e) => setCompanyData({ ...companyData, endereco_completo: e.target.value })}
+                placeholder="Rua, Número, Complemento, Bairro"
+                rows={3}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="endereco_bairro">Bairro *</Label>
+                <Label htmlFor="cep">CEP *</Label>
                 <Input
-                  id="endereco_bairro"
-                  value={companyData.endereco_bairro}
-                  onChange={(e) => setCompanyData({ ...companyData, endereco_bairro: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endereco_cep">CEP *</Label>
-                <Input
-                  id="endereco_cep"
-                  value={companyData.endereco_cep}
-                  onChange={(e) => setCompanyData({ ...companyData, endereco_cep: e.target.value })}
+                  id="cep"
+                  value={companyData.cep}
+                  onChange={(e) => setCompanyData({ ...companyData, cep: e.target.value })}
                   placeholder="00000-000"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="endereco_cidade">Cidade *</Label>
+                <Label htmlFor="estado">Estado *</Label>
                 <Input
-                  id="endereco_cidade"
-                  value={companyData.endereco_cidade}
-                  onChange={(e) => setCompanyData({ ...companyData, endereco_cidade: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endereco_uf">UF *</Label>
-                <Input
-                  id="endereco_uf"
-                  value={companyData.endereco_uf}
-                  onChange={(e) => setCompanyData({ ...companyData, endereco_uf: e.target.value })}
+                  id="estado"
+                  value={companyData.estado}
+                  onChange={(e) => setCompanyData({ ...companyData, estado: e.target.value })}
                   placeholder="SP"
                   maxLength={2}
                 />
@@ -359,12 +329,29 @@ const AdminCompany = () => {
             </div>
 
             <div>
-              <Label htmlFor="endereco_codigo_municipio">Código do Município</Label>
+              <Label htmlFor="cidade">Cidade *</Label>
               <Input
-                id="endereco_codigo_municipio"
-                value={companyData.endereco_codigo_municipio}
-                onChange={(e) => setCompanyData({ ...companyData, endereco_codigo_municipio: e.target.value })}
-                placeholder="3550308"
+                id="cidade"
+                value={companyData.cidade}
+                onChange={(e) => setCompanyData({ ...companyData, cidade: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="inscricao_municipal">Inscrição Municipal</Label>
+              <Input
+                id="inscricao_municipal"
+                value={companyData.inscricao_municipal}
+                onChange={(e) => setCompanyData({ ...companyData, inscricao_municipal: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="responsavel_tecnico">Responsável Técnico</Label>
+              <Input
+                id="responsavel_tecnico"
+                value={companyData.responsavel_tecnico}
+                onChange={(e) => setCompanyData({ ...companyData, responsavel_tecnico: e.target.value })}
               />
             </div>
           </CardContent>

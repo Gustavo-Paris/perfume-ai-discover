@@ -51,7 +51,6 @@ import EmailPreferences from "./components/notifications/EmailPreferences";
 import Unsubscribe from "./pages/Unsubscribe";
 import Search from "./pages/Search";
 import Afiliados from "./pages/Afiliados";
-import AdminFiscal from './pages/admin/AdminFiscal';
 import MinhasNotasFiscais from './pages/MinhasNotasFiscais';
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminSupportMacros from "./pages/admin/AdminSupportMacros";
@@ -104,7 +103,6 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="orders" element={<AdminOrders />} />
-            <Route path="fiscal" element={<AdminFiscal />} />
             <Route path="fiscal-notes" element={<AdminFiscalNotes />} />
             <Route path="stock" element={<AdminStock />} />
             <Route path="users" element={<AdminUsers />} />

@@ -66,17 +66,17 @@ serve(async (req) => {
       console.log('Profile not found, using fallback data');
     }
 
-    // Get company settings for valid CNPJ/CPF (optional)
-    let companySettings = null;
+    // Get company info for valid CNPJ/CPF (optional)
+    let companyInfo = null;
     try {
       const { data } = await supabase
-        .from('company_settings')
+        .from('company_info')
         .select('*')
         .limit(1)
         .single();
-      companySettings = data;
+      companyInfo = data;
     } catch (error) {
-      console.log('Company settings not found, using fallback data');
+      console.log('Company info not found, using fallback data');
     }
 
     // Check if shipment already exists
@@ -149,12 +149,12 @@ serve(async (req) => {
     const cartPayload = {
       service: 1, // Correios PAC
       from: {
-        name: companySettings?.razao_social || "Perfumaria do Chapecó",
+        name: companyInfo?.razao_social || "Perfumaria do Chapecó",
         phone: "(49) 99999-9999",
         email: "contato@perfumariadochapeco.com.br",
-        document: companySettings?.cpf || "11144477735", // CPF da empresa
-        company_document: companySettings?.cnpj || "11222333000181", // CNPJ válido para sandbox
-        state_register: companySettings?.inscricao_estadual || "123456789",
+        document: companyInfo?.inscricao_estadual || "11144477735", // CPF da empresa
+        company_document: companyInfo?.cnpj || "11222333000181", // CNPJ válido para sandbox
+        state_register: companyInfo?.inscricao_estadual || "123456789",
         postal_code: "89814000",
         address: "Rua Florianópolis - D",
         number: "828",
