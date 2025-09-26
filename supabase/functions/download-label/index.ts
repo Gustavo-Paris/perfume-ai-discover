@@ -59,6 +59,12 @@ serve(async (req) => {
       });
     }
 
+    // Validate PDF URL format
+    if (!shipment.pdf_url || (!shipment.pdf_url.includes('/print') && !shipment.pdf_url.includes('/imprimir'))) {
+      console.error('Invalid PDF URL format:', shipment.pdf_url);
+      throw new Error('URL de etiqueta inválida. Pode ser necessário gerar uma nova etiqueta.');
+    }
+
     // Download label from Melhor Envio
     console.log('Downloading label from Melhor Envio:', shipment.pdf_url);
     
@@ -67,24 +73,55 @@ serve(async (req) => {
       throw new Error('Melhor Envio token not configured');
     }
 
-    const labelResponse = await fetch(shipment.pdf_url, {
+    // Try different approaches for downloading the label
+    let labelResponse;
+    
+    // First try: Direct URL with token
+    labelResponse = await fetch(shipment.pdf_url, {
       headers: {
         'Authorization': `Bearer ${melhorEnvioToken}`,
         'Accept': 'application/pdf',
-        'User-Agent': 'ParisCoApp/1.0'
+        'User-Agent': 'Aplicacao loja@email.com.br'
       }
     });
 
+    // If first attempt fails, try without authorization header (some URLs are public)
+    if (!labelResponse.ok && labelResponse.status === 401) {
+      console.log('Trying without authorization header...');
+      labelResponse = await fetch(shipment.pdf_url, {
+        headers: {
+          'Accept': 'application/pdf',
+          'User-Agent': 'Aplicacao loja@email.com.br'
+        }
+      });
+    }
+
     if (!labelResponse.ok) {
       console.error('Label response error:', labelResponse.status, labelResponse.statusText);
-      throw new Error(`Failed to download label: ${labelResponse.status} ${labelResponse.statusText}`);
+      const responseText = await labelResponse.text();
+      console.error('Response body:', responseText.substring(0, 500));
+      
+      if (labelResponse.status === 404) {
+        throw new Error('Etiqueta não encontrada. A URL pode ter expirado.');
+      } else if (labelResponse.status === 401) {
+        throw new Error('Não autorizado. Verifique o token do Melhor Envio.');
+      } else {
+        throw new Error(`Erro ao baixar etiqueta: ${labelResponse.status} ${labelResponse.statusText}`);
+      }
     }
 
     // Check content type
     const contentType = labelResponse.headers.get('content-type');
-    if (contentType && !contentType.includes('application/pdf')) {
+    console.log('Content type received:', contentType);
+    
+    if (contentType && contentType.includes('text/html')) {
+      console.error('Received HTML instead of PDF - URL may be invalid');
+      throw new Error('A URL da etiqueta está inválida. Tente gerar uma nova etiqueta.');
+    }
+    
+    if (contentType && !contentType.includes('application/pdf') && !contentType.includes('application/octet-stream')) {
       console.error('Invalid content type received:', contentType);
-      throw new Error('Received invalid file format from Melhor Envio');
+      throw new Error('Formato de arquivo inválido recebido do Melhor Envio');
     }
 
     const labelArrayBuffer = await labelResponse.arrayBuffer();
