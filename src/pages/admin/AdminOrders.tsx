@@ -631,6 +631,7 @@ const AdminOrders = () => {
         order={detailOrder}
         isOpen={detailsOpen}
         onClose={() => setDetailsOpen(false)}
+        loading={loadingDetails}
       />
     </div>
   );

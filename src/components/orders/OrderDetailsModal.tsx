@@ -7,15 +7,17 @@ import { Order } from '@/types/order';
 import { EnhancedShipmentCard } from './EnhancedShipmentCard';
 
 interface OrderDetailsModalProps {
-  order: Order;
+  order: Order | null;
   isOpen: boolean;
   onClose: () => void;
+  loading?: boolean;
 }
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   order,
   isOpen,
-  onClose
+  onClose,
+  loading = false
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -44,18 +46,25 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="font-playfair text-2xl">
-              Pedido #{order.order_number}
-            </DialogTitle>
-            <Badge className={getStatusColor(order.status)}>
-              {getStatusText(order.status)}
-            </Badge>
+        {loading || !order ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div>Carregando detalhes do pedido...</div>
           </div>
-        </DialogHeader>
+        ) : (
+          <>
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="font-playfair text-2xl">
+                  Pedido #{order.order_number}
+                </DialogTitle>
+                <Badge className={getStatusColor(order.status)}>
+                  {getStatusText(order.status)}
+                </Badge>
+              </div>
+            </DialogHeader>
 
-        <div className="space-y-6">
+            <div className="space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -221,6 +230,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </div>
           </div>
         </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
