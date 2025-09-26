@@ -13,13 +13,6 @@ interface ScheduleCollectionRequest {
   collection_time_end?: string; // HH:MM
 }
 
-interface MelhorEnvioCollectionRequest {
-  orders: string[];
-  date: string;
-  time_start?: string;
-  time_end?: string;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -52,17 +45,18 @@ serve(async (req) => {
       throw new Error('Melhor Envio token not configured');
     }
 
-    // Prepare collection request data - use shipment IDs instead of cart IDs
-    const melhorEnvioShipmentIds = shipments
-      .map(s => s.melhor_envio_shipment_id || s.melhor_envio_cart_id)
+    // Use cart IDs for collection request (this is the correct approach)
+    const cartIds = shipments
+      .map(s => s.melhor_envio_cart_id)
       .filter(Boolean);
 
-    if (!melhorEnvioShipmentIds.length) {
-      throw new Error('Nenhum ID de envio válido encontrado nos pedidos selecionados');
+    if (!cartIds.length) {
+      throw new Error('Nenhum ID de carrinho válido encontrado nos pedidos selecionados');
     }
 
-    const collectionData: MelhorEnvioCollectionRequest = {
-      orders: melhorEnvioShipmentIds,
+    // Prepare collection request data
+    const collectionData = {
+      orders: cartIds,
       date: collection_date,
       ...(collection_time_start && { time_start: collection_time_start }),
       ...(collection_time_end && { time_end: collection_time_end })
@@ -70,7 +64,7 @@ serve(async (req) => {
 
     console.log('Scheduling collection with Melhor Envio:', JSON.stringify(collectionData, null, 2));
 
-    // Call Melhor Envio API to schedule collection - using correct endpoint
+    // Call Melhor Envio API - correct endpoint for collection requests
     const melhorEnvioUrl = Deno.env.get('MELHOR_ENVIO_ENVIRONMENT') === 'production' 
       ? 'https://melhorenvio.com.br/api/v2/me/cart/request-collect'
       : 'https://sandbox.melhorenvio.com.br/api/v2/me/cart/request-collect';
