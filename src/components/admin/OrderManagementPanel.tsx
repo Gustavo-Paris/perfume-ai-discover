@@ -107,7 +107,7 @@ export const OrderManagementPanel = () => {
 
       if (data.success) {
         toast({
-          title: "Etiqueta Criada",
+          title: "✅ Etiqueta Criada",
           description: "A etiqueta de envio foi criada com sucesso.",
         });
         loadRecentOrders();

@@ -212,12 +212,9 @@ const AdminOrders = () => {
 
       if (data?.success !== false) {
         toast({
-          title: "🤖 NF-e Gerada Automaticamente",
-          description: "A nota fiscal foi gerada e o sistema prosseguirá com a etiqueta.",
+          title: "✅ NF-e Gerada",
+          description: "A nota fiscal foi gerada com sucesso. Agora você pode gerar a etiqueta manualmente.",
         });
-        
-        // Trigger automatic label creation after NF-e
-        setTimeout(() => handleAutomaticLabel(orderId), 2000);
         
         refetch();
       }
@@ -246,7 +243,7 @@ const AdminOrders = () => {
 
       if (data.success) {
         toast({
-          title: "🤖 Etiqueta Criada Automaticamente",
+          title: "✅ Etiqueta Criada",
           description: "Etiqueta gerada! Pedido processado completamente.",
         });
         refetch();
@@ -574,8 +571,8 @@ const AdminOrders = () => {
                               <Zap className="w-4 h-4 animate-pulse" />
                             ) : (
                               <>
-                                <Bot className="w-4 h-4" />
-                                Etiqueta
+                                <Package className="w-4 h-4" />
+                                Gerar Etiqueta
                               </>
                             )}
                           </Button>
