@@ -34,31 +34,24 @@ const Carrinho = () => {
 // Componente para mostrar preço com possível promoção
 const ItemPriceDisplay = ({ perfume, size, quantity }: { perfume: any; size: number; quantity: number }) => {
   const { data: promotion } = useActivePromotionByPerfume(perfume.id);
-  const [currentPrice, setCurrentPrice] = useState(0);
-  const [originalPrice, setOriginalPrice] = useState(0);
-  const { getItemPrice } = useCart();
+  
+  // Calcular preço inicial imediatamente (sem esperar async)
+  const getInitialPrice = () => {
+    // Primeiro tenta pegar do cache dinâmico
+    if (perfume.dynamicPrices && perfume.dynamicPrices[size]) {
+      return perfume.dynamicPrices[size];
+    }
+    // Fallback para preços hardcoded
+    switch (size) {
+      case 2: return perfume.price_2ml || 0;
+      case 5: return perfume.price_5ml || 0;
+      case 10: return perfume.price_10ml || 0;
+      default: return perfume.price_full || 0;
+    }
+  };
 
-  useEffect(() => {
-    const calculatePrices = async () => {
-      // Tentar buscar preço da tabela perfume_prices
-      let itemPrice = await getItemPrice(perfume.id, size);
-      
-      // Se não encontrou (retornou 0), usar preços hardcoded como fallback
-      if (itemPrice === 0) {
-        switch (size) {
-          case 2: itemPrice = perfume.price_2ml || 0; break;
-          case 5: itemPrice = perfume.price_5ml || 0; break;
-          case 10: itemPrice = perfume.price_10ml || 0; break;
-          default: itemPrice = perfume.price_full || 0; break;
-        }
-      }
-      
-      setCurrentPrice(itemPrice);
-      setOriginalPrice(itemPrice);
-    };
-    
-    calculatePrices();
-  }, [perfume, size, getItemPrice, promotion]);
+  const currentPrice = getInitialPrice();
+  const originalPrice = currentPrice;
 
   // Verificar se há promoção ativa e se o preço atual é menor que o original
   const hasDiscount = promotion && currentPrice > 0 && originalPrice > 0 && currentPrice < originalPrice;
