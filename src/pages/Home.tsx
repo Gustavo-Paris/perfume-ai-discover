@@ -27,11 +27,11 @@ const Home = () => {
     setCurrentImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
   };
 
-  // Autoplay - troca automática a cada 5 segundos
+  // Autoplay - troca automática a cada 8 segundos
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
+    }, 8000);
 
     return () => clearInterval(interval);
   }, []);
@@ -105,7 +105,7 @@ const Home = () => {
                       key={currentImageIndex}
                       src={heroImages[currentImageIndex]}
                       alt="Decants Paris & Co Premium" 
-                      className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] object-contain p-8"
+                      className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] object-cover"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5 }}
@@ -142,17 +142,6 @@ const Home = () => {
                           aria-label={`Ir para imagem ${index + 1}`}
                         />
                       ))}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Floating card */}
-                <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 md:px-6 py-2 md:py-4 shadow-xl z-20">
-                  <div className="flex items-center space-x-2 md:space-x-3">
-                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500 animate-pulse"></div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-xs md:text-base">Decants Premium</p>
-                      <p className="text-[10px] md:text-sm text-gray-600">Paris & Co Parfums</p>
                     </div>
                   </div>
                 </div>
