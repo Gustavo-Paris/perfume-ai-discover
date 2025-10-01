@@ -568,6 +568,36 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return priceData.price;
     }
 
+    // Fallback: buscar preços hardcoded da tabela perfumes
+    const { data: perfumeData } = await supabase
+      .from('perfumes')
+      .select('price_2ml, price_5ml, price_10ml, price_full')
+      .eq('id', perfumeId)
+      .maybeSingle();
+
+    if (perfumeData) {
+      let fallbackPrice = 0;
+      switch (size) {
+        case 2: fallbackPrice = perfumeData.price_2ml || 0; break;
+        case 5: fallbackPrice = perfumeData.price_5ml || 0; break;
+        case 10: fallbackPrice = perfumeData.price_10ml || 0; break;
+        default: fallbackPrice = perfumeData.price_full || 0; break;
+      }
+      
+      // Cachear o preço hardcoded também
+      if (fallbackPrice > 0) {
+        setPricesCache(prev => ({
+          ...prev,
+          [perfumeId]: {
+            ...prev[perfumeId],
+            [size]: fallbackPrice
+          }
+        }));
+      }
+      
+      return fallbackPrice;
+    }
+
     return 0;
   };
 

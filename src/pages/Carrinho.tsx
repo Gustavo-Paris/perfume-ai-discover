@@ -40,20 +40,25 @@ const ItemPriceDisplay = ({ perfume, size, quantity }: { perfume: any; size: num
 
   useEffect(() => {
     const calculatePrices = async () => {
-      // Buscar preço através do getItemPrice (sempre confiável)
-      const itemPrice = await getItemPrice(perfume.id, size);
+      // Tentar buscar preço da tabela perfume_prices
+      let itemPrice = await getItemPrice(perfume.id, size);
       
-      // Preço original é sempre o preço base sem promoção
-      const basePrice = itemPrice;
+      // Se não encontrou (retornou 0), usar preços hardcoded como fallback
+      if (itemPrice === 0) {
+        switch (size) {
+          case 2: itemPrice = perfume.price_2ml || 0; break;
+          case 5: itemPrice = perfume.price_5ml || 0; break;
+          case 10: itemPrice = perfume.price_10ml || 0; break;
+          default: itemPrice = perfume.price_full || 0; break;
+        }
+      }
       
-      // Se tem promoção ativa, o preço atual já vem com desconto aplicado
-      // e o original é o preço sem desconto
       setCurrentPrice(itemPrice);
-      setOriginalPrice(basePrice);
+      setOriginalPrice(itemPrice);
     };
     
     calculatePrices();
-  }, [perfume.id, size, getItemPrice, promotion]);
+  }, [perfume, size, getItemPrice, promotion]);
 
   // Verificar se há promoção ativa e se o preço atual é menor que o original
   const hasDiscount = promotion && currentPrice > 0 && originalPrice > 0 && currentPrice < originalPrice;
