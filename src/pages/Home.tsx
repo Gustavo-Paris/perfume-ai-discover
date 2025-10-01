@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Import decant images
 import decantsCollection from '@/assets/decants-collection.png';
@@ -26,6 +26,15 @@ const Home = () => {
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
   };
+
+  // Autoplay - troca automática a cada 5 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
