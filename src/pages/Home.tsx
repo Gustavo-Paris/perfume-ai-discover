@@ -27,11 +27,11 @@ const Home = () => {
     setCurrentImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
   };
 
-  // Autoplay - troca automática a cada 8 segundos
+  // Autoplay - troca automática a cada 5 segundos
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
-    }, 8000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
