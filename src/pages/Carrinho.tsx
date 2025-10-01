@@ -10,7 +10,7 @@ import { useCart } from '@/contexts/CartContextOptimized';
 import { useActivePromotionByPerfume } from '@/hooks/usePromotions';
 
 const Carrinho = () => {
-  const { items, updateQuantity, removeItem, getTotal, clearCart, loading, getItemPrice } = useCart();
+  const { items, updateQuantity, removeItem, getTotal, clearCart, loading } = useCart();
   const [subtotal, setSubtotal] = useState(0);
 
   useEffect(() => {

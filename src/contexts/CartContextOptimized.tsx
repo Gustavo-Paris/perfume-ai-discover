@@ -214,7 +214,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('perfumes')
         .select('id, name, brand, price_2ml, price_5ml, price_10ml, price_full')
         .eq('id', item.perfume_id)
-        .single();
+        .maybeSingle();
 
       if (user) {
         await addToCartDB(item.perfume_id, item.size_ml, item.quantity);
@@ -318,7 +318,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .from('perfumes')
       .select('id, name, brand, family, gender, description, image_url, price_2ml, price_5ml, price_10ml, price_full, top_notes, heart_notes, base_notes, category, created_at')
       .eq('id', perfumeId)
-      .single();
+      .maybeSingle();
 
     if (error || !perfume) {
       throw new Error('Perfume not found');
