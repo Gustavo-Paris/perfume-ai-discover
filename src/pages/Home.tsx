@@ -1,13 +1,32 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Truck, HeartHandshake, Star, Cpu, Sparkles } from 'lucide-react';
+import { ArrowRight, Shield, Truck, HeartHandshake, Star, Cpu, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
-import FeaturedSlider from '@/components/home/FeaturedSlider';
+import { useState } from 'react';
+
+// Import decant images
+import decantsCollection from '@/assets/decants-collection.png';
+import decantsDuo1 from '@/assets/decants-duo-1.png';
+import decantsQuartet1 from '@/assets/decants-quartet-1.png';
+import decantsQuartet2 from '@/assets/decants-quartet-2.png';
+import decantsQuartet3 from '@/assets/decants-quartet-3.png';
+
+const heroImages = [decantsCollection, decantsDuo1, decantsQuartet1, decantsQuartet2, decantsQuartet3];
 
 const Home = () => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -57,7 +76,7 @@ const Home = () => {
               </div>
             </motion.div>
 
-            {/* Right Column - Hero Image */}
+            {/* Right Column - Hero Image Carousel */}
             <motion.div className="order-1 lg:order-2" initial={{
             opacity: 0,
             x: 50
@@ -71,16 +90,60 @@ const Home = () => {
           }}>
               <div className="relative max-w-lg mx-auto px-4 sm:px-0">
                 <div className="relative z-10">
-                  <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&h=700&fit=crop&crop=center&q=80" alt="Coleção de perfumes luxuosos" className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] object-cover rounded-2xl shadow-2xl" loading="eager" />
+                  {/* Carousel Container */}
+                  <div className="relative rounded-2xl shadow-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
+                    <motion.img 
+                      key={currentImageIndex}
+                      src={heroImages[currentImageIndex]}
+                      alt="Decants Paris & Co Premium" 
+                      className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] object-contain p-8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                      loading="eager" 
+                    />
+                    
+                    {/* Navigation Buttons */}
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 md:p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                      aria-label="Imagem anterior"
+                    >
+                      <ChevronLeft className="h-5 w-5 md:h-6 md:w-6 text-gray-900" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 md:p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                      aria-label="Próxima imagem"
+                    >
+                      <ChevronRight className="h-5 w-5 md:h-6 md:w-6 text-gray-900" />
+                    </button>
+
+                    {/* Indicators */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                      {heroImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            index === currentImageIndex 
+                              ? 'bg-blue-600 w-8' 
+                              : 'bg-white/60 w-2 hover:bg-white/80'
+                          }`}
+                          aria-label={`Ir para imagem ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Floating card */}
-                <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 md:px-6 py-2 md:py-4 shadow-xl">
+                <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl px-3 md:px-6 py-2 md:py-4 shadow-xl z-20">
                   <div className="flex items-center space-x-2 md:space-x-3">
                     <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-green-500 animate-pulse"></div>
                     <div>
-                      <p className="font-medium text-gray-900 text-xs md:text-base">IA Personalizada</p>
-                      <p className="text-[10px] md:text-sm text-gray-600">Recomendação inteligente</p>
+                      <p className="font-medium text-gray-900 text-xs md:text-base">Decants Premium</p>
+                      <p className="text-[10px] md:text-sm text-gray-600">Paris & Co Parfums</p>
                     </div>
                   </div>
                 </div>
@@ -93,11 +156,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* Featured Decants Carousel */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800">
-        <FeaturedSlider />
-      </div>
 
       {/* Featured Products */}
       <FeaturedProducts />
