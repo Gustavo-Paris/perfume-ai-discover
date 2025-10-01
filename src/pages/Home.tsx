@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
+import FeaturedSlider from '@/components/home/FeaturedSlider';
 
 const Home = () => {
   return (
@@ -92,6 +93,11 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Featured Decants Carousel */}
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800">
+        <FeaturedSlider />
+      </div>
 
       {/* Featured Products */}
       <FeaturedProducts />

@@ -1,52 +1,60 @@
-
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
-interface FeaturedPerfume {
+// Import decant images
+import decantsCollection from '@/assets/decants-collection.png';
+import decantsDuo1 from '@/assets/decants-duo-1.png';
+import decantsQuartet1 from '@/assets/decants-quartet-1.png';
+import decantsQuartet2 from '@/assets/decants-quartet-2.png';
+import decantsQuartet3 from '@/assets/decants-quartet-3.png';
+
+interface FeaturedImage {
   id: number;
-  name: string;
-  price: string;
+  title: string;
   image: string;
 }
 
-const featuredPerfumes: FeaturedPerfume[] = [
+const featuredImages: FeaturedImage[] = [
   {
     id: 1,
-    name: "Elegância Dourada",
-    price: "89,90",
-    image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=400&h=500&fit=crop&crop=center"
+    title: "Coleção Completa Paris & Co",
+    image: decantsCollection
   },
   {
     id: 2,
-    name: "Noite de Prata",
-    price: "79,90",
-    image: "https://images.unsplash.com/photo-1563170351-be82bc888aa4?w=400&h=500&fit=crop&crop=center"
+    title: "Vulcan Feu & Turathi Blue",
+    image: decantsDuo1
   },
   {
     id: 3,
-    name: "Brisa Matinal",
-    price: "69,90",
-    image: "https://images.unsplash.com/photo-1588405748880-12d1d2a59d75?w=400&h=500&fit=crop&crop=center"
+    title: "Yara Collection",
+    image: decantsQuartet1
   },
   {
     id: 4,
-    name: "Mistério Oriental",
-    price: "99,90",
-    image: "https://images.unsplash.com/photo-1551554781-c46200ea959d?w=400&h=500&fit=crop&crop=center"
+    title: "Fragrâncias Premium",
+    image: decantsQuartet2
+  },
+  {
+    id: 5,
+    title: "Liquid Brunette & Badee Al Oud",
+    image: decantsQuartet3
   }
 ];
 
 const FeaturedSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % featuredPerfumes.length);
+    setCurrentIndex((prev) => (prev + 1) % featuredImages.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + featuredPerfumes.length) % featuredPerfumes.length);
+    setCurrentIndex((prev) => (prev - 1 + featuredImages.length) % featuredImages.length);
   };
 
   return (
@@ -54,10 +62,10 @@ const FeaturedSlider = () => {
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-12">
           <h2 className="font-display font-bold text-3xl md:text-4xl mb-4 text-gold">
-            Perfumes em Destaque
+            Nossos Decants Premium
           </h2>
           <p className="text-xl text-white/80 max-w-2xl mx-auto font-sans font-medium">
-            Descubra nossa seleção curada dos perfumes mais desejados
+            Fragrâncias de luxo em frascos exclusivos Paris & Co
           </p>
         </div>
 
@@ -82,61 +90,49 @@ const FeaturedSlider = () => {
             </Button>
           </div>
 
-          {/* Cards Container */}
-          <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-300 ease-out md:justify-center"
-              style={{ 
-                transform: `translateX(-${currentIndex * 280}px)`,
-              }}
+          {/* Image Display */}
+          <div className="overflow-hidden rounded-3xl">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="relative aspect-[16/9] md:aspect-[21/9] bg-gradient-to-br from-navy/60 to-navy/40 backdrop-blur-lg border border-gold/20 rounded-3xl overflow-hidden shadow-2xl cursor-pointer"
+              onClick={() => navigate('/catalogo')}
             >
-              {featuredPerfumes.map((perfume, index) => (
-                <motion.div
-                  key={perfume.id}
-                  className="flex-shrink-0 w-60 mx-2 bg-navy/50 backdrop-blur-lg border border-gold/10 rounded-2xl overflow-hidden shadow-lg"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  {/* Image */}
-                  <div className="aspect-[4/5] overflow-hidden bg-navy/40">
-                    <img
-                      src={perfume.image}
-                      alt={perfume.name}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="p-4">
-                    <h3 className="font-display font-semibold text-lg text-white/90 mb-2">
-                      {perfume.name}
-                    </h3>
-                    <p className="text-gold font-sans font-medium mb-3">
-                      A partir de R$ {perfume.price}
-                    </p>
-                    <Button 
-                      size="sm" 
-                      className="w-full btn-secondary"
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ver
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+              <img
+                src={featuredImages[currentIndex].image}
+                alt={featuredImages[currentIndex].title}
+                className="w-full h-full object-contain p-8 md:p-12 transition-transform duration-300 hover:scale-105"
+              />
+              
+              {/* Overlay gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent pointer-events-none" />
+              
+              {/* Title overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                <h3 className="font-display font-bold text-2xl md:text-3xl text-white mb-2">
+                  {featuredImages[currentIndex].title}
+                </h3>
+                <p className="text-gold font-sans font-medium">
+                  Clique para explorar o catálogo completo
+                </p>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Mobile scroll indicators */}
-          <div className="flex justify-center mt-6 space-x-2 md:hidden">
-            {featuredPerfumes.map((_, index) => (
+          {/* Scroll indicators */}
+          <div className="flex justify-center mt-8 space-x-3">
+            {featuredImages.map((_, index) => (
               <button
                 key={index}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-gold' : 'bg-white/30'
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentIndex 
+                    ? 'bg-gold w-8' 
+                    : 'bg-white/30 w-2 hover:bg-white/50'
                 }`}
                 onClick={() => setCurrentIndex(index)}
+                aria-label={`Ir para imagem ${index + 1}`}
               />
             ))}
           </div>
