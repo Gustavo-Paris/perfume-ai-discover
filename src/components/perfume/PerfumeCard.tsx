@@ -32,6 +32,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [isAdding, setIsAdding] = useState(false);
   
   // Buscar promoção ativa para este perfume
   const { data: activePromotion } = useActivePromotionByPerfume(perfume.id);
@@ -47,6 +48,10 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const handleQuickAdd = async (e: React.MouseEvent, size: number) => {
     e.stopPropagation();
     
+    // ✅ Prevenir múltiplos cliques
+    if (isAdding) return;
+    
+    setIsAdding(true);
     try {
       await addToCart({
         perfume_id: perfume.id,
@@ -56,6 +61,9 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     } catch (error: any) {
       // Erro já tratado no CartContext com toast
       console.error('Erro ao adicionar ao carrinho:', error);
+    } finally {
+      // Resetar após um pequeno delay para evitar cliques múltiplos rapidíssimos
+      setTimeout(() => setIsAdding(false), 500);
     }
   };
 
@@ -256,8 +264,9 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
                 <TooltipTrigger asChild>
                   <Button 
                     onClick={(e) => handleQuickAdd(e, size)}
-                     className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
-                     size="sm"
+                    className="flex-1 bg-navy hover:bg-navy/90 text-white font-display font-medium text-xs h-8 px-1 min-w-0 flex items-center justify-center gap-0.5"
+                    size="sm"
+                    disabled={isAdding}
                    >
                      <Plus className="h-3 w-3" />
                      <span>{size}ml{perfume.product_type === 'miniature' ? '' : ''}</span>
