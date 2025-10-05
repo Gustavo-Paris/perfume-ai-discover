@@ -8,10 +8,47 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContextOptimized';
 import { useActivePromotionByPerfume } from '@/hooks/usePromotions';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 const Carrinho = () => {
   const { items, updateQuantity, removeItem, getTotal, clearCart, loading } = useCart();
+  const { user } = useAuth();
   const [subtotal, setSubtotal] = useState(0);
+  const [stockLimits, setStockLimits] = useState<Record<string, number>>({});
+
+  // Verificar limites de estoque para todos os itens
+  useEffect(() => {
+    const checkAllStocks = async () => {
+      if (!items.length) return;
+
+      const limits: Record<string, number> = {};
+      
+      for (const item of items) {
+        try {
+          const { data: availability } = await supabase.rpc('check_perfume_availability', {
+            perfume_uuid: item.perfume.id,
+            size_ml_param: item.size,
+            quantity_requested: 1,
+            user_uuid: user?.id || null
+          });
+
+          if (availability && availability[0]) {
+            const key = `${item.perfume.id}-${item.size}`;
+            // O limite total é a quantidade atual no carrinho + o que ainda pode adicionar
+            limits[key] = availability[0].max_quantity;
+          }
+        } catch (error) {
+          console.error('Erro ao verificar estoque:', error);
+        }
+      }
+      
+      setStockLimits(limits);
+    };
+
+    checkAllStocks();
+  }, [items, user?.id]);
 
   useEffect(() => {
     const calculateSubtotal = async () => {
@@ -30,6 +67,23 @@ const Carrinho = () => {
 
   const formatPrice = (price: number) => 
     `R$ ${price.toFixed(2).replace('.', ',')}`;
+
+  const handleIncrement = async (perfumeId: string, size: number, currentQuantity: number) => {
+    const key = `${perfumeId}-${size}`;
+    const maxAvailable = stockLimits[key];
+
+    if (maxAvailable !== undefined && currentQuantity >= maxAvailable) {
+      toast({
+        title: "Limite de estoque atingido",
+        description: `Você já tem o máximo disponível no carrinho (${maxAvailable} unidades de ${size}ml).`,
+        variant: "destructive",
+        duration: 4000
+      });
+      return;
+    }
+
+    await updateQuantity(perfumeId, size, currentQuantity + 1);
+  };
 
 // Componente para mostrar preço com possível promoção
 const ItemPriceDisplay = ({ perfume, size, quantity }: { perfume: any; size: number; quantity: number }) => {
@@ -196,8 +250,8 @@ const ItemPriceDisplay = ({ perfume, size, quantity }: { perfume: any; size: num
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => updateQuantity(item.perfume.id, item.size, item.quantity + 1)}
-                            disabled={loading}
+                            onClick={() => handleIncrement(item.perfume.id, item.size, item.quantity)}
+                            disabled={loading || (stockLimits[`${item.perfume.id}-${item.size}`] !== undefined && item.quantity >= stockLimits[`${item.perfume.id}-${item.size}`])}
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
