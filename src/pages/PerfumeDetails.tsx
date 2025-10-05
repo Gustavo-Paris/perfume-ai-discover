@@ -34,6 +34,7 @@ const PerfumeDetails = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState<number>(999);
   const [stockMl, setStockMl] = useState<number>(0);
+  const [stockCheckTrigger, setStockCheckTrigger] = useState(0); // Para forçar reavaliação de estoque
   
   // Review hooks
   const { data: canReview } = useCanReview(id || '');
@@ -63,6 +64,18 @@ const PerfumeDetails = () => {
       if (!id || !selectedSize) return;
 
       try {
+        // Buscar quantidade atual no carrinho para este perfume e tamanho
+        const { data: cartData } = await supabase
+          .from('cart_items')
+          .select('quantity')
+          .eq('user_id', user?.id)
+          .eq('perfume_id', id)
+          .eq('size_ml', selectedSize)
+          .maybeSingle();
+        
+        const quantityInCart = cartData?.quantity || 0;
+
+        // Verificar disponibilidade excluindo a própria reserva do usuário
         const { data: availability, error } = await supabase.rpc('check_perfume_availability', {
           perfume_uuid: id,
           size_ml_param: selectedSize,
@@ -78,12 +91,17 @@ const PerfumeDetails = () => {
         }
 
         const stockInfo = availability[0];
-        setMaxQuantity(stockInfo.max_quantity || 0);
+        // O máximo que pode ter no carrinho é o estoque disponível
+        const maxPossible = stockInfo.max_quantity;
+        // O máximo que pode ADICIONAR agora é: limite total - quantidade já no carrinho
+        const maxCanAdd = Math.max(0, maxPossible - quantityInCart);
+        
+        setMaxQuantity(maxCanAdd);
         setStockMl(stockInfo.stock_ml || 0);
 
-        // Ajustar quantidade se exceder o máximo disponível
-        if (quantity > stockInfo.max_quantity) {
-          setQuantity(Math.max(1, stockInfo.max_quantity));
+        // Ajustar quantidade se exceder o máximo que pode adicionar
+        if (quantity > maxCanAdd) {
+          setQuantity(Math.max(1, maxCanAdd));
         }
       } catch (error) {
         console.error('Erro ao verificar estoque:', error);
@@ -93,7 +111,7 @@ const PerfumeDetails = () => {
     };
 
     checkStock();
-  }, [id, selectedSize]);
+  }, [id, selectedSize, user?.id, stockCheckTrigger]);
 
   if (isLoading || pricesLoading) {
     return (
@@ -123,7 +141,7 @@ const PerfumeDetails = () => {
     
     // ✅ Validação final de estoque antes de adicionar
     if (quantity > maxQuantity) {
-      toast.error(`Estoque insuficiente! Disponível: ${maxQuantity} unidade(s) de ${selectedSize}ml`);
+      toast.error(`Estoque insuficiente! Você pode adicionar no máximo ${maxQuantity} unidade(s) de ${selectedSize}ml`);
       return;
     }
     
@@ -133,6 +151,8 @@ const PerfumeDetails = () => {
         size_ml: selectedSize,
         quantity
       });
+      // Recarregar estoque após adicionar ao carrinho
+      setStockCheckTrigger(prev => prev + 1);
       // Toast de sucesso já é tratado no CartContext
     } catch (error: any) {
       // Erro já tratado no CartContext com toast

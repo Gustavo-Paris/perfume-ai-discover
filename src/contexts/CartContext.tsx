@@ -235,9 +235,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const stockInfo = availability[0];
       if (!stockInfo.available) {
-        throw new Error(
-          `Estoque insuficiente. Disponível: ${stockInfo.max_quantity} unidade(s) de ${item.size_ml}ml (${stockInfo.stock_ml}ml em estoque)`
-        );
+        const canAddMore = Math.max(0, stockInfo.max_quantity - currentQuantity);
+        
+        if (canAddMore === 0) {
+          toast({
+            title: "Estoque insuficiente",
+            description: `Você já tem o máximo disponível no carrinho (${currentQuantity} de ${item.size_ml}ml). Estoque total: ${stockInfo.max_quantity} unidades.`,
+            variant: "destructive",
+            duration: 4000
+          });
+        } else {
+          toast({
+            title: "Não é possível adicionar essa quantidade",
+            description: `Você tem ${currentQuantity} no carrinho e só pode adicionar mais ${canAddMore} (limite: ${stockInfo.max_quantity} unidades de ${item.size_ml}ml).`,
+            variant: "destructive",
+            duration: 5000
+          });
+        }
+        setLoading(false);
+        return;
       }
       
       // Get perfume data for analytics
