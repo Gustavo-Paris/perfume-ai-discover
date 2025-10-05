@@ -48,10 +48,20 @@ const PerfumeDetails = () => {
   
   // Set initial size based on available sizes using useEffect
   useEffect(() => {
-    if (availableSizes.length > 0 && selectedSize === null) {
-      setSelectedSize(availableSizes[0]);
+    // Usar availableSizes primeiro, depois fallback para tamanhos hardcoded
+    const sizesWithPrices = availableSizes.length > 0 
+      ? availableSizes 
+      : [2, 5, 10].filter(size => {
+          const price = (size === 2 ? databasePerfume?.price_2ml : 
+                        size === 5 ? databasePerfume?.price_5ml : 
+                        databasePerfume?.price_10ml) || 0;
+          return price > 0;
+        });
+    
+    if (sizesWithPrices.length > 0 && selectedSize === null) {
+      setSelectedSize(sizesWithPrices[0]);
     }
-  }, [availableSizes, selectedSize]);
+  }, [availableSizes, selectedSize, databasePerfume]);
 
   if (isLoading || pricesLoading) {
     return (
@@ -92,7 +102,40 @@ const PerfumeDetails = () => {
     }
   };
 
-  const currentPrice = selectedSize ? prices[selectedSize] || 0 : 0;
+  // Fallback para preços hardcoded se não houver na tabela perfume_prices
+  const getPrice = (size: number): number => {
+    // Primeiro tenta pegar da tabela perfume_prices
+    if (prices[size] && prices[size] > 0) {
+      return prices[size];
+    }
+    
+    // Fallback para preços hardcoded
+    switch (size) {
+      case 2:
+        return databasePerfume.price_2ml || 0;
+      case 5:
+        return databasePerfume.price_5ml || 0;
+      case 10:
+        return databasePerfume.price_10ml || 0;
+      default:
+        return 0;
+    }
+  };
+  
+  // Pegar tamanhos disponíveis (ou do perfume ou dos tamanhos padrão)
+  const getAvailableSizesWithPrices = (): number[] => {
+    // Se tem tamanhos disponíveis configurados, usa eles
+    if (databasePerfume.available_sizes && databasePerfume.available_sizes.length > 0) {
+      return databasePerfume.available_sizes;
+    }
+    
+    // Senão, verifica quais tamanhos têm preço
+    const sizesToCheck = [2, 5, 10];
+    return sizesToCheck.filter(size => getPrice(size) > 0);
+  };
+  
+  const finalAvailableSizes = getAvailableSizesWithPrices();
+  const currentPrice = selectedSize ? getPrice(selectedSize) : 0;
   
   // Aplicar preço promocional se existir promoção ativa
   const getPromotionalPrice = (size: number, originalPrice: number) => {
@@ -106,7 +149,7 @@ const PerfumeDetails = () => {
   };
   
   const finalPrice = selectedSize 
-    ? getPromotionalPrice(selectedSize, prices[selectedSize] || 0)
+    ? getPromotionalPrice(selectedSize, currentPrice)
     : 0;
 
   const handleDebugRecalculate = async () => {
@@ -338,10 +381,8 @@ const PerfumeDetails = () => {
                 )}
               </div>
                <div className="flex gap-3 flex-wrap">
-                {availableSizes
-                  .filter(size => prices[size] && prices[size] > 0)
-                  .map(size => {
-                    const originalPrice = prices[size] || 0;
+                {finalAvailableSizes.map(size => {
+                    const originalPrice = getPrice(size);
                     const promotionalPrice = getPromotionalPrice(size, originalPrice);
                     const hasDiscount = activePromotion && promotionalPrice < originalPrice;
                     
@@ -377,7 +418,7 @@ const PerfumeDetails = () => {
                       </Button>
                     );
                   })}
-                {availableSizes.filter(size => prices[size] && prices[size] > 0).length === 0 && (
+                {finalAvailableSizes.length === 0 && (
                   <div className="text-muted-foreground text-sm py-2">
                     Nenhum tamanho disponível para este perfume
                   </div>
