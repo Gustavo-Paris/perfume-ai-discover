@@ -66,7 +66,8 @@ const PerfumeDetails = () => {
         const { data: availability, error } = await supabase.rpc('check_perfume_availability', {
           perfume_uuid: id,
           size_ml_param: selectedSize,
-          quantity_requested: 1
+          quantity_requested: 1,
+          user_uuid: user?.id || null
         });
 
         if (error || !availability || availability.length === 0) {

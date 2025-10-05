@@ -3297,11 +3297,18 @@ export type Database = {
         Returns: number
       }
       check_perfume_availability: {
-        Args: {
-          perfume_uuid: string
-          quantity_requested?: number
-          size_ml_param: number
-        }
+        Args:
+          | {
+              perfume_uuid: string
+              quantity_requested?: number
+              size_ml_param: number
+            }
+          | {
+              perfume_uuid: string
+              quantity_requested?: number
+              size_ml_param: number
+              user_uuid?: string
+            }
         Returns: {
           available: boolean
           max_quantity: number

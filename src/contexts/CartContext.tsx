@@ -221,11 +221,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const targetQuantity = currentQuantity + item.quantity;
       
-      // Verificar disponibilidade usando função do banco
+      // Verificar disponibilidade usando função do banco (excluindo a reserva do próprio usuário)
       const { data: availability, error: availError } = await supabase.rpc('check_perfume_availability', {
         perfume_uuid: item.perfume_id,
         size_ml_param: item.size_ml,
-        quantity_requested: targetQuantity
+        quantity_requested: targetQuantity,
+        user_uuid: user?.id || null
       });
       
       if (availError || !availability || availability.length === 0) {
@@ -432,11 +433,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setLoading(true);
     try {
-      // ✅ VALIDAR ESTOQUE DISPONÍVEL antes de atualizar quantidade
+      // ✅ VALIDAR ESTOQUE DISPONÍVEL antes de atualizar quantidade (excluindo reserva do próprio usuário)
       const { data: availability, error: availError } = await supabase.rpc('check_perfume_availability', {
         perfume_uuid: perfumeId,
         size_ml_param: sizeML,
-        quantity_requested: quantity
+        quantity_requested: quantity,
+        user_uuid: user?.id || null
       });
       
       if (availError || !availability || availability.length === 0) {
