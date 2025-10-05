@@ -46,22 +46,13 @@ const PerfumeDetails = () => {
   // Buscar promoção ativa para este perfume
   const { data: activePromotion } = useActivePromotionByPerfume(id || '');
   
-  // Set initial size based on available sizes using useEffect
+  // Set initial size based on available sizes from database
   useEffect(() => {
-    // Usar availableSizes primeiro, depois fallback para tamanhos hardcoded
-    const sizesWithPrices = availableSizes.length > 0 
-      ? availableSizes 
-      : [2, 5, 10].filter(size => {
-          const price = (size === 2 ? databasePerfume?.price_2ml : 
-                        size === 5 ? databasePerfume?.price_5ml : 
-                        databasePerfume?.price_10ml) || 0;
-          return price > 0;
-        });
-    
-    if (sizesWithPrices.length > 0 && selectedSize === null) {
-      setSelectedSize(sizesWithPrices[0]);
+    const configuredSizes = databasePerfume?.available_sizes || [];
+    if (configuredSizes.length > 0 && selectedSize === null) {
+      setSelectedSize(configuredSizes[0]);
     }
-  }, [availableSizes, selectedSize, databasePerfume]);
+  }, [databasePerfume?.available_sizes, selectedSize]);
 
   if (isLoading || pricesLoading) {
     return (
@@ -122,19 +113,8 @@ const PerfumeDetails = () => {
     }
   };
   
-  // Pegar tamanhos disponíveis (ou do perfume ou dos tamanhos padrão)
-  const getAvailableSizesWithPrices = (): number[] => {
-    // Se tem tamanhos disponíveis configurados, usa eles
-    if (databasePerfume.available_sizes && databasePerfume.available_sizes.length > 0) {
-      return databasePerfume.available_sizes;
-    }
-    
-    // Senão, verifica quais tamanhos têm preço
-    const sizesToCheck = [2, 5, 10];
-    return sizesToCheck.filter(size => getPrice(size) > 0);
-  };
-  
-  const finalAvailableSizes = getAvailableSizesWithPrices();
+  // Usar tamanhos configurados no banco de dados
+  const finalAvailableSizes = databasePerfume?.available_sizes || [];
   const currentPrice = selectedSize ? getPrice(selectedSize) : 0;
   
   // Aplicar preço promocional se existir promoção ativa
