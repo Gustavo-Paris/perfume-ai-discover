@@ -97,6 +97,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           heart_notes,
           base_notes,
           category,
+          available_sizes,
           created_at
         )
       `)
@@ -123,14 +124,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pricesMap[dp.size_ml] = dp.price;
       });
       
+      // ✅ VALIDAR se o tamanho do item está em available_sizes
+      const availableSizes = (item.perfumes.available_sizes as number[]) || [];
+      if (availableSizes.length > 0 && !availableSizes.includes(item.size_ml)) {
+        console.warn(`Item no carrinho com tamanho indisponível: ${item.perfumes.name} - ${item.size_ml}ml`);
+        // Remover item do carrinho se tamanho não está disponível
+        await supabase
+          .from('cart_items')
+          .delete()
+          .eq('id', item.id);
+        continue; // Pular este item
+      }
+      
       formattedItems.push({
         perfume: {
           ...item.perfumes,
           gender: item.perfumes.gender as 'masculino' | 'feminino' | 'unissex',
-          size_ml: [],
+          size_ml: availableSizes.length > 0 ? availableSizes : [],
           stock_full: 0,
           stock_5ml: 0,
           stock_10ml: 0,
+          available_sizes: availableSizes,
           // Adicionar preços dinâmicos ao objeto perfume
           dynamicPrices: pricesMap
         } as Perfume & { dynamicPrices: Record<number, number> },
@@ -246,6 +260,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addToCartDB = async (perfumeId: string, sizeML: number, quantity: number) => {
+    // ✅ VALIDAR available_sizes antes de adicionar
+    const { data: perfume } = await supabase
+      .from('perfumes')
+      .select('available_sizes')
+      .eq('id', perfumeId)
+      .single();
+    
+    const availableSizes = (perfume?.available_sizes as number[]) || [];
+    if (availableSizes.length > 0 && !availableSizes.includes(sizeML)) {
+      throw new Error(`Tamanho ${sizeML}ml não disponível para este perfume`);
+    }
+    
     // Check if item already exists
     const { data: existingItem } = await supabase
       .from('cart_items')
@@ -297,12 +323,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Get perfume data
     const { data: perfume, error } = await supabase
       .from('perfumes')
-      .select('id, name, brand, family, gender, description, image_url, price_2ml, price_5ml, price_10ml, price_full, top_notes, heart_notes, base_notes, category, created_at')
+      .select('id, name, brand, family, gender, description, image_url, price_2ml, price_5ml, price_10ml, price_full, top_notes, heart_notes, base_notes, category, available_sizes, created_at')
       .eq('id', perfumeId)
       .single();
 
     if (error || !perfume) {
       throw new Error('Perfume not found');
+    }
+    
+    // ✅ VALIDAR se o tamanho está disponível
+    const availableSizes = (perfume.available_sizes as number[]) || [];
+    if (availableSizes.length > 0 && !availableSizes.includes(sizeML)) {
+      throw new Error(`Tamanho ${sizeML}ml não disponível para este perfume`);
     }
 
     // Buscar preços dinâmicos
@@ -325,10 +357,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const formattedPerfume: Perfume & { dynamicPrices: Record<number, number> } = {
       ...perfume,
       gender: perfume.gender as 'masculino' | 'feminino' | 'unissex',
-      size_ml: [],
+      size_ml: availableSizes.length > 0 ? availableSizes : [],
       stock_full: 0,
       stock_5ml: 0,
       stock_10ml: 0,
+      available_sizes: availableSizes,
       dynamicPrices: pricesMap
     };
 

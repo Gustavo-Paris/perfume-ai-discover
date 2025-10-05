@@ -70,28 +70,36 @@ const CatalogoOptimized = () => {
   const transformedPerfumes = useMemo(() => {
     const baseResults = searchResults.length > 0 ? searchResults : infinitePerfumes;
     
-    return baseResults.map((dbPerfume: DatabasePerfume) => ({
-      id: dbPerfume.id,
-      name: dbPerfume.name,
-      brand: dbPerfume.brand,
-      family: dbPerfume.family,
-      gender: dbPerfume.gender,
-      size_ml: availableSizes || [5, 10],
-      price_full: Number(dbPerfume.price_full),
-      price_2ml: dbPerfume.price_2ml ? Number(dbPerfume.price_2ml) : null,
-      price_5ml: dbPerfume.price_5ml ? Number(dbPerfume.price_5ml) : 0,
-      price_10ml: dbPerfume.price_10ml ? Number(dbPerfume.price_10ml) : 0,
-      stock_full: 10,
-      stock_5ml: 50,
-      stock_10ml: 30,
-      description: dbPerfume.description || '',
-      image_url: dbPerfume.image_url || '',
-      top_notes: dbPerfume.top_notes,
-      heart_notes: dbPerfume.heart_notes,
-      base_notes: dbPerfume.base_notes,
-      created_at: dbPerfume.created_at,
-      availableSizes: availableSizes || [5, 10]
-    }));
+    return baseResults.map((dbPerfume: DatabasePerfume) => {
+      // ✅ USAR available_sizes específico de cada perfume, com fallback
+      const perfumeAvailableSizes = dbPerfume.available_sizes && dbPerfume.available_sizes.length > 0 
+        ? dbPerfume.available_sizes 
+        : (availableSizes || [5, 10]);
+      
+      return {
+        id: dbPerfume.id,
+        name: dbPerfume.name,
+        brand: dbPerfume.brand,
+        family: dbPerfume.family,
+        gender: dbPerfume.gender,
+        size_ml: perfumeAvailableSizes,
+        price_full: Number(dbPerfume.price_full),
+        price_2ml: dbPerfume.price_2ml ? Number(dbPerfume.price_2ml) : null,
+        price_5ml: dbPerfume.price_5ml ? Number(dbPerfume.price_5ml) : 0,
+        price_10ml: dbPerfume.price_10ml ? Number(dbPerfume.price_10ml) : 0,
+        stock_full: 10,
+        stock_5ml: 50,
+        stock_10ml: 30,
+        description: dbPerfume.description || '',
+        image_url: dbPerfume.image_url || '',
+        top_notes: dbPerfume.top_notes,
+        heart_notes: dbPerfume.heart_notes,
+        base_notes: dbPerfume.base_notes,
+        created_at: dbPerfume.created_at,
+        available_sizes: perfumeAvailableSizes,
+        availableSizes: perfumeAvailableSizes
+      };
+    });
   }, [searchResults, infinitePerfumes, availableSizes]);
 
   // Get unique values for filters from transformed data

@@ -38,6 +38,11 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   
   // Buscar preços dinâmicos do perfume
   const { prices: dynamicPrices, availableSizes } = usePerfumePricesObject(perfume.id);
+  
+  // ✅ PRIORIZAR available_sizes do perfume (configurado no admin)
+  const configuredSizes = perfume.available_sizes && perfume.available_sizes.length > 0 
+    ? perfume.available_sizes 
+    : availableSizes;
 
   const handleQuickAdd = (e: React.MouseEvent, size: number) => {
     e.stopPropagation();
@@ -117,8 +122,8 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     };
   };
 
-  // Só mostrar tamanhos que têm preços válidos calculados (UX profissional)
-  const sizesWithPrices = availableSizes
+  // ✅ USAR tamanhos configurados, filtrando apenas os que têm preços válidos
+  const sizesWithPrices = configuredSizes
     .map(size => ({
       size,
       priceInfo: getDisplayPrice(size)
