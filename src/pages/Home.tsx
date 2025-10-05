@@ -100,17 +100,20 @@ const Home = () => {
               <div className="relative max-w-lg mx-auto px-4 sm:px-0">
                 <div className="relative z-10">
                   {/* Carousel Container */}
-                  <div className="relative rounded-2xl shadow-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
-                    <motion.img 
-                      key={currentImageIndex}
-                      src={heroImages[currentImageIndex]}
-                      alt="Decants Paris & Co Premium" 
-                      className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] object-cover"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5 }}
-                      loading="eager" 
-                    />
+                  <div className="relative rounded-2xl shadow-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]">
+                    {/* Render all images with absolute positioning for smooth crossfade */}
+                    {heroImages.map((image, index) => (
+                      <motion.img 
+                        key={index}
+                        src={image}
+                        alt="Decants Paris & Co Premium" 
+                        className="absolute inset-0 w-full h-full object-cover"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: index === currentImageIndex ? 1 : 0 }}
+                        transition={{ duration: 0.7, ease: "easeInOut" }}
+                        loading={index === 0 ? "eager" : "lazy"}
+                      />
+                    ))}
                     
                     {/* Navigation Buttons */}
                     <button

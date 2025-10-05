@@ -92,33 +92,40 @@ const FeaturedSlider = () => {
 
           {/* Image Display */}
           <div className="overflow-hidden rounded-3xl">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="relative aspect-[16/9] md:aspect-[21/9] bg-gradient-to-br from-navy/60 to-navy/40 backdrop-blur-lg border border-gold/20 rounded-3xl overflow-hidden shadow-2xl cursor-pointer"
+            <div className="relative aspect-[16/9] md:aspect-[21/9] bg-gradient-to-br from-navy/60 to-navy/40 backdrop-blur-lg border border-gold/20 rounded-3xl overflow-hidden shadow-2xl cursor-pointer"
               onClick={() => navigate('/catalogo')}
             >
-              <img
-                src={featuredImages[currentIndex].image}
-                alt={featuredImages[currentIndex].title}
-                className="w-full h-full object-contain p-8 md:p-12 transition-transform duration-300 hover:scale-105"
-              />
-              
-              {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent pointer-events-none" />
-              
-              {/* Title overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                <h3 className="font-display font-bold text-2xl md:text-3xl text-white mb-2">
-                  {featuredImages[currentIndex].title}
-                </h3>
-                <p className="text-gold font-sans font-medium">
-                  Clique para explorar o catálogo completo
-                </p>
-              </div>
-            </motion.div>
+              {/* Render all images with absolute positioning for smooth crossfade */}
+              {featuredImages.map((item, index) => (
+                <motion.div
+                  key={index}
+                  className="absolute inset-0"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: index === currentIndex ? 1 : 0 }}
+                  transition={{ duration: 0.7, ease: "easeInOut" }}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-contain p-8 md:p-12"
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
+                  
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent pointer-events-none" />
+                  
+                  {/* Title overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                    <h3 className="font-display font-bold text-2xl md:text-3xl text-white mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-gold font-sans font-medium">
+                      Clique para explorar o catálogo completo
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
 
           {/* Scroll indicators */}
