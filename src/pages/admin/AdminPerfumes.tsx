@@ -71,6 +71,7 @@ const AdminPerfumes = () => {
     price_5ml: null as number | null, 
     price_10ml: null as number | null,
     price_full: 0,
+    available_sizes: [] as number[],
   });
 
 
@@ -91,6 +92,7 @@ const AdminPerfumes = () => {
       price_5ml: null,
       price_10ml: null,
       price_full: 0,
+      available_sizes: [],
     });
     setNewMargin(200);
   };
@@ -150,6 +152,7 @@ const AdminPerfumes = () => {
       price_5ml: (perfume as any).price_5ml || null,
       price_10ml: (perfume as any).price_10ml || null,
       price_full: (perfume as any).price_full || 0,
+      available_sizes: (perfume as any).available_sizes || [],
     });
     
     // CORRIGIR: Usar função correta para converter multiplicador para porcentagem
@@ -529,6 +532,49 @@ const AdminPerfumes = () => {
                 value={formatNotes(formData.base_notes)}
                 onChange={(e) => setFormData({ ...formData, base_notes: parseNotes(e.target.value) })}
               />
+            </div>
+
+            {/* Volumes Disponíveis */}
+            <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+              <div>
+                <Label>Volumes Disponíveis</Label>
+                <p className="text-sm text-muted-foreground">
+                  Selecione quais volumes estarão disponíveis para venda deste perfume
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {availableSizes.map(size => (
+                  <div key={size} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`edit-size-${size}`}
+                      checked={formData.available_sizes.includes(size)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            available_sizes: [...formData.available_sizes, size].sort((a, b) => a - b)
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            available_sizes: formData.available_sizes.filter(s => s !== size)
+                          });
+                        }
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor={`edit-size-${size}`} className="text-sm font-medium cursor-pointer">
+                      {size}ml
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              {formData.available_sizes.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Selecionados: {formData.available_sizes.join(', ')}ml
+                </p>
+              )}
             </div>
 
             <PricesDisplayModal perfumeId={editingPerfume?.id} />
