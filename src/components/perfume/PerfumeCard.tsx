@@ -62,8 +62,8 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
       // Erro já tratado no CartContext com toast
       console.error('Erro ao adicionar ao carrinho:', error);
     } finally {
-      // Resetar após um pequeno delay para evitar cliques múltiplos rapidíssimos
-      setTimeout(() => setIsAdding(false), 500);
+      // Resetar após delay para garantir que o estado do carrinho foi atualizado
+      setTimeout(() => setIsAdding(false), 1000);
     }
   };
 

@@ -197,11 +197,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addToCart = async (item: { perfume_id: string; size_ml: number; quantity: number }) => {
     setLoading(true);
     try {
-      // ✅ VALIDAR ESTOQUE DISPONÍVEL antes de adicionar
-      const currentItemInCart = items.find(
-        i => i.perfume.id === item.perfume_id && i.size === item.size_ml
-      );
-      const currentQuantity = currentItemInCart?.quantity || 0;
+      // ✅ VALIDAR ESTOQUE DISPONÍVEL - buscar quantidade REAL no banco para evitar race conditions
+      let currentQuantity = 0;
+      
+      if (user) {
+        // Usuário logado: buscar do banco
+        const { data: cartItems } = await supabase
+          .from('cart_items')
+          .select('quantity')
+          .eq('user_id', user.id)
+          .eq('perfume_id', item.perfume_id)
+          .eq('size_ml', item.size_ml)
+          .maybeSingle();
+        
+        currentQuantity = cartItems?.quantity || 0;
+      } else {
+        // Usuário guest: buscar do estado local
+        const currentItemInCart = items.find(
+          i => i.perfume.id === item.perfume_id && i.size === item.size_ml
+        );
+        currentQuantity = currentItemInCart?.quantity || 0;
+      }
+      
       const targetQuantity = currentQuantity + item.quantity;
       
       // Verificar disponibilidade usando função do banco
