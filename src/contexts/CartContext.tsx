@@ -197,6 +197,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addToCart = async (item: { perfume_id: string; size_ml: number; quantity: number }) => {
     setLoading(true);
     try {
+      // ✅ VALIDAR ESTOQUE DISPONÍVEL antes de adicionar
+      const currentItemInCart = items.find(
+        i => i.perfume.id === item.perfume_id && i.size === item.size_ml
+      );
+      const currentQuantity = currentItemInCart?.quantity || 0;
+      const targetQuantity = currentQuantity + item.quantity;
+      
+      // Verificar disponibilidade usando função do banco
+      const { data: availability, error: availError } = await supabase.rpc('check_perfume_availability', {
+        perfume_uuid: item.perfume_id,
+        size_ml_param: item.size_ml,
+        quantity_requested: targetQuantity
+      });
+      
+      if (availError || !availability || availability.length === 0) {
+        throw new Error('Erro ao verificar disponibilidade do produto');
+      }
+      
+      const stockInfo = availability[0];
+      if (!stockInfo.available) {
+        throw new Error(
+          `Estoque insuficiente. Disponível: ${stockInfo.max_quantity} unidade(s) de ${item.size_ml}ml (${stockInfo.stock_ml}ml em estoque)`
+        );
+      }
+      
       // Get perfume data for analytics
       const { data: perfume } = await supabase
         .from('perfumes')
@@ -242,16 +267,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
       
-      // Toast só aparece após sucesso
+      // ✅ Toast só aparece após SUCESSO completo
       toast({
         title: "Item adicionado ao carrinho!",
-        description: "O produto foi adicionado com sucesso.",
+        description: `${perfume?.name || 'Produto'} ${item.size_ml}ml foi adicionado ao seu carrinho.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding to cart:', error);
+      
+      // Mostrar mensagem de erro específica
+      const errorMessage = error.message || "Não foi possível adicionar o item ao carrinho.";
       toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o item ao carrinho.",
+        title: "Erro ao adicionar ao carrinho",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -387,6 +415,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setLoading(true);
     try {
+      // ✅ VALIDAR ESTOQUE DISPONÍVEL antes de atualizar quantidade
+      const { data: availability, error: availError } = await supabase.rpc('check_perfume_availability', {
+        perfume_uuid: perfumeId,
+        size_ml_param: sizeML,
+        quantity_requested: quantity
+      });
+      
+      if (availError || !availability || availability.length === 0) {
+        throw new Error('Erro ao verificar disponibilidade do produto');
+      }
+      
+      const stockInfo = availability[0];
+      if (!stockInfo.available) {
+        toast({
+          title: "Estoque insuficiente",
+          description: `Disponível apenas ${stockInfo.max_quantity} unidade(s) de ${sizeML}ml (${stockInfo.stock_ml}ml em estoque total)`,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return; // Não atualizar se não houver estoque
+      }
+      
       if (user) {
         // Reserve stock to the new target quantity first
         const { error: reserveError } = await supabase.rpc('upsert_reservation', {

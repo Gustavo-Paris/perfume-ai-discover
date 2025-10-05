@@ -44,18 +44,19 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
     ? perfume.available_sizes 
     : availableSizes;
 
-  const handleQuickAdd = (e: React.MouseEvent, size: number) => {
+  const handleQuickAdd = async (e: React.MouseEvent, size: number) => {
     e.stopPropagation();
-    addToCart({
-      perfume_id: perfume.id,
-      size_ml: size,
-      quantity: 1
-    });
     
-    toast({
-      title: "Adicionado ao carrinho!",
-      description: `${perfume.name} ${size}ml foi adicionado ao seu carrinho.`,
-    });
+    try {
+      await addToCart({
+        perfume_id: perfume.id,
+        size_ml: size,
+        quantity: 1
+      });
+    } catch (error: any) {
+      // Erro já tratado no CartContext com toast
+      console.error('Erro ao adicionar ao carrinho:', error);
+    }
   };
 
   // Prefetch perfume details on hover for better UX
