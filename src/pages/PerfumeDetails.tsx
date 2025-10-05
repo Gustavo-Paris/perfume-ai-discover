@@ -19,6 +19,7 @@ import ReviewForm from '@/components/reviews/ReviewForm';
 import SEO from '@/components/SEO';
 import ProductSchema from '@/components/ProductSchema';
 import { useActivePromotionByPerfume, calculatePromotionalPrice } from '@/hooks/usePromotions';
+import { supabase } from '@/integrations/supabase/client';
 import PromotionBadge from '@/components/promotions/PromotionBadge';
 
 const PerfumeDetails = () => {
@@ -31,6 +32,8 @@ const PerfumeDetails = () => {
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
+  const [maxQuantity, setMaxQuantity] = useState<number>(999);
+  const [stockMl, setStockMl] = useState<number>(0);
   
   // Review hooks
   const { data: canReview } = useCanReview(id || '');
@@ -53,6 +56,43 @@ const PerfumeDetails = () => {
       setSelectedSize(configuredSizes[0]);
     }
   }, [databasePerfume?.available_sizes, selectedSize]);
+
+  // ✅ Verificar estoque disponível quando selecionar tamanho
+  useEffect(() => {
+    const checkStock = async () => {
+      if (!id || !selectedSize) return;
+
+      try {
+        const { data: availability, error } = await supabase.rpc('check_perfume_availability', {
+          perfume_uuid: id,
+          size_ml_param: selectedSize,
+          quantity_requested: 1
+        });
+
+        if (error || !availability || availability.length === 0) {
+          console.error('Erro ao verificar estoque:', error);
+          setMaxQuantity(0);
+          setStockMl(0);
+          return;
+        }
+
+        const stockInfo = availability[0];
+        setMaxQuantity(stockInfo.max_quantity || 0);
+        setStockMl(stockInfo.stock_ml || 0);
+
+        // Ajustar quantidade se exceder o máximo disponível
+        if (quantity > stockInfo.max_quantity) {
+          setQuantity(Math.max(1, stockInfo.max_quantity));
+        }
+      } catch (error) {
+        console.error('Erro ao verificar estoque:', error);
+        setMaxQuantity(0);
+        setStockMl(0);
+      }
+    };
+
+    checkStock();
+  }, [id, selectedSize]);
 
   if (isLoading || pricesLoading) {
     return (
@@ -80,17 +120,35 @@ const PerfumeDetails = () => {
   const handleAddToCart = async () => {
     if (!selectedSize || !databasePerfume.id) return;
     
+    // ✅ Validação final de estoque antes de adicionar
+    if (quantity > maxQuantity) {
+      toast.error(`Estoque insuficiente! Disponível: ${maxQuantity} unidade(s) de ${selectedSize}ml`);
+      return;
+    }
+    
     try {
       await addToCart({
         perfume_id: databasePerfume.id,
         size_ml: selectedSize,
         quantity
       });
-
-      toast.success(`Adicionado ao carrinho! ${databasePerfume.name} ${selectedSize}ml (${quantity}x) foi adicionado ao seu carrinho.`);
-    } catch (error) {
+      // Toast de sucesso já é tratado no CartContext
+    } catch (error: any) {
+      // Erro já tratado no CartContext com toast
       console.error('Error adding to cart:', error);
     }
+  };
+
+  const handleIncreaseQuantity = () => {
+    if (quantity >= maxQuantity) {
+      toast.error(`Estoque máximo atingido! Disponível: ${maxQuantity} unidade(s) de ${selectedSize}ml (${stockMl}ml em estoque)`);
+      return;
+    }
+    setQuantity(prev => prev + 1);
+  };
+
+  const handleDecreaseQuantity = () => {
+    setQuantity(prev => Math.max(1, prev - 1));
   };
 
   // Fallback para preços hardcoded se não houver na tabela perfume_prices
@@ -408,25 +466,38 @@ const PerfumeDetails = () => {
 
             {/* Quantity */}
             <div>
-              <h3 className="font-semibold mb-3">Quantidade</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold">Quantidade</h3>
+                {maxQuantity > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    Disponível: {maxQuantity} un. ({stockMl}ml)
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={handleDecreaseQuantity}
                   disabled={quantity <= 1}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-12 text-center">{quantity}</span>
+                <span className="w-12 text-center font-semibold">{quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={handleIncreaseQuantity}
+                  disabled={quantity >= maxQuantity || maxQuantity === 0}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
+              {maxQuantity === 0 && (
+                <p className="text-sm text-destructive mt-2">
+                  Sem estoque disponível para este tamanho
+                </p>
+              )}
             </div>
 
             {/* Price and Actions */}
@@ -446,10 +517,10 @@ const PerfumeDetails = () => {
                 <Button 
                   onClick={handleAddToCart}
                   className="flex-1 gradient-gold text-white hover:opacity-90"
-                  disabled={!selectedSize || cartLoading}
+                  disabled={!selectedSize || cartLoading || maxQuantity === 0 || quantity > maxQuantity}
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
-                  {cartLoading ? 'Adicionando...' : 'Adicionar ao Carrinho'}
+                  {cartLoading ? 'Adicionando...' : maxQuantity === 0 ? 'Sem Estoque' : 'Adicionar ao Carrinho'}
                 </Button>
                 <Button
                   variant="outline"
