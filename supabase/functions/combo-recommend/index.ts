@@ -10,11 +10,11 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Função para fazer retry com backoff exponencial
+// Retry with exponential backoff
 async function retryWithBackoff(fn: () => Promise<any>, maxRetries = 3, baseDelay = 1000) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -34,19 +34,19 @@ async function retryWithBackoff(fn: () => Promise<any>, maxRetries = 3, baseDela
   }
 }
 
-// Função para chamar OpenAI com retry
-async function callOpenAI(messages: any[], temperature = 0.3, maxTokens = 300) {
+// Call Lovable AI with retry
+async function callLovableAI(messages: any[], temperature = 0.3, maxTokens = 1000) {
   return await retryWithBackoff(async () => {
-    console.log('Calling OpenAI API for combo analysis...');
+    console.log('Calling Lovable AI Gateway (Gemini) for combo analysis...');
     
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         temperature,
         messages,
         max_tokens: maxTokens
@@ -55,16 +55,16 @@ async function callOpenAI(messages: any[], temperature = 0.3, maxTokens = 300) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`OpenAI API error ${response.status}:`, errorText);
+      console.error(`Lovable AI error ${response.status}:`, errorText);
       
       if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again in a moment.');
-      } else if (response.status === 401) {
-        throw new Error('Invalid API key. Please check your OpenAI configuration.');
+        throw new Error('RATE_LIMIT: Muitas solicitações.');
+      } else if (response.status === 402) {
+        throw new Error('PAYMENT_REQUIRED: Créditos insuficientes.');
       } else if (response.status >= 500) {
-        throw new Error('OpenAI service temporarily unavailable. Please try again.');
+        throw new Error('Serviço de IA temporariamente indisponível.');
       } else {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        throw new Error(`Erro na API: ${response.status}`);
       }
     }
 
@@ -87,17 +87,17 @@ serve(async (req) => {
       historyLength: conversationHistory?.length || 0 
     });
 
-    if (!openaiApiKey) {
-      console.error('OpenAI API key not configured');
+    if (!lovableApiKey) {
+      console.error('Lovable API key not configured');
       return new Response(JSON.stringify({ 
-        error: 'Serviço de IA não configurado. Entre em contato com o suporte.' 
+        error: 'Serviço de IA não configurado.' 
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Get perfume details for recommendations
+    // Get perfume details
     let perfumeDetails = [];
     if (recommendedPerfumes && recommendedPerfumes.length > 0) {
       const { data: perfumes, error: perfumesError } = await supabase
@@ -113,7 +113,7 @@ serve(async (req) => {
       perfumeDetails = perfumes || [];
     }
 
-    // Get additional perfumes from same families/preferences if needed
+    // Get additional perfumes from same families if needed
     if (perfumeDetails.length < 5) {
       const families = [...new Set(perfumeDetails.map(p => p.family))];
       const genders = [...new Set(perfumeDetails.map(p => p.gender))];
@@ -132,56 +132,69 @@ serve(async (req) => {
 
     console.log(`Working with ${perfumeDetails.length} perfumes for combo analysis`);
 
-    // Generate smart combos based on conversation and budget
-    const comboPrompt = `Você é um especialista em perfumaria que cria combos otimizados para USAR QUASE TODO O ORÇAMENTO.
+    // Enhanced prompt with complementarity and dynamic sizing
+    const comboPrompt = `Você é um especialista em perfumaria criando combos inteligentes e complementares.
 
 ORÇAMENTO: R$ ${budget}
 CONVERSA: ${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
 
-PERFUMES DISPONÍVEIS (${perfumeDetails.length} opções):
+PERFUMES DISPONÍVEIS:
 ${JSON.stringify(perfumeDetails.slice(0, 15).map(p => ({
       id: p.id,
       name: p.name,
       brand: p.brand,
       family: p.family,
       gender: p.gender,
+      intensity: p.intensity,
+      top_notes: p.top_notes,
+      heart_notes: p.heart_notes,
+      base_notes: p.base_notes,
       price_5ml: p.price_5ml,
       price_10ml: p.price_10ml,
       price_full: p.price_full
     })), null, 2)}
 
+REGRAS DE COMPLEMENTARIDADE:
+1. VARIEDADE OLFATIVA: Famílias diferentes em cada combo (amadeirado + cítrico + floral)
+2. INTENSIDADES BALANCEADAS: Combine suave (dia) + intenso (noite)
+3. VERSATILIDADE: Perfumes para diferentes ocasiões (trabalho + festa + casual)
+4. PROGRESSÃO: Leve → Médio → Intenso dentro do combo
+
+LÓGICA DINÂMICA DE TAMANHOS POR ORÇAMENTO:
+- < R$ 150: 3x 5ml (variedade máxima)
+- R$ 150-250: 2x 10ml + 1x 5ml (equilíbrio)
+- R$ 250-400: 1x 10ml + 2x 10ml (generoso)
+- > R$ 400: 1x 100ml + 2x 10ml (frasco completo + testes)
+
 REGRAS CRÍTICAS:
 1. Use 85-98% do orçamento (máximo R$ 20 de sobra!)
-2. Se orçamento ≥ R$ 400: inclua pelo menos 1 frasco de 100ml
-3. Se orçamento R$ 200-399: foque em 10ml + alguns 5ml
-4. Se orçamento < R$ 200: use principalmente 5ml e 10ml
-5. Cada combo deve ter 2-4 perfumes complementares
-6. Varie intensidades e ocasiões de uso
-7. Crie 2-3 combos diferentes
+2. Cada combo deve ter 2-4 perfumes COMPLEMENTARES
+3. Crie 2-3 combos diferentes
+4. Priorize QUALIDADE da combinação sobre quantidade
 
-IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
+FORMATO DE RESPOSTA (JSON válido):
 {
   "combos": [
     {
       "id": "combo1",
-      "name": "Nome do Combo",
-      "description": "Descrição do combo e por que faz sentido",
+      "name": "Nome Descritivo",
+      "description": "Por que estes perfumes se complementam",
       "items": [
-        {"perfume_id": "id", "size_ml": 10, "price": 45.90},
-        {"perfume_id": "id2", "size_ml": 5, "price": 29.90}
+        {"perfume_id": "id", "size_ml": 10, "price": 45.90}
       ],
-      "total": 75.80,
-      "occasions": ["dia", "trabalho"]
+      "total": 145.80,
+      "occasions": ["dia", "trabalho", "noite"],
+      "complementarity_score": 0.92
     }
   ]
 }`;
 
-    console.log('Calling OpenAI for combo generation...');
+    console.log('Calling Lovable AI for combo generation...');
     
-    const comboData = await callOpenAI([
+    const comboData = await callLovableAI([
       { 
         role: 'system', 
-        content: 'Você é um especialista em curadoria de perfumes que cria combos inteligentes baseados em conversas e orçamento. Responda APENAS com JSON válido, sem texto adicional.' 
+        content: 'Você é um especialista em curadoria de perfumes. Responda APENAS com JSON válido.' 
       },
       { role: 'user', content: comboPrompt }
     ], 0.3, 1000);
@@ -189,10 +202,9 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
     let comboContent = comboData.choices[0].message.content.trim();
     console.log('Raw AI response:', comboContent.substring(0, 200) + '...');
     
-    // Clean up response - remove markdown code blocks if present
+    // Clean up response
     comboContent = comboContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
     
-    // Find JSON content between first { and last }
     const firstBrace = comboContent.indexOf('{');
     const lastBrace = comboContent.lastIndexOf('}');
     
@@ -200,14 +212,14 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
       comboContent = comboContent.substring(firstBrace, lastBrace + 1);
     }
     
-    console.log('Cleaned content for parsing:', comboContent.substring(0, 200) + '...');
+    console.log('Cleaned content:', comboContent.substring(0, 200) + '...');
     
     try {
       const parsedCombos = JSON.parse(comboContent);
       console.log('Successfully parsed combos JSON');
       
       if (parsedCombos.combos && Array.isArray(parsedCombos.combos)) {
-        // Validate and enrich combos with full perfume data
+        // Enrich combos with full perfume data
         const enrichedCombos = parsedCombos.combos.map((combo: any) => {
           const enrichedItems = combo.items?.map((item: any) => {
             const perfume = perfumeDetails.find(p => p.id === item.perfume_id);
@@ -224,7 +236,7 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
                 image_url: perfume.image_url
               }
             };
-          }).filter(Boolean) || []; // Remove items without perfume data
+          }).filter(Boolean) || [];
           
           return {
             ...combo,
@@ -243,34 +255,46 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } else {
-        console.error('Invalid combo structure - missing combos array');
+        console.error('Invalid combo structure');
         throw new Error('Invalid combo structure from AI');
       }
     } catch (parseError) {
       console.error('Failed to parse combo JSON:', parseError);
-      console.error('Content that failed to parse:', comboContent);
       
-      // Fallback: create simple combos based on available perfumes
-      console.log('Creating fallback combos...');
+      // Enhanced fallback with complementarity logic
+      console.log('Creating enhanced fallback combos...');
       const fallbackCombos = [];
       
-      // Get perfumes within budget for 5ml
-      const affordablePerfumes = perfumeDetails
-        .filter(p => p.price_5ml && p.price_5ml > 0 && p.price_5ml <= budget * 0.6)
-        .sort((a, b) => (a.price_5ml || 0) - (b.price_5ml || 0))
-        .slice(0, 6);
+      // Separate by intensity for better combinations
+      const lightPerfumes = perfumeDetails.filter(p => 
+        p.intensity?.toLowerCase().includes('suave') || p.intensity?.toLowerCase().includes('leve')
+      );
+      const intensePerfumes = perfumeDetails.filter(p => 
+        p.intensity?.toLowerCase().includes('intenso') || p.intensity?.toLowerCase().includes('forte')
+      );
+      const mediumPerfumes = perfumeDetails.filter(p => 
+        !lightPerfumes.includes(p) && !intensePerfumes.includes(p)
+      );
 
-      if (affordablePerfumes.length >= 2) {
+      // Create combo with variety
+      if (perfumeDetails.length >= 2) {
         let currentTotal = 0;
         const items = [];
         
-        for (const perfume of affordablePerfumes.slice(0, 3)) {
-          const price = perfume.price_5ml || 0;
+        // Try to include different intensities
+        const selections = [
+          lightPerfumes[0] || perfumeDetails[0],
+          intensePerfumes[0] || perfumeDetails[1],
+          mediumPerfumes[0] || perfumeDetails[2]
+        ].filter(Boolean).slice(0, 3);
+        
+        for (const perfume of selections) {
+          const price = perfume.price_5ml || perfume.price_10ml || 0;
           if (currentTotal + price <= budget * 0.9) {
             items.push({
               perfume_id: perfume.id,
-              size_ml: 5,
-              price: price,
+              size_ml: perfume.price_10ml && perfume.price_10ml <= budget * 0.4 ? 10 : 5,
+              price: perfume.price_10ml && perfume.price_10ml <= budget * 0.4 ? perfume.price_10ml : perfume.price_5ml,
               perfume: {
                 id: perfume.id,
                 name: perfume.name,
@@ -285,11 +309,12 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
         if (items.length >= 2) {
           fallbackCombos.push({
             id: 'fallback1',
-            name: 'Combo Descoberta',
-            description: 'Seleção diversificada para explorar novos aromas baseada em suas preferências',
+            name: 'Combo Versátil',
+            description: 'Seleção complementar com diferentes intensidades para todas as ocasiões',
             items: items,
             total: currentTotal,
-            occasions: ['versatil']
+            occasions: ['versatil', 'dia', 'noite'],
+            complementarity_score: 0.75
           });
         }
       }
@@ -305,20 +330,20 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional:
     }
 
   } catch (error) {
-    console.error('Error in combo-recommend function:', error);
+    console.error('Error in combo-recommend:', error);
     
-    let errorMessage = 'Erro interno do servidor. Tente novamente.';
+    let errorMessage = 'Erro interno. Tente novamente.';
     let statusCode = 500;
     const errorString = error instanceof Error ? error.message : String(error);
     
-    if (errorString.includes('Rate limit exceeded')) {
-      errorMessage = 'Muitas solicitações. Aguarde um momento e tente novamente.';
+    if (errorString.includes('RATE_LIMIT')) {
+      errorMessage = 'Muitas solicitações. Aguarde um momento.';
       statusCode = 429;
-    } else if (errorString.includes('Invalid API key')) {
-      errorMessage = 'Configuração da IA inválida. Entre em contato com o suporte.';
-      statusCode = 401;
-    } else if (errorString.includes('service temporarily unavailable')) {
-      errorMessage = 'Serviço de IA temporariamente indisponível. Tente novamente em alguns minutos.';
+    } else if (errorString.includes('PAYMENT_REQUIRED')) {
+      errorMessage = 'Créditos insuficientes. Adicione em Settings → Workspace → Usage.';
+      statusCode = 402;
+    } else if (errorString.includes('indisponível')) {
+      errorMessage = 'Serviço de IA temporariamente indisponível.';
       statusCode = 503;
     }
     
