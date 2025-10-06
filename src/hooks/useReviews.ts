@@ -124,9 +124,9 @@ export const useUserReview = (perfumeId: string) => {
         .select('*')
         .eq('perfume_id', perfumeId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       
       return data as Review | null;
     },
