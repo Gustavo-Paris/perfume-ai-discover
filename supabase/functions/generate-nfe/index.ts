@@ -117,6 +117,30 @@ serve(async (req) => {
     // Criar dados da NF-e
     const addressData = order.address_data;
     
+    // VALIDAÇÃO OBRIGATÓRIA: CPF/CNPJ do destinatário
+    if (!addressData.cpf_cnpj || addressData.cpf_cnpj.trim() === '') {
+      console.error('CPF/CNPJ não informado no endereço');
+      throw new Error('CPF ou CNPJ do destinatário é obrigatório para emissão de Nota Fiscal. Por favor, atualize o endereço de entrega com o CPF ou CNPJ.');
+    }
+
+    // Validar CPF/CNPJ usando função do banco
+    const { data: isValid, error: validationError } = await supabase
+      .rpc('validate_cpf_cnpj', { doc: addressData.cpf_cnpj });
+
+    if (validationError) {
+      console.error('Erro ao validar CPF/CNPJ:', validationError);
+      throw new Error('Erro ao validar CPF/CNPJ: ' + validationError.message);
+    }
+
+    if (!isValid) {
+      console.error('CPF/CNPJ inválido:', addressData.cpf_cnpj);
+      const cpfCnpjClean = addressData.cpf_cnpj.replace(/\D/g, '');
+      const docType = cpfCnpjClean.length === 11 ? 'CPF' : cpfCnpjClean.length === 14 ? 'CNPJ' : 'documento';
+      throw new Error(`${docType} inválido: ${addressData.cpf_cnpj}. Por favor, verifique o número e tente novamente.`);
+    }
+
+    console.log('CPF/CNPJ validado com sucesso:', addressData.cpf_cnpj);
+    
     const nfeData = {
       cnpj_emitente: company.cnpj.replace(/\D/g, ''),
       natureza_operacao: "Venda de mercadoria",
@@ -127,7 +151,7 @@ serve(async (req) => {
       presenca_comprador: 9, // Operação não presencial pela Internet
       modalidade_frete: 0, // Contratação do frete por conta do remetente (CIF)
       destino: {
-        cpf_cnpj: addressData.cpf_cnpj?.replace(/\D/g, '') || '',
+        cpf_cnpj: addressData.cpf_cnpj.replace(/\D/g, ''),
         nome: addressData.name || '',
         endereco: addressData.street || '',
         numero: addressData.number || 'S/N',

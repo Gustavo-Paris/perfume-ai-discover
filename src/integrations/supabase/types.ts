@@ -77,6 +77,7 @@ export type Database = {
           city: string
           complement: string | null
           country: string
+          cpf_cnpj: string | null
           created_at: string | null
           district: string
           id: string
@@ -92,6 +93,7 @@ export type Database = {
           city: string
           complement?: string | null
           country?: string
+          cpf_cnpj?: string | null
           created_at?: string | null
           district: string
           id?: string
@@ -107,6 +109,7 @@ export type Database = {
           city?: string
           complement?: string | null
           country?: string
+          cpf_cnpj?: string | null
           created_at?: string | null
           district?: string
           id?: string
@@ -4107,6 +4110,10 @@ export type Database = {
         }
         Returns: string
       }
+      validate_cnpj: {
+        Args: { cnpj: string }
+        Returns: boolean
+      }
       validate_coupon: {
         Args: { coupon_code: string; order_total: number; user_uuid: string }
         Returns: Json
@@ -4119,6 +4126,14 @@ export type Database = {
           user_uuid: string
         }
         Returns: Json
+      }
+      validate_cpf: {
+        Args: { cpf: string }
+        Returns: boolean
+      }
+      validate_cpf_cnpj: {
+        Args: { doc: string }
+        Returns: boolean
       }
     }
     Enums: {
