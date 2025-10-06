@@ -125,9 +125,10 @@ serve(async (req) => {
       content: msg.content
     })) || [];
 
-    // Check if this is a continuation after recommendations
+    // Check if this is a continuation after recommendations or a request to generate
     const isContinuation = message.includes('viu as 3 recomendações') || 
                           message.includes('Continue a conversa');
+    const isGenerateRequest = message.toLowerCase().includes('gerar recomendações');
 
     // Enhanced system prompt with few-shot examples
     const systemPrompt = `Você é um especialista mundial em perfumaria com décadas de experiência, conhecido por fazer curadorias perfeitas que impressionam os clientes.
@@ -245,8 +246,9 @@ REGRAS FINAIS:
 
     console.log('AI Response received successfully');
 
-    // Check if AI wants to make recommendations
-    const shouldRecommend = aiResponse.toLowerCase().includes('vou agora fazer uma análise completa') || 
+    // Check if AI wants to make recommendations OR if it's a direct generate request
+    const shouldRecommend = isGenerateRequest ||
+                           aiResponse.toLowerCase().includes('vou agora fazer uma análise completa') || 
                            aiResponse.toLowerCase().includes('deixe-me analisar') || 
                            aiResponse.toLowerCase().includes('analisar suas preferências') ||
                            aiResponse.toLowerCase().includes('buscar as melhores opções') ||
@@ -255,6 +257,119 @@ REGRAS FINAIS:
     let recommendations: string[] = [];
     let isComplete = false;
 
+    // If it's a direct generate request, skip the transition and go straight to recommendations
+    if (isGenerateRequest && availablePerfumes.length > 0) {
+      console.log('Direct generate request detected, generating recommendations immediately');
+      
+      try {
+        const userProfile = conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
+        
+        const recommendationMessages = [
+          { role: 'system', content: `Você é um mestre perfumista analisando preferências para recomendar perfumes.
+
+INSTRUÇÕES CRÍTICAS:
+- Retorne APENAS um array JSON de IDs
+- Formato: ["id1", "id2", "id3"]
+- Recomende entre 3 a 5 perfumes que fazem SENTIDO PERFEITO para o perfil
+- RESPEITE absolutamente gênero e preferências mencionadas
+- NUNCA ignore famílias que o usuário disse não gostar` },
+          { role: 'user', content: `PERFIL COMPLETO:
+${userProfile}
+
+CATÁLOGO:
+${JSON.stringify(availablePerfumes.map(p => ({ 
+  id: p.id, 
+  name: p.name, 
+  brand: p.brand, 
+  family: p.family, 
+  gender: p.gender,
+  top_notes: p.top_notes,
+  heart_notes: p.heart_notes,
+  base_notes: p.base_notes,
+  intensity: p.intensity
+})), null, 2)}
+
+Retorne APENAS array JSON de 3-5 IDs dos perfumes mais precisos.` }
+        ];
+
+        const recData = await callLovableAI(recommendationMessages, 0.3, 200);
+        const recResponse = recData.choices[0].message.content.trim();
+        
+        console.log('Recommendation response:', recResponse);
+        
+        let parsedRecs = [];
+        try {
+          parsedRecs = JSON.parse(recResponse);
+        } catch (parseError) {
+          console.log('Failed to parse JSON, trying to extract IDs');
+          const matches = recResponse.match(/"([^"]+)"/g);
+          if (matches) {
+            parsedRecs = matches.map((match: string) => match.replace(/"/g, ''));
+          }
+        }
+
+        if (parsedRecs.length > 0) {
+          recommendations = parsedRecs.slice(0, 5);
+          isComplete = true;
+          console.log('Successfully generated recommendations:', recommendations);
+        } else {
+          console.log('No recommendations parsed, using fallback');
+        }
+      } catch (error) {
+        console.error('Error in direct recommendation generation:', error);
+      }
+      
+      // If we couldn't generate recommendations, use fallback
+      if (recommendations.length === 0) {
+        console.log('Using fallback recommendations');
+        const userProfile = conversationHistory.join('\n').toLowerCase();
+        
+        const mentionsFeminine = userProfile.includes('feminino') || userProfile.includes('mulher');
+        const mentionsMasculine = userProfile.includes('masculino') || userProfile.includes('homem');
+        const wantsWoody = userProfile.includes('amadeirado') || userProfile.includes('madeira');
+        const wantsOriental = userProfile.includes('oriental') || userProfile.includes('âmbar');
+        
+        let filteredPerfumes = availablePerfumes;
+        
+        if (mentionsMasculine && !mentionsFeminine) {
+          filteredPerfumes = availablePerfumes.filter(p => 
+            p.gender === 'masculino' || p.gender === 'unissex'
+          );
+        } else if (mentionsFeminine && !mentionsMasculine) {
+          filteredPerfumes = availablePerfumes.filter(p => 
+            p.gender === 'feminino' || p.gender === 'unissex'
+          );
+        }
+        
+        if (wantsWoody) {
+          filteredPerfumes = filteredPerfumes.filter(p => 
+            p.family?.toLowerCase().includes('amadeirado') || 
+            p.description?.toLowerCase().includes('madeira')
+          );
+        }
+        
+        if (wantsOriental) {
+          filteredPerfumes = filteredPerfumes.filter(p => 
+            p.family?.toLowerCase().includes('oriental')
+          );
+        }
+        
+        if (filteredPerfumes.length >= 3) {
+          recommendations = filteredPerfumes.slice(0, 5).map(p => p.id);
+          isComplete = true;
+          console.log('Fallback recommendations:', recommendations);
+        }
+      }
+      
+      return new Response(JSON.stringify({
+        content: "Análise concluída! Aqui estão suas recomendações personalizadas.",
+        isComplete: true,
+        recommendations
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     if (shouldRecommend && availablePerfumes.length > 0) {
       const hasTextRecommendations = aiResponse.includes('**') || 
                                     aiResponse.includes('1.') || 
