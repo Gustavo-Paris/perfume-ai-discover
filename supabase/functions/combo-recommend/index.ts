@@ -166,14 +166,32 @@ LÓGICA DINÂMICA DE TAMANHOS POR ORÇAMENTO:
 - R$ 250-400: 1x 10ml + 2x 10ml (generoso)
 - > R$ 400: 1x 100ml + 2x 10ml (frasco completo + testes)
 
-REGRAS CRÍTICAS (OBRIGATÓRIO):
-1. NUNCA repita o mesmo perfume_id dentro de um combo
-2. Cada perfume deve aparecer apenas UMA VEZ por combo
-3. Use 85-98% do orçamento (máximo R$ 20 de sobra!)
-4. Cada combo deve ter 2-4 perfumes COMPLEMENTARES e DIFERENTES
-5. Crie 2-3 combos diferentes
-6. Priorize QUALIDADE da combinação sobre quantidade
-7. SEMPRE verifique que todos perfume_ids são únicos antes de retornar
+REGRAS OBRIGATÓRIAS (VIOLAÇÃO = COMBO REJEITADO):
+1. ⚠️ MÍNIMO 85% do orçamento DEVE ser usado (com R$ ${budget}, MÍNIMO R$ ${Math.round(budget * 0.85)})
+2. ⚠️ MÍNIMO 3 perfumes por combo (ideal: 4 perfumes)
+3. ⚠️ NUNCA repita perfume_id dentro de um combo
+4. ⚠️ Use tamanhos variados para otimizar: misture 5ml, 10ml e ocasionalmente 100ml
+5. ⚠️ Cada perfume aparece UMA ÚNICA VEZ por combo
+
+EXEMPLO DE COMBO VÁLIDO para R$ 300:
+{
+  "items": [
+    {"perfume_id": "uuid-1", "size_ml": 10, "price": 58.84},
+    {"perfume_id": "uuid-2", "size_ml": 10, "price": 56.22},
+    {"perfume_id": "uuid-3", "size_ml": 10, "price": 62.50},
+    {"perfume_id": "uuid-4", "size_ml": 10, "price": 73.30}
+  ],
+  "total": 250.86  // ✅ 83.6% do orçamento - VÁLIDO!
+}
+
+❌ COMBO INVÁLIDO (será rejeitado automaticamente):
+{
+  "items": [
+    {"perfume_id": "uuid-1", "size_ml": 10, "price": 58.84},
+    {"perfume_id": "uuid-2", "size_ml": 10, "price": 56.22}
+  ],
+  "total": 115.06  // ❌ Apenas 38% do orçamento - INACEITÁVEL!
+}
 
 FORMATO DE RESPOSTA (JSON válido):
 {
@@ -200,7 +218,7 @@ FORMATO DE RESPOSTA (JSON válido):
         content: 'Você é um especialista em curadoria de perfumes. Responda APENAS com JSON válido.' 
       },
       { role: 'user', content: comboPrompt }
-    ], 0.3, 1000);
+    ], 0.1, 1500);
     
     let comboContent = comboData.choices[0].message.content.trim();
     console.log('Raw AI response:', comboContent.substring(0, 200) + '...');
@@ -255,13 +273,20 @@ FORMATO DE RESPOSTA (JSON válido):
           // Recalculate total to ensure accuracy
           const recalculatedTotal = enrichedItems.reduce((sum: number, item: any) => sum + (item.price || 0), 0);
           
-          // Log validation details
-          console.log('✅ Combo validation:', {
-            name: combo.name,
+          // Log detailed validation
+          const budgetPercent = ((recalculatedTotal / budget) * 100).toFixed(1);
+          const avgPricePerItem = enrichedItems.length > 0 ? (recalculatedTotal / enrichedItems.length).toFixed(2) : 0;
+          
+          console.log('📊 Combo Analysis:', {
+            comboName: combo.name,
             itemCount: enrichedItems.length,
             uniqueIds: new Set(enrichedItems.map((i: any) => i.perfume_id)).size,
-            originalTotal: combo.total,
-            recalculatedTotal: recalculatedTotal,
+            total: recalculatedTotal.toFixed(2),
+            budget: budget,
+            percentUsed: budgetPercent + '%',
+            avgPricePerItem: avgPricePerItem,
+            passesMinimumItems: enrichedItems.length >= 3,
+            passesMinimumBudget: recalculatedTotal >= budget * 0.70,
             withinBudget: recalculatedTotal <= budget
           });
           
@@ -276,10 +301,23 @@ FORMATO DE RESPOSTA (JSON válido):
             total: recalculatedTotal
           };
         }).filter((combo: any) => {
-          // Only keep valid combos
-          const isValid = combo.items.length >= 2 && combo.total <= budget;
+          // Rigorous validation: minimum 3 items and 70% budget usage
+          const isValid = 
+            combo.items.length >= 3 &&
+            combo.total <= budget &&
+            combo.total >= budget * 0.70;
+          
           if (!isValid) {
-            console.warn(`⚠️ Combo "${combo.name}" removido: items=${combo.items.length}, total=${combo.total}, budget=${budget}`);
+            const percentUsed = ((combo.total / budget) * 100).toFixed(1);
+            console.warn(`⚠️ Combo "${combo.name}" REJEITADO:`, {
+              items: combo.items.length,
+              total: combo.total.toFixed(2),
+              budget: budget,
+              percentUsed: percentUsed + '%',
+              reason: combo.items.length < 3 
+                ? 'Poucos itens (mínimo: 3)' 
+                : `Orçamento mal aproveitado (usado: ${percentUsed}%, mínimo: 70%)`
+            });
           }
           return isValid;
         });
@@ -315,32 +353,61 @@ FORMATO DE RESPOSTA (JSON válido):
         !lightPerfumes.includes(p) && !intensePerfumes.includes(p)
       );
 
-      // Create combo with variety
-      if (perfumeDetails.length >= 2) {
+      // Create combo with variety - minimum 3 perfumes
+      if (perfumeDetails.length >= 3) {
+        const targetItemCount = Math.floor(budget / 60); // ~R$60 per perfume
+        const minItems = Math.max(3, Math.min(targetItemCount, perfumeDetails.length));
+        
         let currentTotal = 0;
         const items = [];
-        const usedIds = new Set<string>(); // Garantir IDs únicos no fallback
+        const usedIds = new Set<string>();
         
         // Try to include different intensities
         const selections = [
           lightPerfumes[0] || perfumeDetails[0],
           intensePerfumes[0] || perfumeDetails[1],
-          mediumPerfumes[0] || perfumeDetails[2]
-        ].filter(Boolean).slice(0, 3);
+          mediumPerfumes[0] || perfumeDetails[2],
+          perfumeDetails[3],
+          perfumeDetails[4]
+        ].filter(Boolean);
         
         for (const perfume of selections) {
-          // Skip if already used
-          if (usedIds.has(perfume.id)) {
-            console.log(`Skipping duplicate in fallback: ${perfume.id}`);
-            continue;
+          if (items.length >= minItems) break;
+          if (usedIds.has(perfume.id)) continue;
+          
+          // Intelligent size selection based on remaining budget
+          const remaining = budget - currentTotal;
+          let selectedSize = 10;
+          let selectedPrice = perfume.price_10ml || 0;
+          
+          // Use 100ml if budget allows and it's first/second item
+          if (remaining > 150 && items.length < 2 && perfume.price_full && perfume.price_full < remaining * 0.4) {
+            selectedSize = 100;
+            selectedPrice = perfume.price_full;
+          } 
+          // Use 5ml for small budgets or final items
+          else if (remaining < 70 && perfume.price_5ml) {
+            selectedSize = 5;
+            selectedPrice = perfume.price_5ml;
+          }
+          // Default to 10ml
+          else if (perfume.price_10ml) {
+            selectedSize = 10;
+            selectedPrice = perfume.price_10ml;
+          }
+          // Fallback to 5ml if 10ml not available
+          else if (perfume.price_5ml) {
+            selectedSize = 5;
+            selectedPrice = perfume.price_5ml;
+          } else {
+            continue; // Skip if no valid price
           }
           
-          const price = perfume.price_5ml || perfume.price_10ml || 0;
-          if (currentTotal + price <= budget * 0.9) {
+          if (currentTotal + selectedPrice <= budget) {
             items.push({
               perfume_id: perfume.id,
-              size_ml: perfume.price_10ml && perfume.price_10ml <= budget * 0.4 ? 10 : 5,
-              price: perfume.price_10ml && perfume.price_10ml <= budget * 0.4 ? perfume.price_10ml : perfume.price_5ml,
+              size_ml: selectedSize,
+              price: selectedPrice,
               perfume: {
                 id: perfume.id,
                 name: perfume.name,
@@ -349,11 +416,19 @@ FORMATO DE RESPOSTA (JSON válido):
               }
             });
             usedIds.add(perfume.id);
-            currentTotal += price;
+            currentTotal += selectedPrice;
           }
         }
+        
+        console.log('📦 Fallback combo created:', {
+          itemCount: items.length,
+          total: currentTotal.toFixed(2),
+          budget: budget,
+          percentUsed: ((currentTotal / budget) * 100).toFixed(1) + '%',
+          sizes: items.map(i => i.size_ml + 'ml').join(', ')
+        });
 
-        if (items.length >= 2) {
+        if (items.length >= 3) {
           fallbackCombos.push({
             id: 'fallback1',
             name: 'Combo Versátil',
