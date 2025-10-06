@@ -20,6 +20,9 @@ interface GenerateNFERequest {
 }
 
 serve(async (req) => {
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] ========== NFE GENERATION START ==========`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -27,11 +30,21 @@ serve(async (req) => {
 
   try {
     const { order_id }: GenerateNFERequest = await req.json();
-    console.log('Generating NFE for order:', order_id);
+    console.log(`[${requestId}] Request body:`, { order_id });
+    
+    if (!order_id) {
+      console.error(`[${requestId}] Missing order_id in request`);
+      throw new Error('order_id is required');
+    }
+
+    console.log(`[${requestId}] Generating NFE for order:`, order_id);
+    console.log(`[${requestId}] Environment:`, isProduction ? 'PRODUCTION' : 'HOMOLOGATION');
+    console.log(`[${requestId}] Focus NFe URL:`, focusNfeUrl);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Buscar dados do pedido
+    console.log(`[${requestId}] Fetching order details`);
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -48,15 +61,20 @@ serve(async (req) => {
       .maybeSingle();
 
     if (orderError) {
-      console.error('Erro ao buscar pedido:', orderError);
+      console.error(`[${requestId}] Order fetch error:`, orderError);
       throw new Error('Erro ao buscar dados do pedido: ' + orderError.message);
     }
     
     if (!order) {
+      console.error(`[${requestId}] Order not found`);
       throw new Error('Pedido não encontrado');
     }
 
-    console.log('Pedido encontrado:', order.order_number);
+    console.log(`[${requestId}] Order found:`, { 
+      order_number: order.order_number,
+      items_count: order.order_items?.length || 0,
+      total_amount: order.total_amount
+    });
 
     // Verificar se já existe NF-e para este pedido
     const { data: existingNote } = await supabase
@@ -299,10 +317,19 @@ serve(async (req) => {
         console.error('Erro ao enviar email:', emailError);
       }
     }
+    console.log(`[${requestId}] ✅ NFe generated successfully:`, {
+      nfe_number: noteNumber,
+      nfe_key: focusResult.chave_nfe || 'pending',
+      status: focusResult.status,
+      has_pdf: !!focusResult.caminho_danfe,
+      has_xml: !!focusResult.caminho_xml_nota_fiscal
+    });
+    console.log(`[${requestId}] ========== NFE GENERATION END ==========`);
 
     return new Response(
       JSON.stringify({
         success: true,
+        request_id: requestId,
         fiscal_note: fiscalNote,
         focus_response: focusResult
       }),
@@ -313,15 +340,17 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Erro detalhado ao gerar NF-e:', {
+    console.error(`[${requestId}] ❌ FATAL ERROR generating NFe:`, {
       error: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
       order_id: (error as any)?.order_id || 'unknown'
     });
+    console.log(`[${requestId}] ========== NFE GENERATION END (ERROR) ==========`);
     
     return new Response(
       JSON.stringify({ 
         success: false,
+        request_id: requestId,
         error: errorMessage,
         details: 'Verifique os logs da função para mais detalhes' 
       }),

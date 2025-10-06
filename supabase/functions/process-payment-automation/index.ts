@@ -11,21 +11,32 @@ interface ProcessPaymentRequest {
 }
 
 serve(async (req) => {
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] ========== PAYMENT AUTOMATION START ==========`);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { order_id }: ProcessPaymentRequest = await req.json();
+    console.log(`[${requestId}] Request body:`, { order_id });
     
-    console.log('Processing payment automation for order:', order_id);
+    if (!order_id) {
+      console.error(`[${requestId}] Missing order_id in request`);
+      throw new Error('order_id is required');
+    }
+    
+    console.log(`[${requestId}] Processing payment automation for order:`, order_id);
 
+    console.log(`[${requestId}] Initializing Supabase client`);
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
     // Get order details
+    console.log(`[${requestId}] Fetching order details`);
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('*')
@@ -33,10 +44,18 @@ serve(async (req) => {
       .single();
 
     if (orderError || !order) {
+      console.error(`[${requestId}] Order fetch error:`, orderError);
       throw new Error('Order not found');
     }
 
+    console.log(`[${requestId}] Order found:`, { 
+      order_number: order.order_number, 
+      payment_status: order.payment_status,
+      status: order.status 
+    });
+
     if (order.payment_status !== 'paid') {
+      console.error(`[${requestId}] Order not paid:`, order.payment_status);
       throw new Error('Order payment not confirmed');
     }
 
@@ -46,10 +65,13 @@ serve(async (req) => {
       tasks_completed: []
     };
 
+    console.log(`[${requestId}] Starting 3 automation tasks in parallel`);
+    
     // Task 1: Generate NFe automatically
     tasks.push(async () => {
+      console.log(`[${requestId}] [Task 1/3] Starting NFe generation`);
+      const startTime = Date.now();
       try {
-        console.log('Auto-generating NF-e...');
         const { data: nfeResult, error: nfeError } = await supabase.functions.invoke('generate-nfe', {
           body: { order_id: order_id }
         });
@@ -58,19 +80,23 @@ serve(async (req) => {
           throw nfeError;
         }
 
+        const duration = Date.now() - startTime;
         results.tasks_completed.push({
           task: 'nfe_generation',
           success: true,
+          duration_ms: duration,
           data: nfeResult
         });
         
-        console.log('NF-e generated successfully');
+        console.log(`[${requestId}] [Task 1/3] ✅ NFe generated successfully in ${duration}ms`);
         return nfeResult;
       } catch (error) {
-        console.error('NF-e generation failed:', error);
+        const duration = Date.now() - startTime;
+        console.error(`[${requestId}] [Task 1/3] ❌ NFe generation failed after ${duration}ms:`, error);
         results.tasks_completed.push({
           task: 'nfe_generation',
           success: false,
+          duration_ms: duration,
           error: error instanceof Error ? error.message : String(error)
         });
         throw error;
@@ -79,9 +105,9 @@ serve(async (req) => {
 
     // Task 2: Send order confirmation email
     tasks.push(async () => {
+      console.log(`[${requestId}] [Task 2/3] Starting confirmation email`);
+      const startTime = Date.now();
       try {
-        console.log('Sending order confirmation email...');
-        
         const { data: orderItems } = await supabase
           .from('order_items')
           .select(`
@@ -91,6 +117,8 @@ serve(async (req) => {
             )
           `)
           .eq('order_id', order_id);
+
+        console.log(`[${requestId}] [Task 2/3] Fetched ${orderItems?.length || 0} order items`);
 
         const emailData = {
           orderNumber: order.order_number,
@@ -106,9 +134,12 @@ serve(async (req) => {
           shippingAddress: order.address_data
         };
 
+        const emailTo = order.address_data?.email || order.user_email;
+        console.log(`[${requestId}] [Task 2/3] Sending email to:`, emailTo);
+
         const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
           body: {
-            to: order.address_data?.email || order.user_email,
+            to: emailTo,
             template: 'order_confirmed',
             data: emailData
           }
@@ -118,19 +149,23 @@ serve(async (req) => {
           throw emailError;
         }
 
+        const duration = Date.now() - startTime;
         results.tasks_completed.push({
           task: 'confirmation_email',
           success: true,
+          duration_ms: duration,
           data: emailResult
         });
 
-        console.log('Confirmation email sent successfully');
+        console.log(`[${requestId}] [Task 2/3] ✅ Email sent successfully in ${duration}ms`);
         return emailResult;
       } catch (error) {
-        console.error('Confirmation email failed:', error);
+        const duration = Date.now() - startTime;
+        console.error(`[${requestId}] [Task 2/3] ⚠️  Email failed after ${duration}ms:`, error);
         results.tasks_completed.push({
           task: 'confirmation_email',
           success: false,
+          duration_ms: duration,
           error: error instanceof Error ? error.message : String(error)
         });
         // Don't throw here - email failure shouldn't break the flow
@@ -139,9 +174,9 @@ serve(async (req) => {
 
     // Task 3: Update order status to processing
     tasks.push(async () => {
+      console.log(`[${requestId}] [Task 3/3] Starting order status update`);
+      const startTime = Date.now();
       try {
-        console.log('Updating order status to processing...');
-        
         const { error: updateError } = await supabase
           .from('orders')
           .update({ 
@@ -154,17 +189,21 @@ serve(async (req) => {
           throw updateError;
         }
 
+        const duration = Date.now() - startTime;
         results.tasks_completed.push({
           task: 'order_status_update',
-          success: true
+          success: true,
+          duration_ms: duration
         });
 
-        console.log('Order status updated to processing');
+        console.log(`[${requestId}] [Task 3/3] ✅ Status updated to 'processing' in ${duration}ms`);
       } catch (error) {
-        console.error('Order status update failed:', error);
+        const duration = Date.now() - startTime;
+        console.error(`[${requestId}] [Task 3/3] ⚠️  Status update failed after ${duration}ms:`, error);
         results.tasks_completed.push({
           task: 'order_status_update',
           success: false,
+          duration_ms: duration,
           error: error instanceof Error ? error.message : String(error)
         });
         // Don't throw here - this shouldn't break the flow
@@ -172,12 +211,26 @@ serve(async (req) => {
     });
 
     // Execute all tasks
-    await Promise.allSettled(tasks.map(task => task()));
+    console.log(`[${requestId}] Waiting for all tasks to complete...`);
+    const taskResults = await Promise.allSettled(tasks.map(task => task()));
+
+    // Log summary
+    const successCount = results.tasks_completed.filter((t: any) => t.success).length;
+    const totalTasks = results.tasks_completed.length;
+    console.log(`[${requestId}] Tasks completed: ${successCount}/${totalTasks} successful`);
+    
+    results.tasks_completed.forEach((task: any) => {
+      const icon = task.success ? '✅' : '❌';
+      console.log(`[${requestId}] ${icon} ${task.task}: ${task.success ? 'SUCCESS' : 'FAILED'} (${task.duration_ms}ms)`);
+    });
+
+    console.log(`[${requestId}] ========== PAYMENT AUTOMATION END ==========`);
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Payment automation completed',
+        request_id: requestId,
         results: results
       }),
       {
@@ -187,12 +240,16 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Error in payment automation:', error);
+    console.error(`[${requestId}] ❌ FATAL ERROR in payment automation:`, error);
+    console.error(`[${requestId}] Error stack:`, error instanceof Error ? error.stack : 'No stack trace');
+    console.log(`[${requestId}] ========== PAYMENT AUTOMATION END (ERROR) ==========`);
     
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: errorMessage 
+        request_id: requestId,
+        error: errorMessage,
+        details: 'Check function logs for more information'
       }),
       {
         status: 500,
