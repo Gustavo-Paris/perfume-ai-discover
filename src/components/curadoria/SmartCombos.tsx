@@ -88,6 +88,26 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
   };
 
   if (showCombos && data) {
+    // Validar combos no frontend - remover combos com perfumes duplicados
+    const validCombos = data.combos.filter((combo: ComboRecommendation) => {
+      const perfumeIds = combo.items.map(item => item.perfume_id);
+      const uniqueIds = new Set(perfumeIds);
+      
+      if (perfumeIds.length !== uniqueIds.size) {
+        console.warn(`Frontend: Combo "${combo.name}" tem perfumes duplicados (${perfumeIds.length} items, ${uniqueIds.size} únicos). Ignorando.`);
+        return false;
+      }
+      
+      // Validar total
+      const recalculatedTotal = combo.items.reduce((sum, item) => sum + item.price, 0);
+      if (Math.abs(recalculatedTotal - combo.total) > 0.01) {
+        console.warn(`Frontend: Total divergente em "${combo.name}": ${combo.total} → ${recalculatedTotal}`);
+        combo.total = recalculatedTotal; // Corrigir
+      }
+      
+      return true;
+    });
+    
     return (
       <div className="space-y-8">
         <div className="text-center">
@@ -105,7 +125,7 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
           </p>
         </div>
 
-        {data.combos.length === 0 ? (
+        {validCombos.length === 0 ? (
           <Card className="text-center p-8">
             <CardContent>
               <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -120,7 +140,7 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-            {data.combos.map((combo) => (
+            {validCombos.map((combo) => (
               <Card key={combo.id} className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300">
                 <CardHeader className="bg-gradient-to-r from-primary/5 to-purple-500/5">
                   <CardTitle className="flex items-center justify-between">

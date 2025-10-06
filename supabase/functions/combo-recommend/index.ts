@@ -166,11 +166,14 @@ LÓGICA DINÂMICA DE TAMANHOS POR ORÇAMENTO:
 - R$ 250-400: 1x 10ml + 2x 10ml (generoso)
 - > R$ 400: 1x 100ml + 2x 10ml (frasco completo + testes)
 
-REGRAS CRÍTICAS:
-1. Use 85-98% do orçamento (máximo R$ 20 de sobra!)
-2. Cada combo deve ter 2-4 perfumes COMPLEMENTARES
-3. Crie 2-3 combos diferentes
-4. Priorize QUALIDADE da combinação sobre quantidade
+REGRAS CRÍTICAS (OBRIGATÓRIO):
+1. NUNCA repita o mesmo perfume_id dentro de um combo
+2. Cada perfume deve aparecer apenas UMA VEZ por combo
+3. Use 85-98% do orçamento (máximo R$ 20 de sobra!)
+4. Cada combo deve ter 2-4 perfumes COMPLEMENTARES e DIFERENTES
+5. Crie 2-3 combos diferentes
+6. Priorize QUALIDADE da combinação sobre quantidade
+7. SEMPRE verifique que todos perfume_ids são únicos antes de retornar
 
 FORMATO DE RESPOSTA (JSON válido):
 {
@@ -219,12 +222,23 @@ FORMATO DE RESPOSTA (JSON válido):
       console.log('Successfully parsed combos JSON');
       
       if (parsedCombos.combos && Array.isArray(parsedCombos.combos)) {
-        // Enrich combos with full perfume data
+        // Enrich combos with full perfume data and validate
         const enrichedCombos = parsedCombos.combos.map((combo: any) => {
-          const enrichedItems = combo.items?.map((item: any) => {
+          // Remove duplicates from items using Set
+          const seenIds = new Set<string>();
+          const uniqueItems = combo.items?.filter((item: any) => {
+            if (seenIds.has(item.perfume_id)) {
+              console.warn(`⚠️ Removendo perfume duplicado do combo "${combo.name}": ${item.perfume_id}`);
+              return false;
+            }
+            seenIds.add(item.perfume_id);
+            return true;
+          }) || [];
+          
+          const enrichedItems = uniqueItems.map((item: any) => {
             const perfume = perfumeDetails.find(p => p.id === item.perfume_id);
             if (!perfume) {
-              console.log(`Perfume not found for ID: ${item.perfume_id}`);
+              console.warn(`⚠️ Perfume not found for ID: ${item.perfume_id}`);
               return null;
             }
             return {
@@ -238,12 +252,37 @@ FORMATO DE RESPOSTA (JSON válido):
             };
           }).filter(Boolean) || [];
           
+          // Recalculate total to ensure accuracy
+          const recalculatedTotal = enrichedItems.reduce((sum: number, item: any) => sum + (item.price || 0), 0);
+          
+          // Log validation details
+          console.log('✅ Combo validation:', {
+            name: combo.name,
+            itemCount: enrichedItems.length,
+            uniqueIds: new Set(enrichedItems.map((i: any) => i.perfume_id)).size,
+            originalTotal: combo.total,
+            recalculatedTotal: recalculatedTotal,
+            withinBudget: recalculatedTotal <= budget
+          });
+          
+          // Warn if totals don't match
+          if (Math.abs(recalculatedTotal - (combo.total || 0)) > 0.01) {
+            console.warn(`⚠️ Total corrigido para "${combo.name}": ${combo.total} → ${recalculatedTotal}`);
+          }
+          
           return {
             ...combo,
             items: enrichedItems,
-            total: enrichedItems.reduce((sum: number, item: any) => sum + (item.price || 0), 0)
+            total: recalculatedTotal
           };
-        }).filter((combo: any) => combo.items.length >= 2 && combo.total <= budget);
+        }).filter((combo: any) => {
+          // Only keep valid combos
+          const isValid = combo.items.length >= 2 && combo.total <= budget;
+          if (!isValid) {
+            console.warn(`⚠️ Combo "${combo.name}" removido: items=${combo.items.length}, total=${combo.total}, budget=${budget}`);
+          }
+          return isValid;
+        });
 
         const maxComboValue = enrichedCombos.length > 0 ? Math.max(...enrichedCombos.map((c: any) => c.total)) : 0;
         console.log('Generated combos successfully:', enrichedCombos.length);
@@ -280,6 +319,7 @@ FORMATO DE RESPOSTA (JSON válido):
       if (perfumeDetails.length >= 2) {
         let currentTotal = 0;
         const items = [];
+        const usedIds = new Set<string>(); // Garantir IDs únicos no fallback
         
         // Try to include different intensities
         const selections = [
@@ -289,6 +329,12 @@ FORMATO DE RESPOSTA (JSON válido):
         ].filter(Boolean).slice(0, 3);
         
         for (const perfume of selections) {
+          // Skip if already used
+          if (usedIds.has(perfume.id)) {
+            console.log(`Skipping duplicate in fallback: ${perfume.id}`);
+            continue;
+          }
+          
           const price = perfume.price_5ml || perfume.price_10ml || 0;
           if (currentTotal + price <= budget * 0.9) {
             items.push({
@@ -302,6 +348,7 @@ FORMATO DE RESPOSTA (JSON válido):
                 image_url: perfume.image_url
               }
             });
+            usedIds.add(perfume.id);
             currentTotal += price;
           }
         }
