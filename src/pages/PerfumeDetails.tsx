@@ -113,38 +113,26 @@ const PerfumeDetails = () => {
     checkStock();
   }, [id, selectedSize, user?.id, stockCheckTrigger]);
 
-  // Mostrar loading se está carregando OU se não encontrou o perfume ainda (mas ainda está carregando)
-  if (isLoading || pricesLoading || !databasePerfume) {
-    // Se ainda está carregando, mostrar loading
-    if (isLoading || pricesLoading) {
-      return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-lg">Carregando perfume...</div>
-          </div>
-        </div>
-      );
-    }
-    
-    // Se terminou de carregar mas não encontrou, mostrar erro
-    if (!isLoading && !pricesLoading && !databasePerfume) {
-      return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Perfume não encontrado</h1>
-            <Button onClick={() => navigate('/catalogo')}>
-              Voltar ao Catálogo
-            </Button>
-          </div>
-        </div>
-      );
-    }
-    
-    // Caso contrário, continuar mostrando loading (fallback)
+  // Se está carregando, mostrar loading
+  if (isLoading || pricesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-lg">Carregando perfume...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Se terminou de carregar mas não encontrou o perfume, mostrar erro
+  if (!databasePerfume) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Perfume não encontrado</h1>
+          <Button onClick={() => navigate('/catalogo')}>
+            Voltar ao Catálogo
+          </Button>
         </div>
       </div>
     );
