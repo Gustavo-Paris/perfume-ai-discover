@@ -50,15 +50,6 @@ const PerfumeDetails = () => {
   // Buscar promoção ativa para este perfume
   const { data: activePromotion } = useActivePromotionByPerfume(id || '');
   
-  console.log('PerfumeDetails Debug:', {
-    id,
-    isLoading,
-    pricesLoading,
-    hasPerfumes: !!databasePerfumes,
-    perfumesLength: databasePerfumes?.length,
-    foundPerfume: !!databasePerfume
-  });
-  
   // Set initial size based on available sizes from database
   useEffect(() => {
     const configuredSizes = databasePerfume?.available_sizes || [];
@@ -133,8 +124,8 @@ const PerfumeDetails = () => {
     );
   }
 
-  // Se terminou de carregar mas não encontrou o perfume, mostrar erro
-  if (!databasePerfume) {
+  // Se terminou de carregar E a lista de perfumes existe MAS não encontrou o perfume específico
+  if (databasePerfumes && !databasePerfume) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -142,6 +133,17 @@ const PerfumeDetails = () => {
           <Button onClick={() => navigate('/catalogo')}>
             Voltar ao Catálogo
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Se ainda não carregou a lista de perfumes, mostrar loading
+  if (!databasePerfume) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg">Carregando perfume...</div>
         </div>
       </div>
     );
