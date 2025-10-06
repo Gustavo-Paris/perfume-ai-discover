@@ -43,6 +43,13 @@ const Curadoria = () => {
 
   const { getSession } = useConversationalSessions();
 
+  // Scroll to top when loading transition starts
+  useEffect(() => {
+    if (showLoadingTransition) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [showLoadingTransition]);
+
   // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {

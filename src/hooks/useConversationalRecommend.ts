@@ -49,14 +49,14 @@ export const useConversationalRecommend = () => {
         const messagesWithTransition = [...updatedMessages, assistantMessage];
         updateConversation({ messages: messagesWithTransition });
 
-        // Show loading transition
-        setShowLoadingTransition(true);
+        // Wait 2.5s for user to read the transition message
+        await new Promise(resolve => setTimeout(resolve, 2500));
 
-        // Wait for transition effect to complete
-        await new Promise(resolve => setTimeout(resolve, 4000));
-
-        // Now request actual recommendations
+        // Now request actual recommendations (this fetches data in background)
         const recommendationsResponse = await sendMessageToAPI('gerar recomendações', messagesWithTransition);
+        
+        // Only show loading transition after recommendations are ready
+        setShowLoadingTransition(true);
         
         updateConversation({
           messages: messagesWithTransition,
