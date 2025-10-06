@@ -113,6 +113,7 @@ const PerfumeDetails = () => {
     checkStock();
   }, [id, selectedSize, user?.id, stockCheckTrigger]);
 
+  // Mostrar loading apenas enquanto está carregando
   if (isLoading || pricesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -123,7 +124,8 @@ const PerfumeDetails = () => {
     );
   }
 
-  if (!databasePerfume) {
+  // Só mostrar "não encontrado" se realmente não encontrou após o carregamento completo
+  if (!isLoading && !pricesLoading && !databasePerfume) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -489,11 +491,6 @@ const PerfumeDetails = () => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold">Quantidade</h3>
-                {maxQuantity > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    Disponível: {maxQuantity} un. ({stockMl}ml)
-                  </span>
-                )}
               </div>
               <div className="flex items-center gap-3">
                 <Button
