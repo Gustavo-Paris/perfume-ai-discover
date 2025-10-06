@@ -24,4 +24,5 @@ export interface StreamingResponse {
   isComplete: boolean;
   recommendations?: string[];
   needsRecommendations?: boolean;
+  showAnimation?: boolean;
 }

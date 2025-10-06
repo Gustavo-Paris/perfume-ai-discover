@@ -1,5 +1,4 @@
+// This file is now deprecated - the cart functionality has been moved to CartContextOptimized
+// Import useCart from '@/contexts/CartContextOptimized' instead
 
-// This file is now deprecated - the cart functionality has been moved to CartContext
-// Import useCart from '@/contexts/CartContext' instead
-
-export { useCart } from '@/contexts/CartContext';
+export { useCart } from '@/contexts/CartContextOptimized';

@@ -91,7 +91,12 @@ const Curadoria = () => {
     try {
       const response = await sendMessage(message);
       
-      if (response.isComplete && response.recommendations) {
+      // If animation should be shown, store recommendations but don't show results yet
+      // The animation will handle showing results when it completes
+      if (response.showAnimation) {
+        setRecommendedIds(response.recommendations || []);
+        // Don't set showResults here - let LoadingTransition onComplete handle it
+      } else if (response.isComplete && response.recommendations) {
         setRecommendedIds(response.recommendations);
         setShowResults(true);
       }

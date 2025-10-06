@@ -70,8 +70,11 @@ export const useConversationalRecommend = () => {
         );
 
         return {
-          ...recommendationsResponse,
-          content: response.content // Keep the transition message
+          content: response.content,
+          recommendations: recommendationsResponse.recommendations,
+          isComplete: recommendationsResponse.isComplete,
+          needsRecommendations: false,
+          showAnimation: true // Flag to indicate animation should play
         };
       }
 
