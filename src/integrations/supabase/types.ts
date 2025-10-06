@@ -3373,12 +3373,19 @@ export type Database = {
         Returns: number
       }
       consume_material: {
-        Args: {
-          material_uuid: string
-          movement_notes?: string
-          order_uuid: string
-          quantity_needed: number
-        }
+        Args:
+          | {
+              material_uuid: string
+              movement_notes?: string
+              order_uuid: string
+              quantity_needed: number
+            }
+          | {
+              material_uuid: string
+              notes_text?: string
+              order_uuid?: string
+              quantity_consumed: number
+            }
         Returns: boolean
       }
       create_cart_recovery_attempt: {
