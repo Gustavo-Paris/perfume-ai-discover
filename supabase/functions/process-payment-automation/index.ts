@@ -92,13 +92,55 @@ serve(async (req) => {
         return nfeResult;
       } catch (error) {
         const duration = Date.now() - startTime;
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`[${requestId}] [Task 1/3] ❌ NFe generation failed after ${duration}ms:`, error);
+        
         results.tasks_completed.push({
           task: 'nfe_generation',
           success: false,
           duration_ms: duration,
-          error: error instanceof Error ? error.message : String(error)
+          error: errorMessage
         });
+        
+        // Create notifications for all admins about NFe failure
+        try {
+          console.log(`[${requestId}] Creating admin notifications for NFe failure`);
+          const { data: adminRoles, error: adminError } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .eq('role', 'admin');
+          
+          if (adminError) {
+            console.error(`[${requestId}] Failed to fetch admin users:`, adminError);
+          } else if (adminRoles && adminRoles.length > 0) {
+            const notifications = adminRoles.map(admin => ({
+              type: 'system',
+              message: `Falha na geração automática de NFe para pedido ${order.order_number}`,
+              user_id: admin.user_id,
+              metadata: {
+                order_id: order_id,
+                order_number: order.order_number,
+                error: errorMessage,
+                request_id: requestId,
+                retry_available: true,
+                automation_context: true
+              }
+            }));
+            
+            const { error: notifError } = await supabase
+              .from('notifications')
+              .insert(notifications);
+            
+            if (notifError) {
+              console.error(`[${requestId}] Failed to create admin notifications:`, notifError);
+            } else {
+              console.log(`[${requestId}] ✅ Created ${notifications.length} admin notification(s)`);
+            }
+          }
+        } catch (notifError) {
+          console.error(`[${requestId}] Error creating notifications:`, notifError);
+        }
+        
         throw error;
       }
     });

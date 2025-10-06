@@ -340,11 +340,65 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const orderId = (error as any)?.order_id || 'unknown';
+    
     console.error(`[${requestId}] ❌ FATAL ERROR generating NFe:`, {
       error: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
-      order_id: (error as any)?.order_id || 'unknown'
+      order_id: orderId
     });
+    
+    // Create notifications for all admins about NFe failure
+    try {
+      console.log(`[${requestId}] Creating admin notifications for NFe failure`);
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      const { data: adminRoles, error: adminError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      
+      if (adminError) {
+        console.error(`[${requestId}] Failed to fetch admin users:`, adminError);
+      } else if (adminRoles && adminRoles.length > 0) {
+        // Try to get order_number if we have orderId
+        let orderNumber = null;
+        if (orderId !== 'unknown') {
+          const { data: orderData } = await supabase
+            .from('orders')
+            .select('order_number')
+            .eq('id', orderId)
+            .maybeSingle();
+          orderNumber = orderData?.order_number;
+        }
+        
+        const notifications = adminRoles.map(admin => ({
+          type: 'system',
+          message: `Falha na geração de NFe para pedido ${orderNumber || orderId}`,
+          user_id: admin.user_id,
+          metadata: {
+            order_id: orderId,
+            order_number: orderNumber,
+            error: errorMessage,
+            request_id: requestId,
+            retry_available: true
+          }
+        }));
+        
+        const { error: notifError } = await supabase
+          .from('notifications')
+          .insert(notifications);
+        
+        if (notifError) {
+          console.error(`[${requestId}] Failed to create admin notifications:`, notifError);
+        } else {
+          console.log(`[${requestId}] ✅ Created ${notifications.length} admin notification(s)`);
+        }
+      }
+    } catch (notifError) {
+      console.error(`[${requestId}] Error creating notifications:`, notifError);
+    }
+    
     console.log(`[${requestId}] ========== NFE GENERATION END (ERROR) ==========`);
     
     return new Response(
