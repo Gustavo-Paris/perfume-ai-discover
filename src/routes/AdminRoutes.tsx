@@ -14,6 +14,7 @@ const AdminShipments = lazy(() => import('@/pages/admin/AdminShipments'));
 const AdminCompanyConfig = lazy(() => import('@/pages/admin/AdminCompanyConfig'));
 const AdminOrderAutomation = lazy(() => import('@/pages/admin/AdminOrderAutomation'));
 const AdminFiscalNotes = lazy(() => import('@/pages/admin/AdminFiscalNotes'));
+const AdminNFeDashboard = lazy(() => import('@/pages/admin/AdminNFeDashboard'));
 const AdminOrderManagement = lazy(() => import('@/pages/admin/AdminOrderManagement'));
 
 const AdminRoutes = () => {
@@ -31,6 +32,7 @@ const AdminRoutes = () => {
       <Route path="/admin/company" element={<AdminCompanyConfig />} />
       <Route path="/admin/automation" element={<AdminOrderAutomation />} />
       <Route path="/admin/fiscal-notes" element={<AdminFiscalNotes />} />
+      <Route path="/admin/nfe-dashboard" element={<AdminNFeDashboard />} />
       <Route path="/admin/order-management" element={<AdminOrderManagement />} />
     </>
   );

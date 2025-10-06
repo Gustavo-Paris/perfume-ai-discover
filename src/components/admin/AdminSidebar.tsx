@@ -28,6 +28,7 @@ import {
   FileText,
   Calendar,
   Building,
+  BarChart3,
   Receipt,
   Bot
 } from 'lucide-react';
@@ -85,6 +86,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     icon: FileText,
     defaultOpen: false,
     items: [
+      { title: 'Dashboard NFe', url: '/admin/nfe-dashboard', icon: BarChart3 },
       { title: 'Notas Fiscais', url: '/admin/fiscal-notes', icon: FileText },
     ]
   },
