@@ -194,18 +194,37 @@ EXEMPLO DE COMBO VÁLIDO para R$ 300:
 }
 
 FORMATO DE RESPOSTA (JSON válido):
+⚠️ GERE EXATAMENTE 2-3 COMBOS DIFERENTES com estratégias variadas:
+- Combo 1: "Versátil" (mix de intensidades para todas as ocasiões)
+- Combo 2: "Premium" (foco em qualidade, pode usar 100ml)
+- Combo 3: "Descoberta" (máxima variedade, apenas 5ml ou 10ml)
+
 {
   "combos": [
     {
       "id": "combo1",
-      "name": "Nome Descritivo",
-      "description": "Por que estes perfumes se complementam",
+      "name": "Combo Versátil",
+      "description": "Mix de intensidades para todas as ocasiões",
       "items": [
-        {"perfume_id": "id", "size_ml": 10, "price": 45.90}
+        {"perfume_id": "id1", "size_ml": 10, "price": 58.84},
+        {"perfume_id": "id2", "size_ml": 10, "price": 56.22},
+        {"perfume_id": "id3", "size_ml": 10, "price": 62.50}
       ],
-      "total": 145.80,
+      "total": 177.56,
       "occasions": ["dia", "trabalho", "noite"],
       "complementarity_score": 0.92
+    },
+    {
+      "id": "combo2",
+      "name": "Combo Premium",
+      "description": "Foco em qualidade com frasco completo",
+      "items": [
+        {"perfume_id": "id4", "size_ml": 100, "price": 180.00},
+        {"perfume_id": "id5", "size_ml": 10, "price": 65.00}
+      ],
+      "total": 245.00,
+      "occasions": ["especial", "presente"],
+      "complementarity_score": 0.88
     }
   ]
 }`;
