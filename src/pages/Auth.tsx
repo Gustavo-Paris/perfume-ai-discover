@@ -13,6 +13,9 @@ import { useRecovery } from '@/contexts/RecoveryContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getPasswordStrength, checkPasswordPwned } from '@/utils/password';
 import { Sentry } from '@/utils/sentry';
+import { useRateLimit } from '@/hooks/useRateLimit';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -22,6 +25,11 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signUp, resetPassword, updatePassword, user, session } = useAuth();
+
+  // Rate limiting hooks
+  const loginRateLimit = useRateLimit('login', { maxAttempts: 5, windowMs: 300000, blockDuration: 900000 }); // 5 attempts per 5 min, block 15 min
+  const signupRateLimit = useRateLimit('signup', { maxAttempts: 3, windowMs: 600000, blockDuration: 1800000 }); // 3 attempts per 10 min, block 30 min
+  const resetRateLimit = useRateLimit('password-reset', { maxAttempts: 3, windowMs: 600000, blockDuration: 3600000 }); // 3 attempts per 10 min, block 1 hour
 
   // Formulários
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -119,6 +127,17 @@ const Auth = () => {
   // Login com email/senha
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check rate limit
+    if (!loginRateLimit.checkLimit()) {
+      toast({
+        title: "Muitas tentativas",
+        description: loginRateLimit.getBlockedMessage(),
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -154,6 +173,16 @@ const Auth = () => {
   // Cadastro
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check rate limit
+    if (!signupRateLimit.checkLimit()) {
+      toast({
+        title: "Muitas tentativas",
+        description: signupRateLimit.getBlockedMessage(),
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (signupForm.password !== signupForm.confirmPassword) {
       toast({
@@ -227,6 +256,17 @@ const Auth = () => {
   // Recuperação de senha
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check rate limit
+    if (!resetRateLimit.checkLimit()) {
+      toast({
+        title: "Muitas tentativas",
+        description: resetRateLimit.getBlockedMessage(),
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -389,13 +429,22 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {loginRateLimit.isBlocked && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {loginRateLimit.getBlockedMessage()}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="space-y-2">
                   <Button 
                     type="button" 
                     variant="outline" 
                     className="w-full font-display"
                     onClick={handleGoogleLogin}
-                    disabled={isLoading}
+                    disabled={isLoading || loginRateLimit.isBlocked}
                   >
                     {isLoading ? 'Conectando...' : 'Entrar com Google'}
                   </Button>
@@ -441,7 +490,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
-                    disabled={isLoading}
+                    disabled={isLoading || loginRateLimit.isBlocked}
                   >
                     {isLoading ? 'Entrando...' : 'Entrar'}
                   </Button>
@@ -459,13 +508,22 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {signupRateLimit.isBlocked && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {signupRateLimit.getBlockedMessage()}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="space-y-2">
                   <Button 
                     type="button" 
                     variant="outline" 
                     className="w-full font-display"
                     onClick={handleGoogleLogin}
-                    disabled={isLoading}
+                    disabled={isLoading || signupRateLimit.isBlocked}
                   >
                     {isLoading ? 'Conectando...' : 'Cadastrar com Google'}
                   </Button>
@@ -554,7 +612,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
-                    disabled={isLoading || signupStrength.score < 60 || (signupPwned.checked && signupPwned.pwned)}
+                    disabled={isLoading || signupRateLimit.isBlocked || signupStrength.score < 60 || (signupPwned.checked && signupPwned.pwned)}
                   >
                     {isLoading ? 'Cadastrando...' : 'Cadastrar'}
                   </Button>
@@ -572,6 +630,15 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {resetRateLimit.isBlocked && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {resetRateLimit.getBlockedMessage()}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="reset-email" className="font-display text-gray-700">Email</Label>
@@ -588,7 +655,7 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full bg-navy hover:bg-navy/90 text-white font-display font-medium" 
-                    disabled={isLoading}
+                    disabled={isLoading || resetRateLimit.isBlocked}
                   >
                     {isLoading ? 'Enviando...' : 'Enviar Email de Recuperação'}
                   </Button>
