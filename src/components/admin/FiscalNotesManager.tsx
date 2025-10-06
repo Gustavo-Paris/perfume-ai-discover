@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, FileText, Eye, RefreshCw } from 'lucide-react';
+import { Download, FileText, Eye, RefreshCw, AlertCircle, RotateCcw } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface FiscalNote {
   id: string;
+  order_id: string;
   order_number: string;
   numero: number;
   serie: number;
@@ -23,22 +25,39 @@ interface FiscalNote {
 
 export const FiscalNotesManager = () => {
   const [fiscalNotes, setFiscalNotes] = useState<FiscalNote[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<FiscalNote[]>([]);
   const [loading, setLoading] = useState(true);
+  const [retryingNoteId, setRetryingNoteId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
   useEffect(() => {
     loadFiscalNotes();
   }, []);
 
+  useEffect(() => {
+    filterNotes();
+  }, [fiscalNotes, statusFilter]);
+
   const loadFiscalNotes = async () => {
     try {
       const { data, error } = await supabase
-        .from('fiscal_notes_view')
-        .select('*')
+        .from('fiscal_notes')
+        .select(`
+          *,
+          order:orders!inner(order_number)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFiscalNotes(data || []);
+      
+      const formattedData = data?.map(note => ({
+        ...note,
+        order_number: note.order.order_number,
+        items_count: 0 // Will be populated from fiscal_note_items if needed
+      })) || [];
+      
+      setFiscalNotes(formattedData);
     } catch (error) {
       console.error('Error loading fiscal notes:', error);
       toast({
@@ -48,6 +67,47 @@ export const FiscalNotesManager = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const filterNotes = () => {
+    let filtered = fiscalNotes;
+    
+    if (statusFilter === 'error') {
+      filtered = fiscalNotes.filter(note => 
+        note.status === 'rejected' || note.erro_message
+      );
+    } else if (statusFilter !== 'all') {
+      filtered = fiscalNotes.filter(note => note.status === statusFilter);
+    }
+    
+    setFilteredNotes(filtered);
+  };
+
+  const retryNFeGeneration = async (orderId: string, noteId: string) => {
+    setRetryingNoteId(noteId);
+    try {
+      const { data, error } = await supabase.functions.invoke('retry-nfe-generation', {
+        body: { order_id: orderId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "NF-e Regenerada",
+        description: "A nota fiscal foi regenerada com sucesso.",
+      });
+
+      loadFiscalNotes();
+    } catch (error) {
+      console.error('Error retrying NF-e generation:', error);
+      toast({
+        title: "Erro ao Regenerar NF-e",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setRetryingNoteId(null);
     }
   };
 
@@ -149,14 +209,28 @@ export const FiscalNotesManager = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Notas Fiscais Eletrônicas</h2>
-        <Button onClick={loadFiscalNotes} variant="outline">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Atualizar
-        </Button>
+        <div className="flex gap-3">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="authorized">✅ Autorizadas</SelectItem>
+              <SelectItem value="pending">⏳ Pendentes</SelectItem>
+              <SelectItem value="error">❌ Com Erro</SelectItem>
+              <SelectItem value="cancelled">🚫 Canceladas</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={loadFiscalNotes} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">
-        {fiscalNotes.map((fiscalNote) => (
+        {filteredNotes.map((fiscalNote) => (
           <Card key={fiscalNote.id}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -180,9 +254,13 @@ export const FiscalNotesManager = () => {
                     </p>
                   )}
                   {fiscalNote.erro_message && (
-                    <p className="text-xs text-red-500 mt-1">
-                      Erro: {fiscalNote.erro_message}
-                    </p>
+                    <div className="flex items-start gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-red-700">Erro na geração:</p>
+                        <p className="text-xs text-red-600">{fiscalNote.erro_message}</p>
+                      </div>
+                    </div>
                   )}
                 </div>
                 
@@ -192,6 +270,19 @@ export const FiscalNotesManager = () => {
                   </Badge>
                   
                   <div className="flex gap-2">
+                    {(fiscalNote.status === 'rejected' || fiscalNote.erro_message) && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => retryNFeGeneration(fiscalNote.order_id, fiscalNote.id)}
+                        disabled={retryingNoteId === fiscalNote.id}
+                        className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        {retryingNoteId === fiscalNote.id ? 'Processando...' : 'Tentar Novamente'}
+                      </Button>
+                    )}
+                    
                     {fiscalNote.pdf_url && (
                       <Button
                         size="sm"
@@ -233,6 +324,18 @@ export const FiscalNotesManager = () => {
           </Card>
         ))}
       </div>
+
+      {filteredNotes.length === 0 && fiscalNotes.length > 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Nenhuma nota encontrada</h3>
+            <p className="text-muted-foreground">
+              Não há notas fiscais com o filtro selecionado.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {fiscalNotes.length === 0 && (
         <Card>
