@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, User, Bell, Shield, Trash2, AlertTriangle, 
-  Eye, EyeOff, Lock, Mail, Phone, MapPin, CreditCard 
+  Eye, EyeOff, Lock, Mail, Phone, MapPin, CreditCard, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,14 +26,139 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { getPasswordStrength, checkPasswordPwned, type PasswordStrength } from '@/utils/password';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Configuracoes = () => {
-  const { user } = useAuth();
+  const { user, updatePassword } = useAuth();
   const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [promotionalEmails, setPromotionalEmails] = useState(true);
+  
+  // Password change state
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+  const [passwordStrength, setPasswordStrength] = useState<PasswordStrength>({ score: 0, label: 'Muito Fraca' });
+  const [passwordPwned, setPasswordPwned] = useState<{ checked: boolean; pwned: boolean; count: number | null }>({ 
+    checked: false, 
+    pwned: false, 
+    count: null 
+  });
+
+  // Check password strength on change
+  useEffect(() => {
+    if (passwordForm.new) {
+      const strength = getPasswordStrength(passwordForm.new);
+      setPasswordStrength(strength);
+      
+      // Reset pwned check when password changes
+      setPasswordPwned({ checked: false, pwned: false, count: null });
+    } else {
+      setPasswordStrength({ score: 0, label: 'Muito Fraca' });
+      setPasswordPwned({ checked: false, pwned: false, count: null });
+    }
+  }, [passwordForm.new]);
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos de senha",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (passwordForm.new !== passwordForm.confirm) {
+      toast({
+        title: "Senhas não coincidem",
+        description: "A nova senha e a confirmação devem ser iguais",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Strength check
+    if (passwordStrength.score < 60) {
+      toast({
+        title: "Senha muito fraca",
+        description: "Use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos especiais.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Pwned check
+    setIsChangingPassword(true);
+    const pwned = await checkPasswordPwned(passwordForm.new);
+    setPasswordPwned({ checked: true, ...pwned });
+    
+    if (pwned.pwned) {
+      toast({
+        title: "Senha insegura",
+        description: `Esta senha apareceu em ${pwned.count?.toLocaleString() ?? pwned.count} vazamentos de dados. Escolha outra senha.`,
+        variant: "destructive"
+      });
+      setIsChangingPassword(false);
+      return;
+    }
+    
+    // Verify current password by attempting to sign in
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: passwordForm.current
+      });
+      
+      if (signInError) {
+        toast({
+          title: "Senha atual incorreta",
+          description: "A senha atual não está correta",
+          variant: "destructive"
+        });
+        setIsChangingPassword(false);
+        return;
+      }
+      
+      // Update password
+      const { error } = await updatePassword(passwordForm.new);
+      
+      if (error) {
+        toast({
+          title: "Erro ao alterar senha",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Senha alterada!",
+          description: "Sua senha foi atualizada com sucesso"
+        });
+        setPasswordForm({ current: '', new: '', confirm: '' });
+        setPasswordStrength({ score: 0, label: 'Muito Fraca' });
+        setPasswordPwned({ checked: false, pwned: false, count: null });
+      }
+    } catch (error) {
+      console.error('Password change error:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Não foi possível alterar a senha. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
@@ -171,36 +296,94 @@ const Configuracoes = () => {
                     Segurança
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="current-password">Senha Atual</Label>
-                    <Input 
-                      id="current-password" 
-                      type="password" 
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent>
+                  <form onSubmit={handlePasswordChange} className="space-y-4">
                     <div>
-                      <Label htmlFor="new-password">Nova Senha</Label>
+                      <Label htmlFor="current-password">Senha Atual</Label>
                       <Input 
-                        id="new-password" 
+                        id="current-password" 
                         type="password" 
                         placeholder="••••••••"
+                        value={passwordForm.current}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                        disabled={isChangingPassword}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
-                      <Input 
-                        id="confirm-password" 
-                        type="password" 
-                        placeholder="••••••••"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="new-password">Nova Senha</Label>
+                        <Input 
+                          id="new-password" 
+                          type="password" 
+                          placeholder="••••••••"
+                          value={passwordForm.new}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                          disabled={isChangingPassword}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                        <Input 
+                          id="confirm-password" 
+                          type="password" 
+                          placeholder="••••••••"
+                          value={passwordForm.confirm}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                          disabled={isChangingPassword}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <Button variant="outline">
-                    Alterar Senha
-                  </Button>
+                    
+                    {/* Password Strength Indicator */}
+                    {passwordForm.new && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">Força da senha:</span>
+                          <span className={`font-medium ${
+                            passwordStrength.score >= 80 ? 'text-green-600' :
+                            passwordStrength.score >= 60 ? 'text-blue-600' :
+                            passwordStrength.score >= 40 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
+                            {passwordStrength.label}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={passwordStrength.score} 
+                          className={`h-2 ${
+                            passwordStrength.score >= 80 ? '[&>div]:bg-green-600' :
+                            passwordStrength.score >= 60 ? '[&>div]:bg-blue-600' :
+                            passwordStrength.score >= 40 ? '[&>div]:bg-yellow-600' :
+                            '[&>div]:bg-red-600'
+                          }`}
+                        />
+                        {passwordStrength.score < 60 && (
+                          <p className="text-xs text-muted-foreground">
+                            Use pelo menos 8 caracteres com maiúsculas, minúsculas, números e símbolos
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Pwned Warning */}
+                    {passwordPwned.checked && passwordPwned.pwned && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          ⚠️ Esta senha apareceu em {passwordPwned.count?.toLocaleString() ?? passwordPwned.count} vazamentos de dados conhecidos.
+                          Escolha uma senha diferente para sua segurança.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    <Button 
+                      type="submit" 
+                      variant="outline"
+                      disabled={isChangingPassword || passwordStrength.score < 60}
+                    >
+                      {isChangingPassword ? 'Alterando...' : 'Alterar Senha'}
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
             </motion.div>
