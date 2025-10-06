@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { CreditCard, QrCode, ArrowLeft, Loader2 } from 'lucide-react';
+import { CreditCard, QrCode, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContextOptimized';
+import { useRateLimit } from '@/hooks/useRateLimit';
 
 interface PaymentStepProps {
   onBack: () => void;
@@ -21,7 +23,24 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
   const [processing, setProcessing] = useState(false);
   const { items } = useCart();
 
+  // Rate limiting: 3 tentativas a cada 5 minutos, bloqueio por 10 minutos
+  const checkoutRateLimit = useRateLimit('checkout-attempt', {
+    maxAttempts: 3,
+    windowMs: 5 * 60 * 1000, // 5 minutos
+    blockDuration: 10 * 60 * 1000, // 10 minutos
+  });
+
   const handleCheckout = async () => {
+    // Verificar rate limiting
+    if (!checkoutRateLimit.checkLimit()) {
+      toast({
+        title: 'Limite de tentativas excedido',
+        description: checkoutRateLimit.getBlockedMessage(),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setProcessing(true);
     try {
       // Monta itens para o checkout usando a mesma lógica do CartContext
@@ -102,6 +121,16 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Alerta de Rate Limiting */}
+        {checkoutRateLimit.isBlocked && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {checkoutRateLimit.getBlockedMessage()}. Por segurança, bloqueamos temporariamente novas tentativas de pagamento.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Seleção de forma de pagamento */}
         <div>
           <Label className="text-base font-medium mb-4 block">Forma de Pagamento</Label>
@@ -141,7 +170,12 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
         </div>
 
         {/* Ação */}
-        <Button onClick={handleCheckout} disabled={processing || loading} className="w-full" size="lg">
+        <Button 
+          onClick={handleCheckout} 
+          disabled={processing || loading || checkoutRateLimit.isBlocked} 
+          className="w-full" 
+          size="lg"
+        >
           {processing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processando...
