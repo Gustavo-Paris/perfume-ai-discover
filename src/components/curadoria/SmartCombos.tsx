@@ -121,7 +121,7 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
             Baseado em suas preferências e orçamento de R$ {budget}
           </p>
           <p className="text-sm text-muted-foreground">
-            Combos otimizados para aproveitar {data.budget_used > 0 ? `${((data.budget_used/parseFloat(budget))*100).toFixed(0)}% do seu orçamento` : 'seu orçamento completo'}
+            Encontramos {validCombos.length} combo{validCombos.length > 1 ? 's' : ''} perfeito{validCombos.length > 1 ? 's' : ''} para você
           </p>
         </div>
 
@@ -145,9 +145,14 @@ const SmartCombos = ({ conversationHistory, recommendedPerfumes, onBackToResults
                 <CardHeader className="bg-gradient-to-r from-primary/5 to-purple-500/5">
                   <CardTitle className="flex items-center justify-between">
                     <span className="font-playfair text-xl">{combo.name}</span>
-                    <Badge variant="secondary" className="text-lg font-bold">
-                      R$ {combo.total.toFixed(2)}
-                    </Badge>
+                    <div className="text-right">
+                      <Badge variant="secondary" className="text-lg font-bold">
+                        R$ {combo.total.toFixed(2)}
+                      </Badge>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {((combo.total / parseFloat(budget)) * 100).toFixed(0)}% do seu orçamento
+                      </div>
+                    </div>
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">{combo.description}</p>
                 </CardHeader>
