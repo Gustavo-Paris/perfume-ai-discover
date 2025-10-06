@@ -50,6 +50,15 @@ const PerfumeDetails = () => {
   // Buscar promoção ativa para este perfume
   const { data: activePromotion } = useActivePromotionByPerfume(id || '');
   
+  console.log('PerfumeDetails Debug:', {
+    id,
+    isLoading,
+    pricesLoading,
+    hasPerfumes: !!databasePerfumes,
+    perfumesLength: databasePerfumes?.length,
+    foundPerfume: !!databasePerfume
+  });
+  
   // Set initial size based on available sizes from database
   useEffect(() => {
     const configuredSizes = databasePerfume?.available_sizes || [];
