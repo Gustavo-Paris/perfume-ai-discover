@@ -3,6 +3,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { getPasswordStrength, checkPasswordPwned } from '@/utils/password';
+import { useAutoLogout } from '@/hooks/useAutoLogout';
+import { useSessionValidation } from '@/hooks/useSessionValidation';
+import { toast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -28,6 +31,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Auto-logout por inatividade (30 minutos)
+  useAutoLogout({
+    inactivityTimeout: 30 * 60 * 1000, // 30 minutos
+    warningTime: 2 * 60 * 1000, // Avisar 2 minutos antes
+    onWarning: () => {
+      if (user) {
+        toast({
+          title: "Sessão expirando em breve",
+          description: "Você será desconectado em 2 minutos por inatividade. Mova o mouse para continuar.",
+          variant: "default",
+        });
+      }
+    },
+    onLogout: async () => {
+      if (user) {
+        toast({
+          title: "Sessão encerrada",
+          description: "Você foi desconectado por inatividade.",
+          variant: "default",
+        });
+        await signOut();
+      }
+    },
+  });
+
+  // Validação contínua de sessão e refresh automático
+  useSessionValidation({
+    checkInterval: 60000, // Verificar a cada 1 minuto
+    refreshBeforeExpiry: 5 * 60 * 1000, // Renovar 5 min antes de expirar
+    onSessionExpired: async () => {
+      if (user) {
+        toast({
+          title: "Sessão expirada",
+          description: "Sua sessão expirou. Faça login novamente.",
+          variant: "destructive",
+        });
+        await signOut();
+      }
+    },
+    onSessionRefreshed: () => {
+      console.log('Session refreshed successfully');
+    },
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -235,6 +282,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    try {
+      // Log security event
+      if (user) {
+        await supabase.rpc('log_security_event', {
+          user_uuid: user.id,
+          event_type_param: 'logout',
+          event_description_param: 'User logged out',
+          risk_level_param: 'low',
+          metadata_param: { email: user.email }
+        });
+      }
+    } catch (error) {
+      console.error('Error logging logout event:', error);
+    }
+    
     await supabase.auth.signOut();
     // Force page reload to clear all state
     window.location.href = '/auth';

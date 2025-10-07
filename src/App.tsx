@@ -70,6 +70,7 @@ import AdminProductCadastro from './pages/admin/AdminProductCadastro';
 const AdminLaunchSetup = lazy(() => import('./pages/admin/AdminLaunchSetup'));
 
 import { SupportChat } from "./components/support/SupportChat";
+import { SessionMonitor } from "./components/auth/SessionMonitor";
 
 const queryClient = new QueryClient();
 
@@ -145,6 +146,7 @@ const AppContent = () => {
       </main>
       <Footer />
       <SupportChat />
+      <SessionMonitor />
     </div>
   );
 };
