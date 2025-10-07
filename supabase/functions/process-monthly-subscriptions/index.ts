@@ -17,7 +17,11 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Ler parâmetros do corpo da requisição
+    const { forceRun = false, dryRun = false } = await req.json().catch(() => ({}));
+
     console.log('🚀 Iniciando processamento mensal de assinaturas...');
+    console.log(`⚙️ Modo: ${dryRun ? 'SIMULAÇÃO' : 'REAL'} | Forçado: ${forceRun ? 'SIM' : 'NÃO'}`);
 
     // Buscar assinaturas ativas
     const { data: activeSubscriptions, error: subError } = await supabase
@@ -44,10 +48,12 @@ serve(async (req) => {
     console.log(`📋 ${activeSubscriptions.length} assinaturas ativas encontradas`);
 
     const results = {
+      success: true,
       processed: 0,
       skipped: 0,
       failed: 0,
-      errors: [] as string[]
+      errors: [] as Array<{ subscriptionId: string; error: string }>,
+      details: [] as Array<{ subscriptionId: string; status: 'success' | 'error'; message: string }>
     };
 
     // Data do mês atual (primeiro dia)
@@ -60,18 +66,25 @@ serve(async (req) => {
       try {
         console.log(`\n🔄 Processando assinatura ${subscription.id}...`);
 
-        // Verificar se já foi processado este mês
-        const { data: existingShipment } = await supabase
-          .from('subscription_shipments')
-          .select('id')
-          .eq('subscription_id', subscription.id)
-          .eq('month_year', monthYear)
-          .maybeSingle();
+        // Verificar se já foi processado este mês (pular se não for forceRun)
+        if (!forceRun) {
+          const { data: existingShipment } = await supabase
+            .from('subscription_shipments')
+            .select('id')
+            .eq('subscription_id', subscription.id)
+            .eq('month_year', monthYear)
+            .maybeSingle();
 
-        if (existingShipment) {
-          console.log('⏭️ Já processado este mês, pulando...');
-          results.skipped++;
-          continue;
+          if (existingShipment) {
+            console.log('⏭️ Já processado este mês, pulando...');
+            results.skipped++;
+            results.details.push({
+              subscriptionId: subscription.id,
+              status: 'success',
+              message: 'Já processado este mês'
+            });
+            continue;
+          }
         }
 
         const plan = subscription.plan;
@@ -133,64 +146,83 @@ serve(async (req) => {
         }
 
         const selectedIds = selectedPerfumes.map(p => p.id);
+        const perfumeNames = selectedPerfumes.map(p => `${p.brand} - ${p.name}`).join(', ');
 
-        // Criar envio
-        const { data: shipment, error: shipmentError } = await supabase
-          .from('subscription_shipments')
-          .insert({
-            subscription_id: subscription.id,
-            month_year: monthYear,
-            perfume_ids: selectedIds,
-            status: 'pending',
-            selection_reasoning: {
-              selection_date: new Date().toISOString(),
-              perfumes: selectedPerfumes.map(p => ({
-                id: p.id,
-                name: p.name,
-                brand: p.brand,
-                family: p.family
-              }))
+        if (!dryRun) {
+          // Criar envio
+          const { data: shipment, error: shipmentError } = await supabase
+            .from('subscription_shipments')
+            .insert({
+              subscription_id: subscription.id,
+              month_year: monthYear,
+              perfume_ids: selectedIds,
+              status: 'pending',
+              selection_reasoning: {
+                selection_date: new Date().toISOString(),
+                perfumes: selectedPerfumes.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  brand: p.brand,
+                  family: p.family
+                }))
+              }
+            })
+            .select()
+            .single();
+
+          if (shipmentError) {
+            throw shipmentError;
+          }
+
+          console.log('✅ Envio criado:', shipment.id);
+
+          // Consumir estoque
+          for (const perfume of selectedPerfumes) {
+            const { error: stockError } = await supabase.rpc('consume_perfume_stock', {
+              p_perfume_id: perfume.id,
+              p_quantity_ml: plan.size_ml
+            });
+
+            if (stockError) {
+              console.error(`⚠️ Erro ao consumir estoque de ${perfume.name}:`, stockError);
             }
-          })
-          .select()
-          .single();
+          }
 
-        if (shipmentError) {
-          throw shipmentError;
-        }
-
-        console.log('✅ Envio criado:', shipment.id);
-
-        // Consumir estoque
-        for (const perfume of selectedPerfumes) {
-          const { error: stockError } = await supabase.rpc('consume_perfume_stock', {
-            p_perfume_id: perfume.id,
-            p_quantity_ml: plan.size_ml
+          // Registrar no histórico
+          await supabase.rpc('log_subscription_event', {
+            p_subscription_id: subscription.id,
+            p_event_type: 'shipment_created',
+            p_event_data: {
+              shipment_id: shipment.id,
+              perfume_count: selectedIds.length,
+              month_year: monthYear
+            }
           });
 
-          if (stockError) {
-            console.error(`⚠️ Erro ao consumir estoque de ${perfume.name}:`, stockError);
-          }
+          console.log('✅ Assinatura processada com sucesso!');
+        } else {
+          console.log('🔍 SIMULAÇÃO: Envio não criado');
         }
 
-        // Registrar no histórico
-        await supabase.rpc('log_subscription_event', {
-          p_subscription_id: subscription.id,
-          p_event_type: 'shipment_created',
-          p_event_data: {
-            shipment_id: shipment.id,
-            perfume_count: selectedIds.length,
-            month_year: monthYear
-          }
-        });
-
-        console.log('✅ Assinatura processada com sucesso!');
         results.processed++;
+        results.details.push({
+          subscriptionId: subscription.id,
+          status: 'success',
+          message: `${dryRun ? '[SIMULAÇÃO] ' : ''}Selecionados: ${perfumeNames}`
+        });
 
       } catch (error) {
         console.error(`❌ Erro ao processar assinatura ${subscription.id}:`, error);
         results.failed++;
-        results.errors.push(`${subscription.id}: ${error.message}`);
+        results.errors.push({
+          subscriptionId: subscription.id,
+          error: error.message
+        });
+        results.details.push({
+          subscriptionId: subscription.id,
+          status: 'error',
+          message: error.message
+        });
       }
     }
 

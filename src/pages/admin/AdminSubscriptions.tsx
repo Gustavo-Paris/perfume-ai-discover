@@ -15,6 +15,7 @@ import { ptBR } from 'date-fns/locale';
 import { UserSubscription, SubscriptionPlan, SubscriptionStatus } from '@/types/subscription';
 import { PendingShipmentsPanel } from '@/components/subscription/PendingShipmentsPanel';
 import { ShipmentHistory } from '@/components/subscription/ShipmentHistory';
+import { ManualProcessingPanel } from '@/components/admin/ManualProcessingPanel';
 
 export default function AdminSubscriptions() {
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatus | 'all'>('all');
@@ -104,6 +105,7 @@ export default function AdminSubscriptions() {
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="pending-shipments">Envios Pendentes</TabsTrigger>
           <TabsTrigger value="history">Histórico</TabsTrigger>
+          <TabsTrigger value="manual-process">Processar Manualmente</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
@@ -274,6 +276,10 @@ export default function AdminSubscriptions() {
 
         <TabsContent value="history" className="mt-6">
           <ShipmentHistory />
+        </TabsContent>
+
+        <TabsContent value="manual-process" className="mt-6">
+          <ManualProcessingPanel />
         </TabsContent>
       </Tabs>
     </div>
