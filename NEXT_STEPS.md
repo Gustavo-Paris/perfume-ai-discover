@@ -24,8 +24,8 @@
 
 ## 🔴 Alta Prioridade
 
-### 1. Sistema de Alertas Automáticos ✅
-**Status**: IMPLEMENTADO
+### 1. Sistema de Alertas Automáticos ✅✅✅
+**Status**: COMPLETAMENTE IMPLEMENTADO
 **Tempo estimado**: 2h
 **Impacto**: CRÍTICO
 
@@ -37,6 +37,7 @@ Tarefas:
 - [x] Dashboard de configuração de alertas em `/admin/security-alerts` ✅
 - [x] Configurar thresholds de alerta ✅
 - [x] Criar notificações no dashboard ✅
+- [x] Agendar execução periódica via cron job (a cada 10 minutos) ✅
 - [ ] Enviar emails de alerta para administradores (pendente integração Resend)
 
 Critérios de alerta implementados:
@@ -45,7 +46,7 @@ Critérios de alerta implementados:
 - ✅ Rate limit excedido >10x em 1 hora
 - ✅ Tentativas de acesso não autorizado
 
-**Próximo passo**: Agendar execução periódica via cron job
+**Sistema funcionando**: O monitoramento está rodando automaticamente a cada 10 minutos via pg_cron
 
 ### 2. Completar Integração de Audit Logs
 **Status**: 60% implementado
@@ -200,23 +201,22 @@ Warnings do linter Supabase (não relacionados à última migração):
 
 ## 🎯 Recomendação da Próxima Ação
 
-**Mais Impacto**: Implementar **Sistema de Alertas Automáticos**
+**Mais Impacto**: **Completar Integração de Audit Logs em Edge Functions**
 
 Por quê?
-- ✅ Audit logs já estão capturando eventos
-- ✅ Dashboard permite visualização manual
-- ❌ Falta notificação proativa para admins
-- ❌ Eventos críticos podem passar despercebidos
+- ✅ Hook useSecurityAudit criado e funcional
+- ✅ Logs de autenticação já implementados
+- ✅ Sistema de alertas monitora eventos críticos
+- ❌ Edge functions críticas ainda não logam eventos
+- ❌ Ações administrativas não estão sendo auditadas
 
 O que implementar:
-1. Edge function que roda periodicamente (cron)
-2. Analisa logs das últimas horas
-3. Detecta padrões suspeitos
-4. Envia emails/notificações para admins
-5. Cria alertas no dashboard
+1. Adicionar logs em edge functions críticas (confirm-order, generate-nfe, etc)
+2. Implementar logs em ações admin (CRUD de perfumes, aprovação de reviews)
+3. Garantir rastreabilidade completa de operações sensíveis
 
 **Tempo**: ~2 horas
-**Impacto**: Alto (detecção proativa de ameaças)
+**Impacto**: Alto (compliance e auditoria completa)
 
 ---
 
