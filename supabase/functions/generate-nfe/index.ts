@@ -297,25 +297,85 @@ serve(async (req) => {
       console.error('Erro ao salver itens da nota:', itemsError);
     }
 
-    // Se autorizada, enviar email com PDF
+    // Enviar email automaticamente com retry
     if (focusResult.status === 'autorizado' && focusResult.caminho_danfe) {
-      try {
-        await supabase.functions.invoke('send-email', {
-          body: {
-            to: addressData.email,
-            template: 'nfe_generated',  
-            data: {
-              customerName: addressData.name,
-              orderNumber: order.order_number,
-              nfeNumber: noteNumber,
-              nfeKey: focusResult.chave_nfe,
-              pdfUrl: focusResult.caminho_danfe
+      console.log(`[${requestId}] Attempting to send NFe email to:`, addressData.email);
+      
+      let emailSent = false;
+      let lastError = null;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries && !emailSent; attempt++) {
+        try {
+          console.log(`[${requestId}] Email attempt ${attempt}/${maxRetries}`);
+          
+          const emailResponse = await supabase.functions.invoke('send-email', {
+            body: {
+              to: addressData.email,
+              template: 'nfe_generated',  
+              data: {
+                customerName: addressData.name,
+                orderNumber: order.order_number,
+                nfeNumber: noteNumber,
+                nfeKey: focusResult.chave_nfe,
+                pdfUrl: focusResult.caminho_danfe
+              }
             }
+          });
+          
+          if (emailResponse.error) {
+            throw emailResponse.error;
           }
-        });
-      } catch (emailError) {
-        console.error('Erro ao enviar email:', emailError);
+          
+          emailSent = true;
+          console.log(`[${requestId}] ✅ NFe email sent successfully on attempt ${attempt}`);
+          
+        } catch (emailError) {
+          lastError = emailError;
+          console.error(`[${requestId}] ❌ Email attempt ${attempt} failed:`, emailError);
+          
+          // Exponential backoff: wait before retry
+          if (attempt < maxRetries) {
+            const waitMs = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+            console.log(`[${requestId}] Waiting ${waitMs}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitMs));
+          }
+        }
       }
+      
+      // Log final email status
+      if (!emailSent) {
+        console.error(`[${requestId}] ❌ Failed to send email after ${maxRetries} attempts. Last error:`, lastError);
+        
+        // Create notification for admin about email failure
+        try {
+          const { data: adminRoles } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .eq('role', 'admin');
+          
+          if (adminRoles && adminRoles.length > 0) {
+            await supabase
+              .from('notifications')
+              .insert(adminRoles.map(admin => ({
+                type: 'system',
+                message: `Falha ao enviar email de NFe para ${addressData.email} (Pedido ${order.order_number})`,
+                user_id: admin.user_id,
+                metadata: {
+                  order_id: order_id,
+                  order_number: order.order_number,
+                  nfe_number: noteNumber,
+                  recipient_email: addressData.email,
+                  error: lastError instanceof Error ? lastError.message : String(lastError)
+                }
+              })));
+          }
+        } catch (notifError) {
+          console.error(`[${requestId}] Failed to create notification:`, notifError);
+        }
+      }
+    } else if (focusResult.status !== 'autorizado') {
+      console.log(`[${requestId}] ⏳ NFe not yet authorized (status: ${focusResult.status}), email will not be sent`);
     }
     console.log(`[${requestId}] ✅ NFe generated successfully:`, {
       nfe_number: noteNumber,

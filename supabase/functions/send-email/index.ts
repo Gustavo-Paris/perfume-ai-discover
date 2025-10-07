@@ -7,8 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Temporarily disable Resend until proper setup
-const resend = null;
+import { Resend } from 'npm:resend@4.0.0';
+
+const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'Perfumes Paris <noreply@perfumesparis.com>';
 
 // Email templates
@@ -440,25 +441,22 @@ const handler = async (req: Request): Promise<Response> => {
     const subject = compiledSubject(data);
     const html = compiledHtml(data);
 
-    // Email sending is temporarily disabled
-    console.log('Email sending temporarily disabled - would send:', {
+    console.log('Sending email via Resend:', {
+      from: EMAIL_FROM,
+      to: [to],
+      subject
+    });
+    
+    const emailResponse = await resend.emails.send({
       from: EMAIL_FROM,
       to: [to],
       subject,
-      html: html.substring(0, 100) + '...'
+      html,
     });
-    
-    // Activate Resend email sending - currently disabled for testing
-    console.log('Email function called but Resend temporarily disabled');
-    const emailResponse = { data: { id: 'resend-disabled' }, error: null };
-    
-    // When ready to activate, uncomment and configure:
-    // const emailResponse = await resend.emails.send({
-    //   from: EMAIL_FROM,
-    //   to: [to],
-    //   subject,
-    //   html,
-    // });
+
+    if (emailResponse.error) {
+      throw new Error(`Resend error: ${emailResponse.error.message}`);
+    }
 
     console.log('Email sent successfully:', emailResponse);
 
