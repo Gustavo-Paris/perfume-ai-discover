@@ -32,6 +32,11 @@ export const useSessionValidation = ({
 
       // Buscar sessão atual
       const { data: { session }, error } = await supabase.auth.getSession();
+      
+      // Se não há sessão ativa, não fazer nada (usuário não logado)
+      if (!session && !error) {
+        return;
+      }
 
       if (error) {
         console.error('Session validation error:', error);
