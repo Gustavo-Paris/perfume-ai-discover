@@ -3075,6 +3075,199 @@ export type Database = {
           },
         ]
       }
+      subscription_history: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          subscription_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          subscription_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          decants_per_month: number
+          description: string | null
+          display_order: number | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_monthly: number
+          size_ml: number
+          stripe_price_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          decants_per_month: number
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_monthly: number
+          size_ml: number
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          decants_per_month?: number
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_monthly?: number
+          size_ml?: number
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      subscription_preferences: {
+        Row: {
+          created_at: string | null
+          excluded_notes: string[] | null
+          id: string
+          intensity_preference:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          notes: string | null
+          preferred_families: string[] | null
+          preferred_gender: string[] | null
+          subscription_id: string
+          surprise_me: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          excluded_notes?: string[] | null
+          id?: string
+          intensity_preference?:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          notes?: string | null
+          preferred_families?: string[] | null
+          preferred_gender?: string[] | null
+          subscription_id: string
+          surprise_me?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          excluded_notes?: string[] | null
+          id?: string
+          intensity_preference?:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          notes?: string | null
+          preferred_families?: string[] | null
+          preferred_gender?: string[] | null
+          subscription_id?: string
+          surprise_me?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_preferences_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: true
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_shipments: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          id: string
+          month_year: string
+          order_id: string | null
+          perfume_ids: string[]
+          selection_reasoning: Json | null
+          shipped_at: string | null
+          status: Database["public"]["Enums"]["shipment_status"]
+          subscription_id: string
+          tracking_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          month_year: string
+          order_id?: string | null
+          perfume_ids: string[]
+          selection_reasoning?: Json | null
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"]
+          subscription_id: string
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          month_year?: string
+          order_id?: string | null
+          perfume_ids?: string[]
+          selection_reasoning?: Json | null
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"]
+          subscription_id?: string
+          tracking_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_shipments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_conversations: {
         Row: {
           assigned_to: string | null
@@ -3250,6 +3443,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          cancelled_at: string | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_id: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       warehouses: {
         Row: {
@@ -4108,6 +4357,14 @@ export type Database = {
             }
         Returns: string
       }
+      log_subscription_event: {
+        Args: {
+          p_event_data?: Json
+          p_event_type: string
+          p_subscription_id: string
+        }
+        Returns: string
+      }
       log_unauthorized_company_access: {
         Args: { p_action?: string; p_user_id?: string }
         Returns: undefined
@@ -4263,6 +4520,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "customer"
+      intensity_preference: "light" | "medium" | "strong" | "any"
+      shipment_status:
+        | "pending"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "failed"
+      subscription_status: "active" | "paused" | "cancelled" | "past_due"
     }
     CompositeTypes: {
       http_header: {
@@ -4407,6 +4672,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "customer"],
+      intensity_preference: ["light", "medium", "strong", "any"],
+      shipment_status: [
+        "pending",
+        "processing",
+        "shipped",
+        "delivered",
+        "failed",
+      ],
+      subscription_status: ["active", "paused", "cancelled", "past_due"],
     },
   },
 } as const
