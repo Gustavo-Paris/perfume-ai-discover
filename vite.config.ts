@@ -19,9 +19,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Remove all console statements in production (keep only critical errors)
+  // Remove debug logs in production (keep console.error for critical issues)
   esbuild: {
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
+    drop: mode === 'production' ? ['debugger'] : [],
+    pure: mode === 'production' ? ['console.log', 'console.warn', 'console.debug'] : [],
   },
   build: {
     // Minificar e otimizar para produção
