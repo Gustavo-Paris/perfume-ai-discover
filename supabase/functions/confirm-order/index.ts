@@ -1,9 +1,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import Stripe from "https://esm.sh/stripe@14.21.0";
+import { 
+  validateCSRFToken,
+  checkRateLimit,
+  logSecurityEvent,
+  getClientIP
+} from '../_shared/security.ts';
 
 interface ConfirmOrderRequest {
   orderDraftId: string;
+  csrfToken?: string;
   paymentData: {
     transaction_id: string;
     payment_method: 'pix' | 'credit_card';
@@ -37,15 +44,7 @@ serve(async (req) => {
       );
     }
 
-    const { orderDraftId, paymentData }: ConfirmOrderRequest = requestBody;
-
-    if (!orderDraftId || !paymentData) {
-      console.error('Missing required fields:', { orderDraftId: !!orderDraftId, paymentData: !!paymentData });
-      return new Response(
-        JSON.stringify({ error: 'Order draft ID and payment data are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { orderDraftId, csrfToken, paymentData }: ConfirmOrderRequest = requestBody;
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -67,6 +66,102 @@ serve(async (req) => {
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Extract user ID from auth header
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    let userId: string | null = null;
+    
+    if (token) {
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id || null;
+    }
+
+    const clientIp = getClientIP(req);
+
+    // FASE 2.1: CSRF Token Validation
+    if (!validateCSRFToken(csrfToken)) {
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'csrf_validation_failed',
+        'CSRF token validation failed on order confirmation',
+        'high',
+        { orderDraftId, ip: clientIp }
+      );
+      
+      return new Response(
+        JSON.stringify({ error: 'Invalid security token' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // FASE 2.1: Rate Limiting (5 confirm attempts per 5 minutes)
+    const rateLimitResult = await checkRateLimit(
+      supabase,
+      userId,
+      clientIp,
+      'order-confirmation',
+      5,
+      5
+    );
+
+    if (!rateLimitResult.allowed) {
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'rate_limit_exceeded',
+        'Order confirmation rate limit exceeded',
+        'high',
+        { orderDraftId, ip: clientIp }
+      );
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'Muitas tentativas de confirmação. Tente novamente em alguns minutos.',
+          remaining: 0,
+          reset: rateLimitResult.reset
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Basic validation
+    if (!orderDraftId || !paymentData) {
+      console.error('Missing required fields:', { orderDraftId: !!orderDraftId, paymentData: !!paymentData });
+      
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'invalid_order_data',
+        'Missing required order confirmation fields',
+        'medium',
+        { hasOrderDraftId: !!orderDraftId, hasPaymentData: !!paymentData }
+      );
+
+      return new Response(
+        JSON.stringify({ error: 'Order draft ID and payment data are required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(orderDraftId)) {
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'invalid_order_data',
+        'Invalid order draft ID format',
+        'medium',
+        { orderDraftId }
+      );
+
+      return new Response(
+        JSON.stringify({ error: 'Invalid order draft ID' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Step 1: Get order draft
     console.log('Step 1: Fetching order draft:', orderDraftId);
@@ -358,6 +453,21 @@ serve(async (req) => {
     }
 
     console.log('Order confirmation completed successfully');
+
+    // Log successful order confirmation
+    await logSecurityEvent(
+      supabase,
+      userId,
+      'order_confirmed',
+      'Order confirmed successfully',
+      'low',
+      { 
+        orderId: order.id, 
+        orderNumber: order.order_number,
+        totalAmount: order.total_amount,
+        paymentMethod: order.payment_method
+      }
+    );
 
     return new Response(
       JSON.stringify({

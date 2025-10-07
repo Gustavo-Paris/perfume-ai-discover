@@ -1,10 +1,18 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import { 
+  sanitizeString, 
+  validateCSRFToken,
+  checkRateLimit,
+  logSecurityEvent,
+  getClientIP
+} from '../_shared/security.ts';
 
 interface PaymentRequest {
   orderDraftId: string;
   paymentMethod: 'pix' | 'credit_card';
+  csrfToken?: string;
   cardData?: {
     number: string;
     holder_name: string;
@@ -51,19 +59,107 @@ serve(async (req) => {
   }
 
   try {
-    const { orderDraftId, paymentMethod, cardData, installments }: PaymentRequest = await req.json();
+    const requestBody: PaymentRequest = await req.json();
+    const { orderDraftId, paymentMethod, csrfToken, cardData, installments } = requestBody;
 
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Extract user ID from auth header
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    let userId: string | null = null;
+    
+    if (token) {
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id || null;
+    }
+
+    const clientIp = getClientIP(req);
+
+    // FASE 2.1: CSRF Token Validation
+    if (!validateCSRFToken(csrfToken)) {
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'csrf_validation_failed',
+        'CSRF token validation failed on payment processing',
+        'high',
+        { orderDraftId, paymentMethod, ip: clientIp }
+      );
+      
+      return new Response(
+        JSON.stringify({ error: 'Invalid security token' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // FASE 2.1: Rate Limiting (3 payment attempts per 5 minutes)
+    const rateLimitResult = await checkRateLimit(
+      supabase,
+      userId,
+      clientIp,
+      'payment-attempt',
+      3,
+      5
+    );
+
+    if (!rateLimitResult.allowed) {
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'rate_limit_exceeded',
+        'Payment attempt rate limit exceeded',
+        'high',
+        { orderDraftId, paymentMethod, ip: clientIp }
+      );
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'Muitas tentativas de pagamento. Tente novamente em alguns minutos.',
+          remaining: 0,
+          reset: rateLimitResult.reset
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Basic validation
     if (!orderDraftId || !paymentMethod) {
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'invalid_payment_data',
+        'Missing required payment fields',
+        'medium',
+        { hasOrderDraftId: !!orderDraftId, hasPaymentMethod: !!paymentMethod }
+      );
+
       return new Response(
         JSON.stringify({ error: 'Order draft ID and payment method are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(orderDraftId)) {
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'invalid_payment_data',
+        'Invalid order draft ID format',
+        'medium',
+        { orderDraftId }
+      );
+
+      return new Response(
+        JSON.stringify({ error: 'Invalid order draft ID' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Get order draft with all necessary data
     const { data: orderDraft, error: draftError } = await supabase
@@ -249,6 +345,12 @@ serve(async (req) => {
         );
       }
 
+      // Sanitize card holder name
+      const sanitizedCardData = {
+        ...cardData,
+        holder_name: sanitizeString(cardData.holder_name)
+      };
+
       // For now, simulate credit card processing since Modo Bank focus is on PIX
       const mockCardResponse = {
         status: 'paid' as const,
@@ -260,6 +362,16 @@ serve(async (req) => {
 
       // Send server-side purchase event to GA4
       await sendGA4PurchaseEvent(orderDraftId, mockCardResponse.transaction_id, totalAmount, cartItems);
+
+      // Log successful payment
+      await logSecurityEvent(
+        supabase,
+        userId,
+        'payment_success',
+        'Credit card payment processed successfully',
+        'low',
+        { orderDraftId, transactionId: mockCardResponse.transaction_id, amount: totalAmount }
+      );
 
       return new Response(
         JSON.stringify({
