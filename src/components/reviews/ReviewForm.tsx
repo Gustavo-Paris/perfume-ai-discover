@@ -8,6 +8,8 @@ import { useCreateReview, useUpdateReview } from '@/hooks/useReviewForm';
 import { Review } from '@/types/review';
 import { Loader2 } from 'lucide-react';
 import { sanitizeInput } from '@/utils/securityEnhancements';
+import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 
 interface ReviewFormProps {
   perfumeId: string;
@@ -17,6 +19,7 @@ interface ReviewFormProps {
 const ReviewForm = ({ perfumeId, existingReview }: ReviewFormProps) => {
   const [rating, setRating] = useState(existingReview?.rating || 0);
   const [comment, setComment] = useState(existingReview?.comment || '');
+  const { toast } = useToast();
 
   const createReviewMutation = useCreateReview(perfumeId);
   const updateReviewMutation = useUpdateReview(perfumeId);
@@ -26,8 +29,19 @@ const ReviewForm = ({ perfumeId, existingReview }: ReviewFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validação do schema - removendo perfume_id da validação
+    const validation = z.object({
+      rating: z.number().int().min(1, 'Selecione uma nota de 1 a 5').max(5, 'Nota máxima é 5'),
+      comment: z.string().max(500, 'Comentário muito longo').optional()
+    }).safeParse({ rating, comment: comment.trim() || undefined });
     
-    if (rating === 0) {
+    if (!validation.success) {
+      toast({
+        title: "Dados inválidos",
+        description: validation.error.errors[0].message,
+        variant: "destructive"
+      });
       return;
     }
 

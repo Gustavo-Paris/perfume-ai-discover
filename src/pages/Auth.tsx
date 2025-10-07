@@ -16,6 +16,7 @@ import { Sentry } from '@/utils/sentry';
 import { useRateLimit } from '@/hooks/useRateLimit';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { signInSchema, signUpSchema, resetPasswordSchema, updatePasswordSchema } from '@/utils/validationSchemas';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -137,6 +138,17 @@ const Auth = () => {
       });
       return;
     }
+
+    // Validação do schema
+    const validation = signInSchema.safeParse(loginForm);
+    if (!validation.success) {
+      toast({
+        title: "Dados inválidos",
+        description: validation.error.errors[0].message,
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsLoading(true);
     
@@ -179,6 +191,17 @@ const Auth = () => {
       toast({
         title: "Muitas tentativas",
         description: signupRateLimit.getBlockedMessage(),
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validação do schema
+    const validation = signUpSchema.safeParse(signupForm);
+    if (!validation.success) {
+      toast({
+        title: "Dados inválidos",
+        description: validation.error.errors[0].message,
         variant: "destructive"
       });
       return;
@@ -266,6 +289,17 @@ const Auth = () => {
       });
       return;
     }
+
+    // Validação do schema
+    const validation = resetPasswordSchema.safeParse({ email: resetForm.email });
+    if (!validation.success) {
+      toast({
+        title: "Email inválido",
+        description: validation.error.errors[0].message,
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsLoading(true);
     
@@ -309,11 +343,13 @@ const Auth = () => {
       });
       return;
     }
-    
-    if (newPasswordForm.password.length < 6) {
+
+    // Validação do schema
+    const validation = updatePasswordSchema.safeParse({ password: newPasswordForm.password, confirmPassword: newPasswordForm.confirmPassword });
+    if (!validation.success) {
       toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres",
+        title: "Senha inválida",
+        description: validation.error.errors[0].message,
         variant: "destructive"
       });
       return;
