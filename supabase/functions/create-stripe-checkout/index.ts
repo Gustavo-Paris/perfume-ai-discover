@@ -2,6 +2,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { 
+  validateCSRFToken, 
+  checkRateLimit, 
+  logSecurityEvent,
+  validateAndSanitizeCheckoutItems,
+  getClientIP,
+  sanitizeString
+} from "../_shared/security.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,6 +26,7 @@ interface CheckoutItem {
 }
 
 interface CheckoutRequest {
+  csrfToken?: string;
   items: CheckoutItem[];
   user_email?: string;
   order_draft_id?: string;
@@ -76,13 +85,94 @@ serve(async (req) => {
     }
 
 // Parse request body
-const { items, user_email, order_draft_id, payment_method, success_url, cancel_url }: CheckoutRequest = await req.json();
-const method: 'pix' | 'card' = payment_method === 'pix' ? 'pix' : 'card';
-logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_draft_id, method });
+const requestBody: CheckoutRequest = await req.json();
+const { csrfToken, items, user_email, order_draft_id, payment_method, success_url, cancel_url } = requestBody;
 
-    if (!items || items.length === 0) {
-      throw new Error('Nenhum item no carrinho');
+    // SECURITY: Validar CSRF token
+    if (!validateCSRFToken(csrfToken)) {
+      logStep("SECURITY: CSRF token validation failed");
+      await logSecurityEvent(
+        supabase,
+        user?.id || null,
+        'csrf_validation_failed',
+        'CSRF token inválido no checkout',
+        'high',
+        { endpoint: 'create-stripe-checkout' }
+      );
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Token de segurança inválido. Recarregue a página.' 
+        }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
+
+    // SECURITY: Rate limiting (3 tentativas por 5 minutos)
+    const clientIP = getClientIP(req);
+    const rateLimit = await checkRateLimit(
+      supabase,
+      user?.id || null,
+      clientIP,
+      'checkout-attempt',
+      3,
+      5
+    );
+
+    if (!rateLimit.allowed) {
+      logStep("SECURITY: Rate limit exceeded", { userId: user?.id, ip: clientIP });
+      await logSecurityEvent(
+        supabase,
+        user?.id || null,
+        'rate_limit_exceeded',
+        'Rate limit excedido no checkout',
+        'medium',
+        { endpoint: 'create-stripe-checkout', ip: clientIP }
+      );
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Muitas tentativas de pagamento. Tente novamente em alguns minutos.' 
+        }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    // SECURITY: Validar e sanitizar items
+    let sanitizedItems;
+    try {
+      sanitizedItems = validateAndSanitizeCheckoutItems(items);
+      logStep("Items validated and sanitized", { count: sanitizedItems.length });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Items inválidos';
+      logStep("SECURITY: Invalid checkout items", { error: errorMsg });
+      await logSecurityEvent(
+        supabase,
+        user?.id || null,
+        'invalid_checkout_data',
+        'Dados de checkout inválidos',
+        'medium',
+        { error: errorMsg, ip: clientIP }
+      );
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: errorMsg
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+const method: 'pix' | 'card' = payment_method === 'pix' ? 'pix' : 'card';
+logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft: !!order_draft_id, method });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
@@ -110,8 +200,8 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
       }
     }
 
-    // Prepare line items for Stripe using real perfume prices
-    let lineItems = items.map(item => ({
+    // Prepare line items for Stripe using sanitized data
+    let lineItems = sanitizedItems.map(item => ({
       price_data: {
         currency: 'brl',
         product_data: {
@@ -190,7 +280,7 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
     }
 
     // Calculate totals for logging (now including shipping)
-    const itemsTotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+    const itemsTotal = sanitizedItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
     const totalAmount = itemsTotal + shippingCost;
     logStep("Total amount calculated", { itemsTotal, shippingCost, total: totalAmount, currency: 'BRL' });
 
@@ -293,11 +383,11 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
         name: 'auto',
         shipping: 'auto'
       },
-      payment_intent_data: {
-        metadata: {
-          user_id: user?.id || 'guest',
-          user_email: customerEmail,
-          item_count: items.length.toString(),
+        payment_intent_data: {
+          metadata: {
+            user_id: user?.id || 'guest',
+            user_email: customerEmail,
+            item_count: sanitizedItems.length.toString(),
           selected_payment_method: method,
           ...(order_draft_id ? { order_draft_id } : {}),
         }
@@ -363,6 +453,21 @@ logStep("Checkout request parsed", { itemCount: items.length, hasDraft: !!order_
     }
 
     logStep("Stripe checkout completed successfully");
+
+    // Log security event de sucesso
+    await logSecurityEvent(
+      supabase,
+      user?.id || null,
+      'checkout_success',
+      'Checkout completado com sucesso',
+      'low',
+      { 
+        sessionId: session?.id, 
+        itemCount: sanitizedItems.length,
+        totalAmount,
+        method 
+      }
+    );
 
     // Ensure session was created successfully
     if (!session) {
