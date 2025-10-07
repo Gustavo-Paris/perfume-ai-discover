@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, Search, TrendingUp, Users, DollarSign, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { UserSubscription, SubscriptionPlan, SubscriptionStatus } from '@/types/subscription';
+import { PendingShipmentsPanel } from '@/components/subscription/PendingShipmentsPanel';
 
 export default function AdminSubscriptions() {
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatus | 'all'>('all');
@@ -89,15 +91,22 @@ export default function AdminSubscriptions() {
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Gerenciar Assinaturas</h1>
-          <p className="text-muted-foreground">
-            Visão geral e gerenciamento de todas as assinaturas
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Gerenciar Assinaturas</h1>
+        <p className="text-muted-foreground">
+          Visualize e gerencie todas as assinaturas e envios do sistema
+        </p>
+      </div>
 
-        {/* Métricas */}
-        <div className="grid gap-4 md:grid-cols-4">
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="pending-shipments">Envios Pendentes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6 mt-6">
+          {/* Métricas */}
+          <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -255,6 +264,12 @@ export default function AdminSubscriptions() {
             )}
           </CardContent>
         </Card>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="pending-shipments" className="mt-6">
+          <PendingShipmentsPanel />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
