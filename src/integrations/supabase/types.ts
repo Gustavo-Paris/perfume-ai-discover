@@ -2725,6 +2725,39 @@ export type Database = {
         }
         Relationships: []
       }
+      security_alert_config: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          is_enabled: boolean
+          notification_channels: Json
+          threshold_value: number
+          time_window_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          notification_channels?: Json
+          threshold_value?: number
+          time_window_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          notification_channels?: Json
+          threshold_value?: number
+          time_window_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_audit_log: {
         Row: {
           created_at: string

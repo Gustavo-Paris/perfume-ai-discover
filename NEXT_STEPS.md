@@ -24,26 +24,28 @@
 
 ## 🔴 Alta Prioridade
 
-### 1. Sistema de Alertas Automáticos
-**Status**: Não iniciado
+### 1. Sistema de Alertas Automáticos ✅
+**Status**: IMPLEMENTADO
 **Tempo estimado**: 2h
 **Impacto**: CRÍTICO
 
 **Objetivo**: Notificar admins automaticamente sobre eventos de segurança críticos
 
 Tarefas:
-- [ ] Criar edge function `security-monitor` 
-- [ ] Detectar padrões suspeitos (múltiplos logins falhados, rate limits)
-- [ ] Enviar emails de alerta para administradores
-- [ ] Dashboard de alertas em tempo real
-- [ ] Configurar thresholds de alerta
+- [x] Criar edge function `security-monitor` ✅
+- [x] Detectar padrões suspeitos (múltiplos logins falhados, rate limits) ✅
+- [x] Dashboard de configuração de alertas em `/admin/security-alerts` ✅
+- [x] Configurar thresholds de alerta ✅
+- [x] Criar notificações no dashboard ✅
+- [ ] Enviar emails de alerta para administradores (pendente integração Resend)
 
-Critérios de alerta:
-- ✋ Mais de 5 tentativas de login falhadas em 10min (mesmo IP)
-- ✋ Eventos com risk_level='critical'
-- ✋ Rate limit excedido >10x em 1 hora
-- ✋ Acesso a dados sensíveis fora do horário comercial
-- ✋ Mudanças em configurações críticas (company_info, roles)
+Critérios de alerta implementados:
+- ✅ Mais de 5 tentativas de login falhadas em 10min (mesmo IP)
+- ✅ Eventos com risk_level='critical'
+- ✅ Rate limit excedido >10x em 1 hora
+- ✅ Tentativas de acesso não autorizado
+
+**Próximo passo**: Agendar execução periódica via cron job
 
 ### 2. Completar Integração de Audit Logs
 **Status**: 60% implementado

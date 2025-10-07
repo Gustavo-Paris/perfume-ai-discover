@@ -31,7 +31,8 @@ import {
   BarChart3,
   Receipt,
   Bot,
-  Shield
+  Shield,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -123,6 +124,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
       { title: 'Configurações', url: '/admin/config', icon: Settings },
       { title: 'Monitoramento', url: '/admin/monitoring', icon: TrendingUp },
       { title: 'Logs de Segurança', url: '/admin/security-logs', icon: Shield },
+      { title: 'Alertas de Segurança', url: '/admin/security-alerts', icon: Bell },
     ]
   },
 ];
