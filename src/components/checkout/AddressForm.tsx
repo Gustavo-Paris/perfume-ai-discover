@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { sanitizeInput } from '@/utils/securityEnhancements';
+import { useCSRFToken } from '@/hooks/useCSRFToken';
 
 const addressSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -35,6 +36,9 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [isDefault, setIsDefault] = useState(false);
+
+  // CSRF Protection
+  const { token: csrfToken, validateToken } = useCSRFToken();
 
   const {
     register,
@@ -94,6 +98,15 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
       return;
     }
 
+    // CSRF token validation
+    if (!validateToken(csrfToken)) {
+      toast({
+        title: "Erro de Segurança",
+        description: "Token de segurança inválido. Recarregue a página.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setLoading(true);
     

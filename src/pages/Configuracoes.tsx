@@ -29,6 +29,7 @@ import { motion } from 'framer-motion';
 import { getPasswordStrength, checkPasswordPwned, type PasswordStrength } from '@/utils/password';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useCSRFToken } from '@/hooks/useCSRFToken';
 
 const Configuracoes = () => {
   const { user, updatePassword } = useAuth();
@@ -52,6 +53,9 @@ const Configuracoes = () => {
     count: null 
   });
 
+  // CSRF Protection
+  const { token: csrfToken, validateToken } = useCSRFToken();
+
   // Check password strength on change
   useEffect(() => {
     if (passwordForm.new) {
@@ -68,6 +72,16 @@ const Configuracoes = () => {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // CSRF token validation
+    if (!validateToken(csrfToken)) {
+      toast({
+        title: "Erro de Segurança",
+        description: "Token de segurança inválido. Recarregue a página.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Validation
     if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {

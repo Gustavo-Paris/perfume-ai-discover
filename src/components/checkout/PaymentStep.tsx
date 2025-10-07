@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContextOptimized';
 import { useRateLimit } from '@/hooks/useRateLimit';
+import { useCSRFToken } from '@/hooks/useCSRFToken';
 
 interface PaymentStepProps {
   onBack: () => void;
@@ -30,7 +31,20 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
     blockDuration: 10 * 60 * 1000, // 10 minutos
   });
 
+  // CSRF Protection
+  const { token: csrfToken, validateToken } = useCSRFToken();
+
   const handleCheckout = async () => {
+    // CSRF token validation
+    if (!validateToken(csrfToken)) {
+      toast({
+        title: "Erro de Segurança",
+        description: "Token de segurança inválido. Recarregue a página.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Verificar rate limiting
     if (!checkoutRateLimit.checkLimit()) {
       toast({
@@ -72,6 +86,7 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
 
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
         body: {
+          csrfToken,
           items: checkoutItems,
           order_draft_id: orderDraftId,
           payment_method: paymentMethod, // 'pix' | 'card'
