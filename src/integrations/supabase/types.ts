@@ -3522,6 +3522,10 @@ export type Database = {
             }
         Returns: boolean
       }
+      check_rls_enabled: {
+        Args: { table_name: string }
+        Returns: boolean
+      }
       check_stock_availability: {
         Args: {
           perfume_uuid: string
