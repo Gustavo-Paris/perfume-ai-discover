@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Play, 
   AlertTriangle, 
@@ -11,7 +12,9 @@ import {
   XCircle, 
   Loader2,
   TestTube,
-  Calendar
+  Calendar,
+  Info,
+  HelpCircle
 } from 'lucide-react';
 import { useProcessSubscriptionsManually } from '@/hooks/useProcessSubscriptionsManually';
 import { format } from 'date-fns';
@@ -78,43 +81,59 @@ export function ManualProcessingPanel() {
 
           {/* Botões de ação */}
           <div className="flex gap-3">
-            <Button
-              onClick={() => handleProcess(true)}
-              disabled={isProcessing}
-              variant="outline"
-              className="flex-1"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Simulando...
-                </>
-              ) : (
-                <>
-                  <TestTube className="mr-2 h-4 w-4" />
-                  Simular (Dry Run)
-                </>
-              )}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleProcess(true)}
+                    disabled={isProcessing}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Simulando...
+                      </>
+                    ) : (
+                      <>
+                        <TestTube className="mr-2 h-4 w-4" />
+                        Simular (Dry Run)
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Testa o processamento sem criar envios reais</p>
+                </TooltipContent>
+              </Tooltip>
 
-            <Button
-              onClick={() => handleProcess(false)}
-              disabled={isProcessing}
-              variant="default"
-              className="flex-1"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <Play className="mr-2 h-4 w-4" />
-                  Processar Agora
-                </>
-              )}
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleProcess(false)}
+                    disabled={isProcessing}
+                    variant="default"
+                    className="flex-1"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Processar Agora
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Processar todas as assinaturas ativas imediatamente</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
 
           {/* Barra de progresso */}
