@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 
 export interface Affiliate {
   id: string;
@@ -34,14 +35,14 @@ export const useAffiliates = () => {
   // Carregar dados do afiliado
   const loadAffiliateData = useCallback(async () => {
     if (!user) {
-      console.log('useAffiliates: No user, clearing data');
+      debugLog('useAffiliates: No user, clearing data');
       setAffiliate(null);
       setReferrals([]);
       setLoading(false);
       return;
     }
 
-    console.log('useAffiliates: Loading data for user:', user.id);
+    debugLog('useAffiliates: Loading data for user:', user.id);
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -51,11 +52,11 @@ export const useAffiliates = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('useAffiliates: Error loading affiliate:', error);
+        debugError('useAffiliates: Error loading affiliate:', error);
         throw error;
       }
 
-      console.log('useAffiliates: Affiliate data:', data);
+      debugLog('useAffiliates: Affiliate data:', data);
       setAffiliate(data);
 
       if (data) {
@@ -67,16 +68,16 @@ export const useAffiliates = () => {
           .order('created_at', { ascending: false });
 
         if (!referralError) {
-          console.log('useAffiliates: Referrals loaded:', referralData);
+          debugLog('useAffiliates: Referrals loaded:', referralData);
           setReferrals(referralData || []);
         } else {
-          console.error('useAffiliates: Error loading referrals:', referralError);
+          debugError('useAffiliates: Error loading referrals:', referralError);
         }
       } else {
-        console.log('useAffiliates: User is not an affiliate');
+        debugLog('useAffiliates: User is not an affiliate');
       }
     } catch (error) {
-      console.error('useAffiliates: Error loading affiliate data:', error);
+      debugError('useAffiliates: Error loading affiliate data:', error);
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export const useAffiliates = () => {
       setAffiliate(data);
       return { success: true, affiliate: data };
     } catch (error) {
-      console.error('Error applying to affiliate program:', error);
+      debugError('Error applying to affiliate program:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Erro ao se inscrever' 
@@ -141,13 +142,13 @@ export const useAffiliates = () => {
       });
 
       if (error) {
-        console.error('Error processing affiliate referral via RPC:', error);
+        debugError('Error processing affiliate referral via RPC:', error);
         return false;
       }
 
       return data === true;
     } catch (error) {
-      console.error('Error processing affiliate referral:', error);
+      debugError('Error processing affiliate referral:', error);
       return false;
     }
   }, []);
@@ -167,13 +168,13 @@ export const useAffiliates = () => {
         .eq('status', 'pending');
 
       if (error) {
-        console.error('Error confirming commission:', error);
+        debugError('Error confirming commission:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error confirming commission:', error);
+      debugError('Error confirming commission:', error);
       return false;
     }
   }, []);

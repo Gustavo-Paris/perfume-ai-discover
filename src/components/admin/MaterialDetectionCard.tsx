@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDetectMaterialInfo } from '@/hooks/useMaterialConfigurations';
 import { useMaterials } from '@/hooks/useMaterials';
+import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 
 interface MaterialDetectionCardProps {
   onDetectedMaterial?: (material: any, detectionInfo: any) => void;
@@ -31,9 +32,9 @@ export default function MaterialDetectionCard({ onDetectedMaterial }: MaterialDe
     for (const material of detectableMaterials.slice(0, 5)) {
       try {
         const info = await detectInfo.mutateAsync(material.name);
-        console.log(`Material: ${material.name}`, info);
+        debugLog(`Material: ${material.name}`, info);
       } catch (error) {
-        console.error('Erro na detecção:', error);
+        debugError('Erro na detecção:', error);
       }
     }
   };

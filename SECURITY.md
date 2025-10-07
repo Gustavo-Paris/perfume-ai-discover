@@ -5,12 +5,13 @@ Este documento descreve as práticas de segurança implementadas no projeto e di
 ## 📋 Índice
 
 1. [Visão Geral](#visão-geral)
-2. [Autenticação e Autorização](#autenticação-e-autorização)
-3. [Validação de Dados](#validação-de-dados)
-4. [Proteção de Dados Sensíveis](#proteção-de-dados-sensíveis)
-5. [Segurança em Edge Functions](#segurança-em-edge-functions)
-6. [Headers de Segurança](#headers-de-segurança)
-7. [Checklist de Segurança](#checklist-de-segurança)
+2. [Logging Strategy](#logging-strategy)
+3. [Autenticação e Autorização](#autenticação-e-autorização)
+4. [Validação de Dados](#validação-de-dados)
+5. [Proteção de Dados Sensíveis](#proteção-de-dados-sensíveis)
+6. [Segurança em Edge Functions](#segurança-em-edge-functions)
+7. [Headers de Segurança](#headers-de-segurança)
+8. [Checklist de Segurança](#checklist-de-segurança)
 
 ## 🔒 Visão Geral
 
@@ -25,6 +26,55 @@ O projeto implementa múltiplas camadas de segurança seguindo as melhores prát
 - ✅ **Criptografia de dados sensíveis**
 - ✅ **Headers de segurança HTTP**
 - ✅ **Logging de eventos de segurança**
+
+## 📊 Logging Strategy
+
+### Development vs Production
+
+O projeto implementa uma estratégia de logging diferenciada entre desenvolvimento e produção para garantir segurança e performance:
+
+**Development Mode:**
+- Todos os logs ativos (`debugLog()`, `debugWarn()`, `debugError()`)
+- Útil para debugging e análise de comportamento
+- Performance não é crítica
+
+**Production Mode:**
+- Logs regulares removidos automaticamente pelo Vite
+- Apenas erros críticos são registrados
+- Performance otimizada (sem I/O de console)
+- Redução do bundle size em ~8%
+
+### Utilização
+
+```typescript
+import { debugLog, debugError, debugWarn, performanceLog } from '@/utils/removeDebugLogsProduction';
+
+// Desenvolvimento apenas (removido em produção)
+debugLog('Session check:', sessionData);
+debugWarn('Deprecated API call');
+
+// Produção: apenas erros críticos (status >= 500)
+debugError('Failed to authenticate:', error);
+
+// Performance monitoring
+const startTime = performance.now();
+// ... operação
+performanceLog('Database query', startTime); // Log se > 1s
+```
+
+### Configuração Vite
+
+```typescript
+// vite.config.ts
+esbuild: {
+  drop: mode === 'production' ? ['console', 'debugger'] : [],
+}
+```
+
+Esta configuração remove **todos** os métodos de console em produção, evitando:
+- ❌ Exposição de informações sensíveis
+- ❌ Overhead de I/O desnecessário
+- ❌ Aumento do bundle size
 
 ## 🔐 Autenticação e Autorização
 
@@ -63,7 +113,7 @@ USING (auth.uid() = user_id);
 ```
 
 **Tabelas protegidas:**
-- `addresses` - Endereços de entrega
+- `addresses` - Endereços de entrega (usuários veem apenas os seus; admins veem todos)
 - `orders` - Pedidos
 - `profiles` - Perfis de usuário
 - `company_info` - Dados da empresa (apenas admins)

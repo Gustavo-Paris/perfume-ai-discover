@@ -6,6 +6,7 @@ import { getPasswordStrength, checkPasswordPwned } from '@/utils/password';
 import { useAutoLogout } from '@/hooks/useAutoLogout';
 import { useSessionValidation } from '@/hooks/useSessionValidation';
 import { toast } from '@/hooks/use-toast';
+import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -72,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     },
     onSessionRefreshed: () => {
-      console.log('Session refreshed successfully');
+      debugLog('Session refreshed successfully');
     },
   });
 
@@ -101,12 +102,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const hasRecoveryTokens = hash.includes('access_token') && (hash.includes('type=recovery') || searchParams.get('type') === 'recovery');
       
       if (hasRecoveryTokens) {
-        console.log('🔄 Recovery tokens detected, processing...');
+        debugLog('🔄 Recovery tokens detected, processing...');
         
         // Force refresh the session immediately from URL
         const { error: refreshError } = await supabase.auth.refreshSession();
         if (refreshError) {
-          console.error('❌ Refresh error:', refreshError);
+          debugError('❌ Refresh error:', refreshError);
         }
         
         // Wait for Supabase to fully process
@@ -114,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Get current session with retry logic
-      console.log('📋 Getting session...');
+      debugLog('📋 Getting session...');
       let session = null;
       let attempts = 0;
       const maxAttempts = 3;
@@ -122,26 +123,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       while (!session && attempts < maxAttempts) {
         const { data, error } = await supabase.auth.getSession();
         if (error) {
-          console.error(`❌ Session check error (attempt ${attempts + 1}):`, error);
+          debugError(`❌ Session check error (attempt ${attempts + 1}):`, error);
         } else {
           session = data.session;
         }
         
         if (!session && attempts < maxAttempts - 1) {
-          console.log(`⏳ Retrying session check in 1s... (attempt ${attempts + 1})`);
+          debugLog(`⏳ Retrying session check in 1s... (attempt ${attempts + 1})`);
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
         attempts++;
       }
       
       if (mounted) {
-        console.log('✅ Session loaded:', !!session);
+        debugLog('✅ Session loaded:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     } catch (error) {
-      console.error('❌ Auth initialization error:', error);
+      debugError('❌ Auth initialization error:', error);
       if (mounted) {
         setSession(null);
         setUser(null);
@@ -197,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      debugError('Sign up error:', error);
       return { error };
     }
   };
@@ -276,7 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error: null };
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      debugError('Sign in error:', error);
       return { error };
     }
   };
@@ -294,7 +295,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     } catch (error) {
-      console.error('Error logging logout event:', error);
+      debugError('Error logging logout event:', error);
     }
     
     await supabase.auth.signOut();
@@ -334,7 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error };
     } catch (err) {
-      console.error('Exception in updatePassword:', err);
+      debugError('Exception in updatePassword:', err);
       return { error: err };
     }
   };

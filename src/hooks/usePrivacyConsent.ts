@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { hasConsent, giveConsent, revokeConsent, COOKIE_NAMES } from '@/utils/privacy';
+import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 
 export interface PrivacyConsent {
   id: string;
@@ -37,7 +38,7 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
       
       // Only record consent for authenticated users to comply with RLS policies
       if (!user.user?.id) {
-        console.log('Skipping database consent recording for anonymous user');
+        debugLog('Skipping database consent recording for anonymous user');
         return null;
       }
       
@@ -83,22 +84,22 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
 
   const acceptConsent = async () => {
     try {
-      console.log('Accepting consent...');
-      console.log('Before setting cookie, all cookies:', document.cookie);
+      debugLog('Accepting consent...');
+      debugLog('Before setting cookie, all cookies:', document.cookie);
       giveConsent(consentType);
-      console.log('After setting cookie, all cookies:', document.cookie);
+      debugLog('After setting cookie, all cookies:', document.cookie);
       
       // Force immediate check
       const cookieName = COOKIE_NAMES[consentType];
       const directCookieCheck = document.cookie.split(';').find(c => c.trim().startsWith(`${cookieName}=`));
-      console.log('Direct cookie check:', directCookieCheck);
-      console.log('hasConsent check:', hasConsent(consentType));
+      debugLog('Direct cookie check:', directCookieCheck);
+      debugLog('hasConsent check:', hasConsent(consentType));
       
       setConsentState(true);
       await recordConsent.mutateAsync({ consented: true });
-      console.log('Consent recorded successfully');
+      debugLog('Consent recorded successfully');
     } catch (error) {
-      console.error('Error accepting consent:', error);
+      debugError('Error accepting consent:', error);
       giveConsent(consentType);
       setConsentState(true);
     }
@@ -106,15 +107,15 @@ export const usePrivacyConsent = (consentType: keyof typeof COOKIE_NAMES) => {
 
   const rejectConsent = async () => {
     try {
-      console.log('Rejecting consent...');
-      console.log('Before removing cookie, all cookies:', document.cookie);
+      debugLog('Rejecting consent...');
+      debugLog('Before removing cookie, all cookies:', document.cookie);
       revokeConsent(consentType);
-      console.log('After removing cookie, all cookies:', document.cookie);
+      debugLog('After removing cookie, all cookies:', document.cookie);
       setConsentState(false);
       await recordConsent.mutateAsync({ consented: false });
-      console.log('Rejection recorded successfully');
+      debugLog('Rejection recorded successfully');
     } catch (error) {
-      console.error('Error rejecting consent:', error);
+      debugError('Error rejecting consent:', error);
       revokeConsent(consentType);
       setConsentState(false);
     }

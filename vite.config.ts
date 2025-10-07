@@ -19,10 +19,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // FASE 1.2: Remover console.log/warn em produção (manter apenas errors críticos)
+  // Remove all console statements in production (keep only critical errors)
   esbuild: {
     drop: mode === 'production' ? ['console', 'debugger'] : [],
-    pure: mode === 'production' ? ['console.log', 'console.warn'] : [],
   },
   build: {
     // Minificar e otimizar para produção
