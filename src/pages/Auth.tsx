@@ -156,6 +156,16 @@ const Auth = () => {
       const { error } = await signIn(loginForm.email, loginForm.password);
       
       if (error) {
+        // Log falha de login
+        try {
+          await supabase.from('security_audit_log').insert({
+            event_type: 'login_failed',
+            event_description: `Tentativa de login falhou para ${loginForm.email}`,
+            risk_level: 'medium',
+            metadata: { email: loginForm.email }
+          });
+        } catch {}
+        
         toast({
           title: "Erro no login",
           description: error.message === 'Invalid login credentials' 
@@ -164,6 +174,16 @@ const Auth = () => {
           variant: "destructive"
         });
       } else {
+        // Log sucesso de login
+        try {
+          await supabase.from('security_audit_log').insert({
+            event_type: 'login_success',
+            event_description: `Login bem-sucedido para ${loginForm.email}`,
+            risk_level: 'low',
+            metadata: { email: loginForm.email }
+          });
+        } catch {}
+        
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta!"
@@ -255,6 +275,16 @@ const Auth = () => {
           variant: "destructive"
         });
       } else {
+        // Log criação de conta
+        try {
+          await supabase.from('security_audit_log').insert({
+            event_type: 'account_created',
+            event_description: `Conta criada para ${signupForm.email}`,
+            risk_level: 'low',
+            metadata: { email: signupForm.email, name: signupForm.name }
+          });
+        } catch {}
+        
         toast({
           title: "Cadastro realizado!",
           description: "Verifique seu email para confirmar a conta"
@@ -388,6 +418,16 @@ const Auth = () => {
       
       if (!error) {
         console.log('✅ Password updated successfully');
+        
+        // Log mudança de senha
+        try {
+          await supabase.from('security_audit_log').insert({
+            event_type: 'password_change',
+            event_description: 'Senha alterada com sucesso',
+            risk_level: 'medium'
+          });
+        } catch {}
+        
         toast({
           title: "Senha alterada!",
           description: "Sua senha foi atualizada com sucesso"

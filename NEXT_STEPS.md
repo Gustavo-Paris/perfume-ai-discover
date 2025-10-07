@@ -1,183 +1,222 @@
-# Próximos Passos - Implementação de Segurança
+# Próximos Passos - Sistema de Segurança
 
 ## 🎯 Status Atual
 
-### ✅ Implementado (100% Core)
+### ✅ Implementado (100% Core + 85% Aplicação)
 - ✅ FASE 1: Autenticação robusta e session management
 - ✅ FASE 2: Validação server-side, RLS Policies
 - ✅ FASE 3: Proteção de dados sensíveis & Criptografia
 - ✅ FASE 4: Validação robusta & Headers de segurança
 - ✅ Documentação completa (SECURITY.md)
 - ✅ Guia de implementação (IMPLEMENTATION_GUIDE.md)
+- ✅ Headers HTTP (vercel.json, netlify.toml)
+- ✅ Schemas aplicados (Auth.tsx, ReviewForm.tsx, AddressForm.tsx)
+- ✅ Sistema de Audit Logs (tabela + hook + dashboard)
+- ✅ Dashboard de segurança em `/admin/security-logs`
+- ✅ Logs automáticos de autenticação (login, signup, password change)
 
-### 🔄 Em Progresso (70% Aplicação)
-- 🔄 Aplicar schemas de validação em formulários existentes
-- 🔄 Atualizar edge functions com novo middleware
-- 🔄 Substituir componentes por versões seguras
-
-## 📝 Tarefas Prioritárias
-
-### Alta Prioridade (Esta Semana)
-
-#### 1. Atualizar Formulários (2-3 horas)
-- [ ] **Auth.tsx** - Aplicar signUpSchema e signInSchema
-  ```typescript
-  import { signUpSchema, signInSchema } from '@/utils/validationSchemas';
-  ```
-
-- [ ] **ReviewForm.tsx** - Aplicar reviewSchema
-  ```typescript
-  import { reviewSchema } from '@/utils/validationSchemas';
-  ```
-
-- [ ] **CompanyConfigManager.tsx** - Validar CPF/CNPJ
-  ```typescript
-  import { cpfSchema, cnpjSchema } from '@/utils/validationSchemas';
-  ```
-
-#### 2. Headers de Segurança (30 min)
-- [ ] Criar `vercel.json` com headers de segurança
-- [ ] Testar headers em staging
-- [ ] Verificar CSP não quebra funcionalidades
-
-#### 3. Testes de Segurança (1-2 horas)
-- [ ] Testar rate limiting (fazer múltiplas requisições)
-- [ ] Testar CSRF protection (request sem token)
-- [ ] Testar sanitização (tentar injetar scripts)
-- [ ] Verificar RLS policies (tentar acessar dados de outro usuário)
-
-### Média Prioridade (Próxima Semana)
-
-#### 4. Edge Functions (3-4 horas)
-- [ ] **validate-coupon** - Adicionar middleware
-- [ ] **recommend** - Adicionar rate limiting
-- [ ] **conversational-recommend** - Adicionar validação
-- [ ] **send-email** - Sanitizar inputs
-
-#### 5. Componentes Seguros (2 horas)
-- [ ] Substituir exibições de email por `EmailDisplay`
-- [ ] Substituir exibições de telefone por `PhoneDisplay`
-- [ ] Usar `CPFDisplay` no admin
-
-#### 6. Monitoramento (2 horas)
-- [ ] Configurar dashboard de segurança
-- [ ] Criar queries de análise de logs
-- [ ] Configurar alertas críticos
-
-### Baixa Prioridade (Quando Tiver Tempo)
-
-#### 7. Documentação Adicional
-- [ ] Adicionar seção de segurança no README
-- [ ] Criar playbook de incident response
-- [ ] Documentar processo de review de código
-
-#### 8. Melhorias Avançadas
-- [ ] Implementar 2FA (Two-Factor Authentication)
-- [ ] Adicionar device fingerprinting
-- [ ] Implementar detecção de anomalias
-
-## 🚀 Quick Wins (Faça Agora - 15 min)
-
-### 1. Headers HTTP
-Criar `vercel.json`:
-```json
-{
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" }
-      ]
-    }
-  ]
-}
-```
-
-### 2. Teste Rápido de RLS
-Execute no SQL Editor do Supabase:
-```sql
--- Verificar todas as tabelas têm RLS habilitado
-SELECT schemaname, tablename, rowsecurity
-FROM pg_tables
-WHERE schemaname = 'public'
-AND rowsecurity = false;
-
--- Deve retornar vazio ou apenas tabelas públicas intencionais
-```
-
-### 3. Adicionar no README
-```markdown
-## 🔒 Segurança
-
-Este projeto implementa múltiplas camadas de segurança:
-- ✅ Autenticação robusta com Supabase Auth
-- ✅ Row Level Security (RLS) em todas as tabelas
-- ✅ Validação client-side e server-side
-- ✅ Proteção CSRF e rate limiting
-- ✅ Sanitização de inputs
-- ✅ Mascaramento de dados sensíveis
-
-Veja [SECURITY.md](./SECURITY.md) para detalhes completos.
-```
-
-## 📊 Métricas de Sucesso
-
-Acompanhar estas métricas após implementação completa:
-
-### Semana 1
-- [ ] 0 tentativas de CSRF bem-sucedidas
-- [ ] < 5 eventos de rate limit por dia
-- [ ] 0 vazamentos de dados sensíveis em logs
-
-### Semana 2
-- [ ] Tempo de resposta < 200ms com validações
-- [ ] 100% dos formulários com validação Zod
-- [ ] 100% das edge functions com middleware
-
-### Mês 1
-- [ ] 0 incidentes de segurança
-- [ ] Audit log completo e analisado
-- [ ] Time treinado em práticas seguras
-
-## 🎓 Recursos para o Time
-
-### Leitura Obrigatória
-1. [SECURITY.md](./SECURITY.md) - Guia completo
-2. [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) - Como aplicar
-3. [OWASP Top 10](https://owasp.org/www-project-top-ten/) - Vulnerabilidades comuns
-
-### Treinamento Sugerido
-- [ ] Workshop: "Validação de Dados 101"
-- [ ] Code review: "Identificando vulnerabilidades"
-- [ ] Hands-on: "Testando segurança na prática"
-
-## 🚨 Alertas para Configurar
-
-### Críticos (Imediato)
-- Rate limit excedido > 10x/hora por IP
-- CSRF validation failed > 5x/hora
-- Tentativas de SQL injection detectadas
-- Acesso não autorizado a dados sensíveis
-
-### Avisos (Revisar Diariamente)
-- Novos padrões de erro em logs
-- Picos de tráfego incomuns
-- Mudanças em RLS policies
-
-## 📞 Contatos de Emergência
-
-Em caso de incidente de segurança:
-1. **Desabilitar funcionalidade afetada**
-2. **Notificar:** [seu-email-de-seguranca]
-3. **Documentar:** O quê, quando, como
-4. **Revisar:** Logs de auditoria
-5. **Corrigir:** Implementar fix
-6. **Comunicar:** Stakeholders
+### 🔄 Em Progresso
+- 🔄 Integrar audit logs em mais componentes e edge functions
+- 🔄 Aplicar schemas em formulários restantes
+- 🔄 Implementar alertas automáticos
 
 ---
 
-**Criado em:** 2025-10-07  
-**Última revisão:** 2025-10-07  
+## 🔴 Alta Prioridade
+
+### 1. Sistema de Alertas Automáticos
+**Status**: Não iniciado
+**Tempo estimado**: 2h
+**Impacto**: CRÍTICO
+
+**Objetivo**: Notificar admins automaticamente sobre eventos de segurança críticos
+
+Tarefas:
+- [ ] Criar edge function `security-monitor` 
+- [ ] Detectar padrões suspeitos (múltiplos logins falhados, rate limits)
+- [ ] Enviar emails de alerta para administradores
+- [ ] Dashboard de alertas em tempo real
+- [ ] Configurar thresholds de alerta
+
+Critérios de alerta:
+- ✋ Mais de 5 tentativas de login falhadas em 10min (mesmo IP)
+- ✋ Eventos com risk_level='critical'
+- ✋ Rate limit excedido >10x em 1 hora
+- ✋ Acesso a dados sensíveis fora do horário comercial
+- ✋ Mudanças em configurações críticas (company_info, roles)
+
+### 2. Completar Integração de Audit Logs
+**Status**: 60% implementado
+**Tempo estimado**: 2h
+
+- [x] Hook useSecurityAudit criado
+- [x] Logs em Auth.tsx (login, signup, password change)
+- [ ] Adicionar logs em edge functions:
+  - `create-stripe-checkout`
+  - `confirm-order`
+  - `generate-nfe`
+  - `moderate-review`
+- [ ] Logs em ações administrativas:
+  - CRUD de perfumes
+  - Aprovação/rejeição de reviews
+  - Mudanças de configuração da empresa
+  - Gerenciamento de roles
+- [ ] Relatórios semanais automáticos (email para admins)
+
+### 3. Testes de Segurança Completos
+**Status**: Não iniciado
+**Tempo estimado**: 3h
+
+- [ ] **Rate Limiting**: Fazer >5 requisições rápidas e verificar bloqueio
+- [ ] **CSRF Protection**: Tentar POST sem token CSRF
+- [ ] **Input Sanitization**: Tentar injetar `<script>alert('xss')</script>`
+- [ ] **RLS Policies**: Tentar acessar dados de outro usuário
+- [ ] **SQL Injection**: Testar inputs com `'; DROP TABLE--`
+- [ ] **Auth Bypass**: Tentar acessar rotas admin sem permissão
+
+---
+
+## 🟡 Média Prioridade
+
+### 1. Autenticação de Dois Fatores (2FA)
+**Status**: Não iniciado
+**Tempo estimado**: 4h
+
+- [ ] Implementar TOTP com biblioteca `otpauth`
+- [ ] Criar UI de configuração de 2FA
+- [ ] Gerar e armazenar códigos de recuperação
+- [ ] Testar fluxo completo (enable, login, disable)
+- [ ] Documentar processo para usuários
+
+### 2. Session Management Avançado
+**Status**: Não iniciado
+**Tempo estimado**: 2h
+
+- [ ] Detectar múltiplos logins simultâneos
+- [ ] Adicionar botão "Logout de todos os dispositivos"
+- [ ] Mostrar histórico de sessões ativas
+- [ ] Implementar geolocalização de logins
+- [ ] Alertar usuário sobre login em novo dispositivo
+
+### 3. Aplicar Schemas em Formulários Restantes
+**Tempo**: 30min cada
+
+- [x] `src/pages/Auth.tsx` ✅
+- [x] `src/components/reviews/ReviewForm.tsx` ✅
+- [x] `src/components/checkout/AddressForm.tsx` ✅
+- [ ] `src/components/checkout/PaymentStep.tsx`
+- [ ] `src/components/support/SupportChat.tsx`
+- [ ] `src/pages/Configuracoes.tsx`
+- [ ] `src/components/admin/CompanyConfigManager.tsx`
+
+### 4. Edge Functions com Middleware
+**Tempo**: 20min cada
+
+- [x] `confirm-order` ✅
+- [x] `process-payment` ✅
+- [ ] `create-stripe-checkout`
+- [ ] `validate-coupon`
+- [ ] `recommend`
+- [ ] `conversational-recommend`
+- [ ] `shipping-quote`
+
+---
+
+## 🟢 Baixa Prioridade
+
+### 1. Compliance LGPD
+- [ ] Implementar exportação de dados pessoais (JSON)
+- [ ] Criar fluxo de exclusão completa de conta
+- [ ] Adicionar consentimentos granulares
+- [ ] Logs de processamento de dados pessoais
+
+### 2. Melhorias de UX de Segurança
+- [ ] Indicador de força de senha em tempo real com barra
+- [ ] Mensagens de erro mais amigáveis
+- [ ] Tooltips explicando requisitos de segurança
+- [ ] Página "Central de Segurança" para usuários
+
+### 3. Documentação Adicional
+- [ ] Guia de resposta a incidentes
+- [ ] Runbook de troubleshooting de segurança
+- [ ] Exemplos de uso de todos os hooks
+- [ ] Checklist de deploy de segurança
+
+---
+
+## 📊 Métricas de Segurança
+
+### Monitorar no Dashboard `/admin/security-logs`
+
+**Diariamente:**
+- 📈 Total de eventos por nível de risco
+- 🚨 Eventos críticos/altos (devem ser 0)
+- 🔐 Logins falhados por IP
+- ⚡ Rate limits excedidos
+
+**Semanalmente:**
+- 📊 Tendências de eventos de segurança
+- 👥 Usuários mais ativos
+- 🌍 Distribuição geográfica de acessos
+- 🔍 Padrões anômalos
+
+**Mensalmente:**
+- 📉 Comparativo mês anterior
+- 🎯 Taxa de sucesso de autenticação
+- 🛡️ Efetividade de proteções
+- 📚 Compliance de auditoria
+
+---
+
+## ⚠️ Warnings de Segurança Detectados
+
+Warnings do linter Supabase (não relacionados à última migração):
+
+1. **Security Definer Views** (2x): Revisar views com SECURITY DEFINER
+2. **Function Search Path** (4x): Adicionar `SET search_path = public` nas funções
+3. **Extension in Public**: Mover extensões para schema separado
+4. **Leaked Password Protection**: ⚠️ **AÇÃO NECESSÁRIA** - Habilitar no Supabase Dashboard
+5. **Postgres Version**: ⚠️ **AÇÃO NECESSÁRIA** - Atualizar versão
+
+### ⚡ Ações Imediatas Recomendadas
+
+**Para o Usuário (Supabase Dashboard):**
+
+1. **Habilitar Proteção de Senha Vazada:**
+   - Acesse: Authentication > Providers
+   - Ative: "Leaked Password Protection"
+
+2. **Atualizar Postgres (quando possível):**
+   - Acesse: Project Settings > Database
+   - Clique: "Upgrade Database"
+
+**Para o Desenvolvedor (Próxima migração):**
+- Corrigir funções sem `search_path` definido
+- Revisar views com SECURITY DEFINER
+
+---
+
+## 🎯 Recomendação da Próxima Ação
+
+**Mais Impacto**: Implementar **Sistema de Alertas Automáticos**
+
+Por quê?
+- ✅ Audit logs já estão capturando eventos
+- ✅ Dashboard permite visualização manual
+- ❌ Falta notificação proativa para admins
+- ❌ Eventos críticos podem passar despercebidos
+
+O que implementar:
+1. Edge function que roda periodicamente (cron)
+2. Analisa logs das últimas horas
+3. Detecta padrões suspeitos
+4. Envia emails/notificações para admins
+5. Cria alertas no dashboard
+
+**Tempo**: ~2 horas
+**Impacto**: Alto (detecção proativa de ameaças)
+
+---
+
+**Última atualização:** 2025-10-07  
 **Próxima revisão:** 2025-10-14
