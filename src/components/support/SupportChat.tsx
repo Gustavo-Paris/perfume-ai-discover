@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useSupportChat } from '@/hooks/useSupportChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { sanitizeInput } from '@/utils/securityEnhancements';
 
 export function SupportChat() {
   const { user } = useAuth();
@@ -42,12 +43,16 @@ export function SupportChat() {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    await sendMessage(newMessage);
+    // Sanitizar mensagem antes de enviar
+    const sanitizedMessage = sanitizeInput(newMessage.trim());
+    await sendMessage(sanitizedMessage);
     setNewMessage('');
   };
 
   const handleStartChat = async () => {
-    await startConversation(subject || undefined, category || undefined);
+    // Sanitizar subject antes de iniciar conversa
+    const sanitizedSubject = subject ? sanitizeInput(subject) : undefined;
+    await startConversation(sanitizedSubject, category || undefined);
     setShowStartForm(false);
     setSubject('');
     setCategory('');
@@ -62,7 +67,9 @@ export function SupportChat() {
   };
 
   const handleSubmitRating = async () => {
-    await closeConversation(rating, feedback);
+    // Sanitizar feedback antes de enviar
+    const sanitizedFeedback = feedback ? sanitizeInput(feedback) : '';
+    await closeConversation(rating, sanitizedFeedback);
     setShowRating(false);
     setRating(5);
     setFeedback('');

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAdvancedSearch } from '@/hooks/useAdvancedSearch';
+import { sanitizeSearchQuery } from '@/utils/securityEnhancements';
 
 interface HeaderSearchBoxProps {
   placeholder?: string;
@@ -59,7 +60,7 @@ const HeaderSearchBox = ({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = sanitizeSearchQuery(e.target.value);
     setQuery(value);
     setShowSuggestions(true);
   };
@@ -70,7 +71,8 @@ const HeaderSearchBox = ({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && query.trim()) {
-      navigate(`/catalogo?q=${encodeURIComponent(query.trim())}`);
+      const sanitizedQuery = sanitizeSearchQuery(query.trim());
+      navigate(`/catalogo?q=${encodeURIComponent(sanitizedQuery)}`);
       setShowSuggestions(false);
       onClose?.();
     } else if (e.key === 'Escape') {
@@ -81,7 +83,8 @@ const HeaderSearchBox = ({
 
   const handleSearch = () => {
     if (query.trim()) {
-      navigate(`/catalogo?q=${encodeURIComponent(query.trim())}`);
+      const sanitizedQuery = sanitizeSearchQuery(query.trim());
+      navigate(`/catalogo?q=${encodeURIComponent(sanitizedQuery)}`);
       setShowSuggestions(false);
       onClose?.();
     }

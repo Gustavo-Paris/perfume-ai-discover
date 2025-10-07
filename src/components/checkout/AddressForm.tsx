@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { sanitizeInput } from '@/utils/securityEnhancements';
 
 const addressSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -109,15 +110,16 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
         }
       }
 
+      // Sanitizar todos os inputs do endereço
       const addressData = {
         user_id: user.id,
-        name: data.name,
+        name: sanitizeInput(data.name),
         cep: data.cep.replace(/\D/g, ''),
-        street: data.street,
-        number: data.number,
-        complement: data.complement || null,
-        district: data.district,
-        city: data.city,
+        street: sanitizeInput(data.street),
+        number: sanitizeInput(data.number),
+        complement: data.complement ? sanitizeInput(data.complement) : null,
+        district: sanitizeInput(data.district),
+        city: sanitizeInput(data.city),
         state: data.state.toUpperCase(),
         country: 'Brasil',
         is_default: data.isDefault

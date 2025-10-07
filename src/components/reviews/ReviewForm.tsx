@@ -7,6 +7,7 @@ import StarRating from './StarRating';
 import { useCreateReview, useUpdateReview } from '@/hooks/useReviewForm';
 import { Review } from '@/types/review';
 import { Loader2 } from 'lucide-react';
+import { sanitizeInput } from '@/utils/securityEnhancements';
 
 interface ReviewFormProps {
   perfumeId: string;
@@ -30,9 +31,12 @@ const ReviewForm = ({ perfumeId, existingReview }: ReviewFormProps) => {
       return;
     }
 
+    // Sanitizar comentário para prevenir XSS
+    const sanitizedComment = comment.trim() ? sanitizeInput(comment.trim()) : undefined;
+
     const reviewData = {
       rating,
-      comment: comment.trim() || undefined,
+      comment: sanitizedComment,
     };
 
     if (isUpdating && existingReview) {
