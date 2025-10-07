@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { debugLog } from '@/utils/removeDebugLogsProduction';
 
 export const useBudgetDetection = () => {
   const extractBudget = useCallback((message: string): number | null => {
@@ -35,13 +36,13 @@ export const useBudgetDetection = () => {
       if (message.role === 'user') {
         const budget = extractBudget(message.content);
         if (budget && budget >= 50) { // Only return valid budgets
-          console.log('Budget detected from conversation:', budget);
+          debugLog('Budget detected from conversation:', budget);
           return budget;
         }
       }
     }
 
-    console.log('No budget detected in conversation');
+    debugLog('No budget detected in conversation');
     return null;
   }, [extractBudget]);
 

@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { debugError } from '@/utils/removeDebugLogsProduction';
 
 interface User {
   id: string;
@@ -88,7 +89,7 @@ const AdminUsers = () => {
 
       setUsers(usersWithOrders);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      debugError('Error fetching users:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar usuários.",

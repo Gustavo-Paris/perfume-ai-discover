@@ -18,9 +18,12 @@ export function objectHasOwn(object: any, property: string | number | symbol): b
  * Apply Object.hasOwn polyfill globally if not supported
  * Must be called before any code that might use Object.hasOwn
  */
+
+import { debugWarn } from '@/utils/removeDebugLogsProduction';
+
 export function applyObjectHasOwnPolyfill(): void {
   if (typeof (Object as any).hasOwn !== 'function') {
-    console.warn('Browser lacks Object.hasOwn support, applying polyfill');
+    debugWarn('Browser lacks Object.hasOwn support, applying polyfill');
     (Object as any).hasOwn = objectHasOwn;
   }
 }

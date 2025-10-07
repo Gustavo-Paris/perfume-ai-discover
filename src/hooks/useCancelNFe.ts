@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { debugError } from '@/utils/removeDebugLogsProduction';
 
 interface CancelNFeParams {
   fiscal_note_id: string;
@@ -36,7 +37,7 @@ export const useCancelNFe = () => {
 
       return data;
     } catch (error: any) {
-      console.error('Error cancelling NFe:', error);
+      debugError('Error cancelling NFe:', error);
       toast({
         title: "Erro ao Cancelar NFe",
         description: error.message || "Erro desconhecido ao cancelar nota fiscal",

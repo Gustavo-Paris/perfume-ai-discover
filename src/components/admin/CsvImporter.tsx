@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, AlertCircle } from 'lucide-react';
 import { useCsvImport } from '@/hooks/useCsvImport';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { debugError } from '@/utils/removeDebugLogsProduction';
 
 const CsvImporter = () => {
   const [csvContent, setCsvContent] = useState('');
@@ -33,7 +34,7 @@ const CsvImporter = () => {
       const text = await response.text();
       setCsvContent(text);
     } catch (error) {
-      console.error('Erro ao carregar CSV exemplo:', error);
+      debugError('Erro ao carregar CSV exemplo:', error);
     }
   };
 

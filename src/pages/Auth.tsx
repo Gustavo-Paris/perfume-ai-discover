@@ -18,6 +18,7 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signInSchema, signUpSchema, resetPasswordSchema, updatePasswordSchema } from '@/utils/validationSchemas';
 import PasswordRequirements from '@/components/auth/PasswordRequirements';
+import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -48,9 +49,9 @@ const Auth = () => {
   // Detectar fluxo de recuperação de senha
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      console.log('🔄 Auth event:', event);
+      debugLog('🔄 Auth event:', event);
       if (event === 'PASSWORD_RECOVERY') {
-        console.log('🔒 Entering recovery mode');
+        debugLog('🔒 Entering recovery mode');
         setRecoveryMode(true);
         setActiveTab('new-password');
       }
@@ -61,9 +62,9 @@ const Auth = () => {
 
   // Redirecionar usuários autenticados (mas não durante recovery)
   useEffect(() => {
-    console.log('🧭 Navigation check - user:', !!user, 'recoveryMode:', isRecoveryMode);
+    debugLog('🧭 Navigation check - user:', !!user, 'recoveryMode:', isRecoveryMode);
     if (user && !isRecoveryMode) {
-      console.log('➡️ Redirecting to home');
+      debugLog('➡️ Redirecting to home');
       navigate('/');
     }
   }, [user, navigate, isRecoveryMode]);
@@ -72,7 +73,7 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      console.log('🟡 Initiating Google OAuth...');
+      debugLog('🟡 Initiating Google OAuth...');
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -88,7 +89,7 @@ const Auth = () => {
       });
       
       if (error) {
-        console.error('❌ Google OAuth error:', error);
+        debugError('❌ Google OAuth error:', error);
         toast({
           title: "Erro no login com Google",
           description: error.message === 'To signup the same user from different providers'
@@ -99,7 +100,7 @@ const Auth = () => {
         setIsLoading(false);
       } else if (data?.url) {
         // Abre em popup
-        console.log('🪟 Opening Google OAuth in popup...');
+        debugLog('🪟 Opening Google OAuth in popup...');
         const popup = window.open(data.url, 'google-oauth', 'width=500,height=600,scrollbars=yes,resizable=yes');
         
         // Monitora o popup para detectar quando fecha
@@ -112,11 +113,11 @@ const Auth = () => {
           }
         }, 1000);
       } else {
-        console.log('✅ Google OAuth initiated');
+        debugLog('✅ Google OAuth initiated');
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Google login error:', error);
+      debugError('Google login error:', error);
       toast({
         title: "Erro no login",
         description: "Não foi possível fazer login com Google. Verifique se o Google OAuth está configurado.",
@@ -295,7 +296,7 @@ const Auth = () => {
         setSignupPwned({ checked: false, pwned: false, count: null });
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      debugError('Signup error:', error);
       Sentry.addBreadcrumb({ category: 'auth', level: 'error', message: 'Unexpected signup error' });
       toast({
         title: "Erro no cadastro",
@@ -351,7 +352,7 @@ const Auth = () => {
         setResetForm({ email: '' });
       }
     } catch (error) {
-      console.error('Reset password error:', error);
+      debugError('Reset password error:', error);
       toast({
         title: "Erro na recuperação",
         description: "Não foi possível enviar email de recuperação",
@@ -418,7 +419,7 @@ const Auth = () => {
       });
       
       if (!error) {
-        console.log('✅ Password updated successfully');
+        debugLog('✅ Password updated successfully');
         
         // Log mudança de senha
         try {
@@ -438,17 +439,17 @@ const Auth = () => {
         setNewPassStrength(getPasswordStrength(''));
         setNewPassPwned({ checked: false, pwned: false, count: null });
         
-        console.log('🚪 Signing out...');
+        debugLog('🚪 Signing out...');
         await supabase.auth.signOut();
         
         // Aguardar um pouco para garantir que o signOut seja processado
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        console.log('🧹 Cleaning up...');
+        debugLog('🧹 Cleaning up...');
         window.history.replaceState(null, '', window.location.pathname);
         setRecoveryMode(false);
         
-        console.log('➡️ Switching to login tab...');
+        debugLog('➡️ Switching to login tab...');
         setActiveTab('login');
       } else {
         Sentry.addBreadcrumb({ category: 'auth', level: 'error', message: `Update password error: ${error.message}` });
@@ -459,7 +460,7 @@ const Auth = () => {
         });
       }
     } catch (error) {
-      console.error('Update password error:', error);
+      debugError('Update password error:', error);
       Sentry.addBreadcrumb({ category: 'auth', level: 'error', message: 'Unexpected update password error' });
       toast({
         title: "Erro inesperado",

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 
 export const useFixPerfumeMargin = () => {
   const queryClient = useQueryClient();
@@ -13,7 +14,7 @@ export const useFixPerfumeMargin = () => {
       perfumeId: string; 
       newMarginPercentage?: number;
     }) => {
-      console.log(`🔧 Corrigindo margem do perfume ${perfumeId} para ${newMarginPercentage}%`);
+      debugLog(`🔧 Corrigindo margem do perfume ${perfumeId} para ${newMarginPercentage}%`);
       
       // Converter porcentagem para multiplicador (100% = 2.0)
       const marginMultiplier = 1 + (newMarginPercentage / 100);
@@ -24,11 +25,11 @@ export const useFixPerfumeMargin = () => {
       });
       
       if (error) {
-        console.error('❌ Erro ao corrigir margem:', error);
+        debugError('❌ Erro ao corrigir margem:', error);
         throw error;
       }
       
-      console.log('✅ Margem corrigida com sucesso:', data);
+      debugLog('✅ Margem corrigida com sucesso:', data);
       return data;
     },
     onSuccess: (_, variables) => {
@@ -43,7 +44,7 @@ export const useFixPerfumeMargin = () => {
       queryClient.invalidateQueries({ queryKey: ['price-logs'] });
     },
     onError: (error: any) => {
-      console.error('❌ Erro ao corrigir margem:', error);
+      debugError('❌ Erro ao corrigir margem:', error);
       toast.error(`❌ Erro ao corrigir margem: ${error.message}`);
     },
   });

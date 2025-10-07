@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
+import { debugError } from '@/utils/removeDebugLogsProduction';
 
 export const useAccessLog = () => {
   const { user } = useAuth();
@@ -38,7 +39,7 @@ export const useRouteLogger = (route: string) => {
     if (user && route) {
       // Log access with a small delay to avoid excessive logging
       const timer = setTimeout(() => {
-        logAccess({ route }).catch(console.error);
+        logAccess({ route }).catch(debugError);
       }, 1000);
 
       return () => clearTimeout(timer);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ConversationMessage } from '@/types/conversation';
+import { debugLog } from '@/utils/removeDebugLogsProduction';
 
 export interface ComboItem {
   perfume_id: string;

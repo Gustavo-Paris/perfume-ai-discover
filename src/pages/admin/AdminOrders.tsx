@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { OrderDetailsModal } from '@/components/orders/OrderDetailsModal';
 import { SystemNotifications } from '@/components/admin/SystemNotifications';
+import { debugError, debugLog } from '@/utils/removeDebugLogsProduction';
 
 interface OrderProfile {
   name: string;
@@ -191,11 +192,11 @@ const AdminOrders = () => {
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
+        debugError('Supabase function error:', error);
         throw new Error(`Erro na função: ${error.message}`);
       }
 
-      console.log('NF-e response:', data);
+      debugLog('NF-e response:', data);
 
       if (data?.success === false) {
         // Se já existe NF-e, não é erro
@@ -219,7 +220,7 @@ const AdminOrders = () => {
         refetch();
       }
     } catch (error) {
-      console.error('Error generating NF-e:', error);
+      debugError('Error generating NF-e:', error);
       toast({
         title: "❌ Erro na Geração de NF-e",
         description: error instanceof Error ? error.message : "Falha na geração automática de NF-e",

@@ -14,12 +14,15 @@ serve(async (req) => {
     const homologToken = Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN');
     const prodToken = Deno.env.get('FOCUS_NFE_TOKEN');
     
-    console.log('Token debug:', {
-      hasHomologToken: !!homologToken,
-      hasProdToken: !!prodToken,
-      homologTokenLength: homologToken?.length || 0,
-      prodTokenLength: prodToken?.length || 0
-    });
+    // Only log in development
+    if (Deno.env.get('ENVIRONMENT') === 'development') {
+      console.log('Token debug:', {
+        hasHomologToken: !!homologToken,
+        hasProdToken: !!prodToken,
+        homologTokenLength: homologToken?.length || 0,
+        prodTokenLength: prodToken?.length || 0
+      });
+    }
 
     // Test Focus NFe API connection
     if (homologToken) {
@@ -30,14 +33,18 @@ serve(async (req) => {
         }
       });
       
-      console.log('Focus NFe test response:', {
-        status: testResponse.status,
-        statusText: testResponse.statusText
-      });
+      if (Deno.env.get('ENVIRONMENT') === 'development') {
+        console.log('Focus NFe test response:', {
+          status: testResponse.status,
+          statusText: testResponse.statusText
+        });
+      }
       
       if (!testResponse.ok) {
         const errorText = await testResponse.text();
-        console.log('Focus NFe error:', errorText);
+        if (Deno.env.get('ENVIRONMENT') === 'development') {
+          console.log('Focus NFe error:', errorText);
+        }
       }
     }
 

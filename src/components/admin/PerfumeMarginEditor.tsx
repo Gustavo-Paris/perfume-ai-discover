@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useUpdatePerfumeMargin } from '@/hooks/useUpdatePerfumeMargin';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
 import { decimalToPercentage, formatMarginDisplay, isValidMargin, percentageToMultiplier } from '@/utils/marginHelpers';
+import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 
 interface PerfumeMarginEditorProps {
   perfume: {
@@ -44,7 +45,7 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
       // Ex: 80% margem = 1.8 multiplicador, 100% margem = 2.0 multiplicador
       const marginMultiplier = percentageToMultiplier(marginValue);
       
-      console.log(`Converting ${marginValue}% to multiplier: ${marginMultiplier}`);
+      debugLog(`Converting ${marginValue}% to multiplier: ${marginMultiplier}`);
       
       await updateMargin.mutateAsync({
         perfumeId: perfume.id,
@@ -54,12 +55,12 @@ export const PerfumeMarginEditor = ({ perfume }: PerfumeMarginEditorProps) => {
       // Force refetch prices after successful update
       setTimeout(() => {
         refetchPrices();
-        console.log('Prices refetched after margin update');
+        debugLog('Prices refetched after margin update');
       }, 1000);
       
       setIsEditing(false);
     } catch (error) {
-      console.error('Erro ao salvar margem:', error);
+      debugError('Erro ao salvar margem:', error);
       setError('Erro ao atualizar margem');
     }
   };

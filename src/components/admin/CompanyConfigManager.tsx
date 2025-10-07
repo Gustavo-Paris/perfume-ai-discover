@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Building, Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { debugError } from '@/utils/removeDebugLogsProduction';
 
 interface CompanyInfo {
   id?: string;
@@ -76,7 +77,7 @@ export const CompanyConfigManager = () => {
         setCompanyInfo(data);
       }
     } catch (error) {
-      console.error('Error loading company info:', error);
+      debugError('Error loading company info:', error);
       toast({
         title: "Erro ao Carregar",
         description: "Não foi possível carregar as informações da empresa.",
@@ -104,7 +105,7 @@ export const CompanyConfigManager = () => {
         description: "As informações da empresa foram atualizadas com sucesso.",
       });
     } catch (error) {
-      console.error('Error saving company info:', error);
+      debugError('Error saving company info:', error);
       toast({
         title: "Erro ao Salvar",
         description: "Não foi possível salvar as configurações.",

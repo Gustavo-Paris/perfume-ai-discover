@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Edit, Trash2, Tag, Calendar, Users, DollarSign, Percent } from 'lucide-react';
 import { useCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon } from '@/hooks/useCoupons';
 import { Coupon } from '@/types/coupon';
+import { debugError } from '@/utils/removeDebugLogsProduction';
 
 export default function AdminCoupons() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -61,7 +62,7 @@ export default function AdminCoupons() {
     try {
       await deleteCoupon.mutateAsync(coupon.code);
     } catch (error) {
-      console.error('Error deleting coupon:', error);
+      debugError('Error deleting coupon:', error);
     }
   };
 
@@ -91,7 +92,7 @@ export default function AdminCoupons() {
       resetForm();
       setIsCreateDialogOpen(false);
     } catch (error) {
-      console.error('Error saving coupon:', error);
+      debugError('Error saving coupon:', error);
     }
   };
 

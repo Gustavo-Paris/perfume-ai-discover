@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { debugLog } from '@/utils/removeDebugLogsProduction';
 
 interface RecoveryContextProps {
   isRecoveryMode: boolean;
@@ -24,14 +25,14 @@ export const RecoveryProvider = ({ children }: RecoveryProviderProps) => {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   const setRecoveryMode = (mode: boolean) => {
-    console.log('🔄 Recovery mode:', mode);
+    debugLog('🔄 Recovery mode:', mode);
     setIsRecoveryMode(mode);
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        console.log('🔒 Password recovery detected, entering recovery mode');
+        debugLog('🔒 Password recovery detected, entering recovery mode');
         setRecoveryMode(true);
       }
     });

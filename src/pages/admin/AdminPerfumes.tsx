@@ -24,6 +24,7 @@ import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers'
 import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
 import { useUpdateAllMargins } from '@/hooks/useUpdateAllMargins';
 import { useSecurityAudit } from '@/hooks/useSecurityAudit';
+import { debugLog } from '@/utils/removeDebugLogsProduction';
 
 
 const AdminPerfumes = () => {
@@ -172,7 +173,7 @@ const AdminPerfumes = () => {
     if (!editingPerfume) return;
     
     try {
-      console.log('AdminPerfumes: Updating margin for perfume:', editingPerfume.id, 'from', newMargin);
+      debugLog('AdminPerfumes: Updating margin for perfume:', editingPerfume.id, 'from', newMargin);
       
       // Converter margem percentual para multiplicador  
       // Ex: 80% margem = 1.8 multiplicador, 100% margem = 2.0 multiplicador
@@ -193,13 +194,13 @@ const AdminPerfumes = () => {
       // Force refresh the data
       await refetch();
       
-      console.log('AdminPerfumes: Data refetched after margin update');
+      debugLog('AdminPerfumes: Data refetched after margin update');
       
       // After successful update, refresh the perfume data to show new prices
       setTimeout(() => {
         const updatedPerfume = perfumes?.find(p => p.id === editingPerfume.id);
         if (updatedPerfume) {
-          console.log('AdminPerfumes: Updated perfume found:', updatedPerfume.target_margin_percentage);
+          debugLog('AdminPerfumes: Updated perfume found:', updatedPerfume.target_margin_percentage);
           handleEdit(updatedPerfume);
         }
       }, 1500); // Increased timeout to give more time for DB updates
