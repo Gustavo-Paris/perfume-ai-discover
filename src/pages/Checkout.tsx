@@ -11,8 +11,8 @@ import { Address, OrderDraft, ShippingQuote } from '@/types';
 import { AddressStep } from '@/components/checkout/AddressStep';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
-
 import { PointsRedemption } from '@/components/checkout/PointsRedemption';
+import { useValidateStockBeforeCheckout } from '@/hooks/useValidateStockBeforeCheckout';
 import { toast } from '@/hooks/use-toast';
 import { trackBeginCheckout } from '@/utils/analytics';
 
@@ -167,6 +167,23 @@ const Checkout = () => {
 
     setLoading(true);
     try {
+      // Validate stock availability BEFORE creating order draft
+      const { validateStock } = useValidateStockBeforeCheckout();
+      
+      const cartItemsForValidation = items.map(item => ({
+        perfume_id: item.perfume.id,
+        size_ml: item.size,
+        quantity: item.quantity,
+      }));
+
+      const stockResult = await validateStock(cartItemsForValidation);
+
+      if (!stockResult.available) {
+        setLoading(false);
+        return; // Stop here, toast was already shown by the hook
+      }
+
+      // Create order draft only if stock is available
       const draft = await createOrderDraft(selectedAddress.id);
       if (draft) {
         await getShippingQuotes(draft.id);

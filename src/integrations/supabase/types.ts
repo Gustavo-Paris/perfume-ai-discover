@@ -1360,7 +1360,6 @@ export type Database = {
       }
       material_movements: {
         Row: {
-          change_quantity: number
           created_at: string | null
           id: string
           material_id: string
@@ -1368,9 +1367,9 @@ export type Database = {
           movement_type: string
           notes: string | null
           order_id: string | null
+          quantity: number
         }
         Insert: {
-          change_quantity: number
           created_at?: string | null
           id?: string
           material_id: string
@@ -1378,9 +1377,9 @@ export type Database = {
           movement_type: string
           notes?: string | null
           order_id?: string | null
+          quantity: number
         }
         Update: {
-          change_quantity?: number
           created_at?: string | null
           id?: string
           material_id?: string
@@ -1388,6 +1387,7 @@ export type Database = {
           movement_type?: string
           notes?: string | null
           order_id?: string | null
+          quantity?: number
         }
         Relationships: [
           {
@@ -3461,6 +3461,44 @@ export type Database = {
         }
         Relationships: []
       }
+      recent_stock_movements: {
+        Row: {
+          change_ml: number | null
+          created_at: string | null
+          current_total_stock: number | null
+          id: string | null
+          lot_code: string | null
+          movement_type: string | null
+          notes: string | null
+          order_id: string | null
+          perfume_brand: string | null
+          perfume_id: string | null
+          perfume_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_perfume_id_fkey"
+            columns: ["perfume_id"]
+            isOneToOne: false
+            referencedRelation: "perfumes_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       add_points_transaction: {
@@ -4192,6 +4230,10 @@ export type Database = {
           max_length?: number
         }
         Returns: string
+      }
+      validate_cart_stock_availability: {
+        Args: { cart_items_param: Json }
+        Returns: Json
       }
       validate_cnpj: {
         Args: { cnpj: string }
