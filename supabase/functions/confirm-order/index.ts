@@ -2,11 +2,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { 
-  validateCSRFToken,
-  checkRateLimit,
-  logSecurityEvent,
-  getClientIP
-} from '../_shared/security.ts';
+  validateRequest,
+  createErrorResponse,
+  createSuccessResponse
+} from '../_shared/validationMiddleware.ts';
 
 interface ConfirmOrderRequest {
   orderDraftId: string;
@@ -31,73 +30,34 @@ serve(async (req) => {
   try {
     console.log('=== CONFIRM ORDER START ===');
     
-    // Parse request
-    let requestBody;
-    try {
-      requestBody = await req.json();
-      console.log('Request received:', JSON.stringify(requestBody, null, 2));
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON request' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { orderDraftId, csrfToken, paymentData }: ConfirmOrderRequest = requestBody;
-
-    // Initialize Supabase client
+    // Initialize Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    console.log('Environment check:', {
-      hasUrl: !!supabaseUrl,
-      hasKey: !!supabaseKey,
-      urlLength: supabaseUrl?.length || 0,
-      keyLength: supabaseKey?.length || 0
-    });
-    
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase environment variables');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createErrorResponse('Server configuration error', 500, corsHeaders);
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Extract user ID from auth header
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    let userId: string | null = null;
-    
-    if (token) {
-      const { data: { user } } = await supabase.auth.getUser(token);
-      userId = user?.id || null;
+    // FASE 4: Validação robusta com middleware
+    const validation = await validateRequest(req, supabase, {
+      requireAuth: false, // Pode ser guest checkout
+      requireCSRF: true,
+      rateLimit: {
+        maxAttempts: 5,
+        windowMinutes: 5
+      }
+    });
+
+    if (!validation.valid) {
+      console.log('Validation failed:', validation.error);
+      return createErrorResponse(validation.error!, validation.statusCode!, corsHeaders);
     }
 
-    const clientIp = getClientIP(req);
-
-    // FASE 2.1: CSRF Token Validation
-    if (!validateCSRFToken(csrfToken)) {
-      await logSecurityEvent(
-        supabase,
-        userId,
-        'csrf_validation_failed',
-        'CSRF token validation failed on order confirmation',
-        'high',
-        { orderDraftId, ip: clientIp }
-      );
-      
-      return new Response(
-        JSON.stringify({ error: 'Invalid security token' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // FASE 2.1: Rate Limiting (5 confirm attempts per 5 minutes)
-    const rateLimitResult = await checkRateLimit(
+    const { user, clientIP } = validation;
+    console.log('Validation passed - user:', user?.id || 'guest', 'ip:', clientIP);
       supabase,
       userId,
       clientIp,

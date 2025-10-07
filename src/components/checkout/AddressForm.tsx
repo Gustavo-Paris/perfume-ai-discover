@@ -14,21 +14,9 @@ import { sanitizeInput } from '@/utils/securityEnhancements';
 import { useCSRFToken } from '@/hooks/useCSRFToken';
 import { useSensitiveInput } from '@/hooks/useSensitiveInput';
 import { validateCPF, validateCNPJ } from '@/utils/dataProtection';
+import { addressSchema, type AddressFormData } from '@/utils/validationSchemas';
 
-const addressSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
-  cep: z.string().min(8, 'CEP deve ter 8 dígitos').max(9),
-  street: z.string().min(1, 'Rua é obrigatória'),
-  number: z.string().min(1, 'Número é obrigatório'),
-  complement: z.string().optional(),
-  district: z.string().min(1, 'Bairro é obrigatório'),
-  city: z.string().min(1, 'Cidade é obrigatória'),
-  state: z.string().min(2, 'Estado é obrigatório').max(2),
-  cpfCnpj: z.string().optional(), // CPF/CNPJ para nota fiscal
-  isDefault: z.boolean().default(false),
-});
-
-type AddressFormData = z.infer<typeof addressSchema>;
+// Schema importado de validationSchemas.ts
 
 interface AddressFormProps {
   onSuccess: () => void;
@@ -59,7 +47,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
   } = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      isDefault: false
+      is_default: false
     }
   });
 
@@ -122,7 +110,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
     
     try {
       // If this is set as default, remove default from other addresses
-      if (data.isDefault) {
+      if (data.is_default) {
         const { error: updateError } = await supabase
           .from('addresses')
           .update({ is_default: false })
@@ -163,7 +151,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
         state: data.state.toUpperCase(),
         country: 'Brasil',
         cpf_cnpj: cpfCnpjInput.value ? cpfCnpjInput.value.replace(/\D/g, '') : null,
-        is_default: data.isDefault
+        is_default: data.is_default
       };
 
       
@@ -352,16 +340,16 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
 
       <div className="flex items-center space-x-2">
         <Checkbox
-          id="isDefault"
+          id="is_default"
           checked={isDefault}
           onCheckedChange={(checked) => {
             const value = checked === true;
             setIsDefault(value);
-            setValue('isDefault', value);
+            setValue('is_default', value);
           }}
           disabled={loading}
         />
-        <Label htmlFor="isDefault" className="text-sm">
+        <Label htmlFor="is_default" className="text-sm">
           Definir como endereço padrão
         </Label>
       </div>
