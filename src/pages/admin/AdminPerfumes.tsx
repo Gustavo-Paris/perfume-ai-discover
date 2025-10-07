@@ -23,6 +23,7 @@ import { PricesDisplayModal } from '@/components/admin/PricesDisplayModal';
 import { formatMarginDisplay, decimalToPercentage } from '@/utils/marginHelpers';
 import { useRecalculateAllPrices } from '@/hooks/useRecalculateAllPrices';
 import { useUpdateAllMargins } from '@/hooks/useUpdateAllMargins';
+import { useSecurityAudit } from '@/hooks/useSecurityAudit';
 
 
 const AdminPerfumes = () => {
@@ -97,16 +98,20 @@ const AdminPerfumes = () => {
     setNewMargin(200);
   };
 
+  const { logAdminAccess } = useSecurityAudit();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       if (editingPerfume) {
         await updatePerfume.mutateAsync({ id: editingPerfume.id, ...formData });
+        await logAdminAccess(`Perfume atualizado: ${formData.brand} - ${formData.name}`);
         toast({ title: "Perfume atualizado com sucesso!" });
         setEditingPerfume(null);
       } else {
         await createPerfume.mutateAsync(formData);
+        await logAdminAccess(`Perfume criado: ${formData.brand} - ${formData.name}`);
         toast({ title: "Perfume criado com sucesso!" });
         setIsCreateOpen(false);
       }
@@ -123,7 +128,9 @@ const AdminPerfumes = () => {
   const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este perfume?')) {
       try {
+        const perfume = perfumes?.find(p => p.id === id);
         await deletePerfume.mutateAsync(id);
+        await logAdminAccess(`Perfume excluído: ${perfume?.brand} - ${perfume?.name}`);
         toast({ title: "Perfume excluído com sucesso!" });
       } catch (error) {
         toast({ 
@@ -175,6 +182,8 @@ const AdminPerfumes = () => {
         perfumeId: editingPerfume.id,
         newMarginPercentage: marginMultiplier
       });
+      
+      await logAdminAccess(`Margem atualizada para ${newMargin}% no perfume: ${editingPerfume.brand} - ${editingPerfume.name}`);
       
       toast({
         title: "Margem atualizada!",

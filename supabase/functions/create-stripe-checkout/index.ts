@@ -454,6 +454,38 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
 
     logStep("Stripe checkout completed successfully");
 
+    // Log security audit event
+    try {
+      const supabaseService = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+      
+      await supabaseService
+        .from('security_audit_log')
+        .insert({
+          user_id: user?.id || null,
+          event_type: 'sensitive_data_access',
+          event_description: `Checkout criado via Stripe (${method})`,
+          risk_level: 'low',
+          resource_type: 'checkout',
+          resource_id: session?.id || null,
+          ip_address: clientIP,
+          user_agent: req.headers.get('user-agent'),
+          metadata: {
+            session_id: session?.id,
+            item_count: sanitizedItems.length,
+            total_amount: totalAmount,
+            payment_method: method,
+            order_draft_id: order_draft_id || null,
+            customer_email: customerEmail
+          }
+        });
+    } catch (auditError) {
+      logStep("Warning: Failed to log audit event", { error: auditError });
+    }
+
     // Log security event de sucesso
     await logSecurityEvent(
       supabase,

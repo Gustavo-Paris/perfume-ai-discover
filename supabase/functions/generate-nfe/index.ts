@@ -324,6 +324,32 @@ serve(async (req) => {
       has_pdf: !!focusResult.caminho_danfe,
       has_xml: !!focusResult.caminho_xml_nota_fiscal
     });
+    
+    // Log security audit event
+    try {
+      await supabase
+        .from('security_audit_log')
+        .insert({
+          user_id: order.user_id || null,
+          event_type: 'sensitive_data_access',
+          event_description: `NF-e gerada: #${noteNumber} para pedido ${order.order_number}`,
+          risk_level: 'medium',
+          resource_type: 'fiscal_note',
+          resource_id: fiscalNote.id,
+          metadata: {
+            order_id: order_id,
+            order_number: order.order_number,
+            nfe_number: noteNumber,
+            nfe_key: focusResult.chave_nfe,
+            nfe_status: focusResult.status,
+            valor_total: order.total_amount,
+            environment: isProduction ? 'production' : 'homologation'
+          }
+        });
+    } catch (auditError) {
+      console.warn(`[${requestId}] Failed to log audit event:`, auditError);
+    }
+    
     console.log(`[${requestId}] ========== NFE GENERATION END ==========`);
 
     return new Response(

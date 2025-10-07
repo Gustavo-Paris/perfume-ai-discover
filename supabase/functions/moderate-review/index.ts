@@ -77,6 +77,36 @@ serve(async (req) => {
 
     if (updateError) throw updateError;
 
+    // Log security audit event
+    try {
+      const { data: review } = await supabase
+        .from('reviews')
+        .select('user_id, rating, perfume_id')
+        .eq('id', reviewId)
+        .single();
+        
+      await supabase
+        .from('security_audit_log')
+        .insert({
+          user_id: review?.user_id || null,
+          event_type: 'admin_access',
+          event_description: `Review ${moderation.approved ? 'aprovada' : 'rejeitada'} via moderação automática`,
+          risk_level: 'medium',
+          resource_type: 'review',
+          resource_id: reviewId,
+          metadata: {
+            review_id: reviewId,
+            approved: moderation.approved,
+            moderation_reason: moderation.reason,
+            moderation_confidence: moderation.confidence,
+            rating: review?.rating,
+            perfume_id: review?.perfume_id
+          }
+        });
+    } catch (auditError) {
+      console.warn('Failed to log audit event:', auditError);
+    }
+
     // If approved, trigger notification to user
     if (moderation.approved) {
       const { data: review } = await supabase

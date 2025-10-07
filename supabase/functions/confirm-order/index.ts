@@ -366,6 +366,32 @@ serve(async (req) => {
 
     console.log('Order confirmation completed successfully');
 
+    // Log security audit event
+    try {
+      await supabase
+        .from('security_audit_log')
+        .insert({
+          user_id: userId || null,
+          event_type: 'sensitive_data_access',
+          event_description: `Pedido confirmado: ${order.order_number}`,
+          risk_level: 'low',
+          resource_type: 'order',
+          resource_id: order.id,
+          ip_address: clientIP,
+          user_agent: req.headers.get('user-agent'),
+          metadata: {
+            order_id: order.id,
+            order_number: order.order_number,
+            total_amount: totalAmount,
+            payment_method: verifiedMethod,
+            payment_status: verifiedStatus,
+            items_count: cartItems.length
+          }
+        });
+    } catch (auditError) {
+      console.warn('Failed to log audit event:', auditError);
+    }
+
     return createSuccessResponse({
       success: true,
       order: {
