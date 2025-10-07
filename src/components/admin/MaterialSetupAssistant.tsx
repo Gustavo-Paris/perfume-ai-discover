@@ -91,10 +91,6 @@ export default function MaterialSetupAssistant() {
       const currentSizes = currentConfig?.bottle_materials.map(b => b.size_ml) || [];
       const newSizes = setup.bottles.map(b => b.size).filter(size => !currentSizes.includes(size));
       
-      console.log('Current sizes:', currentSizes);
-      console.log('Setup sizes:', setup.bottles.map(b => b.size));
-      console.log('New sizes detected:', newSizes);
-      
       // Save configuration first
       await saveMutation.mutateAsync({
         bottle_materials: setup.bottles.map(b => ({
@@ -115,7 +111,7 @@ export default function MaterialSetupAssistant() {
       
       setIsOpen(false);
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      toast.error('Erro ao salvar configuração');
     }
   };
 
@@ -125,7 +121,7 @@ export default function MaterialSetupAssistant() {
       toast.info(`🔄 Forçando recálculo para todos os ${allSizes.length} tamanhos...`);
       await recalculateAllPrices.mutateAsync(allSizes);
     } catch (error) {
-      console.error('Erro ao forçar recálculo:', error);
+      toast.error('Erro ao forçar recálculo');
     }
   };
 

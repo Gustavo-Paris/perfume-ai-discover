@@ -99,7 +99,6 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
 
       if (data?.success && data?.checkout_url) {
         const url = data.checkout_url as string;
-        console.log('Redirecting to Stripe checkout:', url);
         
         // Show loading message before redirect
         toast({ 
@@ -115,7 +114,6 @@ export const PaymentStep = ({ onBack, onSuccess, orderDraftId, totalAmount, load
         throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
       }
     } catch (err) {
-      console.error('Checkout error:', err);
       toast({
         title: 'Erro no Checkout',
         description: err instanceof Error ? err.message : 'Tente novamente em instantes.',

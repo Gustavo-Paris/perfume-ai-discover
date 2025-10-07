@@ -16,7 +16,6 @@ interface UploadedImage {
 }
 
 const PerfumeImageUploader = () => {
-  console.log('PerfumeImageUploader: Component loading');
   const { perfumeImages, uploadImages, isUploading, uploadedImages } = usePerfumeImageUpload();
   
   // Estado para upload personalizado

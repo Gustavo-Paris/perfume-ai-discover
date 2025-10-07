@@ -19,8 +19,6 @@ const Header = () => {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  console.log('🔍 Recovery check from context:', isRecoveryMode);
-
   // Close search when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: Event) => {

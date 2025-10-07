@@ -84,7 +84,6 @@ const PerfumeDetails = () => {
         });
 
         if (error || !availability || availability.length === 0) {
-          console.error('Erro ao verificar estoque:', error);
           setMaxQuantity(0);
           setStockMl(0);
           return;
@@ -104,7 +103,6 @@ const PerfumeDetails = () => {
           setQuantity(Math.max(1, maxCanAdd));
         }
       } catch (error) {
-        console.error('Erro ao verificar estoque:', error);
         setMaxQuantity(0);
         setStockMl(0);
       }
@@ -169,7 +167,6 @@ const PerfumeDetails = () => {
       // Toast de sucesso já é tratado no CartContext
     } catch (error: any) {
       // Erro já tratado no CartContext com toast
-      console.error('Error adding to cart:', error);
     }
   };
 

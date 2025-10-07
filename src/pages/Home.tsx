@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import { useState, useEffect } from 'react';
+import SEO from '@/components/SEO';
 
 // Import decant images
 import decantsCollection from '@/assets/decants-collection.png';
@@ -37,7 +38,14 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <SEO 
+        title="Paris & Co - Perfumaria Premium Online | Curadoria de Fragrâncias com IA"
+        description="Descubra sua fragrância perfeita com nossa curadoria inteligente. Perfumes premium, decants de alta qualidade, entrega rápida e garantia Amou ou Troca. Comece sua jornada olfativa agora!"
+        keywords="perfumes online, fragrâncias premium, curadoria de perfumes, decants, perfume importado, eau de parfum, perfumaria brasil"
+        canonical="https://paris-co.com"
+      />
+      <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative min-h-[calc(100vh-56px)] py-12 md:py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
         <div className="container mx-auto max-w-7xl">
@@ -280,6 +288,7 @@ const Home = () => {
         </div>
       </motion.section>
     </div>
+    </>
   );
 };
 

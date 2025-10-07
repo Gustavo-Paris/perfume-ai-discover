@@ -93,7 +93,6 @@ export const useCsvImport = () => {
             .maybeSingle();
 
           if (existingPerfume) {
-            console.log(`Perfume ${rowData.marca} - ${rowData.nome} já existe, pulando...`);
             continue;
           }
 
@@ -155,13 +154,10 @@ export const useCsvImport = () => {
             const { error: lotError } = await supabase
               .from('inventory_lots')
               .insert(lotData);
-            
-            if (lotError) console.warn('Erro ao criar lote:', lotError);
           }
           
           successCount++;
         } catch (error) {
-          console.error(`Erro na linha ${i + 2}:`, error);
           errorCount++;
         }
         
@@ -174,7 +170,6 @@ export const useCsvImport = () => {
       });
       
     } catch (error) {
-      console.error('Erro na importação:', error);
       toast({
         title: "Erro na importação",
         description: "Falha ao processar o arquivo CSV",

@@ -20,6 +20,7 @@ import { SearchFilters } from '@/hooks/useAdvancedSearch';
 import { LoadingState, EmptyState } from '@/components/ui/loading-states';
 import { ProductCardSkeleton } from '@/components/ui/content-loader';
 import { Skeleton } from '@/components/ui/skeleton';
+import SEO from '@/components/SEO';
 
 const Catalogo = () => {
   const { data: databasePerfumes, isLoading } = usePerfumes();
@@ -40,7 +41,6 @@ const Catalogo = () => {
     const query = searchParams.get('q');
     if (query) {
       // The query will be passed as initialQuery to AdvancedSearchBox
-      console.log('URL query found:', query);
     }
   }, [searchParams]);
 
@@ -231,7 +231,14 @@ const Catalogo = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white py-12">
+    <>
+      <SEO 
+        title="Catálogo de Perfumes Premium | Paris & Co"
+        description="Explore nossa coleção completa de perfumes e fragrâncias premium. Decants de alta qualidade, marcas exclusivas e entrega rápida. Filtre por marca, gênero e família olfativa."
+        keywords="catálogo perfumes, comprar perfumes online, fragrâncias premium, decants, perfumes importados, perfumes nacionais"
+        canonical="https://paris-co.com/catalogo"
+      />
+      <div className="min-h-screen bg-white py-12">
       <div className="container mx-auto px-4 max-w-7xl">
         <LoadingState
           isLoading={isLoading}
@@ -428,6 +435,7 @@ const Catalogo = () => {
         </LoadingState>
       </div>
     </div>
+    </>
   );
 };
 

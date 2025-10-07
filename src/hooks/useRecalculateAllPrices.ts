@@ -7,22 +7,15 @@ export const useRecalculateAllPrices = () => {
 
   return useMutation({
     mutationFn: async () => {
-      console.log('🔄 Iniciando recálculo de todos os preços...');
-      
       const { data, error } = await supabase.rpc('recalculate_all_prices');
       
-      console.log('📊 Resposta do recalculate_all_prices:', { data, error });
-      
       if (error) {
-        console.error('❌ Erro ao recalcular todos os preços:', error);
         throw error;
       }
       
       return data;
     },
     onSuccess: (data) => {
-      console.log('✅ Recálculo concluído com sucesso:', data);
-      
       if (data && typeof data === 'object' && (data as any)?.message) {
         toast.success(
           `✅ ${(data as any).message}`
@@ -37,7 +30,6 @@ export const useRecalculateAllPrices = () => {
       queryClient.invalidateQueries({ queryKey: ['perfumes-with-costs'] });
     },
     onError: (error) => {
-      console.error('❌ Erro no recálculo:', error);
       toast.error(`❌ Erro ao recalcular preços: ${error.message || 'Erro desconhecido'}`);
     },
   });
