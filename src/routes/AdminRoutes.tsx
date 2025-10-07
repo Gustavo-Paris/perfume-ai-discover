@@ -18,6 +18,7 @@ const AdminNFeDashboard = lazy(() => import('@/pages/admin/AdminNFeDashboard'));
 const AdminOrderManagement = lazy(() => import('@/pages/admin/AdminOrderManagement'));
 const AdminSecurityLogs = lazy(() => import('@/pages/admin/AdminSecurityLogs'));
 const AdminSecurityAlerts = lazy(() => import('@/pages/admin/AdminSecurityAlerts'));
+const AdminSitemap = lazy(() => import('@/pages/admin/AdminSitemap'));
 
 const AdminRoutes = () => {
   return (
@@ -38,6 +39,7 @@ const AdminRoutes = () => {
       <Route path="/admin/order-management" element={<AdminOrderManagement />} />
         <Route path="/admin/security-logs" element={<AdminSecurityLogs />} />
         <Route path="/admin/security-alerts" element={<AdminSecurityAlerts />} />
+        <Route path="/admin/sitemap" element={<AdminSitemap />} />
     </>
   );
 };

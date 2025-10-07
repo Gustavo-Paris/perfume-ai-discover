@@ -6,6 +6,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Development logging helper
+const debugLog = (...args: any[]) => {
+  if (Deno.env.get('ENVIRONMENT') === 'development') {
+    console.log('[DEBUG]', ...args);
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -77,7 +84,7 @@ serve(async (req) => {
 
     sitemapXml += '\n</urlset>';
 
-    console.log(`✅ Sitemap gerado com ${staticPages.length} páginas estáticas e ${perfumes?.length || 0} perfumes`);
+    debugLog(`✅ Sitemap gerado com ${staticPages.length} páginas estáticas e ${perfumes?.length || 0} perfumes`);
 
     return new Response(sitemapXml, {
       headers: {

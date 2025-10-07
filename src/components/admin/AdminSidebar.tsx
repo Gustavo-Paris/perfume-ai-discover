@@ -119,6 +119,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     items: [
       { title: '🚀 Configuração de Lançamento', url: '/admin/launch-setup', icon: Megaphone },
       { title: 'Dados da Empresa', url: '/admin/company', icon: Building },
+      { title: 'Gerador de Sitemap', url: '/admin/sitemap', icon: FileText },
       { title: 'Upload de Imagens', url: '/admin/perfume-images', icon: Upload },
       { title: 'Importar CSV', url: '/admin/csv-import', icon: Upload },
       { title: 'Configurações', url: '/admin/config', icon: Settings },

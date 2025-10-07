@@ -13,4 +13,12 @@ Allow: /
 User-agent: *
 Allow: /
 
+# Páginas privadas (não indexar)
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /carrinho/
+Disallow: /pedidos/
+Disallow: /configuracoes/
+
+# Sitemap dinâmico gerado automaticamente
 Sitemap: https://vjlfwmwhvxlicykqetnk.supabase.co/functions/v1/generate-sitemap
