@@ -3397,6 +3397,7 @@ export type Database = {
       }
       perfumes_public: {
         Row: {
+          available_sizes: Json | null
           base_notes: string[] | null
           brand: string | null
           category: string | null
@@ -3412,9 +3413,12 @@ export type Database = {
           price_2ml: number | null
           price_5ml: number | null
           price_full: number | null
+          product_type: string | null
+          source_size_ml: number | null
           top_notes: string[] | null
         }
         Insert: {
+          available_sizes?: Json | null
           base_notes?: string[] | null
           brand?: string | null
           category?: string | null
@@ -3430,9 +3434,12 @@ export type Database = {
           price_2ml?: number | null
           price_5ml?: number | null
           price_full?: number | null
+          product_type?: string | null
+          source_size_ml?: number | null
           top_notes?: string[] | null
         }
         Update: {
+          available_sizes?: Json | null
           base_notes?: string[] | null
           brand?: string | null
           category?: string | null
@@ -3448,6 +3455,8 @@ export type Database = {
           price_2ml?: number | null
           price_5ml?: number | null
           price_full?: number | null
+          product_type?: string | null
+          source_size_ml?: number | null
           top_notes?: string[] | null
         }
         Relationships: []
