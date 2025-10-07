@@ -68,3 +68,6 @@ verify_jwt = true
 
 [functions.process-payment-automation]
 verify_jwt = true
+
+[functions.generate-sitemap]
+verify_jwt = false
