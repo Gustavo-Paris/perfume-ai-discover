@@ -4,8 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, FileText, Eye, RefreshCw, AlertCircle, RotateCcw } from 'lucide-react';
+import { Download, FileText, Eye, RefreshCw, AlertCircle, RotateCcw, XCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useCancelNFe } from '@/hooks/useCancelNFe';
 
 interface FiscalNote {
   id: string;
@@ -29,7 +33,11 @@ export const FiscalNotesManager = () => {
   const [loading, setLoading] = useState(true);
   const [retryingNoteId, setRetryingNoteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [selectedNoteForCancel, setSelectedNoteForCancel] = useState<FiscalNote | null>(null);
+  const [cancelJustification, setCancelJustification] = useState('');
   const { toast } = useToast();
+  const { cancelNFe, loading: cancelLoading } = useCancelNFe();
 
   useEffect(() => {
     loadFiscalNotes();
@@ -201,6 +209,30 @@ export const FiscalNotesManager = () => {
     }
   };
 
+  const openCancelDialog = (fiscalNote: FiscalNote) => {
+    setSelectedNoteForCancel(fiscalNote);
+    setCancelJustification('');
+    setCancelDialogOpen(true);
+  };
+
+  const handleCancelNFe = async () => {
+    if (!selectedNoteForCancel) return;
+
+    try {
+      await cancelNFe({
+        fiscal_note_id: selectedNoteForCancel.id,
+        justificativa: cancelJustification,
+      });
+      
+      setCancelDialogOpen(false);
+      setSelectedNoteForCancel(null);
+      setCancelJustification('');
+      loadFiscalNotes();
+    } catch (error) {
+      // Error handling is done in the hook
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Carregando notas fiscais...</div>;
   }
@@ -270,6 +302,18 @@ export const FiscalNotesManager = () => {
                   </Badge>
                   
                   <div className="flex gap-2">
+                    {fiscalNote.status === 'authorized' && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => openCancelDialog(fiscalNote)}
+                        className="flex items-center gap-2"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Cancelar
+                      </Button>
+                    )}
+                    
                     {(fiscalNote.status === 'rejected' || fiscalNote.erro_message) && (
                       <Button
                         size="sm"
@@ -348,6 +392,52 @@ export const FiscalNotesManager = () => {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancelar Nota Fiscal</DialogTitle>
+            <DialogDescription>
+              Você está prestes a cancelar a NF-e {selectedNoteForCancel?.numero.toString().padStart(6, '0')} - Série {selectedNoteForCancel?.serie}.
+              Esta ação é irreversível.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="justification">Justificativa (mínimo 15 caracteres) *</Label>
+              <Textarea
+                id="justification"
+                placeholder="Ex: Erro no valor do produto, cliente solicitou cancelamento, etc."
+                value={cancelJustification}
+                onChange={(e) => setCancelJustification(e.target.value)}
+                className="mt-2"
+                rows={4}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {cancelJustification.length}/15 caracteres mínimos
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setCancelDialogOpen(false)}
+              disabled={cancelLoading}
+            >
+              Voltar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleCancelNFe}
+              disabled={cancelJustification.length < 15 || cancelLoading}
+            >
+              {cancelLoading ? 'Cancelando...' : 'Confirmar Cancelamento'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
