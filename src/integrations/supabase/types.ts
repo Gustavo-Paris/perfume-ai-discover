@@ -2280,6 +2280,36 @@ export type Database = {
           },
         ]
       }
+      profile_access_log: {
+        Row: {
+          access_type: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          viewed_profile_id: string
+          viewer_id: string | null
+        }
+        Insert: {
+          access_type: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          viewed_profile_id: string
+          viewer_id?: string | null
+        }
+        Update: {
+          access_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          viewed_profile_id?: string
+          viewer_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

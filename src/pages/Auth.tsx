@@ -17,6 +17,7 @@ import { useRateLimit } from '@/hooks/useRateLimit';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signInSchema, signUpSchema, resetPasswordSchema, updatePasswordSchema } from '@/utils/validationSchemas';
+import PasswordRequirements from '@/components/auth/PasswordRequirements';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -661,14 +662,15 @@ const Auth = () => {
                         }
                       }}
                       required 
-                      minLength={6} 
+                      minLength={8} 
                       className="font-display" 
                     />
+                    <PasswordRequirements password={signupForm.password} />
                     <div className="space-y-1">
                       <Progress value={signupStrength.score} className={signupStrength.score >= 60 ? "progress-strong" : "progress-weak"} />
                       <p className="text-xs text-muted-foreground">Força da senha: {signupStrength.label} ({signupStrength.score}/100)</p>
                       {signupPwned.checked && signupPwned.pwned && (
-                        <p className="text-xs text-destructive">⚠️ Esta senha foi vazada em {signupPwned.count?.toLocaleString?.() ?? signupPwned.count} ataques. Use outra senha.</p>
+                        <p className="text-xs text-destructive font-medium">⚠️ Esta senha foi vazada em {signupPwned.count?.toLocaleString?.() ?? signupPwned.count} ataques. Use outra senha.</p>
                       )}
                     </div>
                   </div>
@@ -681,7 +683,7 @@ const Auth = () => {
                       value={signupForm.confirmPassword} 
                       onChange={e => setSignupForm({ ...signupForm, confirmPassword: e.target.value })} 
                       required 
-                      minLength={6} 
+                      minLength={8} 
                       className="font-display" 
                     />
                   </div>
@@ -769,14 +771,15 @@ const Auth = () => {
                         }
                       }}
                       required 
-                      minLength={6}
+                      minLength={8}
                       className="font-display" 
                     />
+                    <PasswordRequirements password={newPasswordForm.password} />
                     <div className="space-y-1">
                       <Progress value={newPassStrength.score} className={newPassStrength.score >= 60 ? "progress-strong" : "progress-weak"} />
                       <p className="text-xs text-muted-foreground">Força da senha: {newPassStrength.label} ({newPassStrength.score}/100)</p>
                       {newPassPwned.checked && newPassPwned.pwned && (
-                        <p className="text-xs text-destructive">⚠️ Esta senha foi vazada em {newPassPwned.count?.toLocaleString?.() ?? newPassPwned.count} ataques. Use outra senha.</p>
+                        <p className="text-xs text-destructive font-medium">⚠️ Esta senha foi vazada em {newPassPwned.count?.toLocaleString?.() ?? newPassPwned.count} ataques. Use outra senha.</p>
                       )}
                     </div>
                   </div>
@@ -789,7 +792,7 @@ const Auth = () => {
                       value={newPasswordForm.confirmPassword} 
                       onChange={e => setNewPasswordForm({ ...newPasswordForm, confirmPassword: e.target.value })} 
                       required 
-                      minLength={6}
+                      minLength={8}
                       className="font-display" 
                     />
                   </div>
