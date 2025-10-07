@@ -15,6 +15,7 @@ const HeaderNavigation = () => {
   const navigation = [
     { name: 'Curadoria', href: '/curadoria' },
     { name: 'Catálogo', href: '/catalogo' },
+    { name: 'Assinaturas', href: '/assinaturas' },
     ...(user ? [{ name: 'Fidelidade', href: '/fidelidade' }] : []), // Only show if logged in
   ];
 

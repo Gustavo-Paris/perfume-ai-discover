@@ -62,6 +62,9 @@ import AdminCompanyConfig from "./pages/admin/AdminCompanyConfig";
 import AdminOrderAutomation from "./pages/admin/AdminOrderAutomation";
 import AdminFiscalNotes from "./pages/admin/AdminFiscalNotes";
 import AdminOrderManagement from "./pages/admin/AdminOrderManagement";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
+import Assinaturas from "./pages/Assinaturas";
+import MinhaAssinatura from "./pages/MinhaAssinatura";
 
 import AdminMaterialsSimplified from "./pages/admin/AdminMaterialsSimplified";
 import AdminProductCadastro from './pages/admin/AdminProductCadastro';
@@ -111,6 +114,7 @@ const AppContent = () => {
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="promotions" element={<AdminPromotions />} />
             <Route path="affiliates" element={<AdminAffiliates />} />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="support" element={<AdminSupport />} />
             <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
@@ -138,6 +142,8 @@ const AppContent = () => {
           <Route path="/sac" element={<SAC />} />
           <Route path="/search" element={<Search />} />
           <Route path="/afiliados" element={<Afiliados />} />
+          <Route path="/assinaturas" element={<Assinaturas />} />
+          <Route path="/minha-assinatura" element={<MinhaAssinatura />} />
           <Route path="/email-preferences" element={<EmailPreferences />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

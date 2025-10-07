@@ -74,3 +74,12 @@ verify_jwt = false
 
 [functions.cancel-nfe]
 verify_jwt = true
+
+[functions.subscription-checkout]
+verify_jwt = true
+
+[functions.subscription-webhook]
+verify_jwt = false
+
+[functions.process-monthly-subscriptions]
+verify_jwt = false

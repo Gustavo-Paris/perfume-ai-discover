@@ -10,6 +10,7 @@ import { useRecovery } from '@/contexts/RecoveryContext';
 const navigation = [
   { name: 'Curadoria', href: '/curadoria' },
   { name: 'Catálogo', href: '/catalogo' },
+  { name: 'Assinaturas', href: '/assinaturas' },
   { name: 'Sobre', href: '/sobre' },
   { name: 'Contato', href: '/contato' },
 ];
