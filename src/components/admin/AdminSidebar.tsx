@@ -79,6 +79,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     defaultOpen: false,
     items: [
       { title: '🤖 Pedidos Inteligentes', url: '/admin/orders', icon: Bot },
+      { title: 'Assinaturas', url: '/admin/subscriptions', icon: Calendar },
       { title: 'Promoções', url: '/admin/promotions', icon: Percent },
       { title: 'Cupons', url: '/admin/coupons', icon: Tag },
     ]
