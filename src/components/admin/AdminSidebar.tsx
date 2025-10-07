@@ -30,7 +30,8 @@ import {
   Building,
   BarChart3,
   Receipt,
-  Bot
+  Bot,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -121,6 +122,7 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
       { title: 'Importar CSV', url: '/admin/csv-import', icon: Upload },
       { title: 'Configurações', url: '/admin/config', icon: Settings },
       { title: 'Monitoramento', url: '/admin/monitoring', icon: TrendingUp },
+      { title: 'Logs de Segurança', url: '/admin/security-logs', icon: Shield },
     ]
   },
 ];
