@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { sanitizeInput } from '@/utils/securityEnhancements';
 import { useCSRFToken } from '@/hooks/useCSRFToken';
+import { useSensitiveInput } from '@/hooks/useSensitiveInput';
+import { validateCPF, validateCNPJ } from '@/utils/dataProtection';
 
 const addressSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -22,6 +24,7 @@ const addressSchema = z.object({
   district: z.string().min(1, 'Bairro é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
   state: z.string().min(2, 'Estado é obrigatório').max(2),
+  cpfCnpj: z.string().optional(), // CPF/CNPJ para nota fiscal
   isDefault: z.boolean().default(false),
 });
 
@@ -39,6 +42,13 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
 
   // CSRF Protection
   const { token: csrfToken, validateToken } = useCSRFToken();
+
+  // CPF/CNPJ com validação e formatação
+  const cpfCnpjInput = useSensitiveInput({
+    type: 'text',
+    autoFormat: false,
+    validateOnChange: false,
+  });
 
   const {
     register,
@@ -123,6 +133,23 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
         }
       }
 
+      // Validar CPF/CNPJ se fornecido
+      if (cpfCnpjInput.value) {
+        const cleaned = cpfCnpjInput.value.replace(/\D/g, '');
+        const isValidCPF = cleaned.length === 11 && validateCPF(cleaned);
+        const isValidCNPJ = cleaned.length === 14 && validateCNPJ(cleaned);
+        
+        if (!isValidCPF && !isValidCNPJ) {
+          toast({
+            title: "CPF/CNPJ Inválido",
+            description: "Por favor, verifique o CPF ou CNPJ informado.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       // Sanitizar todos os inputs do endereço
       const addressData = {
         user_id: user.id,
@@ -135,6 +162,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
         city: sanitizeInput(data.city),
         state: data.state.toUpperCase(),
         country: 'Brasil',
+        cpf_cnpj: cpfCnpjInput.value ? cpfCnpjInput.value.replace(/\D/g, '') : null,
         is_default: data.isDefault
       };
 
@@ -301,6 +329,25 @@ export const AddressForm: React.FC<AddressFormProps> = ({ onSuccess }) => {
             <p className="text-sm text-red-600 mt-1">{errors.state.message}</p>
           )}
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="cpfCnpj">CPF/CNPJ (opcional, para nota fiscal)</Label>
+        <Input
+          id="cpfCnpj"
+          value={cpfCnpjInput.formattedValue}
+          onChange={cpfCnpjInput.handleChange}
+          onBlur={cpfCnpjInput.handleBlur}
+          placeholder="000.000.000-00 ou 00.000.000/0000-00"
+          disabled={loading}
+          maxLength={18}
+        />
+        {cpfCnpjInput.error && (
+          <p className="text-sm text-red-600 mt-1">{cpfCnpjInput.error}</p>
+        )}
+        <p className="text-xs text-muted-foreground mt-1">
+          Necessário para emissão de nota fiscal
+        </p>
       </div>
 
       <div className="flex items-center space-x-2">
