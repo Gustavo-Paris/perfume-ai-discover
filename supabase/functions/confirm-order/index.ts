@@ -58,69 +58,21 @@ serve(async (req) => {
 
     const { user, clientIP } = validation;
     console.log('Validation passed - user:', user?.id || 'guest', 'ip:', clientIP);
-      supabase,
-      userId,
-      clientIp,
-      'order-confirmation',
-      5,
-      5
-    );
 
-    if (!rateLimitResult.allowed) {
-      await logSecurityEvent(
-        supabase,
-        userId,
-        'rate_limit_exceeded',
-        'Order confirmation rate limit exceeded',
-        'high',
-        { orderDraftId, ip: clientIp }
-      );
-
-      return new Response(
-        JSON.stringify({ 
-          error: 'Muitas tentativas de confirmação. Tente novamente em alguns minutos.',
-          remaining: 0,
-          reset: rateLimitResult.reset
-        }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Parse request body
+    const { orderDraftId, paymentData } = await req.json() as ConfirmOrderRequest;
+    const userId = user?.id;
 
     // Basic validation
     if (!orderDraftId || !paymentData) {
       console.error('Missing required fields:', { orderDraftId: !!orderDraftId, paymentData: !!paymentData });
-      
-      await logSecurityEvent(
-        supabase,
-        userId,
-        'invalid_order_data',
-        'Missing required order confirmation fields',
-        'medium',
-        { hasOrderDraftId: !!orderDraftId, hasPaymentData: !!paymentData }
-      );
-
-      return new Response(
-        JSON.stringify({ error: 'Order draft ID and payment data are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createErrorResponse('Order draft ID and payment data are required', 400, corsHeaders);
     }
 
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(orderDraftId)) {
-      await logSecurityEvent(
-        supabase,
-        userId,
-        'invalid_order_data',
-        'Invalid order draft ID format',
-        'medium',
-        { orderDraftId }
-      );
-
-      return new Response(
-        JSON.stringify({ error: 'Invalid order draft ID' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createErrorResponse('Invalid order draft ID', 400, corsHeaders);
     }
 
     // Step 1: Get order draft
@@ -414,58 +366,30 @@ serve(async (req) => {
 
     console.log('Order confirmation completed successfully');
 
-    // Log successful order confirmation
-    await logSecurityEvent(
-      supabase,
-      userId,
-      'order_confirmed',
-      'Order confirmed successfully',
-      'low',
-      { 
-        orderId: order.id, 
-        orderNumber: order.order_number,
-        totalAmount: order.total_amount,
-        paymentMethod: order.payment_method
+    return createSuccessResponse({
+      success: true,
+      order: {
+        id: order.id,
+        order_number: order.order_number,
+        status: order.status,
+        payment_status: order.payment_status,
+        total_amount: order.total_amount,
+        subtotal: order.subtotal,
+        shipping_cost: order.shipping_cost,
+        shipping_service: order.shipping_service,
+        payment_method: order.payment_method,
+        address_data: completeAddressData
       }
-    );
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        order: {
-          id: order.id,
-          order_number: order.order_number,
-          status: order.status,
-          payment_status: order.payment_status,
-          total_amount: order.total_amount,
-          subtotal: order.subtotal,
-          shipping_cost: order.shipping_cost,
-          shipping_service: order.shipping_service,
-          payment_method: order.payment_method,
-          address_data: completeAddressData
-        }
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    }, corsHeaders);
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorName = error instanceof Error ? error.name : 'Unknown';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    
     console.error('Unexpected error in confirm-order function:', error);
-    console.error('Error name:', errorName);
-    console.error('Error message:', errorMessage);
-    console.error('Error stack:', errorStack);
     
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: 'Internal server error',
-        message: errorMessage,
-        errorName: errorName
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    return createErrorResponse(
+      'Internal server error: ' + errorMessage,
+      500,
+      corsHeaders
     );
   }
 });
