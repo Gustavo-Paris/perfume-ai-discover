@@ -45,8 +45,15 @@ export function SupportChat() {
 
     // Sanitizar mensagem antes de enviar
     const sanitizedMessage = sanitizeInput(newMessage.trim());
-    await sendMessage(sanitizedMessage);
-    setNewMessage('');
+      await sendMessage(sanitizedMessage);
+      setNewMessage('');
+    } catch (error: any) {
+      toast({
+        title: "Mensagem inválida",
+        description: error.errors?.[0]?.message || "Verifique sua mensagem e tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleStartChat = async () => {

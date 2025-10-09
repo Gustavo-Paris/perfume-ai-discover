@@ -30,6 +30,7 @@ import { getPasswordStrength, checkPasswordPwned, type PasswordStrength } from '
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCSRFToken } from '@/hooks/useCSRFToken';
+import { profileUpdateSchema, type ProfileUpdateFormData } from '@/utils/validationSchemas';
 
 const Configuracoes = () => {
   const { user, updatePassword } = useAuth();
@@ -39,6 +40,15 @@ const Configuracoes = () => {
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [promotionalEmails, setPromotionalEmails] = useState(true);
   
+  // Profile update state
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: user?.user_metadata?.name || '',
+    email: user?.email || '',
+    phone: '',
+    cpf: ''
+  });
+
   // Password change state
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -69,6 +79,49 @@ const Configuracoes = () => {
       setPasswordPwned({ checked: false, pwned: false, count: null });
     }
   }, [passwordForm.new]);
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      // Validate with Zod
+      const validatedData = profileUpdateSchema.parse(profileForm);
+      setIsSavingProfile(true);
+
+      // Update profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: validatedData.name,
+          phone: validatedData.phone,
+          cpf: validatedData.cpf
+        })
+        .eq('id', user?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Perfil atualizado!",
+        description: "Suas informações foram salvas com sucesso"
+      });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        toast({
+          title: "Dados inválidos",
+          description: error.errors?.[0]?.message || "Verifique os dados e tente novamente.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Erro ao atualizar",
+          description: "Não foi possível salvar as alterações. Tente novamente.",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,46 +313,58 @@ const Configuracoes = () => {
                     Informações Pessoais
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Nome Completo</Label>
-                      <Input 
-                        id="name" 
-                        defaultValue={user?.user_metadata?.name || ''} 
-                        placeholder="Seu nome completo"
-                      />
+                <CardContent>
+                  <form onSubmit={handleProfileUpdate} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Nome Completo</Label>
+                        <Input 
+                          id="name" 
+                          value={profileForm.name}
+                          onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                          placeholder="Seu nome completo"
+                          disabled={isSavingProfile}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                          placeholder="seu@email.com"
+                          disabled={isSavingProfile}
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        defaultValue={user?.email || ''} 
-                        placeholder="seu@email.com"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="phone">Telefone</Label>
+                        <Input 
+                          id="phone" 
+                          type="tel" 
+                          value={profileForm.phone}
+                          onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                          placeholder="(11) 99999-9999"
+                          disabled={isSavingProfile}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cpf">CPF</Label>
+                        <Input 
+                          id="cpf" 
+                          value={profileForm.cpf}
+                          onChange={(e) => setProfileForm({ ...profileForm, cpf: e.target.value })}
+                          placeholder="000.000.000-00"
+                          disabled={isSavingProfile}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input 
-                        id="phone" 
-                        type="tel" 
-                        placeholder="(11) 99999-9999"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cpf">CPF</Label>
-                      <Input 
-                        id="cpf" 
-                        placeholder="000.000.000-00"
-                      />
-                    </div>
-                  </div>
-                  <Button className="btn-primary">
-                    Salvar Alterações
-                  </Button>
+                    <Button type="submit" className="btn-primary" disabled={isSavingProfile}>
+                      {isSavingProfile ? 'Salvando...' : 'Salvar Alterações'}
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
 
@@ -460,9 +525,7 @@ const Configuracoes = () => {
                     />
                   </div>
                   
-                  <Button className="btn-primary">
-                    Salvar Preferências
-                  </Button>
+                  <Button className="btn-primary">Salvar Preferências</Button>
                 </CardContent>
               </Card>
             </motion.div>
@@ -481,37 +544,29 @@ const Configuracoes = () => {
                     Privacidade e Dados
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Controle de Dados</h4>
-                    <div className="space-y-2">
-                      <Button variant="outline" className="w-full justify-start">
-                        <Eye className="mr-2 h-4 w-4" />
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">Seus Dados</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Você pode solicitar uma cópia de todos os seus dados ou solicitar a exclusão permanente.
+                    </p>
+                    <div className="space-x-2">
+                      <Button variant="outline">
                         Baixar Meus Dados
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <EyeOff className="mr-2 h-4 w-4" />
-                        Gerenciar Cookies
                       </Button>
                     </div>
                   </div>
                   
                   <Separator />
                   
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Políticas</h4>
-                    <div className="space-y-2 text-sm">
-                      <p>
-                        <a href="/privacidade" className="text-primary hover:underline">
-                          Política de Privacidade
-                        </a>
-                      </p>
-                      <p>
-                        <a href="/termos" className="text-primary hover:underline">
-                          Termos de Uso
-                        </a>
-                      </p>
-                    </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">Política de Privacidade</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Consulte nossa política de privacidade para entender como tratamos seus dados.
+                    </p>
+                    <Button variant="link" className="p-0" onClick={() => navigate('/privacidade')}>
+                      Ler Política de Privacidade
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -524,60 +579,42 @@ const Configuracoes = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Card className="border-red-200">
+              <Card className="border-destructive">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-red-600">
+                  <CardTitle className="flex items-center gap-2 text-destructive">
                     <AlertTriangle className="h-5 w-5" />
                     Zona Perigosa
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h4 className="font-medium text-red-800 mb-2">Excluir Conta Permanentemente</h4>
-                    <p className="text-sm text-red-700 mb-4">
-                      Uma vez excluída, sua conta não poderá ser recuperada. Todos os seus dados, 
-                      pedidos, pontos e configurações serão permanentemente removidos.
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2 text-destructive">Excluir Conta</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Esta ação é permanente e não pode ser desfeita. Todos os seus dados, pedidos e histórico serão removidos.
                     </p>
-                    
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
-                          <Trash2 className="mr-2 h-4 w-4" />
+                        <Button variant="destructive">
+                          <Trash2 className="h-4 w-4 mr-2" />
                           Excluir Minha Conta
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle className="flex items-center gap-2 text-red-600">
-                            <AlertTriangle className="h-5 w-5" />
-                            Excluir Conta Permanentemente
-                          </AlertDialogTitle>
-                          <AlertDialogDescription className="space-y-3">
-                            <p>
-                              <strong>Esta ação não pode ser desfeita.</strong> Ao confirmar, todos os seus dados serão permanentemente removidos, incluindo:
-                            </p>
-                            <ul className="list-disc list-inside space-y-1 text-sm">
-                              <li>Dados pessoais e endereços</li>
-                              <li>Histórico de pedidos e compras</li>
-                              <li>Pontos de fidelidade acumulados</li>
-                              <li>Sessões de curadoria e preferências</li>
-                              <li>Carrinho de compras</li>
-                            </ul>
-                            <p className="text-sm font-medium">
-                              Tem certeza de que deseja continuar?
-                            </p>
+                          <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. Isso irá excluir permanentemente sua conta
+                            e remover todos os seus dados de nossos servidores.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel disabled={isDeleting}>
-                            Cancelar
-                          </AlertDialogCancel>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={handleDeleteAccount}
                             disabled={isDeleting}
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
-                            {isDeleting ? 'Excluindo...' : 'Sim, Excluir Conta'}
+                            {isDeleting ? 'Excluindo...' : 'Sim, excluir minha conta'}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
