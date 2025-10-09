@@ -6,10 +6,19 @@
 
 ### Segurança e Performance
 - [x] **RLS Policies** - Todas as tabelas protegidas com Row Level Security
+- [x] **Correções Críticas de Segurança** - Vulnerabilidades de exposição de dados corrigidas (FASE 1)
+  - ✅ Política RLS de `orders` corrigida - dados de clientes protegidos
+  - ✅ Política RLS de `order_items` corrigida - dados de vendas protegidos
+  - ✅ Cupons restritos apenas para usuários autenticados
 - [x] **Validação forte de senhas** - Integração com HIBP API ativa
 - [x] **Remoção de console.log** - 280+ instâncias substituídas por debugLog()
 - [x] **Sitemap dinâmico** - Edge function gerando sitemap.xml automaticamente
 - [x] **SEO completo** - Canonical URLs, Open Graph, Twitter Cards implementados
+- [x] **Monitoramento de Segurança** - Dashboard de métricas em tempo real (FASE 3)
+  - ✅ Hook `useSecurityMetrics` para coleta de dados
+  - ✅ Dashboard visual com gráficos e alertas
+  - ✅ Detecção automática de atividades suspeitas
+  - ✅ Rota `/admin/security-metrics` implementada
 
 ### Backend e Automações
 - [x] **Cancelamento de NFe** - Função e hooks implementados
@@ -25,6 +34,11 @@
 - [x] **Componentes otimizados** - Skeletons, loading states, error boundaries
 
 ## ⚠️ REQUER AÇÃO MANUAL
+
+### Configurações de Segurança (FASE 2)
+- [ ] **Leaked Password Protection** - Habilitar no Dashboard Supabase (Authentication > Settings)
+- [ ] **Postgres Version Update** - Atualizar versão para aplicar patches de segurança (Settings > Database)
+- [ ] **Function Search Path** - Avisos das funções pg_http (baixa prioridade - comportamento normal)
 
 ### Testes Críticos
 - [ ] **Testar Stripe end-to-end** - Cartão + PIX + Webhooks
@@ -86,10 +100,16 @@ Pode ser:
 
 ## 🎯 Próximos Passos (Prioridade)
 
-1. **Testes de Pagamento** - Validar fluxo completo Stripe (2-3 dias)
-2. **Testes de NFe** - Gerar 10+ notas em homologação (1-2 dias)
-3. **Otimização de Imagens** - WebP + CDN (1 dia)
-4. **Documentação** - Manual operacional para admins (1 dia)
-5. **Testes E2E** - Cobertura crítica de fluxos (3-5 dias)
+### Segurança (Urgente)
+1. **Habilitar Leaked Password Protection** - Dashboard Supabase (5 min)
+2. **Atualizar Postgres** - Aplicar patches de segurança (15-30 min)
+3. **Revisar Logs de Segurança** - Verificar dashboard `/admin/security-metrics` (diariamente)
 
-**Tempo estimado até launch:** 7-10 dias úteis
+### Testes e Validação
+4. **Testes de Pagamento** - Validar fluxo completo Stripe (2-3 dias)
+5. **Testes de NFe** - Gerar 10+ notas em homologação (1-2 dias)
+6. **Otimização de Imagens** - WebP + CDN (1 dia)
+7. **Documentação** - Manual operacional para admins (1 dia)
+8. **Testes E2E** - Cobertura crítica de fluxos (3-5 dias)
+
+**Tempo estimado até launch:** 7-10 dias úteis (após configurações de segurança)
