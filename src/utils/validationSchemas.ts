@@ -169,6 +169,21 @@ export const reviewSchema = z.object({
 export type ReviewFormData = z.infer<typeof reviewSchema>;
 
 // ========================================
+// SCHEMAS DE SUPPORT CHAT
+// ========================================
+
+export const supportChatSchema = z.object({
+  subject: z.string().max(200, { message: "Assunto deve ter no máximo 200 caracteres" }).optional(),
+  category: z.enum(['pedidos', 'produtos', 'entrega', 'pagamento', 'devolucao', 'tecnico', 'outros']).optional(),
+  message: z.string()
+    .trim()
+    .min(1, { message: "Mensagem não pode estar vazia" })
+    .max(2000, { message: "Mensagem deve ter no máximo 2000 caracteres" }),
+  rating: z.number().int().min(1).max(5).optional(),
+  feedback: z.string().max(500, { message: "Feedback deve ter no máximo 500 caracteres" }).optional(),
+});
+
+// ========================================
 // SCHEMAS DE CUPOM
 // ========================================
 

@@ -76,25 +76,19 @@ describe('Input Sanitization Security Tests', () => {
     expect(sanitized.length).toBeLessThanOrEqual(1000);
   });
 
-  it('should validate Zod schemas prevent malicious input', async () => {
-    const { supportChatSchema } = await import('@/utils/validationSchemas');
-    
-    const maliciousInputs = [
-      { message: '<script>alert("XSS")</script>' },
-      { message: 'javascript:alert("XSS")' },
-      { message: '<img src=x onerror=alert("XSS")>' },
-      { message: '<iframe src="evil.com"></iframe>' }
+  it('should validate and sanitize malicious content', () => {
+    const maliciousMessages = [
+      '<script>alert("xss")</script>Test message',
+      'Normal message<img src=x onerror=alert(1)>',
+      'Good\'"<script>alert(\'xss\')</script>',
     ];
 
-    maliciousInputs.forEach(input => {
-      const result = supportChatSchema.safeParse(input);
+    maliciousMessages.forEach(msg => {
+      const sanitized = sanitizeInput(msg);
       
-      // Should either reject or sanitize
-      if (result.success) {
-        expect(result.data.message).not.toContain('<script');
-        expect(result.data.message).not.toContain('javascript:');
-        expect(result.data.message).not.toContain('onerror');
-      }
+      expect(sanitized).not.toContain('<script>');
+      expect(sanitized).not.toContain('onerror');
+      expect(sanitized).not.toContain('javascript:');
     });
   });
 

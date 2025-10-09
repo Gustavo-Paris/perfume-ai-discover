@@ -30,7 +30,7 @@ import { getPasswordStrength, checkPasswordPwned, type PasswordStrength } from '
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCSRFToken } from '@/hooks/useCSRFToken';
-import { profileUpdateSchema, type ProfileUpdateFormData } from '@/utils/validationSchemas';
+import { profileUpdateSchema } from '@/utils/validationSchemas';
 
 const Configuracoes = () => {
   const { user, updatePassword } = useAuth();
@@ -44,9 +44,7 @@ const Configuracoes = () => {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
     name: user?.user_metadata?.name || '',
-    email: user?.email || '',
-    phone: '',
-    cpf: ''
+    email: user?.email || ''
   });
 
   // Password change state
@@ -92,9 +90,7 @@ const Configuracoes = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          name: validatedData.name,
-          phone: validatedData.phone,
-          cpf: validatedData.cpf
+          name: validatedData.name
         })
         .eq('id', user?.id);
 
@@ -334,29 +330,6 @@ const Configuracoes = () => {
                           value={profileForm.email}
                           onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
                           placeholder="seu@email.com"
-                          disabled={isSavingProfile}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="phone">Telefone</Label>
-                        <Input 
-                          id="phone" 
-                          type="tel" 
-                          value={profileForm.phone}
-                          onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                          placeholder="(11) 99999-9999"
-                          disabled={isSavingProfile}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="cpf">CPF</Label>
-                        <Input 
-                          id="cpf" 
-                          value={profileForm.cpf}
-                          onChange={(e) => setProfileForm({ ...profileForm, cpf: e.target.value })}
-                          placeholder="000.000.000-00"
                           disabled={isSavingProfile}
                         />
                       </div>

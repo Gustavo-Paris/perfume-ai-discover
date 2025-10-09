@@ -11,6 +11,7 @@ import { useSupportChat } from '@/hooks/useSupportChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { sanitizeInput } from '@/utils/securityEnhancements';
+import { toast } from '@/hooks/use-toast';
 
 export function SupportChat() {
   const { user } = useAuth();
@@ -43,8 +44,9 @@ export function SupportChat() {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    // Sanitizar mensagem antes de enviar
-    const sanitizedMessage = sanitizeInput(newMessage.trim());
+    try {
+      // Sanitizar mensagem antes de enviar
+      const sanitizedMessage = sanitizeInput(newMessage.trim());
       await sendMessage(sanitizedMessage);
       setNewMessage('');
     } catch (error: any) {

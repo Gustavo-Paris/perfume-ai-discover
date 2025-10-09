@@ -90,7 +90,7 @@ describe('Row-Level Security (RLS) Tests', () => {
 
     for (const table of sensitiveTables) {
       const { data, error } = await supabase
-        .from(table)
+        .from(table as any)
         .select('count');
 
       // Non-admin users should get error or empty results
@@ -110,10 +110,11 @@ describe('Row-Level Security (RLS) Tests', () => {
         name: 'Test Address',
         street: 'Test Street',
         number: '123',
+        district: 'Test District',
         city: 'Test City',
         state: 'TS',
         cep: '12345-678'
-      });
+      } as any);
 
     // Should be blocked by RLS policy
     expect(error).toBeDefined();
@@ -160,7 +161,7 @@ describe('Row-Level Security (RLS) Tests', () => {
 
     for (const table of publicTables) {
       const { data, error } = await supabase
-        .from(table)
+        .from(table as any)
         .select('*')
         .limit(1);
 
