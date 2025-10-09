@@ -63,7 +63,7 @@ export const usePerfumes = () => {
         // Non-admin users get public data only (no sensitive business data)
         ({ data, error } = await supabase
           .from('perfumes')
-          .select('id, name, brand, description, image_url, gender, family, top_notes, heart_notes, base_notes, category, price_2ml, price_5ml, price_10ml, price_full, created_at')
+          .select('id, name, brand, description, image_url, gender, family, top_notes, heart_notes, base_notes, category, price_2ml, price_5ml, price_10ml, price_full, created_at, available_sizes, product_type, source_size_ml')
           .order('created_at', { ascending: false }));
       }
       
@@ -94,7 +94,7 @@ export const usePerfumesWithCosts = () => {
         // Non-admin users don't get cost data - redirect to public data
         const { data, error } = await supabase
           .from('perfumes')
-          .select('id, name, brand, description, image_url, gender, family, top_notes, heart_notes, base_notes, category, price_2ml, price_5ml, price_10ml, price_full, created_at')
+          .select('id, name, brand, description, image_url, gender, family, top_notes, heart_notes, base_notes, category, price_2ml, price_5ml, price_10ml, price_full, created_at, available_sizes, product_type, source_size_ml')
           .order('created_at', { ascending: false });
         
         if (error) throw error;
