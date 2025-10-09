@@ -3423,6 +3423,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa_settings: {
+        Row: {
+          backup_codes: string[]
+          created_at: string
+          enabled: boolean
+          id: string
+          secret: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[]
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          secret: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[]
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          secret?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
