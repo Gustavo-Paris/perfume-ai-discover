@@ -50,9 +50,8 @@ Critérios de alerta implementados:
 
 **Sistema funcionando**: O monitoramento está rodando automaticamente a cada 10 minutos via pg_cron
 
-### 2. Completar Integração de Audit Logs ✅✅
-**Status**: 95% implementado
-**Tempo estimado**: 2h
+### 2. Completar Integração de Audit Logs ✅✅✅
+**Status**: 100% implementado (logs principais)
 
 - [x] Hook useSecurityAudit criado ✅
 - [x] Logs em Auth.tsx (login, signup, password change) ✅
@@ -64,9 +63,9 @@ Critérios de alerta implementados:
 - [x] Logs em ações administrativas:
   - [x] CRUD de perfumes ✅
   - [x] Moderação de reviews (via edge function) ✅
-  - [ ] Mudanças de configuração da empresa
-  - [ ] Gerenciamento de roles
-- [ ] Relatórios semanais automáticos (email para admins)
+  - [x] Mudanças de configuração da empresa ✅
+  - [x] Gerenciamento de roles ✅
+- [ ] Relatórios semanais automáticos (email para admins) - Baixa prioridade
 
 ### 3. Testes de Segurança Completos ✅✅✅
 **Status**: IMPLEMENTADO - Pronto para execução

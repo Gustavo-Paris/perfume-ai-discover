@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { debugError } from '@/utils/removeDebugLogsProduction';
+import { useSecurityAudit } from '@/hooks/useSecurityAudit';
 
 interface User {
   id: string;
@@ -49,6 +50,7 @@ const AdminUsers = () => {
   const [isAdjustDialogOpen, setIsAdjustDialogOpen] = useState(false);
   const [isAdminDialogOpen, setIsAdminDialogOpen] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
+  const { logSecurityEvent } = useSecurityAudit();
 
   const fetchUsers = async () => {
     try {
@@ -159,6 +161,8 @@ const AdminUsers = () => {
 
   const handleToggleAdmin = async (userId: string, isCurrentlyAdmin: boolean) => {
     try {
+      const targetUser = users.find(u => u.id === userId);
+      
       if (isCurrentlyAdmin) {
         // Remove admin role
         const { error } = await supabase
@@ -168,6 +172,19 @@ const AdminUsers = () => {
           .eq('role', 'admin');
 
         if (error) throw error;
+
+        // Log audit event
+        await logSecurityEvent({
+          event_type: 'role_removed',
+          description: `Permissão de admin removida de ${targetUser?.email}`,
+          risk_level: 'high',
+          metadata: {
+            target_user_id: userId,
+            target_user_email: targetUser?.email,
+            role: 'admin',
+            action: 'removed'
+          }
+        });
 
         toast({
           title: "Permissão removida",
@@ -183,6 +200,19 @@ const AdminUsers = () => {
           });
 
         if (error) throw error;
+
+        // Log audit event
+        await logSecurityEvent({
+          event_type: 'role_granted',
+          description: `Permissão de admin concedida a ${targetUser?.email}`,
+          risk_level: 'critical',
+          metadata: {
+            target_user_id: userId,
+            target_user_email: targetUser?.email,
+            role: 'admin',
+            action: 'granted'
+          }
+        });
 
         toast({
           title: "Permissão concedida",
@@ -230,6 +260,20 @@ const AdminUsers = () => {
         });
 
       if (error) throw error;
+
+      // Log audit event
+      await logSecurityEvent({
+        event_type: 'role_granted',
+        description: `Novo administrador criado: ${newAdminEmail.trim()}`,
+        risk_level: 'critical',
+        metadata: {
+          target_user_id: profileData.id,
+          target_user_email: newAdminEmail.trim(),
+          role: 'admin',
+          action: 'granted',
+          method: 'direct_creation'
+        }
+      });
 
       toast({
         title: "Admin criado",

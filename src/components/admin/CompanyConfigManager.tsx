@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Building, Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { debugError } from '@/utils/removeDebugLogsProduction';
+import { useSecurityAudit } from '@/hooks/useSecurityAudit';
 
 interface CompanyInfo {
   id?: string;
@@ -57,6 +58,7 @@ export const CompanyConfigManager = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { logSecurityEvent } = useSecurityAudit();
 
   useEffect(() => {
     loadCompanyInfo();
@@ -98,6 +100,18 @@ export const CompanyConfigManager = () => {
         .single();
 
       if (error) throw error;
+
+      // Log audit event
+      await logSecurityEvent({
+        event_type: 'company_config_update',
+        description: 'Configurações da empresa atualizadas',
+        risk_level: 'medium',
+        metadata: {
+          fields_updated: Object.keys(companyInfo),
+          cnpj: companyInfo.cnpj,
+          razao_social: companyInfo.razao_social,
+        }
+      });
 
       setCompanyInfo(data);
       toast({

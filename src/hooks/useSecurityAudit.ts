@@ -21,7 +21,10 @@ type SecurityEventType =
   | 'api_key_created'
   | 'api_key_deleted'
   | 'rate_limit_exceeded'
-  | 'suspicious_activity';
+  | 'suspicious_activity'
+  | 'company_config_update'
+  | 'role_granted'
+  | 'role_removed';
 
 type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
