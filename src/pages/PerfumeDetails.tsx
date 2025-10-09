@@ -204,10 +204,25 @@ const PerfumeDetails = () => {
   
   // Usar tamanhos que têm preços calculados na tabela perfume_prices
   const configuredSizes = databasePerfume?.available_sizes || [];
+  
+  // DEBUG: Log para identificar o problema
+  console.log('🔍 DEBUG PerfumeDetails:', {
+    perfumeId: id,
+    user: user?.id || 'not logged in',
+    configuredSizes,
+    prices,
+    availableSizes,
+    pricesLoading
+  });
+  
   const finalAvailableSizes = configuredSizes.filter(size => {
     const price = prices[size] || 0;
+    console.log(`🔍 Size ${size}ml: price = ${price}`);
     return price > 0;
   });
+  
+  console.log('🔍 finalAvailableSizes:', finalAvailableSizes);
+  
   const currentPrice = selectedSize ? getPrice(selectedSize) : 0;
   
   // Aplicar preço promocional se existir promoção ativa
