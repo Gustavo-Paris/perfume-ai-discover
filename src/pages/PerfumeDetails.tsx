@@ -202,8 +202,12 @@ const PerfumeDetails = () => {
     }
   };
   
-  // Usar tamanhos configurados no banco de dados
-  const finalAvailableSizes = databasePerfume?.available_sizes || [];
+  // Usar tamanhos que têm preços calculados na tabela perfume_prices
+  const configuredSizes = databasePerfume?.available_sizes || [];
+  const finalAvailableSizes = configuredSizes.filter(size => {
+    const price = prices[size] || 0;
+    return price > 0;
+  });
   const currentPrice = selectedSize ? getPrice(selectedSize) : 0;
   
   // Aplicar preço promocional se existir promoção ativa
