@@ -4,6 +4,7 @@ import {
   Settings, User, Bell, Shield, Trash2, AlertTriangle, 
   Eye, EyeOff, Lock, Mail, Phone, MapPin, CreditCard, AlertCircle
 } from 'lucide-react';
+import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -353,7 +354,7 @@ const Configuracoes = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Lock className="h-5 w-5" />
-                    Segurança
+                    Alterar Senha
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -446,6 +447,9 @@ const Configuracoes = () => {
                   </form>
                 </CardContent>
               </Card>
+
+              {/* Two-Factor Authentication */}
+              <TwoFactorSetup />
             </motion.div>
           </TabsContent>
 

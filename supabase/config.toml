@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.process-monthly-subscriptions]
 verify_jwt = false
+
+[functions.verify-2fa]
+verify_jwt = true

@@ -18,11 +18,15 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { signInSchema, signUpSchema, resetPasswordSchema, updatePasswordSchema } from '@/utils/validationSchemas';
 import PasswordRequirements from '@/components/auth/PasswordRequirements';
+import { TwoFactorLogin } from '@/components/auth/TwoFactorLogin';
 import { debugLog, debugError } from '@/utils/removeDebugLogsProduction';
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   const { isRecoveryMode, setRecoveryMode } = useRecovery();
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [twoFASecret, setTwoFASecret] = useState('');
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
   
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -176,6 +180,31 @@ const Auth = () => {
           variant: "destructive"
         });
       } else {
+        // Check if user has 2FA enabled
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        
+        if (authUser) {
+          const { data: twoFASettings } = await supabase
+            .from('user_2fa_settings')
+            .select('*')
+            .eq('user_id', authUser.id)
+            .eq('enabled', true)
+            .maybeSingle();
+          
+          if (twoFASettings) {
+            // User has 2FA enabled, show verification screen
+            setTwoFASecret(twoFASettings.secret);
+            setPendingUserId(authUser.id);
+            setRequires2FA(true);
+            
+            // Sign out temporarily until 2FA is verified
+            await supabase.auth.signOut();
+            
+            setIsLoading(false);
+            return;
+          }
+        }
+        
         // Log sucesso de login
         try {
           await supabase.from('security_audit_log').insert({
@@ -471,6 +500,53 @@ const Auth = () => {
     
     setIsLoading(false);
   };
+
+  // Handle 2FA verification success
+  const handle2FASuccess = async () => {
+    // Sign in again after 2FA verification
+    const { error } = await signIn(loginForm.email, loginForm.password);
+    
+    if (!error) {
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo de volta!"
+      });
+      
+      // Log sucesso de login com 2FA
+      try {
+        await supabase.from('security_audit_log').insert({
+          event_type: 'login_success_2fa',
+          event_description: `Login com 2FA bem-sucedido para ${loginForm.email}`,
+          risk_level: 'low',
+          metadata: { email: loginForm.email }
+        });
+      } catch {}
+      
+      setRequires2FA(false);
+      navigate('/');
+    }
+  };
+
+  // Handle 2FA verification cancel
+  const handle2FACancel = () => {
+    setRequires2FA(false);
+    setTwoFASecret('');
+    setPendingUserId(null);
+    setLoginForm({ email: '', password: '' });
+  };
+
+  // If 2FA verification is required, show TwoFactorLogin
+  if (requires2FA && twoFASecret) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
+        <TwoFactorLogin
+          secret={twoFASecret}
+          onSuccess={handle2FASuccess}
+          onCancel={handle2FACancel}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-white">
