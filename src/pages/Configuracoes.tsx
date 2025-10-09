@@ -30,7 +30,7 @@ import { getPasswordStrength, checkPasswordPwned, type PasswordStrength } from '
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCSRFToken } from '@/hooks/useCSRFToken';
-import { profileUpdateSchema } from '@/utils/validationSchemas';
+import { profileUpdateSchema, updatePasswordSchema } from '@/utils/validationSchemas';
 
 const Configuracoes = () => {
   const { user, updatePassword } = useAuth();
@@ -132,33 +132,41 @@ const Configuracoes = () => {
       return;
     }
     
-    // Validation
-    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha todos os campos de senha",
-        variant: "destructive"
+    try {
+      // Validar com Zod
+      const validatedData = updatePasswordSchema.parse({
+        password: passwordForm.new,
+        confirmPassword: passwordForm.confirm
       });
-      return;
-    }
-    
-    if (passwordForm.new !== passwordForm.confirm) {
-      toast({
-        title: "Senhas não coincidem",
-        description: "A nova senha e a confirmação devem ser iguais",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Strength check
-    if (passwordStrength.score < 60) {
-      toast({
-        title: "Senha muito fraca",
-        description: "Use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos especiais.",
-        variant: "destructive"
-      });
-      return;
+      
+      // Validation
+      if (!passwordForm.current) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "Preencha a senha atual",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Strength check
+      if (passwordStrength.score < 60) {
+        toast({
+          title: "Senha muito fraca",
+          description: "Use pelo menos 8 caracteres com letras maiúsculas, minúsculas, números e símbolos especiais.",
+          variant: "destructive"
+        });
+        return;
+      }
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        toast({
+          title: "Dados inválidos",
+          description: error.errors?.[0]?.message || "Verifique os dados e tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
     
     // Pwned check

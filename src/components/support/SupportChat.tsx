@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { sanitizeInput } from '@/utils/securityEnhancements';
 import { toast } from '@/hooks/use-toast';
+import { supportChatSchema } from '@/utils/validationSchemas';
 
 export function SupportChat() {
   const { user } = useAuth();
@@ -45,26 +46,53 @@ export function SupportChat() {
     if (!newMessage.trim()) return;
 
     try {
+      // Validar com Zod
+      const validatedData = supportChatSchema.parse({ message: newMessage.trim() });
+      
       // Sanitizar mensagem antes de enviar
-      const sanitizedMessage = sanitizeInput(newMessage.trim());
+      const sanitizedMessage = sanitizeInput(validatedData.message);
       await sendMessage(sanitizedMessage);
       setNewMessage('');
     } catch (error: any) {
-      toast({
-        title: "Mensagem inválida",
-        description: error.errors?.[0]?.message || "Verifique sua mensagem e tente novamente.",
-        variant: "destructive"
-      });
+      if (error.name === 'ZodError') {
+        toast({
+          title: "Mensagem inválida",
+          description: error.errors?.[0]?.message || "Verifique sua mensagem e tente novamente.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Erro ao enviar",
+          description: "Não foi possível enviar a mensagem. Tente novamente.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
   const handleStartChat = async () => {
-    // Sanitizar subject antes de iniciar conversa
-    const sanitizedSubject = subject ? sanitizeInput(subject) : undefined;
-    await startConversation(sanitizedSubject, category || undefined);
-    setShowStartForm(false);
-    setSubject('');
-    setCategory('');
+    try {
+      // Validar com Zod
+      const validatedData = supportChatSchema.parse({ 
+        subject: subject || undefined, 
+        category: category || undefined 
+      });
+      
+      // Sanitizar subject antes de iniciar conversa
+      const sanitizedSubject = validatedData.subject ? sanitizeInput(validatedData.subject) : undefined;
+      await startConversation(sanitizedSubject, validatedData.category);
+      setShowStartForm(false);
+      setSubject('');
+      setCategory('');
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        toast({
+          title: "Dados inválidos",
+          description: error.errors?.[0]?.message || "Verifique os dados e tente novamente.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const handleCloseChat = () => {
@@ -76,12 +104,28 @@ export function SupportChat() {
   };
 
   const handleSubmitRating = async () => {
-    // Sanitizar feedback antes de enviar
-    const sanitizedFeedback = feedback ? sanitizeInput(feedback) : '';
-    await closeConversation(rating, sanitizedFeedback);
-    setShowRating(false);
-    setRating(5);
-    setFeedback('');
+    try {
+      // Validar com Zod
+      const validatedData = supportChatSchema.parse({ 
+        rating, 
+        feedback: feedback || undefined 
+      });
+      
+      // Sanitizar feedback antes de enviar
+      const sanitizedFeedback = validatedData.feedback ? sanitizeInput(validatedData.feedback) : '';
+      await closeConversation(validatedData.rating, sanitizedFeedback);
+      setShowRating(false);
+      setRating(5);
+      setFeedback('');
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        toast({
+          title: "Dados inválidos",
+          description: error.errors?.[0]?.message || "Verifique os dados e tente novamente.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const openChat = () => {
