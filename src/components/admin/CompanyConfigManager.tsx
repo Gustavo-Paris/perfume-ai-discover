@@ -9,6 +9,7 @@ import { Building, Save, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { debugError } from '@/utils/removeDebugLogsProduction';
 import { useSecurityAudit } from '@/hooks/useSecurityAudit';
+import { companyConfigSchema } from '@/utils/validationSchemas';
 
 interface CompanyInfo {
   id?: string;
@@ -93,9 +94,36 @@ export const CompanyConfigManager = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Validar com Zod antes de salvar
+      const validatedData = companyConfigSchema.parse({
+        razao_social: companyInfo.razao_social,
+        nome_fantasia: companyInfo.nome_fantasia || undefined,
+        cnpj: companyInfo.cnpj,
+        inscricao_estadual: companyInfo.inscricao_estadual || undefined,
+        inscricao_municipal: companyInfo.inscricao_municipal || undefined,
+        endereco_completo: companyInfo.endereco_completo,
+        cep: companyInfo.cep,
+        cidade: companyInfo.cidade,
+        estado: companyInfo.estado,
+        telefone: companyInfo.telefone,
+        email_contato: companyInfo.email_contato,
+        email_sac: companyInfo.email_sac || undefined,
+        responsavel_tecnico: companyInfo.responsavel_tecnico || undefined,
+        regime_tributario: companyInfo.regime_tributario || undefined,
+        certificado_a1_base64: companyInfo.certificado_a1_base64 || undefined,
+        certificado_senha: companyInfo.certificado_senha || undefined,
+        ambiente_nfe: companyInfo.ambiente_nfe || undefined,
+        focus_nfe_token: companyInfo.focus_nfe_token || undefined,
+      });
+      
+      // Preparar dados para salvar no banco
+      const dataToSave = companyInfo.id 
+        ? { ...validatedData, id: companyInfo.id }
+        : validatedData;
+      
       const { data, error } = await supabase
         .from('company_info')
-        .upsert(companyInfo)
+        .upsert(dataToSave as any)
         .select()
         .single();
 
@@ -118,13 +146,22 @@ export const CompanyConfigManager = () => {
         title: "Configurações Salvas",
         description: "As informações da empresa foram atualizadas com sucesso.",
       });
-    } catch (error) {
+    } catch (error: any) {
       debugError('Error saving company info:', error);
-      toast({
-        title: "Erro ao Salvar",
-        description: "Não foi possível salvar as configurações.",
-        variant: "destructive",
-      });
+      
+      if (error.name === 'ZodError') {
+        toast({
+          title: "Dados Inválidos",
+          description: error.errors?.[0]?.message || "Verifique os dados e tente novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao Salvar",
+          description: "Não foi possível salvar as configurações.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setSaving(false);
     }

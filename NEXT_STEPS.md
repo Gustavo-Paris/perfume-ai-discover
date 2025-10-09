@@ -126,8 +126,8 @@ Tarefas:
 - [ ] Implementar geolocalização de logins
 - [ ] Alertar usuário sobre login em novo dispositivo
 
-### 3. Aplicar Schemas em Formulários Restantes ✅
-**Status**: COMPLETO
+### 3. Aplicar Schemas em Formulários Restantes ✅✅✅
+**Status**: 100% COMPLETO
 **Tempo**: 30min cada
 
 - [x] `src/pages/Auth.tsx` ✅

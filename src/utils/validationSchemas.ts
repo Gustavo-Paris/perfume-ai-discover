@@ -250,6 +250,33 @@ export const profileUpdateSchema = z.object({
 });
 
 // ========================================
+// SCHEMAS DE CONFIGURAÇÃO DA EMPRESA
+// ========================================
+
+export const companyConfigSchema = z.object({
+  razao_social: z.string().trim().min(1, 'Razão social é obrigatória').max(200, 'Razão social muito longa'),
+  nome_fantasia: z.string().trim().max(200, 'Nome fantasia muito longo').optional(),
+  cnpj: cnpjSchema,
+  inscricao_estadual: z.string().trim().max(20, 'Inscrição estadual muito longa').optional(),
+  inscricao_municipal: z.string().trim().max(20, 'Inscrição municipal muito longa').optional(),
+  endereco_completo: z.string().trim().min(1, 'Endereço é obrigatório').max(300, 'Endereço muito longo'),
+  cep: cepSchema,
+  cidade: z.string().trim().min(1, 'Cidade é obrigatória').max(100, 'Cidade muito longa'),
+  estado: z.string().trim().length(2, 'Estado deve ter 2 caracteres').toUpperCase(),
+  telefone: phoneSchema,
+  email_contato: emailSchema,
+  email_sac: emailSchema.optional(),
+  responsavel_tecnico: z.string().trim().max(100, 'Nome do responsável muito longo').optional(),
+  regime_tributario: z.enum(['simples_nacional', 'lucro_presumido', 'lucro_real']).optional(),
+  certificado_a1_base64: z.string().max(100000, 'Certificado muito grande').optional(),
+  certificado_senha: z.string().max(100, 'Senha muito longa').optional(),
+  ambiente_nfe: z.enum(['homologacao', 'producao']).optional(),
+  focus_nfe_token: z.string().max(200, 'Token muito longo').optional(),
+});
+
+export type CompanyConfigFormData = z.infer<typeof companyConfigSchema>;
+
+// ========================================
 // UTILITÁRIOS DE VALIDAÇÃO
 // ========================================
 
