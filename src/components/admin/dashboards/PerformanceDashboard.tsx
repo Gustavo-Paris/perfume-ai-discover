@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
+import { DashboardHeader } from '@/components/admin/DashboardHeader';
+import type { DateRange } from '@/components/admin/DateRangeFilter';
 
 interface PerformanceStats {
   totalSessions: number;
@@ -37,6 +39,10 @@ const PerformanceDashboard = ({ currentDashboard, setCurrentDashboard }: {
   currentDashboard: DashboardType;
   setCurrentDashboard: (dashboard: DashboardType) => void;
 }) => {
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  });
   const [stats, setStats] = useState<PerformanceStats>({
     totalSessions: 0,
     conversionRate: 0,
@@ -55,44 +61,51 @@ const PerformanceDashboard = ({ currentDashboard, setCurrentDashboard }: {
   useEffect(() => {
     const fetchPerformanceData = async () => {
       try {
-        const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-        const sixtyDaysAgo = subDays(new Date(), 60).toISOString();
+        const fromDate = dateRange.from.toISOString();
+        const toDate = dateRange.to.toISOString();
+        const daysDiff = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+        const previousFromDate = subDays(dateRange.from, daysDiff).toISOString();
+        const previousToDate = dateRange.from.toISOString();
 
         // Get conversational sessions (our main "sessions")
         const { data: allSessions } = await supabase
           .from('conversational_sessions')
           .select('created_at, user_id, session_status, recommended_perfumes')
-          .gte('created_at', thirtyDaysAgo);
+          .gte('created_at', fromDate)
+          .lte('created_at', toDate);
 
         const { data: previousSessions } = await supabase
           .from('conversational_sessions')
           .select('created_at, user_id')
-          .gte('created_at', sixtyDaysAgo)
-          .lt('created_at', thirtyDaysAgo);
+          .gte('created_at', previousFromDate)
+          .lt('created_at', previousToDate);
 
         // Get orders (conversions)
         const { data: orders } = await supabase
           .from('orders')
           .select('created_at, user_id, payment_status')
-          .gte('created_at', thirtyDaysAgo);
+          .gte('created_at', fromDate)
+          .lte('created_at', toDate);
 
         // Get user profiles to analyze new vs returning
         const { data: allUsers } = await supabase
           .from('profiles')
           .select('id, created_at')
-          .gte('created_at', thirtyDaysAgo);
+          .gte('created_at', fromDate)
+          .lte('created_at', toDate);
 
         const { data: previousUsers } = await supabase
           .from('profiles')
           .select('id')
-          .gte('created_at', sixtyDaysAgo)
-          .lt('created_at', thirtyDaysAgo);
+          .gte('created_at', previousFromDate)
+          .lt('created_at', previousToDate);
 
         // Get access logs for traffic analysis
         const { data: accessLogs } = await supabase
           .from('access_logs')
           .select('route, created_at, user_id')
-          .gte('created_at', thirtyDaysAgo)
+          .gte('created_at', fromDate)
+          .lte('created_at', toDate)
           .limit(1000);
 
         // Calculate main stats
@@ -113,8 +126,8 @@ const PerformanceDashboard = ({ currentDashboard, setCurrentDashboard }: {
         const sessionUserIds = new Set(allSessions?.map(s => s.user_id).filter(Boolean));
         const returningUsers = allUsers?.filter(u => {
           const userCreated = new Date(u.created_at);
-          const thirtyDaysAgoDate = new Date(thirtyDaysAgo);
-          return userCreated < thirtyDaysAgoDate && sessionUserIds.has(u.id);
+          const fromDateObj = new Date(fromDate);
+          return userCreated < fromDateObj && sessionUserIds.has(u.id);
         }).length || 0;
 
         // Bounce rate - sessions without recommendations
@@ -170,8 +183,8 @@ const PerformanceDashboard = ({ currentDashboard, setCurrentDashboard }: {
 
         // Performance by day
         const dailyPerformance = new Map();
-        for (let i = 29; i >= 0; i--) {
-          const date = subDays(new Date(), i);
+        for (let i = daysDiff - 1; i >= 0; i--) {
+          const date = subDays(dateRange.to, i);
           const dateStr = format(date, 'yyyy-MM-dd');
           dailyPerformance.set(dateStr, {
             date: format(date, 'dd/MM', { locale: ptBR }),
@@ -237,7 +250,29 @@ const PerformanceDashboard = ({ currentDashboard, setCurrentDashboard }: {
     };
 
     fetchPerformanceData();
-  }, []);
+  }, [dateRange]);
+
+  const exportData = () => {
+    return [
+      { metric: 'Taxa de Conversão', value: `${stats.conversionRate.toFixed(1)}%` },
+      { metric: 'Taxa de Abandono', value: `${stats.abandonmentRate.toFixed(1)}%` },
+      { metric: 'Taxa de Rejeição', value: `${stats.bounceRate.toFixed(1)}%` },
+      { metric: 'Crescimento de Usuários', value: `${stats.userGrowth.toFixed(1)}%` },
+      { metric: 'Total de Sessões', value: stats.totalSessions.toLocaleString() },
+      { metric: 'Novos Usuários', value: stats.newUsers.toLocaleString() },
+      { metric: 'Usuários Recorrentes', value: stats.returningUsers.toLocaleString() },
+      { metric: 'Tempo Médio de Sessão', value: `${stats.avgSessionTime} min` },
+      ...funnelData.map(step => ({
+        metric: `Funil - ${step.step}`,
+        value: `${step.users.toLocaleString()} (${step.conversionRate.toFixed(1)}%)`
+      }))
+    ];
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    setDateRange({ ...dateRange });
+  };
 
   const StatCard = ({ title, value, icon: Icon, subtitle, gradient, trend }: {
     title: string;
@@ -278,13 +313,18 @@ const PerformanceDashboard = ({ currentDashboard, setCurrentDashboard }: {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard de Performance</h2>
-          <p className="text-muted-foreground">Análise de conversão e métricas de engajamento</p>
-        </div>
-        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-      </div>
+      <DashboardHeader
+        title="Dashboard de Performance"
+        description="Análise de conversão e métricas de engajamento"
+        currentDashboard={currentDashboard}
+        setCurrentDashboard={setCurrentDashboard}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        exportData={exportData()}
+        exportFilename="performance-dashboard"
+        exportTitle="Dashboard de Performance"
+        onRefresh={handleRefresh}
+      />
 
       {/* Performance Stats */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

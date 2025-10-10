@@ -8,6 +8,8 @@ import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DashboardHeader } from '@/components/admin/DashboardHeader';
+import type { DateRange } from '@/components/admin/DateRangeFilter';
 
 interface AnalyticsStats {
   totalPageViews: number;
@@ -37,6 +39,10 @@ const AnalyticsDashboard = ({ currentDashboard, setCurrentDashboard }: {
   currentDashboard: DashboardType;
   setCurrentDashboard: (dashboard: DashboardType) => void;
 }) => {
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  });
   const [stats, setStats] = useState<AnalyticsStats>({
     totalPageViews: 0,
     uniqueVisitors: 0,
@@ -55,35 +61,39 @@ const AnalyticsDashboard = ({ currentDashboard, setCurrentDashboard }: {
   useEffect(() => {
     const fetchAnalyticsData = async () => {
       try {
-        const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-        const sixtyDaysAgo = subDays(new Date(), 60).toISOString();
-        const today = startOfDay(new Date()).toISOString();
+        const fromDate = dateRange.from.toISOString();
+        const toDate = dateRange.to.toISOString();
+        const daysDiff = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+        const previousFromDate = subDays(dateRange.from, daysDiff).toISOString();
+        const previousToDate = dateRange.from.toISOString();
 
         // Get access logs for page views and traffic analysis
         const { data: accessLogs } = await supabase
           .from('access_logs')
           .select('route, created_at, user_id, user_agent')
-          .gte('created_at', thirtyDaysAgo)
+          .gte('created_at', fromDate)
+          .lte('created_at', toDate)
           .order('created_at', { ascending: false })
           .limit(10000);
 
         const { data: previousLogs } = await supabase
           .from('access_logs')
           .select('user_id, created_at')
-          .gte('created_at', sixtyDaysAgo)
-          .lt('created_at', thirtyDaysAgo);
+          .gte('created_at', previousFromDate)
+          .lt('created_at', previousToDate);
 
         // Get user profiles for user analysis
         const { data: users } = await supabase
           .from('profiles')
           .select('id, created_at')
-          .gte('created_at', thirtyDaysAgo);
+          .gte('created_at', fromDate)
+          .lte('created_at', toDate);
 
         const { data: previousUsers } = await supabase
           .from('profiles')
           .select('id')
-          .gte('created_at', sixtyDaysAgo)
-          .lt('created_at', thirtyDaysAgo);
+          .gte('created_at', previousFromDate)
+          .lt('created_at', previousToDate);
 
         // Calculate basic stats
         const totalPageViews = accessLogs?.length || 0;
@@ -188,7 +198,28 @@ const AnalyticsDashboard = ({ currentDashboard, setCurrentDashboard }: {
     // Update real-time users every minute
     const interval = setInterval(fetchAnalyticsData, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dateRange]);
+
+  const exportData = () => {
+    return [
+      { metric: 'Total de Visualizações', value: stats.totalPageViews.toLocaleString() },
+      { metric: 'Visitantes Únicos', value: stats.uniqueVisitors.toLocaleString() },
+      { metric: 'Taxa de Rejeição', value: `${stats.bounceRate.toFixed(1)}%` },
+      { metric: 'Duração Média da Sessão', value: `${stats.avgSessionDuration} min` },
+      { metric: 'Novos Usuários', value: `${stats.newUsersPercent.toFixed(1)}%` },
+      { metric: 'Acessos Mobile', value: `${stats.mobilePercent.toFixed(1)}%` },
+      { metric: 'Crescimento de Usuários', value: `${stats.userGrowth.toFixed(1)}%` },
+      ...stats.topPages.map((page, i) => ({
+        metric: `${i + 1}ª Página Mais Visitada`,
+        value: `${page.page} (${page.views} views)`
+      }))
+    ];
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    setDateRange({ ...dateRange });
+  };
 
   const StatCard = ({ title, value, icon: Icon, subtitle, gradient, trend }: {
     title: string;
@@ -230,18 +261,25 @@ const AnalyticsDashboard = ({ currentDashboard, setCurrentDashboard }: {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard de Analytics</h2>
-          <p className="text-muted-foreground">Análise comportamental e métricas de engajamento</p>
+        <div className="flex-1">
+          <DashboardHeader
+            title="Dashboard de Analytics"
+            description="Análise comportamental e métricas de engajamento"
+            currentDashboard={currentDashboard}
+            setCurrentDashboard={setCurrentDashboard}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            exportData={exportData()}
+            exportFilename="analytics-dashboard"
+            exportTitle="Dashboard de Analytics"
+            onRefresh={handleRefresh}
+          />
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-sm text-muted-foreground">
-              {realTimeUsers} usuários online
-            </span>
-          </div>
-          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span className="text-sm text-muted-foreground">
+            {realTimeUsers} usuários online
+          </span>
         </div>
       </div>
 
