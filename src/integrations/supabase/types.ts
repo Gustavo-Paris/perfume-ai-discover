@@ -4481,6 +4481,18 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_abc_classification: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brand: string
+          class: string
+          cumulative_percentage: number
+          name: string
+          perfume_id: string
+          revenue: number
+          revenue_percentage: number
+        }[]
+      }
       get_active_promotion: {
         Args: { perfume_uuid: string }
         Returns: {
@@ -4541,6 +4553,19 @@ export type Database = {
         Args: { perfume_uuid: string; size_ml_param: number }
         Returns: number
       }
+      get_bcg_matrix: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brand: string
+          category: string
+          growth_rate: number
+          margin: number
+          market_share: number
+          name: string
+          perfume_id: string
+          revenue: number
+        }[]
+      }
       get_company_public_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4548,6 +4573,31 @@ export type Database = {
           email_contato: string
           estado: string
           nome_fantasia: string
+        }[]
+      }
+      get_cross_sell_products: {
+        Args: { p_limit?: number }
+        Returns: {
+          correlation_score: number
+          product_1_id: string
+          product_1_name: string
+          product_2_id: string
+          product_2_name: string
+          times_bought_together: number
+        }[]
+      }
+      get_dead_products: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_margin: number
+          avg_price: number
+          brand: string
+          margin_percentage: number
+          name: string
+          perfume_id: string
+          total_orders: number
+          total_quantity: number
+          total_revenue: number
         }[]
       }
       get_perfume_dynamic_prices: {
@@ -4664,6 +4714,19 @@ export type Database = {
           total_stock_ml: number
         }[]
       }
+      get_product_performance: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_margin_percentage: number
+          brand: string
+          name: string
+          performance_score: number
+          perfume_id: string
+          total_quantity: number
+          total_revenue: number
+          trend: string
+        }[]
+      }
       get_public_company_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4685,6 +4748,48 @@ export type Database = {
       get_security_config: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_top_products_by_margin: {
+        Args: { p_limit?: number }
+        Returns: {
+          avg_margin: number
+          avg_price: number
+          brand: string
+          margin_percentage: number
+          name: string
+          perfume_id: string
+          total_orders: number
+          total_quantity: number
+          total_revenue: number
+        }[]
+      }
+      get_top_products_by_quantity: {
+        Args: { p_limit?: number }
+        Returns: {
+          avg_margin: number
+          avg_price: number
+          brand: string
+          margin_percentage: number
+          name: string
+          perfume_id: string
+          total_orders: number
+          total_quantity: number
+          total_revenue: number
+        }[]
+      }
+      get_top_products_by_revenue: {
+        Args: { p_limit?: number }
+        Returns: {
+          avg_margin: number
+          avg_price: number
+          brand: string
+          margin_percentage: number
+          name: string
+          perfume_id: string
+          total_orders: number
+          total_quantity: number
+          total_revenue: number
+        }[]
       }
       get_user_orders_with_perfumes: {
         Args: { p_user_id: string }
