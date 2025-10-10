@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMarketingMetrics, useMarketingTrends, useCACByCoupon } from '@/hooks/useMarketingMetrics';
 import { 
   useTopCouponsByROI, 
@@ -12,9 +12,6 @@ import {
   Line, 
   BarChart, 
   Bar, 
-  PieChart,
-  Pie,
-  Cell,
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -22,13 +19,17 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { TrendingUp, DollarSign, Percent, Users, ShoppingCart, AlertCircle } from 'lucide-react';
+import { TrendingUp, DollarSign, Percent, Users, ShoppingCart, AlertCircle, Tag, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+interface MarketingDashboardProps {
+  currentDashboard: DashboardType;
+  setCurrentDashboard: (dashboard: DashboardType) => void;
+}
 
-const MarketingDashboard = () => {
+const MarketingDashboard = ({ currentDashboard, setCurrentDashboard }: MarketingDashboardProps) => {
   const { data: metrics, isLoading: metricsLoading } = useMarketingMetrics();
   const { data: trends, isLoading: trendsLoading } = useMarketingTrends(6);
   const { data: topROI, isLoading: roiLoading } = useTopCouponsByROI(10);
@@ -38,95 +39,122 @@ const MarketingDashboard = () => {
   const { data: abandonmentData, isLoading: abandonmentLoading } = useCouponAbandonmentAnalysis();
   const { data: cacData, isLoading: cacLoading } = useCACByCoupon();
 
+  const StatCard = ({ title, value, icon: Icon, trend, subtitle, gradient }: {
+    title: string;
+    value: string | number;
+    icon: any;
+    trend?: number;
+    subtitle: string;
+    gradient: string;
+  }) => (
+    <Card className="relative overflow-hidden">
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5`} />
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <div className={`p-2 rounded-full bg-gradient-to-br ${gradient}`}>
+          <Icon className="h-4 w-4 text-white" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-foreground mb-1">{value}</div>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-muted-foreground flex-1">{subtitle}</p>
+          {trend !== undefined && (
+            <div className={`flex items-center gap-1 text-xs font-medium ${
+              trend >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {trend >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+              {Math.abs(trend).toFixed(1)}%
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   if (metricsLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
+    return <div className="text-center p-8">Carregando dados de marketing...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard de Marketing & Cupons</h2>
-        <p className="text-muted-foreground">
-          Análise completa de performance de cupons e estratégias de marketing
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard de Marketing & Cupons</h2>
+          <p className="text-muted-foreground">Análise completa de performance de cupons e estratégias de marketing</p>
+        </div>
+        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cupons Ativos</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.totalCouponsActive || 0}</div>
-            <p className="text-xs text-muted-foreground">Cupons disponíveis para uso</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Cupons Ativos"
+          value={metrics?.totalCouponsActive || 0}
+          icon={Tag}
+          subtitle="Cupons disponíveis para uso"
+          gradient="from-blue-500 to-blue-600"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Desconto Total Concedido</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {metrics?.totalDiscountGiven.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
-            </div>
-            <p className="text-xs text-muted-foreground">Total investido em descontos</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Desconto Total Concedido"
+          value={new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            notation: 'compact'
+          }).format(metrics?.totalDiscountGiven || 0)}
+          icon={DollarSign}
+          subtitle="Total investido em descontos"
+          gradient="from-red-500 to-red-600"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receita Gerada</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              R$ {metrics?.totalRevenueFromCoupons.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
-            </div>
-            <p className="text-xs text-muted-foreground">Receita total com cupons</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Receita Gerada"
+          value={new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            notation: 'compact'
+          }).format(metrics?.totalRevenueFromCoupons || 0)}
+          icon={TrendingUp}
+          subtitle="Receita total com cupons"
+          gradient="from-green-500 to-green-600"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ROI Médio</CardTitle>
-            <Percent className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {metrics?.averageRoi.toFixed(1) || '0'}%
-            </div>
-            <p className="text-xs text-muted-foreground">Retorno sobre investimento</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="ROI Médio"
+          value={`${metrics?.averageRoi?.toFixed(1) || '0.0'}%`}
+          icon={Percent}
+          subtitle="Retorno sobre investimento"
+          gradient="from-purple-500 to-purple-600"
+        />
       </div>
 
       {/* Trends Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tendências de Uso de Cupons (Últimos 6 Meses)</CardTitle>
-          <CardDescription>Análise temporal de uso e conversão de cupons</CardDescription>
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Tendências de Uso de Cupons (Últimos 6 Meses)
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {trendsLoading ? (
             <Skeleton className="h-80 w-full" />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={trends || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
                 <Legend />
                 <Line 
                   yAxisId="left"
@@ -140,7 +168,7 @@ const MarketingDashboard = () => {
                   yAxisId="left"
                   type="monotone" 
                   dataKey="total_discount" 
-                  stroke="hsl(var(--destructive))" 
+                  stroke="#ef4444" 
                   name="Desconto (R$)"
                   strokeWidth={2}
                 />
@@ -148,7 +176,7 @@ const MarketingDashboard = () => {
                   yAxisId="right"
                   type="monotone" 
                   dataKey="conversion_rate" 
-                  stroke="hsl(var(--secondary))" 
+                  stroke="#10b981" 
                   name="Taxa Conversão (%)"
                   strokeWidth={2}
                 />
@@ -159,24 +187,29 @@ const MarketingDashboard = () => {
       </Card>
 
       {/* Top Coupons Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Top 10 by ROI */}
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-purple-100">
             <CardTitle>Top 10 Cupons por ROI</CardTitle>
-            <CardDescription>Maior retorno sobre investimento</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {roiLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={topROI?.slice(0, 10) || []} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="code" type="category" width={80} />
-                  <Tooltip />
-                  <Bar dataKey="roi" fill="hsl(var(--primary))" name="ROI (%)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis dataKey="code" type="category" width={80} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar dataKey="roi" fill="#8b5cf6" name="ROI (%)" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -184,22 +217,27 @@ const MarketingDashboard = () => {
         </Card>
 
         {/* Top 10 by Revenue */}
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-gradient-to-r from-green-50 to-green-100">
             <CardTitle>Top 10 Cupons por Receita</CardTitle>
-            <CardDescription>Maior receita gerada</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {revenueLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={topRevenue?.slice(0, 10) || []} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="code" type="category" width={80} />
-                  <Tooltip />
-                  <Bar dataKey="revenue" fill="hsl(var(--secondary))" name="Receita (R$)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis dataKey="code" type="category" width={80} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar dataKey="revenue" fill="#10b981" name="Receita (R$)" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -207,22 +245,27 @@ const MarketingDashboard = () => {
         </Card>
 
         {/* Top 10 by Usage */}
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-blue-100">
             <CardTitle>Top 10 Cupons por Uso</CardTitle>
-            <CardDescription>Mais utilizados pelos clientes</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {usageLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={topUsage?.slice(0, 10) || []} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="code" type="category" width={80} />
-                  <Tooltip />
-                  <Bar dataKey="orders" fill="hsl(var(--accent))" name="Pedidos" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis dataKey="code" type="category" width={80} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar dataKey="orders" fill="#06b6d4" name="Pedidos" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -231,14 +274,13 @@ const MarketingDashboard = () => {
       </div>
 
       {/* Conversion and Abandonment Analysis */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Conversion Rates */}
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-gradient-to-r from-secondary/5 to-secondary/10">
             <CardTitle>Taxa de Conversão por Cupom</CardTitle>
-            <CardDescription>% de cupons aplicados que viraram vendas</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {conversionLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : (
@@ -262,12 +304,11 @@ const MarketingDashboard = () => {
         </Card>
 
         {/* Abandonment Analysis */}
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-gradient-to-r from-red-50 to-red-100">
             <CardTitle>Análise de Abandono</CardTitle>
-            <CardDescription>Cupons aplicados mas não finalizados</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {abandonmentLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : (
@@ -295,14 +336,14 @@ const MarketingDashboard = () => {
       </div>
 
       {/* CAC Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Custo de Aquisição de Cliente (CAC) por Cupom</CardTitle>
-          <CardDescription>
-            Quanto foi investido em desconto para adquirir cada novo cliente
-          </CardDescription>
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b bg-gradient-to-r from-cyan-50 to-cyan-100">
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-cyan-600" />
+            Custo de Aquisição de Cliente (CAC) por Cupom
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {cacLoading ? (
             <Skeleton className="h-64 w-full" />
           ) : (
@@ -343,12 +384,11 @@ const MarketingDashboard = () => {
       </Card>
 
       {/* Insights & Recommendations */}
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-amber-100">
           <CardTitle>Insights & Recomendações</CardTitle>
-          <CardDescription>Análise automática baseada nos dados</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="space-y-3">
             {metrics && metrics.averageRoi < 50 && (
               <Alert>

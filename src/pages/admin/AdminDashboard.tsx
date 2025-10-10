@@ -174,14 +174,7 @@ const AdminDashboard = () => {
 
   // Handle different dashboard types after hooks are declared
   if (currentDashboard === 'marketing') {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-        </div>
-        <MarketingDashboard />
-      </div>
-    );
+    return <MarketingDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
   }
 
   if (currentDashboard === 'financial') {
