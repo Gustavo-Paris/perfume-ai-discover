@@ -4663,6 +4663,41 @@ export type Database = {
           transaction_count: number
         }[]
       }
+      get_inventory_overview: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          low_stock_items: number
+          out_of_stock_items: number
+          total_inventory_value: number
+          total_products: number
+          total_stock_ml: number
+        }[]
+      }
+      get_inventory_turnover: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_stock_ml: number
+          brand: string
+          days_to_sell: number
+          perfume_id: string
+          perfume_name: string
+          sold_ml: number
+          turnover_rate: number
+        }[]
+      }
+      get_lot_expirations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brand: string
+          days_until_expiry: number
+          expiry_date: string
+          lot_code: string
+          lot_id: string
+          perfume_name: string
+          qty_ml: number
+          status: string
+        }[]
+      }
       get_monthly_comparison: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4671,6 +4706,48 @@ export type Database = {
           metric: string
           previous_month: number
           trend: string
+        }[]
+      }
+      get_order_fulfillment_metrics: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_delivery_time_days: number
+          avg_processing_time_hours: number
+          on_time_delivery_rate: number
+          total_delivered: number
+          total_shipped: number
+        }[]
+      }
+      get_orders_by_period: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_order_value: number
+          cancelled_orders: number
+          completed_orders: number
+          period: string
+          total_orders: number
+          total_revenue: number
+        }[]
+      }
+      get_orders_by_status: {
+        Args: { p_days?: number }
+        Returns: {
+          count: number
+          percentage: number
+          status: string
+          total_value: number
+        }[]
+      }
+      get_orders_overview: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_order_value: number
+          cancelled_orders: number
+          completed_orders: number
+          pending_orders: number
+          processing_orders: number
+          total_orders: number
+          total_revenue: number
         }[]
       }
       get_payment_method_analysis: {
@@ -4855,6 +4932,29 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_stock_levels: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brand: string
+          category: string
+          current_stock_ml: number
+          days_of_stock: number
+          perfume_id: string
+          perfume_name: string
+          reorder_recommended: boolean
+          stock_status: string
+        }[]
+      }
+      get_stock_movements: {
+        Args: { p_days?: number }
+        Returns: {
+          adjustments_ml: number
+          net_change_ml: number
+          period: string
+          purchases_ml: number
+          sales_ml: number
+        }[]
+      }
       get_top_coupon_users: {
         Args: { p_limit?: number }
         Returns: {
@@ -4864,6 +4964,18 @@ export type Database = {
           total_saved: number
           total_spent: number
           total_uses: number
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      get_top_customers: {
+        Args: { p_limit?: number }
+        Returns: {
+          avg_order_value: number
+          last_order_date: string
+          total_orders: number
+          total_spent: number
           user_email: string
           user_id: string
           user_name: string
