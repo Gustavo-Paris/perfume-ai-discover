@@ -16,7 +16,7 @@ export function useOrdersOverview(days: number = 30) {
         .rpc('get_orders_overview', { p_days: days });
       
       if (error) throw error;
-      return data as OrdersOverview;
+      return (Array.isArray(data) ? data[0] : data) as OrdersOverview;
     },
   });
 }
@@ -68,7 +68,7 @@ export function useOrderFulfillmentMetrics(days: number = 30) {
         .rpc('get_order_fulfillment_metrics', { p_days: days });
       
       if (error) throw error;
-      return data as OrderFulfillmentMetrics;
+      return (Array.isArray(data) ? data[0] : data) as OrderFulfillmentMetrics;
     },
   });
 }

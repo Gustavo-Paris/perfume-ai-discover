@@ -16,7 +16,7 @@ export function useInventoryOverview() {
         .rpc('get_inventory_overview');
       
       if (error) throw error;
-      return data as InventoryOverview;
+      return (Array.isArray(data) ? data[0] : data) as InventoryOverview;
     },
   });
 }

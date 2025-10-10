@@ -1,116 +1,27 @@
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ShoppingCart, Clock, CheckCircle, XCircle, Package } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { format, subDays } from 'date-fns';
+import { ShoppingCart, Clock, CheckCircle, XCircle, Package, TrendingUp, Users } from 'lucide-react';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
-
-interface OrderStats {
-  totalOrders: number;
-  pendingOrders: number;
-  completedOrders: number;
-  cancelledOrders: number;
-  avgProcessingTime: number;
-}
+import { 
+  useOrdersOverview, 
+  useOrdersByStatus, 
+  useOrdersByPeriod,
+  useTopCustomers,
+  useOrderFulfillmentMetrics 
+} from '@/hooks/useOrdersAnalytics';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
   currentDashboard: DashboardType;
   setCurrentDashboard: (dashboard: DashboardType) => void;
 }) => {
-  const [stats, setStats] = useState<OrderStats>({
-    totalOrders: 0,
-    pendingOrders: 0,
-    completedOrders: 0,
-    cancelledOrders: 0,
-    avgProcessingTime: 0
-  });
-  const [ordersData, setOrdersData] = useState<any[]>([]);
-  const [statusData, setStatusData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchOrdersData = async () => {
-      try {
-        const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-
-        // Get all orders from last 30 days
-        const { data: orders } = await supabase
-          .from('orders')
-          .select('status, created_at, updated_at')
-          .gte('created_at', thirtyDaysAgo);
-
-        const totalOrders = orders?.length || 0;
-        const pendingOrders = orders?.filter(o => o.status === 'pending').length || 0;
-        const completedOrders = orders?.filter(o => o.status === 'delivered').length || 0;
-        const cancelledOrders = orders?.filter(o => o.status === 'cancelled').length || 0;
-
-        // Calculate average processing time for completed orders
-        const completedOrdersWithTime = orders?.filter(o => 
-          o.status === 'delivered' && o.updated_at && o.created_at
-        ) || [];
-        
-        const avgProcessingTime = completedOrdersWithTime.length > 0 
-          ? completedOrdersWithTime.reduce((sum, order) => {
-              const created = new Date(order.created_at);
-              const updated = new Date(order.updated_at);
-              return sum + (updated.getTime() - created.getTime());
-            }, 0) / completedOrdersWithTime.length / (1000 * 60 * 60 * 24) // Convert to days
-          : 0;
-
-        setStats({
-          totalOrders,
-          pendingOrders,
-          completedOrders,
-          cancelledOrders,
-          avgProcessingTime
-        });
-
-        // Orders by day
-        const dailyOrders = new Map();
-        for (let i = 29; i >= 0; i--) {
-          const date = subDays(new Date(), i);
-          const dateStr = format(date, 'yyyy-MM-dd');
-          dailyOrders.set(dateStr, { 
-            date: format(date, 'dd/MM', { locale: ptBR }), 
-            orders: 0,
-            completed: 0,
-            cancelled: 0
-          });
-        }
-
-        orders?.forEach(order => {
-          const dateStr = format(new Date(order.created_at), 'yyyy-MM-dd');
-          if (dailyOrders.has(dateStr)) {
-            const dayData = dailyOrders.get(dateStr);
-            dayData.orders += 1;
-            if (order.status === 'delivered') dayData.completed += 1;
-            if (order.status === 'cancelled') dayData.cancelled += 1;
-          }
-        });
-
-        setOrdersData(Array.from(dailyOrders.values()));
-
-        // Status distribution
-        const statusCounts = [
-          { status: 'Pendente', count: pendingOrders, color: '#f59e0b' },
-          { status: 'Pago', count: orders?.filter(o => o.status === 'paid').length || 0, color: '#06b6d4' },
-          { status: 'Enviado', count: orders?.filter(o => o.status === 'shipped').length || 0, color: '#8b5cf6' },
-          { status: 'Entregue', count: completedOrders, color: '#10b981' },
-          { status: 'Cancelado', count: cancelledOrders, color: '#ef4444' }
-        ];
-
-        setStatusData(statusCounts.filter(s => s.count > 0));
-      } catch (error) {
-        console.error('Error fetching orders data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrdersData();
-  }, []);
+  const { data: overview, isLoading: overviewLoading } = useOrdersOverview(30);
+  const { data: statusData, isLoading: statusLoading } = useOrdersByStatus(30);
+  const { data: periodData, isLoading: periodLoading } = useOrdersByPeriod(30);
+  const { data: topCustomers, isLoading: customersLoading } = useTopCustomers(5);
+  const { data: fulfillmentMetrics } = useOrderFulfillmentMetrics(30);
 
   const StatCard = ({ title, value, icon: Icon, subtitle, gradient }: {
     title: string;
@@ -134,9 +45,23 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
     </Card>
   );
 
-  if (loading) {
+  if (overviewLoading || statusLoading || periodLoading) {
     return <div className="text-center p-8">Carregando dados de pedidos...</div>;
   }
+
+  const chartData = periodData?.map(item => ({
+    date: format(new Date(item.period), 'dd/MM', { locale: ptBR }),
+    total: item.total_orders,
+    completed: item.completed_orders,
+    cancelled: item.cancelled_orders,
+    revenue: item.total_revenue
+  })) || [];
+
+  const statusChartData = statusData?.map(item => ({
+    status: item.status,
+    count: item.count,
+    value: item.total_value
+  })) || [];
 
   return (
     <div className="space-y-8">
@@ -152,7 +77,7 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Total de Pedidos"
-          value={stats.totalOrders}
+          value={overview?.total_orders || 0}
           icon={ShoppingCart}
           subtitle="Últimos 30 dias"
           gradient="from-blue-500 to-blue-600"
@@ -160,15 +85,15 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
         
         <StatCard
           title="Pendentes"
-          value={stats.pendingOrders}
+          value={overview?.pending_orders || 0}
           icon={Clock}
           subtitle="Aguardando processamento"
           gradient="from-yellow-500 to-yellow-600"
         />
         
         <StatCard
-          title="Entregues"
-          value={stats.completedOrders}
+          title="Concluídos"
+          value={overview?.completed_orders || 0}
           icon={CheckCircle}
           subtitle="Pedidos finalizados"
           gradient="from-green-500 to-green-600"
@@ -176,31 +101,35 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
         
         <StatCard
           title="Cancelados"
-          value={stats.cancelledOrders}
+          value={overview?.cancelled_orders || 0}
           icon={XCircle}
           subtitle="Pedidos cancelados"
           gradient="from-red-500 to-red-600"
         />
         
         <StatCard
-          title="Tempo Médio"
-          value={`${stats.avgProcessingTime.toFixed(1)} dias`}
-          icon={Package}
-          subtitle="Processamento"
+          title="Receita Total"
+          value={new Intl.NumberFormat('pt-BR', { 
+            style: 'currency', 
+            currency: 'BRL',
+            notation: 'compact'
+          }).format(overview?.total_revenue || 0)}
+          icon={TrendingUp}
+          subtitle="Últimos 30 dias"
           gradient="from-purple-500 to-purple-600"
         />
       </div>
 
       {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Orders Timeline */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader>
-            <CardTitle>Pedidos por Dia - Últimos 30 Dias</CardTitle>
+            <CardTitle>Pedidos por Período - Últimos 30 Dias</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={ordersData}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -213,7 +142,7 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="orders" 
+                  dataKey="total" 
                   stroke="#06b6d4" 
                   strokeWidth={3}
                   name="Total"
@@ -223,7 +152,7 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
                   dataKey="completed" 
                   stroke="#10b981" 
                   strokeWidth={2}
-                  name="Entregues"
+                  name="Concluídos"
                 />
                 <Line 
                   type="monotone" 
@@ -240,20 +169,18 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
         {/* Status Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Status dos Pedidos</CardTitle>
+            <CardTitle>Distribuição por Status</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={statusData} layout="horizontal">
+              <BarChart data={statusChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis 
-                  type="category" 
+                <XAxis 
                   dataKey="status" 
                   stroke="hsl(var(--muted-foreground))" 
                   fontSize={12}
-                  width={70}
                 />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
@@ -264,13 +191,120 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
                 <Bar 
                   dataKey="count" 
                   fill="#06b6d4"
-                  radius={[0, 4, 4, 0]}
+                  radius={[8, 8, 0, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
+      {/* Fulfillment Metrics */}
+      {fulfillmentMetrics && (
+        <div className="grid gap-6 md:grid-cols-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Tempo de Processamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {fulfillmentMetrics.avg_processing_time_hours.toFixed(1)}h
+              </div>
+              <p className="text-xs text-muted-foreground">Média de processamento</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Tempo de Entrega
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {fulfillmentMetrics.avg_delivery_time_days.toFixed(1)} dias
+              </div>
+              <p className="text-xs text-muted-foreground">Média de entrega</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Taxa de Entrega
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {fulfillmentMetrics.on_time_delivery_rate.toFixed(1)}%
+              </div>
+              <p className="text-xs text-muted-foreground">Entregas no prazo</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Enviado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {fulfillmentMetrics.total_shipped}
+              </div>
+              <p className="text-xs text-muted-foreground">Pedidos enviados</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Top Customers */}
+      {!customersLoading && topCustomers && topCustomers.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Top Clientes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Pedidos</TableHead>
+                  <TableHead>Total Gasto</TableHead>
+                  <TableHead>Ticket Médio</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topCustomers.map((customer) => (
+                  <TableRow key={customer.user_id}>
+                    <TableCell className="font-medium">{customer.user_name}</TableCell>
+                    <TableCell>{customer.user_email}</TableCell>
+                    <TableCell>{customer.total_orders}</TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat('pt-BR', { 
+                        style: 'currency', 
+                        currency: 'BRL' 
+                      }).format(customer.total_spent)}
+                    </TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat('pt-BR', { 
+                        style: 'currency', 
+                        currency: 'BRL' 
+                      }).format(customer.avg_order_value)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
