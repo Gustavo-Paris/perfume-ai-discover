@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMarketingMetrics, useMarketingTrends, useCACByCoupon } from '@/hooks/useMarketingMetrics';
+import { subDays } from 'date-fns';
+import { DashboardHeader } from '@/components/admin/DashboardHeader';
+import type { DateRange } from '@/components/admin/DateRangeFilter';
 import { 
   useTopCouponsByROI, 
   useTopCouponsByRevenue, 
@@ -30,14 +34,19 @@ interface MarketingDashboardProps {
 }
 
 const MarketingDashboard = ({ currentDashboard, setCurrentDashboard }: MarketingDashboardProps) => {
-  const { data: metrics, isLoading: metricsLoading } = useMarketingMetrics();
-  const { data: trends, isLoading: trendsLoading } = useMarketingTrends(6);
-  const { data: topROI, isLoading: roiLoading } = useTopCouponsByROI(10);
-  const { data: topRevenue, isLoading: revenueLoading } = useTopCouponsByRevenue(10);
-  const { data: topUsage, isLoading: usageLoading } = useTopCouponsByUsage(10);
-  const { data: conversionRates, isLoading: conversionLoading } = useCouponConversionRates();
-  const { data: abandonmentData, isLoading: abandonmentLoading } = useCouponAbandonmentAnalysis();
-  const { data: cacData, isLoading: cacLoading } = useCACByCoupon();
+  const [dateRange] = useState<DateRange>({
+    from: subDays(new Date(), 29),
+    to: new Date()
+  });
+
+  const { data: metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useMarketingMetrics();
+  const { data: trends, isLoading: trendsLoading, refetch: refetchTrends } = useMarketingTrends(6);
+  const { data: topROI, isLoading: roiLoading, refetch: refetchROI } = useTopCouponsByROI(10);
+  const { data: topRevenue, isLoading: revenueLoading, refetch: refetchRevenue } = useTopCouponsByRevenue(10);
+  const { data: topUsage, isLoading: usageLoading, refetch: refetchUsage } = useTopCouponsByUsage(10);
+  const { data: conversionRates, isLoading: conversionLoading, refetch: refetchConversion } = useCouponConversionRates();
+  const { data: abandonmentData, isLoading: abandonmentLoading, refetch: refetchAbandonment } = useCouponAbandonmentAnalysis();
+  const { data: cacData, isLoading: cacLoading, refetch: refetchCAC } = useCACByCoupon();
 
   const StatCard = ({ title, value, icon: Icon, trend, subtitle, gradient }: {
     title: string;
@@ -76,16 +85,38 @@ const MarketingDashboard = ({ currentDashboard, setCurrentDashboard }: Marketing
     return <div className="text-center p-8">Carregando dados de marketing...</div>;
   }
 
+  const exportData = topRevenue?.map(item => ({
+    'Código do Cupom': item.code,
+    'Receita': item.revenue,
+    'Pedidos': item.orders
+  })) || [];
+
+  const handleRefresh = () => {
+    refetchMetrics();
+    refetchTrends();
+    refetchROI();
+    refetchRevenue();
+    refetchUsage();
+    refetchConversion();
+    refetchAbandonment();
+    refetchCAC();
+  };
+
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard de Marketing & Cupons</h2>
-          <p className="text-muted-foreground">Análise completa de performance de cupons e estratégias de marketing</p>
-        </div>
-        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-      </div>
+      <DashboardHeader
+        title="Dashboard de Marketing & Cupons"
+        description="Análise completa de performance de cupons e estratégias de marketing"
+        currentDashboard={currentDashboard}
+        setCurrentDashboard={setCurrentDashboard}
+        dateRange={dateRange}
+        onDateRangeChange={() => {}}
+        exportData={exportData}
+        exportFilename="marketing-cupons"
+        exportTitle="Relatório de Marketing & Cupons"
+        onRefresh={handleRefresh}
+        showDateFilter={false}
+      />
 
       {/* Key Metrics Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

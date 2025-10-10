@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { DollarSign, TrendingUp, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { format, subDays, startOfDay } from 'date-fns';
+import { format, subDays, startOfDay, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
+import { DashboardHeader } from '@/components/admin/DashboardHeader';
+import type { DateRange } from '@/components/admin/DateRangeFilter';
 
 interface FinancialStats {
   totalRevenue: number;
@@ -28,6 +30,10 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
   currentDashboard: DashboardType;
   setCurrentDashboard: (dashboard: DashboardType) => void;
 }) => {
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 29),
+    to: new Date()
+  });
   const [stats, setStats] = useState<FinancialStats>({
     totalRevenue: 0,
     monthlyRevenue: 0,
@@ -44,8 +50,9 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
   useEffect(() => {
     const fetchFinancialData = async () => {
       try {
-        const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-        const sixtyDaysAgo = subDays(new Date(), 60).toISOString();
+        const days = differenceInDays(dateRange.to, dateRange.from);
+        const thirtyDaysAgo = dateRange.from.toISOString();
+        const sixtyDaysAgo = subDays(dateRange.from, days).toISOString();
 
         // Get all paid orders
         const { data: allOrders } = await supabase
@@ -87,13 +94,15 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
           .from('orders')
           .select('total_amount, created_at')
           .eq('payment_status', 'paid')
-          .gte('created_at', thirtyDaysAgo)
+          .gte('created_at', dateRange.from.toISOString())
+          .lte('created_at', dateRange.to.toISOString())
           .order('created_at');
 
         // Group by day
         const dailyRevenue = new Map();
-        for (let i = 29; i >= 0; i--) {
-          const date = subDays(new Date(), i);
+        const numDays = differenceInDays(dateRange.to, dateRange.from);
+        for (let i = numDays; i >= 0; i--) {
+          const date = subDays(dateRange.to, i);
           const dateStr = format(date, 'yyyy-MM-dd');
           dailyRevenue.set(dateStr, { date: format(date, 'dd/MM', { locale: ptBR }), revenue: 0 });
         }
@@ -135,7 +144,7 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
     };
 
     fetchFinancialData();
-  }, []);
+  }, [dateRange]);
 
   const StatCard = ({ title, value, icon: Icon, trend, subtitle, gradient }: {
     title: string;
@@ -174,15 +183,25 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
     return <div className="text-center p-8">Carregando dados financeiros...</div>;
   }
 
+  const exportData = revenueData.map(item => ({
+    Data: item.date,
+    Receita: item.revenue
+  }));
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard Financeiro</h2>
-          <p className="text-muted-foreground">Análise detalhada de receitas e pagamentos</p>
-        </div>
-        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-      </div>
+      <DashboardHeader
+        title="Dashboard Financeiro"
+        description="Análise detalhada de receitas e pagamentos"
+        currentDashboard={currentDashboard}
+        setCurrentDashboard={setCurrentDashboard}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        exportData={exportData}
+        exportFilename="financeiro"
+        exportTitle="Relatório Financeiro"
+        onRefresh={() => setLoading(true)}
+      />
 
       {/* Financial Stats */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -225,7 +244,7 @@ const FinancialDashboard = ({ currentDashboard, setCurrentDashboard }: {
         {/* Revenue Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Receita Diária - Últimos 30 Dias</CardTitle>
+            <CardTitle>Receita Diária</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>

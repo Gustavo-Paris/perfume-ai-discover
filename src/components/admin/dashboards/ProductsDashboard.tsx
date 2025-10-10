@@ -1,4 +1,8 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { subDays } from 'date-fns';
+import { DashboardHeader } from '@/components/admin/DashboardHeader';
+import type { DateRange } from '@/components/admin/DateRangeFilter';
 import { 
   useTopProductsByRevenue, 
   useTopProductsByQuantity,
@@ -36,13 +40,18 @@ interface ProductsDashboardProps {
 }
 
 const ProductsDashboard = ({ currentDashboard, setCurrentDashboard }: ProductsDashboardProps) => {
-  const { data: topByRevenue, isLoading: revenueLoading } = useTopProductsByRevenue(10);
-  const { data: topByQuantity, isLoading: quantityLoading } = useTopProductsByQuantity(10);
-  const { data: topByMargin, isLoading: marginLoading } = useTopProductsByMargin(10);
-  const { data: crossSell, isLoading: crossSellLoading } = useCrossSellAnalysis(15);
-  const { data: abcData, isLoading: abcLoading } = useABCAnalysis();
-  const { data: bcgData, isLoading: bcgLoading } = useBCGMatrix();
-  const { data: deadProducts, isLoading: deadLoading } = useDeadProducts(60);
+  const [dateRange] = useState<DateRange>({
+    from: subDays(new Date(), 29),
+    to: new Date()
+  });
+
+  const { data: topByRevenue, isLoading: revenueLoading, refetch: refetchRevenue } = useTopProductsByRevenue(10);
+  const { data: topByQuantity, isLoading: quantityLoading, refetch: refetchQuantity } = useTopProductsByQuantity(10);
+  const { data: topByMargin, isLoading: marginLoading, refetch: refetchMargin } = useTopProductsByMargin(10);
+  const { data: crossSell, isLoading: crossSellLoading, refetch: refetchCrossSell } = useCrossSellAnalysis(15);
+  const { data: abcData, isLoading: abcLoading, refetch: refetchABC } = useABCAnalysis();
+  const { data: bcgData, isLoading: bcgLoading, refetch: refetchBCG } = useBCGMatrix();
+  const { data: deadProducts, isLoading: deadLoading, refetch: refetchDead } = useDeadProducts(60);
 
   const loading = revenueLoading || quantityLoading || marginLoading;
 
@@ -103,16 +112,38 @@ const ProductsDashboard = ({ currentDashboard, setCurrentDashboard }: ProductsDa
     return <div className="text-center p-8">Carregando análise de produtos...</div>;
   }
 
+  const exportData = topByRevenue?.map(item => ({
+    'Produto': item.name,
+    'Receita': item.total_revenue,
+    'Quantidade': item.total_quantity,
+    'Margem (%)': item.margin_percentage
+  })) || [];
+
+  const handleRefresh = () => {
+    refetchRevenue();
+    refetchQuantity();
+    refetchMargin();
+    refetchCrossSell();
+    refetchABC();
+    refetchBCG();
+    refetchDead();
+  };
+
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Análise de Produtos</h2>
-          <p className="text-muted-foreground">Performance detalhada e insights de vendas por produto</p>
-        </div>
-        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-      </div>
+      <DashboardHeader
+        title="Análise de Produtos"
+        description="Performance detalhada e insights de vendas por produto"
+        currentDashboard={currentDashboard}
+        setCurrentDashboard={setCurrentDashboard}
+        dateRange={dateRange}
+        onDateRangeChange={() => {}}
+        exportData={exportData}
+        exportFilename="produtos"
+        exportTitle="Relatório de Produtos"
+        onRefresh={handleRefresh}
+        showDateFilter={false}
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { ShoppingCart, Clock, CheckCircle, XCircle, Package, TrendingUp, Users } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
+import { DashboardHeader } from '@/components/admin/DashboardHeader';
+import type { DateRange } from '@/components/admin/DateRangeFilter';
 import { 
   useOrdersOverview, 
   useOrdersByStatus, 
@@ -17,11 +20,17 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
   currentDashboard: DashboardType;
   setCurrentDashboard: (dashboard: DashboardType) => void;
 }) => {
-  const { data: overview, isLoading: overviewLoading } = useOrdersOverview(30);
-  const { data: statusData, isLoading: statusLoading } = useOrdersByStatus(30);
-  const { data: periodData, isLoading: periodLoading } = useOrdersByPeriod(30);
-  const { data: topCustomers, isLoading: customersLoading } = useTopCustomers(5);
-  const { data: fulfillmentMetrics } = useOrderFulfillmentMetrics(30);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 29),
+    to: new Date()
+  });
+
+  const days = differenceInDays(dateRange.to, dateRange.from);
+  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } = useOrdersOverview(days);
+  const { data: statusData, isLoading: statusLoading, refetch: refetchStatus } = useOrdersByStatus(days);
+  const { data: periodData, isLoading: periodLoading, refetch: refetchPeriod } = useOrdersByPeriod(days);
+  const { data: topCustomers, isLoading: customersLoading, refetch: refetchCustomers } = useTopCustomers(5);
+  const { data: fulfillmentMetrics, refetch: refetchFulfillment } = useOrderFulfillmentMetrics(days);
 
   const StatCard = ({ title, value, icon: Icon, subtitle, gradient }: {
     title: string;
@@ -63,15 +72,36 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
     value: item.total_value
   })) || [];
 
+  const exportData = chartData.map(item => ({
+    Data: item.date,
+    'Total de Pedidos': item.total,
+    'Concluídos': item.completed,
+    'Cancelados': item.cancelled,
+    'Receita': item.revenue
+  }));
+
+  const handleRefresh = () => {
+    refetchOverview();
+    refetchStatus();
+    refetchPeriod();
+    refetchCustomers();
+    refetchFulfillment();
+  };
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard de Pedidos</h2>
-          <p className="text-muted-foreground">Análise detalhada do fluxo de pedidos</p>
-        </div>
-        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-      </div>
+      <DashboardHeader
+        title="Dashboard de Pedidos"
+        description="Análise detalhada do fluxo de pedidos"
+        currentDashboard={currentDashboard}
+        setCurrentDashboard={setCurrentDashboard}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        exportData={exportData}
+        exportFilename="pedidos"
+        exportTitle="Relatório de Pedidos"
+        onRefresh={handleRefresh}
+      />
 
       {/* Order Stats */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
@@ -125,7 +155,7 @@ const OrdersDashboard = ({ currentDashboard, setCurrentDashboard }: {
         {/* Orders Timeline */}
         <Card>
           <CardHeader>
-            <CardTitle>Pedidos por Período - Últimos 30 Dias</CardTitle>
+            <CardTitle>Pedidos por Período</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>

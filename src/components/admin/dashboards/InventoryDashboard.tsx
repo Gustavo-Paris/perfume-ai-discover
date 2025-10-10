@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Package, AlertTriangle, TrendingUp, TrendingDown, Warehouse, DollarSign } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DashboardSelector, DashboardType } from '@/components/admin/DashboardSelector';
+import { DashboardHeader } from '@/components/admin/DashboardHeader';
+import type { DateRange } from '@/components/admin/DateRangeFilter';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
@@ -18,11 +21,17 @@ const InventoryDashboard = ({ currentDashboard, setCurrentDashboard }: {
   currentDashboard: DashboardType;
   setCurrentDashboard: (dashboard: DashboardType) => void;
 }) => {
-  const { data: overview, isLoading: overviewLoading } = useInventoryOverview();
-  const { data: stockLevels, isLoading: stockLoading } = useStockLevels();
-  const { data: movements, isLoading: movementsLoading } = useStockMovements(30);
-  const { data: turnover } = useInventoryTurnover(90);
-  const { data: expirations } = useLotExpirations();
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(new Date(), 29),
+    to: new Date()
+  });
+
+  const days = differenceInDays(dateRange.to, dateRange.from);
+  const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } = useInventoryOverview();
+  const { data: stockLevels, isLoading: stockLoading, refetch: refetchStock } = useStockLevels();
+  const { data: movements, isLoading: movementsLoading, refetch: refetchMovements } = useStockMovements(days);
+  const { data: turnover, refetch: refetchTurnover } = useInventoryTurnover(90);
+  const { data: expirations, refetch: refetchExpirations } = useLotExpirations();
 
   const StatCard = ({ title, value, icon: Icon, subtitle, gradient, trend }: {
     title: string;
@@ -76,15 +85,35 @@ const InventoryDashboard = ({ currentDashboard, setCurrentDashboard }: {
     item.status === 'critical' || item.status === 'expired'
   ).slice(0, 5) || [];
 
+  const exportData = movementsChartData.map(item => ({
+    Data: item.date,
+    'Compras (ml)': item.purchases,
+    'Vendas (ml)': item.sales,
+    'Saldo (ml)': item.net
+  }));
+
+  const handleRefresh = () => {
+    refetchOverview();
+    refetchStock();
+    refetchMovements();
+    refetchTurnover();
+    refetchExpirations();
+  };
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard de Estoque</h2>
-          <p className="text-muted-foreground">Análise completa do inventário e movimentações</p>
-        </div>
-        <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
-      </div>
+      <DashboardHeader
+        title="Dashboard de Estoque"
+        description="Análise completa do inventário e movimentações"
+        currentDashboard={currentDashboard}
+        setCurrentDashboard={setCurrentDashboard}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        exportData={exportData}
+        exportFilename="estoque"
+        exportTitle="Relatório de Estoque"
+        onRefresh={handleRefresh}
+      />
 
       {/* Inventory Stats */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
@@ -140,7 +169,7 @@ const InventoryDashboard = ({ currentDashboard, setCurrentDashboard }: {
         {/* Stock Movements Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Movimentações de Estoque - Últimos 30 Dias</CardTitle>
+            <CardTitle>Movimentações de Estoque</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
