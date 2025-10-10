@@ -4566,6 +4566,20 @@ export type Database = {
           revenue: number
         }[]
       }
+      get_campaign_metrics: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_discount_per_order: number
+          coupon_usage_rate: number
+          net_revenue: number
+          orders_with_coupon: number
+          period: string
+          revenue_with_coupon: number
+          total_discount_given: number
+          total_orders: number
+          total_revenue: number
+        }[]
+      }
       get_company_public_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4573,6 +4587,36 @@ export type Database = {
           email_contato: string
           estado: string
           nome_fantasia: string
+        }[]
+      }
+      get_coupon_performance: {
+        Args: { p_limit?: number }
+        Returns: {
+          avg_order_value: number
+          code: string
+          conversion_rate: number
+          coupon_id: string
+          created_at: string
+          expires_at: string
+          roi: number
+          total_discount_given: number
+          total_revenue: number
+          total_uses: number
+          type: string
+          value: number
+        }[]
+      }
+      get_coupon_type_analysis: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_coupons: number
+          avg_conversion_rate: number
+          roi: number
+          total_coupons: number
+          total_discount: number
+          total_revenue: number
+          total_uses: number
+          type: string
         }[]
       }
       get_cross_sell_products: {
@@ -4748,6 +4792,20 @@ export type Database = {
       get_security_config: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_top_coupon_users: {
+        Args: { p_limit?: number }
+        Returns: {
+          avg_order_value: number
+          first_use: string
+          last_use: string
+          total_saved: number
+          total_spent: number
+          total_uses: number
+          user_email: string
+          user_id: string
+          user_name: string
+        }[]
       }
       get_top_products_by_margin: {
         Args: { p_limit?: number }
