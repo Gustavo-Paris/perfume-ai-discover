@@ -4580,6 +4580,16 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      get_cash_flow_analysis: {
+        Args: { p_days?: number }
+        Returns: {
+          cash_in: number
+          cash_out: number
+          cumulative_balance: number
+          net_cash_flow: number
+          period: string
+        }[]
+      }
       get_company_public_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4642,6 +4652,35 @@ export type Database = {
           total_orders: number
           total_quantity: number
           total_revenue: number
+        }[]
+      }
+      get_expense_categories: {
+        Args: { p_days?: number }
+        Returns: {
+          category: string
+          percentage_of_revenue: number
+          total_amount: number
+          transaction_count: number
+        }[]
+      }
+      get_monthly_comparison: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          change_percentage: number
+          current_month: number
+          metric: string
+          previous_month: number
+          trend: string
+        }[]
+      }
+      get_payment_method_analysis: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_transaction_value: number
+          payment_method: string
+          percentage_of_total: number
+          total_amount: number
+          total_transactions: number
         }[]
       }
       get_perfume_dynamic_prices: {
@@ -4771,6 +4810,17 @@ export type Database = {
           trend: string
         }[]
       }
+      get_profit_by_category: {
+        Args: { p_days?: number }
+        Returns: {
+          category: string
+          gross_profit: number
+          profit_margin: number
+          total_cost: number
+          total_revenue: number
+          units_sold: number
+        }[]
+      }
       get_public_company_info: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -4778,6 +4828,18 @@ export type Database = {
           email_contato: string
           estado: string
           nome_fantasia: string
+        }[]
+      }
+      get_revenue_metrics: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_order_value: number
+          gross_profit: number
+          period: string
+          profit_margin: number
+          total_cost: number
+          total_orders: number
+          total_revenue: number
         }[]
       }
       get_sac_stats: {
