@@ -12,6 +12,7 @@ import OrdersDashboard from '@/components/admin/dashboards/OrdersDashboard';
 import InventoryDashboard from '@/components/admin/dashboards/InventoryDashboard';
 import PerformanceDashboard from '@/components/admin/dashboards/PerformanceDashboard';
 import AnalyticsDashboard from '@/components/admin/dashboards/AnalyticsDashboard';
+import MarketingDashboard from '@/components/admin/dashboards/MarketingDashboard';
 
 interface DashboardStats {
   ordersToday: number;
@@ -172,6 +173,17 @@ const AdminDashboard = () => {
   }, []);
 
   // Handle different dashboard types after hooks are declared
+  if (currentDashboard === 'marketing') {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
+        </div>
+        <MarketingDashboard />
+      </div>
+    );
+  }
+
   if (currentDashboard === 'financial') {
     return <FinancialDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
   }
