@@ -127,6 +127,7 @@ const FeaturedProducts = () => {
                       <img
                         src={perfume.image_url || `https://images.unsplash.com/photo-1541643600914-78b084683601?w=300&h=400&fit=crop&crop=center&q=80`}
                         alt={perfume.name}
+                        loading={index < 4 ? "eager" : "lazy"}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

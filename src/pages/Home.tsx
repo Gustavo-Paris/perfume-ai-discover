@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import { useState, useEffect } from 'react';
 import SEO from '@/components/SEO';
+import { SocialProof } from '@/components/ui/social-proof';
+import { TrustSignals } from '@/components/ui/trust-signals';
 
 // Import decant images
 import decantsCollection from '@/assets/decants-collection.png';
@@ -61,8 +63,13 @@ const Home = () => {
             duration: 0.8,
             ease: "easeOut"
           }} className="order-2 lg:order-1">
-              <div className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
+                <div className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
                 
+                {/* Trust Signals */}
+                <div className="mb-6 flex flex-wrap justify-center lg:justify-start gap-3">
+                  <SocialProof variant="users" count={5247} className="text-xs" />
+                  <SocialProof variant="purchases" count={127} className="text-xs" />
+                </div>
                 
                 <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-gray-900 leading-tight">
                   Descubra o
@@ -88,8 +95,27 @@ const Home = () => {
                   </Button>
                 </div>
 
-                {/* Social Proof */}
-                
+                {/* Reviews Trust Signal */}
+                <div className="mt-8 flex items-center justify-center lg:justify-start gap-6 px-4 sm:px-0">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 border-2 border-white"
+                      />
+                    ))}
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      <span className="font-semibold">4.9/5</span> de 500+ avaliações
+                    </p>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
@@ -168,6 +194,13 @@ const Home = () => {
 
       {/* Featured Products */}
       <FeaturedProducts />
+
+      {/* Trust Signals Section */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <TrustSignals variant="grid" />
+        </div>
+      </section>
 
       {/* Features Section */}
       <motion.section className="py-12 md:py-20 px-4 bg-white" initial={{

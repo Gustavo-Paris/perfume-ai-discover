@@ -21,6 +21,7 @@ import { LoadingState, EmptyState } from '@/components/ui/loading-states';
 import { ProductCardSkeleton } from '@/components/ui/content-loader';
 import { Skeleton } from '@/components/ui/skeleton';
 import SEO from '@/components/SEO';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 const Catalogo = () => {
   const { data: databasePerfumes, isLoading } = usePerfumes();
@@ -240,6 +241,14 @@ const Catalogo = () => {
       />
       <div className="min-h-screen bg-white py-12">
       <div className="container mx-auto px-4 max-w-7xl">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { label: 'Catálogo', href: '/catalogo' }
+          ]}
+          className="mb-6"
+        />
+
         <LoadingState
           isLoading={isLoading}
           isEmpty={!isLoading && filteredPerfumes.length === 0}

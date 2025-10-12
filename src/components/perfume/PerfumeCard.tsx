@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Perfume } from '@/types';
@@ -16,6 +16,9 @@ import { WishlistButton } from '@/components/wishlist/WishlistButton';
 import { useActivePromotionByPerfume, calculatePromotionalPrice } from '@/hooks/usePromotions';
 import PromotionBadge from '@/components/promotions/PromotionBadge';
 import { usePerfumePricesObject } from '@/hooks/usePerfumePrices';
+import { StockIndicator } from '@/components/ui/stock-indicator';
+import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface PriceInfo {
   original: number;
@@ -33,6 +36,7 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isAdding, setIsAdding] = useState(false);
+  const [totalStock, setTotalStock] = useState<number>(0);
   
   // Buscar promoção ativa para este perfume
   const { data: activePromotion } = useActivePromotionByPerfume(perfume.id);
@@ -44,6 +48,23 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
   const configuredSizes = perfume.available_sizes && perfume.available_sizes.length > 0 
     ? perfume.available_sizes 
     : availableSizes;
+
+  // Fetch stock information
+  useEffect(() => {
+    const fetchStock = async () => {
+      const { data } = await supabase
+        .from('inventory_lots')
+        .select('qty_ml')
+        .eq('perfume_id', perfume.id);
+      
+      if (data) {
+        const total = data.reduce((sum, lot) => sum + (lot.qty_ml || 0), 0);
+        setTotalStock(total);
+      }
+    };
+    
+    fetchStock();
+  }, [perfume.id]);
 
   const handleQuickAdd = async (e: React.MouseEvent, size: number) => {
     e.stopPropagation();
@@ -181,9 +202,23 @@ const PerfumeCard = ({ perfume }: PerfumeCardProps) => {
             </div>
           </div>
 
+          {/* Stock Indicator - Low stock warning */}
+          {totalStock > 0 && totalStock <= 50 && (
+            <div className="absolute bottom-4 left-4 z-10">
+              <StockIndicator 
+                stock={Math.floor(totalStock / 5)} 
+                size="sm"
+                threshold={{ low: 5, medium: 15 }}
+              />
+            </div>
+          )}
+
           {/* Promotion Badge */}
           {activePromotion && (
-            <div className="absolute bottom-4 left-4 z-10">
+            <div className={cn(
+              "absolute z-10",
+              totalStock > 0 && totalStock <= 50 ? "top-4 left-4" : "bottom-4 left-4"
+            )}>
               <PromotionBadge 
                 promotion={{
                   id: activePromotion.id,
