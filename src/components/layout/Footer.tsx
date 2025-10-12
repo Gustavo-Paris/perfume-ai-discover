@@ -78,9 +78,12 @@ const Footer = () => {
             <p className="text-gray-300 text-sm font-display">
               © 2024 Paris & Co Parfums. Todos os direitos reservados.
             </p>
-            <div className="flex space-x-6 text-sm">
+            <div className="flex flex-wrap gap-4 text-sm justify-center md:justify-end">
               <Link to="/privacidade" className="text-gray-300 hover:text-white transition-colors font-display">
                 Privacidade
+              </Link>
+              <Link to="/termos-uso" className="text-gray-300 hover:text-white transition-colors font-display">
+                Termos de Uso
               </Link>
               <Link to="/troca-devolucao" className="text-gray-300 hover:text-white transition-colors font-display">
                 Trocas & Devoluções

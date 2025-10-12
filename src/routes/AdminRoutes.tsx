@@ -20,6 +20,9 @@ const AdminSecurityLogs = lazy(() => import('@/pages/admin/AdminSecurityLogs'));
 const AdminSecurityAlerts = lazy(() => import('@/pages/admin/AdminSecurityAlerts'));
 const AdminSecurityMetrics = lazy(() => import('@/pages/admin/AdminSecurityMetrics'));
 const AdminSitemap = lazy(() => import('@/pages/admin/AdminSitemap'));
+const AdminNFeDashboard = lazy(() => import('@/pages/admin/AdminNFeDashboard'));
+const AdminMonitoring = lazy(() => import('@/pages/admin/AdminMonitoring'));
+const AdminSitemap = lazy(() => import('@/pages/admin/AdminSitemap'));
 
 const AdminRoutes = () => {
   return (

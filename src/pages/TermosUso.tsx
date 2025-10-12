@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Shield, AlertTriangle, UserCheck } from 'lucide-react';
+import { FileText, Shield, AlertTriangle, UserCheck, XCircle } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 const TermosUso = () => {
   useEffect(() => {
@@ -8,22 +9,28 @@ const TermosUso = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-display font-bold text-foreground mb-4">
-            Termos de Uso
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Estes termos regem o uso da plataforma Paris & Co Parfums. Ao usar nossos serviços, 
-            você concorda com estes termos.
-          </p>
-          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-amber-800 text-sm">
-              <strong>Última atualização:</strong> {new Date().toLocaleDateString('pt-BR')}
+    <>
+      <SEO 
+        title="Termos de Uso"
+        description="Conheça os termos e condições de uso da plataforma Paris & Co Parfums"
+      />
+      
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-4xl font-display font-bold text-foreground mb-4">
+              Termos de Uso
+            </h1>
+            <p className="text-muted-foreground text-lg mb-4">
+              Estes termos regem o uso da plataforma Paris & Co Parfums. Ao usar nossos serviços, 
+              você concorda com estes termos.
             </p>
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-amber-800 text-sm">
+                <strong>Última atualização:</strong> 10 de outubro de 2025
+              </p>
+            </div>
           </div>
-        </div>
 
         <div className="space-y-8">
           {/* Aceitação dos Termos */}
@@ -128,11 +135,57 @@ const TermosUso = () => {
             </div>
             <div className="text-card-foreground ml-9 space-y-3">
               <p>
-                Todo o conteúdo do site, incluindo textos, imagens, logos, designs e código, 
-                é protegido por direitos autorais e outras leis de propriedade intelectual.
+                Todo o conteúdo do site Paris & Co Parfums, incluindo mas não limitado a:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Textos, artigos e descrições de produtos</li>
+                <li>Imagens, fotografias e ilustrações</li>
+                <li>Logotipos, marcas e identidade visual</li>
+                <li>Layout, design e elementos gráficos</li>
+                <li>Código-fonte e estrutura do site</li>
+                <li>Algoritmos de recomendação (IA)</li>
+              </ul>
+              <p>
+                Todos estes elementos são protegidos por direitos autorais (Lei 9.610/98) e outras 
+                leis de propriedade intelectual brasileiras e internacionais.
               </p>
               <p>
-                É proibida a reprodução, distribuição ou uso comercial sem autorização expressa.
+                É expressamente <strong>proibido</strong> sem autorização por escrito:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Reproduzir, copiar ou distribuir qualquer conteúdo</li>
+                <li>Usar para fins comerciais ou lucrativos</li>
+                <li>Modificar, adaptar ou criar obras derivadas</li>
+                <li>Fazer engenharia reversa do código ou algoritmos</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Cancelamento de Conta */}
+          <section className="bg-card rounded-lg p-6 border">
+            <div className="flex items-start space-x-3 mb-4">
+              <XCircle className="h-6 w-6 text-orange-500 mt-1" />
+              <h2 className="text-2xl font-display font-semibold text-card-foreground">
+                6. Cancelamento e Suspensão de Conta
+              </h2>
+            </div>
+            <div className="text-card-foreground ml-9 space-y-3">
+              <p>
+                <strong>Cancelamento pelo usuário:</strong> Você pode cancelar sua conta a qualquer momento 
+                em "Configurações → Privacidade → Excluir Conta". Esta ação é irreversível.
+              </p>
+              <p>
+                <strong>Suspensão pela Paris & Co:</strong> Podemos suspender ou encerrar sua conta se:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Violação destes Termos de Uso</li>
+                <li>Atividade fraudulenta ou suspeita</li>
+                <li>Uso de múltiplas contas para burlar regras</li>
+                <li>Abuso de cupons ou programa de fidelidade</li>
+                <li>Comportamento ofensivo com equipe de suporte</li>
+              </ul>
+              <p className="text-sm text-muted-foreground">
+                Em caso de suspensão, você será notificado por e-mail com o motivo e prazo de recurso (15 dias).
               </p>
             </div>
           </section>
@@ -142,7 +195,7 @@ const TermosUso = () => {
             <div className="flex items-start space-x-3 mb-4">
               <AlertTriangle className="h-6 w-6 text-amber-600 mt-1" />
               <h2 className="text-2xl font-display font-semibold text-card-foreground">
-                6. Limitação de Responsabilidade
+                7. Limitação de Responsabilidade
               </h2>
             </div>
             <div className="text-card-foreground ml-9 space-y-3">
@@ -164,7 +217,7 @@ const TermosUso = () => {
             <div className="flex items-start space-x-3 mb-4">
               <FileText className="h-6 w-6 text-primary mt-1" />
               <h2 className="text-2xl font-display font-semibold text-card-foreground">
-                7. Modificações dos Termos
+                8. Modificações dos Termos
               </h2>
             </div>
             <div className="text-card-foreground ml-9 space-y-3">
@@ -183,48 +236,48 @@ const TermosUso = () => {
             <div className="flex items-start space-x-3 mb-4">
               <Shield className="h-6 w-6 text-primary mt-1" />
               <h2 className="text-2xl font-display font-semibold text-card-foreground">
-                8. Lei Aplicável e Foro
+                9. Lei Aplicável e Foro
               </h2>
             </div>
             <div className="text-card-foreground ml-9 space-y-3">
               <p>
-                Estes termos são regidos pelas leis brasileiras.
+                Estes Termos de Uso são regidos pelas leis da República Federativa do Brasil, 
+                especialmente:
               </p>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li>Código de Defesa do Consumidor (Lei 8.078/90)</li>
+                <li>Marco Civil da Internet (Lei 12.965/14)</li>
+                <li>Lei Geral de Proteção de Dados - LGPD (Lei 13.709/18)</li>
+                <li>Código Civil Brasileiro (Lei 10.406/02)</li>
+              </ul>
               <p>
-                Qualquer disputa será resolvida no foro da comarca de São Paulo/SP, 
-                salvo quando a lei exigir foro específico.
+                Qualquer disputa ou controvérsia oriunda destes termos será resolvida no foro 
+                da comarca de <strong>São Paulo/SP</strong>, com exclusão de qualquer outro, por mais 
+                privilegiado que seja, exceto quando a lei exigir foro específico (ex: domicílio do consumidor).
               </p>
             </div>
           </section>
 
           {/* Contato */}
-          <section className="bg-card rounded-lg p-6 border">
+          <section className="bg-primary/5 rounded-lg p-6 border border-primary/20">
             <div className="flex items-start space-x-3 mb-4">
               <FileText className="h-6 w-6 text-primary mt-1" />
-              <h2 className="text-2xl font-display font-semibold text-card-foreground">
-                9. Contato
+              <h2 className="text-2xl font-display font-semibold text-foreground">
+                10. Contato
               </h2>
             </div>
             <div className="text-card-foreground ml-9 space-y-3">
               <p>
-                Para dúvidas sobre estes termos, entre em contato:
+                Para dúvidas sobre estes termos ou questões jurídicas, entre em contato:
               </p>
-              <ul className="space-y-1">
-                <li>E-mail: <a href="mailto:juridico@pariscoparfums.com.br" className="text-primary hover:underline">juridico@pariscoparfums.com.br</a></li>
-                <li>SAC: <a href="mailto:sac@pariscoparfums.com.br" className="text-primary hover:underline">sac@pariscoparfums.com.br</a></li>
-                <li>Telefone: (11) 0000-0000</li>
+              <ul className="space-y-2">
+                <li>📧 Jurídico: <a href="mailto:juridico@pariscoparfums.com.br" className="text-primary hover:underline">juridico@pariscoparfums.com.br</a></li>
+                <li>📧 SAC: <a href="mailto:sac@pariscoparfums.com.br" className="text-primary hover:underline">sac@pariscoparfums.com.br</a></li>
+                <li>📱 Telefone: (49) 99972-3818</li>
+                <li>📍 Endereço: Rua Augusta, 123 - São Paulo/SP, 01234-567</li>
               </ul>
             </div>
           </section>
-
-          {/* Disclaimer */}
-          <div className="bg-muted rounded-lg p-6 border-l-4 border-amber-500">
-            <p className="text-sm text-muted-foreground italic">
-              <strong>Importante:</strong> Este documento deve ser revisado por advogado especialista 
-              antes do uso em produção. Adapte às necessidades específicas do seu negócio e 
-              às leis aplicáveis.
-            </p>
-          </div>
         </div>
 
         {/* Navigation */}
@@ -254,6 +307,7 @@ const TermosUso = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
