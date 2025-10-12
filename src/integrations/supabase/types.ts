@@ -4374,7 +4374,7 @@ export type Database = {
               p_user_id?: string
               p_window_minutes?: number
             }
-        Returns: boolean
+        Returns: Json
       }
       check_rls_enabled: {
         Args: { table_name: string }
@@ -5187,7 +5187,7 @@ export type Database = {
               risk_level_param: string
               user_uuid: string
             }
-        Returns: string
+        Returns: undefined
       }
       log_subscription_event: {
         Args: {
