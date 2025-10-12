@@ -44,6 +44,7 @@ import PerfumeDetails from "./pages/PerfumeDetails";
 import Privacidade from "./pages/Privacidade";
 import TrocaDevolucao from "./pages/TrocaDevolucao";
 import TermosUso from "./pages/TermosUso";
+import FAQ from "./pages/FAQ";
 import SAC from "./pages/SAC";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
@@ -68,6 +69,12 @@ import MinhaAssinatura from "./pages/MinhaAssinatura";
 
 import AdminMaterialsSimplified from "./pages/admin/AdminMaterialsSimplified";
 import AdminProductCadastro from './pages/admin/AdminProductCadastro';
+import AdminSecurityMetrics from "./pages/admin/AdminSecurityMetrics";
+import AdminSecurityLogs from "./pages/admin/AdminSecurityLogs";
+import AdminSecurityAlerts from "./pages/admin/AdminSecurityAlerts";
+import AdminSitemap from "./pages/admin/AdminSitemap";
+import AdminNFeDashboard from "./pages/admin/AdminNFeDashboard";
+import AdminMonitoring from "./pages/admin/AdminMonitoring";
 
 // Lazy load the launch setup component
 const AdminLaunchSetup = lazy(() => import('./pages/admin/AdminLaunchSetup'));
@@ -120,8 +127,15 @@ const AppContent = () => {
             <Route path="config" element={<AdminConfig />} />
             <Route path="company" element={<AdminCompanyConfig />} />
             <Route path="automation" element={<AdminOrderAutomation />} />
+            <Route path="order-management" element={<AdminOrderManagement />} />
             <Route path="shipments" element={<AdminShipments />} />
             <Route path="local-delivery" element={<AdminLocalDelivery />} />
+            <Route path="nfe-dashboard" element={<AdminNFeDashboard />} />
+            <Route path="security-metrics" element={<AdminSecurityMetrics />} />
+            <Route path="security-logs" element={<AdminSecurityLogs />} />
+            <Route path="security-alerts" element={<AdminSecurityAlerts />} />
+            <Route path="sitemap" element={<AdminSitemap />} />
+            <Route path="monitoring" element={<AdminMonitoring />} />
             
             <Route path="materials-simplified" element={<AdminMaterialsSimplified />} />
             
@@ -138,7 +152,10 @@ const AppContent = () => {
             <Route path="inventory" element={<AdminInventory />} />
             <Route path="lots" element={<AdminLots />} />
           </Route>
+          <Route path="/privacidade" element={<Privacidade />} />
           <Route path="/termos-uso" element={<TermosUso />} />
+          <Route path="/troca-devolucao" element={<TrocaDevolucao />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/sac" element={<SAC />} />
           <Route path="/search" element={<Search />} />
           <Route path="/afiliados" element={<Afiliados />} />
