@@ -8,6 +8,7 @@ import {
   logSecurityEvent,
   getClientIP
 } from '../_shared/security.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 interface PaymentRequest {
   orderDraftId: string;
@@ -49,14 +50,11 @@ interface ModoBankPixResponse {
 }
 
 serve(async (req) => {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
-
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const requestBody: PaymentRequest = await req.json();

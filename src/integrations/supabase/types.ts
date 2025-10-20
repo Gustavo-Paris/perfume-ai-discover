@@ -5187,7 +5187,7 @@ export type Database = {
               risk_level_param: string
               user_uuid: string
             }
-        Returns: undefined
+        Returns: string
       }
       log_subscription_event: {
         Args: {

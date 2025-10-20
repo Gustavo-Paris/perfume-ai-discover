@@ -6,6 +6,7 @@ import {
   createErrorResponse,
   createSuccessResponse
 } from '../_shared/validationMiddleware.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 interface ConfirmOrderRequest {
   orderDraftId: string;
@@ -18,14 +19,11 @@ interface ConfirmOrderRequest {
 }
 
 serve(async (req) => {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
-
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreflightRequest(req);
   }
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     console.log('=== CONFIRM ORDER START ===');
