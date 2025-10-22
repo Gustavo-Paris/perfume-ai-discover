@@ -63,7 +63,7 @@ serve(async (req) => {
       tasks_completed: []
     };
 
-    console.log(`[${requestId}] Starting 3 automation tasks in parallel`);
+    console.log(`[${requestId}] Starting 4 automation tasks in parallel`);
     
     // Task 1: Generate NFe automatically
     tasks.push(async () => {
@@ -212,9 +212,87 @@ serve(async (req) => {
       }
     });
 
-    // Task 3: Update order status to processing
+    // Task 3: Create shipping label automatically (FASE 2)
     tasks.push(async () => {
-      console.log(`[${requestId}] [Task 3/3] Starting order status update`);
+      console.log(`[${requestId}] [Task 3/4] Starting shipping label creation`);
+      const startTime = Date.now();
+      try {
+        const { data: labelResult, error: labelError } = await supabase.functions.invoke('me-buy-label', {
+          body: { orderId: order_id }
+        });
+
+        if (labelError) {
+          throw labelError;
+        }
+
+        const duration = Date.now() - startTime;
+        results.tasks_completed.push({
+          task: 'shipping_label',
+          success: true,
+          duration_ms: duration,
+          data: labelResult
+        });
+        
+        console.log(`[${requestId}] [Task 3/4] ✅ Shipping label created successfully in ${duration}ms`);
+        return labelResult;
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`[${requestId}] [Task 3/4] ❌ Shipping label creation failed after ${duration}ms:`, error);
+        
+        results.tasks_completed.push({
+          task: 'shipping_label',
+          success: false,
+          duration_ms: duration,
+          error: errorMessage
+        });
+        
+        // Create admin notification for label failure
+        try {
+          console.log(`[${requestId}] Creating admin notifications for label failure`);
+          const { data: adminRoles, error: adminError } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .eq('role', 'admin');
+          
+          if (adminError) {
+            console.error(`[${requestId}] Failed to fetch admin users:`, adminError);
+          } else if (adminRoles && adminRoles.length > 0) {
+            const notifications = adminRoles.map(admin => ({
+              type: 'system',
+              message: `Falha na criação automática de etiqueta para pedido ${order.order_number}`,
+              user_id: admin.user_id,
+              metadata: {
+                order_id: order_id,
+                order_number: order.order_number,
+                error: errorMessage,
+                request_id: requestId,
+                retry_available: true,
+                automation_context: true
+              }
+            }));
+            
+            const { error: notifError } = await supabase
+              .from('notifications')
+              .insert(notifications);
+            
+            if (notifError) {
+              console.error(`[${requestId}] Failed to create admin notifications:`, notifError);
+            } else {
+              console.log(`[${requestId}] ✅ Created ${notifications.length} admin notification(s)`);
+            }
+          }
+        } catch (notifError) {
+          console.error(`[${requestId}] Error creating notifications:`, notifError);
+        }
+        
+        // Don't throw - label failure shouldn't break the flow
+      }
+    });
+
+    // Task 4: Update order status to processing
+    tasks.push(async () => {
+      console.log(`[${requestId}] [Task 4/4] Starting order status update`);
       const startTime = Date.now();
       try {
         const { error: updateError } = await supabase
@@ -236,10 +314,10 @@ serve(async (req) => {
           duration_ms: duration
         });
 
-        console.log(`[${requestId}] [Task 3/3] ✅ Status updated to 'processing' in ${duration}ms`);
+        console.log(`[${requestId}] [Task 4/4] ✅ Status updated to 'processing' in ${duration}ms`);
       } catch (error) {
         const duration = Date.now() - startTime;
-        console.error(`[${requestId}] [Task 3/3] ⚠️  Status update failed after ${duration}ms:`, error);
+        console.error(`[${requestId}] [Task 4/4] ⚠️  Status update failed after ${duration}ms:`, error);
         results.tasks_completed.push({
           task: 'order_status_update',
           success: false,

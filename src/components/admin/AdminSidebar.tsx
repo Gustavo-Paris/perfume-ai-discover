@@ -94,6 +94,16 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     ]
   },
   {
+    title: '🤖 Automação',
+    icon: Zap,
+    defaultOpen: false,
+    items: [
+      { title: 'Dashboard de Automação', url: '/admin/automation-dashboard', icon: BarChart3 },
+      { title: 'Processamento Manual', url: '/admin/order-management', icon: Bot },
+      { title: 'Configuração', url: '/admin/automation', icon: Settings },
+    ]
+  },
+  {
     title: 'Logística',
     icon: Truck,
     defaultOpen: false,

@@ -118,12 +118,33 @@ serve(async (req) => {
         .maybeSingle();
 
       if (existingOrder) {
-        log("Order already confirmed, skipping confirm-order", { orderId: existingOrder.id });
-        return { skipped: true };
+        log("Order already confirmed, skipping confirm-order but triggering automation", { orderId: existingOrder.id });
+        
+        // Trigger payment automation for existing order
+        try {
+          await supabaseAnon.functions.invoke('process-payment-automation', {
+            body: { order_id: existingOrder.id }
+          });
+          log("Payment automation triggered for existing order", { orderId: existingOrder.id });
+        } catch (automationError) {
+          log("ERROR: Failed to trigger automation for existing order", { 
+            orderId: existingOrder.id, 
+            error: automationError instanceof Error ? automationError.message : String(automationError) 
+          });
+        }
+        
+        return { skipped: true, order_id: existingOrder.id };
       }
 
+      let confirmedOrderId: string | null = null;
+
       if (orderDraftId) {
-        return await confirmOrder(orderDraftId, transactionId, paymentMethod);
+        const confirmResult = await confirmOrder(orderDraftId, transactionId, paymentMethod);
+        
+        // Extract order_id from confirm result
+        if (confirmResult && typeof confirmResult === 'object' && 'order' in confirmResult) {
+          confirmedOrderId = (confirmResult as any).order?.id;
+        }
       } else {
         // If no draft id, attempt to update any pending order created by checkout to paid (by stripe_session_id)
         const { data: pendingOrder } = await supabaseService
@@ -148,12 +169,31 @@ serve(async (req) => {
             return { success: false, error: updErr.message };
           }
           log("Pending order updated to paid", { orderId: pendingOrder.id });
-          return { success: true };
+          confirmedOrderId = pendingOrder.id;
+        } else {
+          log("No orderDraftId or pending order found; nothing to do");
+          return { success: true, note: "no-op" };
         }
-
-        log("No orderDraftId or pending order found; nothing to do");
-        return { success: true, note: "no-op" };
       }
+
+      // FASE 2: Trigger full payment automation (NFe + Email + Label)
+      if (confirmedOrderId) {
+        log("Triggering payment automation for order", { orderId: confirmedOrderId });
+        try {
+          await supabaseAnon.functions.invoke('process-payment-automation', {
+            body: { order_id: confirmedOrderId }
+          });
+          log("Payment automation triggered successfully", { orderId: confirmedOrderId });
+        } catch (automationError) {
+          log("ERROR: Failed to trigger payment automation", { 
+            orderId: confirmedOrderId, 
+            error: automationError instanceof Error ? automationError.message : String(automationError) 
+          });
+          // Don't fail the webhook for automation errors
+        }
+      }
+
+      return { success: true, order_id: confirmedOrderId };
     };
 
     switch (event.type) {
