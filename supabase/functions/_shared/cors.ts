@@ -3,11 +3,10 @@
  * Replaces wildcard CORS with origin validation
  */
 
-// Production domains - UPDATE THESE BEFORE DEPLOYING TO PRODUCTION
+// Production domains
 const PRODUCTION_ORIGINS = [
-  'https://yourproductiondomain.com',
-  'https://www.yourproductiondomain.com',
-  // Add your actual production domain here
+  'https://parisandco.com.br',
+  'https://www.parisandco.com.br',
 ];
 
 // Development origins
