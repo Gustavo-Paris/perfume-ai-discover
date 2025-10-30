@@ -24,12 +24,12 @@ import Pedidos from "./pages/Pedidos";
 import Auth from "./pages/Auth";
 import AdminPerfumes from "./pages/admin/AdminPerfumes";
 import AdminInventory from "./pages/admin/AdminInventory";
-import AdminLots from "./pages/admin/AdminLots";
+import AdminStock from "./pages/admin/AdminStock";
 import AdminPerfumeImages from "./pages/admin/AdminPerfumeImages";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
-import AdminStock from "./pages/admin/AdminStock";
+import AdminLots from "./pages/admin/AdminLots";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminConfig from "./pages/admin/AdminConfig";
 import AdminCoupons from "./pages/admin/AdminCoupons";
@@ -59,10 +59,7 @@ import AdminCompany from "./pages/admin/AdminCompany";
 import AdminLocalDelivery from "./pages/admin/AdminLocalDelivery";
 import AdminCsvImport from './pages/admin/AdminCsvImport';
 import AdminShipments from "./pages/admin/AdminShipments";
-import AdminCompanyConfig from "./pages/admin/AdminCompanyConfig";
-import AdminOrderAutomation from "./pages/admin/AdminOrderAutomation";
 import AdminFiscalNotes from "./pages/admin/AdminFiscalNotes";
-import AdminOrderManagement from "./pages/admin/AdminOrderManagement";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import Assinaturas from "./pages/Assinaturas";
 import MinhaAssinatura from "./pages/MinhaAssinatura";
@@ -73,11 +70,12 @@ import AdminSecurityMetrics from "./pages/admin/AdminSecurityMetrics";
 import AdminSecurityLogs from "./pages/admin/AdminSecurityLogs";
 import AdminSecurityAlerts from "./pages/admin/AdminSecurityAlerts";
 import AdminSitemap from "./pages/admin/AdminSitemap";
-import AdminNFeDashboard from "./pages/admin/AdminNFeDashboard";
 import AdminMonitoring from "./pages/admin/AdminMonitoring";
 
-// Lazy load the launch setup component
+// Lazy load admin pages
 const AdminLaunchSetup = lazy(() => import('./pages/admin/AdminLaunchSetup'));
+const AdminStockUnified = lazy(() => import('./pages/admin/AdminStockUnified'));
+const AdminOrderAutomationUnified = lazy(() => import('./pages/admin/AdminOrderAutomationUnified'));
 
 import { SupportChat } from "./components/support/SupportChat";
 import { SessionMonitor } from "./components/auth/SessionMonitor";
@@ -126,11 +124,8 @@ const AppContent = () => {
             <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
             <Route path="company" element={<AdminCompany />} />
-            <Route path="automation" element={<AdminOrderAutomation />} />
-            <Route path="order-management" element={<AdminOrderManagement />} />
             <Route path="shipments" element={<AdminShipments />} />
             <Route path="local-delivery" element={<AdminLocalDelivery />} />
-            <Route path="nfe-dashboard" element={<AdminNFeDashboard />} />
             <Route path="security-metrics" element={<AdminSecurityMetrics />} />
             <Route path="security-logs" element={<AdminSecurityLogs />} />
             <Route path="security-alerts" element={<AdminSecurityAlerts />} />

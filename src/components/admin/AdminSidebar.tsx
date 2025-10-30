@@ -60,17 +60,16 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     items: [
       { title: 'Cadastrar Produto', url: '/admin/produto-cadastro', icon: Package },
       { title: 'Gerenciar Perfumes', url: '/admin/perfumes', icon: Package },
-      { title: 'Lotes de Estoque', url: '/admin/lots', icon: Boxes },
-      { title: 'Materiais', url: '/admin/materials-simplified', icon: Boxes },
+      { title: 'Lotes de Compra', url: '/admin/lots', icon: Boxes },
+      { title: 'Matérias-Primas', url: '/admin/materials-simplified', icon: Boxes },
     ]
   },
   {
-    title: 'Estoque',
+    title: 'Estoque & Inventário',
     icon: Warehouse,
     defaultOpen: false,
     items: [
-      { title: 'Visão Geral', url: '/admin/stock', icon: Package },
-      { title: 'Movimentações', url: '/admin/inventory', icon: TrendingUp },
+      { title: 'Gestão de Estoque', url: '/admin/stock-unified', icon: Package },
     ]
   },
   {
@@ -78,36 +77,18 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     icon: ShoppingBag,
     defaultOpen: false,
     items: [
-      { title: '🤖 Pedidos Inteligentes', url: '/admin/orders', icon: Bot },
-      { title: 'Assinaturas', url: '/admin/subscriptions', icon: Calendar },
-      { title: 'Promoções', url: '/admin/promotions', icon: Percent },
-      { title: 'Cupons', url: '/admin/coupons', icon: Tag },
+      { title: '🤖 Pedidos Inteligentes', url: '/admin/order-automation-unified', icon: Bot },
+      { title: 'Assinaturas', url: '/admin/assinaturas', icon: Calendar },
+      { title: 'Promoções', url: '/admin/promocoes', icon: Tag },
+      { title: 'Cupons', url: '/admin/cupons', icon: Percent },
     ]
   },
   {
-    title: 'Fiscal & NF-e',
+    title: 'Fiscal & Logística',
     icon: FileText,
     defaultOpen: false,
     items: [
-      { title: 'Dashboard NFe', url: '/admin/nfe-dashboard', icon: BarChart3 },
       { title: 'Notas Fiscais', url: '/admin/fiscal-notes', icon: FileText },
-    ]
-  },
-  {
-    title: '🤖 Automação',
-    icon: Zap,
-    defaultOpen: false,
-    items: [
-      { title: 'Dashboard de Automação', url: '/admin/automation-dashboard', icon: BarChart3 },
-      { title: 'Processamento Manual', url: '/admin/order-management', icon: Bot },
-      { title: 'Configuração', url: '/admin/automation', icon: Settings },
-    ]
-  },
-  {
-    title: 'Logística',
-    icon: Truck,
-    defaultOpen: false,
-    items: [
       { title: 'Envios & Coletas', url: '/admin/shipments', icon: Package },
       { title: 'Entrega Local', url: '/admin/local-delivery', icon: Truck },
     ]
@@ -119,22 +100,36 @@ const adminNavData: (AdminNavItem | AdminNavGroup)[] = [
     items: [
       { title: 'Usuários', url: '/admin/users', icon: Users },
       { title: 'Reviews', url: '/admin/reviews', icon: MessageSquare },
-      { title: 'Afiliados', url: '/admin/affiliates', icon: UserPlus },
+      { title: 'Afiliados', url: '/admin/afiliados', icon: UserPlus },
       { title: 'Suporte', url: '/admin/support', icon: MessageCircle },
     ]
   },
   {
-    title: 'Sistema',
+    title: 'Configurações',
     icon: Settings,
     defaultOpen: false,
     items: [
-      { title: '🚀 Configuração de Lançamento', url: '/admin/launch-setup', icon: Megaphone },
       { title: 'Dados da Empresa', url: '/admin/company', icon: Building },
-      { title: 'Gerador de Sitemap', url: '/admin/sitemap', icon: FileText },
+      { title: 'Configurações Gerais', url: '/admin/config', icon: Settings },
       { title: 'Upload de Imagens', url: '/admin/perfume-images', icon: Upload },
+    ]
+  },
+  {
+    title: 'Ferramentas',
+    icon: Zap,
+    defaultOpen: false,
+    items: [
+      { title: '🚀 Configuração de Lançamento', url: '/admin/launch-setup', icon: Megaphone },
+      { title: 'Gerador de Sitemap', url: '/admin/sitemap', icon: FileText },
       { title: 'Importar CSV', url: '/admin/csv-import', icon: Upload },
-      { title: 'Configurações', url: '/admin/config', icon: Settings },
-      { title: 'Monitoramento', url: '/admin/monitoring', icon: TrendingUp },
+    ]
+  },
+  {
+    title: 'Segurança & Monitoramento',
+    icon: Shield,
+    defaultOpen: false,
+    items: [
+      { title: 'Monitoramento do Sistema', url: '/admin/monitoring', icon: TrendingUp },
       { title: 'Logs de Segurança', url: '/admin/security-logs', icon: Shield },
       { title: 'Alertas de Segurança', url: '/admin/security-alerts', icon: Bell },
     ]

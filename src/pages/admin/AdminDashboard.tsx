@@ -14,6 +14,7 @@ import PerformanceDashboard from '@/components/admin/dashboards/PerformanceDashb
 import AnalyticsDashboard from '@/components/admin/dashboards/AnalyticsDashboard';
 import MarketingDashboard from '@/components/admin/dashboards/MarketingDashboard';
 import ProductsDashboard from '@/components/admin/dashboards/ProductsDashboard';
+import { NFeDashboard } from '@/components/admin/NFeDashboard';
 
 interface DashboardStats {
   ordersToday: number;
@@ -192,6 +193,25 @@ const AdminDashboard = () => {
 
   if (currentDashboard === 'inventory') {
     return <InventoryDashboard currentDashboard={currentDashboard} setCurrentDashboard={setCurrentDashboard} />;
+  }
+
+  if (currentDashboard === 'fiscal') {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Dashboard Fiscal
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Monitoramento completo de notas fiscais eletrônicas
+            </p>
+          </div>
+          <DashboardSelector value={currentDashboard} onChange={setCurrentDashboard} />
+        </div>
+        <NFeDashboard />
+      </div>
+    );
   }
 
   if (currentDashboard === 'performance') {

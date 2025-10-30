@@ -8,15 +8,13 @@ const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminCoupons = lazy(() => import('@/pages/admin/AdminCoupons'));
 const AdminReviews = lazy(() => import('@/pages/admin/AdminReviews'));
-const AdminInventory = lazy(() => import('@/pages/admin/AdminInventory'));
+const AdminFiscalNotes = lazy(() => import('@/pages/admin/AdminFiscalNotes'));
 const AdminConfig = lazy(() => import('@/pages/admin/AdminConfig'));
 const AdminShipments = lazy(() => import('@/pages/admin/AdminShipments'));
 const AdminCompany = lazy(() => import('@/pages/admin/AdminCompany'));
-const AdminOrderAutomation = lazy(() => import('@/pages/admin/AdminOrderAutomation'));
-const AdminFiscalNotes = lazy(() => import('@/pages/admin/AdminFiscalNotes'));
-const AdminNFeDashboard = lazy(() => import('@/pages/admin/AdminNFeDashboard'));
-const AdminOrderManagement = lazy(() => import('@/pages/admin/AdminOrderManagement'));
-const AdminOrderAutomationDashboard = lazy(() => import('@/pages/admin/AdminOrderAutomationDashboard'));
+const AdminOrderAutomationUnified = lazy(() => import('@/pages/admin/AdminOrderAutomationUnified'));
+const AdminStockUnified = lazy(() => import('@/pages/admin/AdminStockUnified'));
+const AdminAutomation = lazy(() => import('@/pages/admin/AdminAutomation'));
 const AdminSecurityLogs = lazy(() => import('@/pages/admin/AdminSecurityLogs'));
 const AdminSecurityAlerts = lazy(() => import('@/pages/admin/AdminSecurityAlerts'));
 const AdminSecurityMetrics = lazy(() => import('@/pages/admin/AdminSecurityMetrics'));
@@ -32,15 +30,13 @@ const AdminRoutes = () => {
       <Route path="/admin/users" element={<AdminUsers />} />
       <Route path="/admin/coupons" element={<AdminCoupons />} />
       <Route path="/admin/reviews" element={<AdminReviews />} />
-      <Route path="/admin/inventory" element={<AdminInventory />} />
       <Route path="/admin/config" element={<AdminConfig />} />
       <Route path="/admin/shipments" element={<AdminShipments />} />
       <Route path="/admin/company" element={<AdminCompany />} />
-      <Route path="/admin/automation" element={<AdminOrderAutomation />} />
+      <Route path="/admin/automation" element={<AdminAutomation />} />
       <Route path="/admin/fiscal-notes" element={<AdminFiscalNotes />} />
-      <Route path="/admin/nfe-dashboard" element={<AdminNFeDashboard />} />
-      <Route path="/admin/order-management" element={<AdminOrderManagement />} />
-      <Route path="/admin/automation-dashboard" element={<AdminOrderAutomationDashboard />} />
+      <Route path="/admin/stock-unified" element={<AdminStockUnified />} />
+      <Route path="/admin/order-automation-unified" element={<AdminOrderAutomationUnified />} />
       <Route path="/admin/security-logs" element={<AdminSecurityLogs />} />
       <Route path="/admin/security-alerts" element={<AdminSecurityAlerts />} />
       <Route path="/admin/security-metrics" element={<AdminSecurityMetrics />} />
