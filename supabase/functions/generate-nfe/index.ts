@@ -111,19 +111,26 @@ serve(async (req) => {
     }
 
     // Get appropriate token based on environment
+    // Priority: Environment-specific token > Company token (from DB) > Generic token
     const focusToken = isProduction 
-      ? (company.focus_nfe_token || Deno.env.get('FOCUS_NFE_TOKEN'))
-      : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN');
+      ? (Deno.env.get('FOCUS_NFE_TOKEN') || company.focus_nfe_token)
+      : (Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN') || company.focus_nfe_token || Deno.env.get('FOCUS_NFE_TOKEN'));
     
     console.log('Debug token info:', {
       isProduction,
-      companyToken: company.focus_nfe_token ? '[REDACTED]' : null,
-      envToken: focusToken ? '[REDACTED]' : null,
+      environment: isProduction ? 'PRODUCTION' : 'HOMOLOGATION',
+      hasCompanyToken: !!company.focus_nfe_token,
+      hasEnvToken: !!(isProduction ? Deno.env.get('FOCUS_NFE_TOKEN') : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN')),
+      tokenSource: focusToken 
+        ? (isProduction ? Deno.env.get('FOCUS_NFE_TOKEN') : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN')) 
+          ? 'environment'
+          : 'database'
+        : 'none',
       hasToken: !!focusToken
     });
     
     if (!focusToken) {
-      throw new Error(`Token Focus NFe não configurado para ambiente ${isProduction ? 'produção' : 'homologação'}`);
+      throw new Error(`Token Focus NFe não configurado. Configure em Admin > Empresa ou adicione ${isProduction ? 'FOCUS_NFE_TOKEN' : 'FOCUS_NFE_HOMOLOG_TOKEN'} nas variáveis de ambiente.`);
     }
 
     // Gerar número da nota
