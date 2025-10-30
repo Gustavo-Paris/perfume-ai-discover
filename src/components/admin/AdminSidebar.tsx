@@ -204,7 +204,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
         collapsed ? "w-14 -translate-x-full lg:translate-x-0" : "w-60 translate-x-0",
         "lg:w-60 overflow-y-auto"
       )}>
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col min-h-0">
           <div className="flex h-14 items-center justify-between px-3 border-b">
             {!collapsed && (
               <span className="text-lg font-semibold">Admin</span>
@@ -219,8 +219,8 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
             </Button>
           </div>
           
-          <nav className="flex-1 p-3">
-            <div className="space-y-1">
+          <nav className="flex-1 p-3 overflow-y-auto">
+            <div className="space-y-1 pb-6">
               {adminNavData.map((item) => {
                 // Single navigation item
                 if ('url' in item) {
