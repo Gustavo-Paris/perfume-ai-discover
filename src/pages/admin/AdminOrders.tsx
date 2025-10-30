@@ -18,7 +18,8 @@ import {
   Zap,
   Download,
   Truck,
-  Bot
+  Bot,
+  TestTube
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -26,6 +27,8 @@ import { useToast } from '@/hooks/use-toast';
 import { OrderDetailsModal } from '@/components/orders/OrderDetailsModal';
 import { SystemNotifications } from '@/components/admin/SystemNotifications';
 import { debugError, debugLog } from '@/utils/removeDebugLogsProduction';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { TestOrderCreator } from '@/components/admin/TestOrderCreator';
 
 interface OrderProfile {
   name: string;
@@ -60,6 +63,7 @@ const AdminOrders = () => {
   const [detailOrder, setDetailOrder] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [processingOrder, setProcessingOrder] = useState<string | null>(null);
+  const [testOrderModalOpen, setTestOrderModalOpen] = useState(false);
   const itemsPerPage = 15;
 
   const { data: ordersResult, isLoading, refetch } = useQuery({
@@ -343,10 +347,20 @@ const AdminOrders = () => {
             Gestão automatizada e unificada de pedidos, NF-e e logística
           </p>
         </div>
-        <Button onClick={() => refetch()} variant="outline" className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setTestOrderModalOpen(true)} 
+            variant="outline"
+            className="flex items-center gap-2 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950"
+          >
+            <TestTube className="w-4 h-4" />
+            🧪 Criar Pedido de Teste
+          </Button>
+          <Button onClick={() => refetch()} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       <SystemNotifications />
@@ -647,6 +661,23 @@ const AdminOrders = () => {
         onClose={() => setDetailsOpen(false)}
         loading={loadingDetails}
       />
+
+      <Dialog open={testOrderModalOpen} onOpenChange={setTestOrderModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TestTube className="w-5 h-5 text-purple-500" />
+              Criar Pedido de Teste
+            </DialogTitle>
+          </DialogHeader>
+          <TestOrderCreator 
+            onSuccess={() => {
+              setTestOrderModalOpen(false);
+              refetch();
+            }} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
