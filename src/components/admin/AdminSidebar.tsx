@@ -202,7 +202,7 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
         "fixed lg:static left-0 top-0 z-40 h-full lg:h-auto transition-all duration-300",
         "bg-background border-r shadow-lg lg:shadow-none",
         collapsed ? "w-14 -translate-x-full lg:translate-x-0" : "w-60 translate-x-0",
-        "lg:w-60 overflow-y-auto"
+        "lg:w-60"
       )}>
         <div className="flex h-full flex-col min-h-0">
           <div className="flex h-14 items-center justify-between px-3 border-b">
@@ -219,8 +219,8 @@ export function AdminSidebar({ collapsed, onToggle }: AdminSidebarProps) {
             </Button>
           </div>
           
-          <nav className="flex-1 p-3 overflow-y-auto">
-            <div className="space-y-1 pb-6">
+          <nav className="flex-1 p-3 overflow-y-auto min-h-0">
+            <div className="space-y-1 pb-12">
               {adminNavData.map((item) => {
                 // Single navigation item
                 if ('url' in item) {
