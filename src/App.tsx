@@ -125,7 +125,7 @@ const AppContent = () => {
             <Route path="support" element={<AdminSupport />} />
             <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
-            <Route path="company" element={<AdminCompanyConfig />} />
+            <Route path="company" element={<AdminCompany />} />
             <Route path="automation" element={<AdminOrderAutomation />} />
             <Route path="order-management" element={<AdminOrderManagement />} />
             <Route path="shipments" element={<AdminShipments />} />
