@@ -116,21 +116,29 @@ serve(async (req) => {
       ? (Deno.env.get('FOCUS_NFE_TOKEN') || company.focus_nfe_token)
       : (Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN') || company.focus_nfe_token || Deno.env.get('FOCUS_NFE_TOKEN'));
     
+    const tokenSource = focusToken 
+      ? (isProduction ? Deno.env.get('FOCUS_NFE_TOKEN') : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN')) 
+        ? 'environment'
+        : 'database'
+      : 'none';
+
     console.log('Debug token info:', {
       isProduction,
       environment: isProduction ? 'PRODUCTION' : 'HOMOLOGATION',
+      focusApiUrl,
       hasCompanyToken: !!company.focus_nfe_token,
       hasEnvToken: !!(isProduction ? Deno.env.get('FOCUS_NFE_TOKEN') : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN')),
-      tokenSource: focusToken 
-        ? (isProduction ? Deno.env.get('FOCUS_NFE_TOKEN') : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN')) 
-          ? 'environment'
-          : 'database'
-        : 'none',
-      hasToken: !!focusToken
+      tokenSource,
+      hasToken: !!focusToken,
+      companyEnvironment: company.ambiente_nfe
     });
     
     if (!focusToken) {
-      throw new Error(`Token Focus NFe não configurado. Configure em Admin > Empresa ou adicione ${isProduction ? 'FOCUS_NFE_TOKEN' : 'FOCUS_NFE_HOMOLOG_TOKEN'} nas variáveis de ambiente.`);
+      const errorMsg = isProduction 
+        ? 'Token Focus NFe de PRODUÇÃO não configurado. Acesse focusnfe.com.br para obter um token válido.'
+        : 'Token Focus NFe de HOMOLOGAÇÃO não configurado. Acesse https://homologacao.focusnfe.com.br/ para criar uma conta gratuita e obter um token de testes.';
+      
+      throw new Error(`${errorMsg} Configure em Admin > Empresa.`);
     }
 
     // Gerar número da nota
@@ -234,7 +242,23 @@ serve(async (req) => {
       console.error('Focus NFe response not ok:', focusResponse.status, focusResponse.statusText);
       const errorText = await focusResponse.text();
       console.error('Focus NFe error body:', errorText);
-      throw new Error(`Focus NFe API error: ${focusResponse.status} - ${errorText}`);
+      
+      // Mensagens específicas para erros comuns
+      let userFriendlyError = `Focus NFe API error: ${focusResponse.status} - ${errorText}`;
+      
+      if (focusResponse.status === 401) {
+        if (isProduction) {
+          userFriendlyError = '❌ Token de PRODUÇÃO inválido ou expirado. Verifique seu token em focusnfe.com.br';
+        } else {
+          userFriendlyError = '❌ Token de HOMOLOGAÇÃO inválido. ATENÇÃO: Você está usando ambiente de HOMOLOGAÇÃO. Obtenha um token de homologação em https://homologacao.focusnfe.com.br/ (não use token de produção em homologação!)';
+        }
+      } else if (focusResponse.status === 403) {
+        userFriendlyError = '❌ Acesso negado. Verifique se o token tem permissões para emitir NF-e.';
+      } else if (focusResponse.status === 422) {
+        userFriendlyError = `❌ Dados inválidos para emissão da NF-e: ${errorText}`;
+      }
+      
+      throw new Error(userFriendlyError);
     }
 
     const focusResult = await focusResponse.json();

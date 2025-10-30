@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Save, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Building2, Save, Upload, CheckCircle, AlertCircle, ExternalLink, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -364,6 +365,72 @@ const AdminCompany = () => {
           <CardTitle>Configurações NFe</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Alert Informativo sobre Token de Homologação */}
+          <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertTitle className="text-blue-900 dark:text-blue-100">
+              Token de Homologação vs Produção
+            </AlertTitle>
+            <AlertDescription className="text-blue-800 dark:text-blue-200 space-y-2">
+              <p className="text-sm">
+                <strong>Ambiente atual:</strong>{' '}
+                <Badge variant={companyData.ambiente_nfe === 'producao' ? 'default' : 'secondary'}>
+                  {companyData.ambiente_nfe === 'producao' ? '🔴 PRODUÇÃO' : '🟡 HOMOLOGAÇÃO'}
+                </Badge>
+              </p>
+              
+              {companyData.ambiente_nfe === 'homologacao' && (
+                <div className="space-y-2 mt-2">
+                  <p className="text-sm font-semibold">📝 Como obter token de homologação:</p>
+                  <ol className="text-sm list-decimal list-inside space-y-1 ml-2">
+                    <li>Acesse <a 
+                      href="https://homologacao.focusnfe.com.br/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      homologacao.focusnfe.com.br
+                      <ExternalLink className="h-3 w-3" />
+                    </a></li>
+                    <li>Faça login ou crie uma conta gratuita</li>
+                    <li>Vá em "Configurações" → "Tokens de API"</li>
+                    <li>Copie o token de homologação</li>
+                    <li>Cole no campo "Focus NFe Token" abaixo</li>
+                  </ol>
+                  <p className="text-xs mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded border border-yellow-300 dark:border-yellow-700">
+                    ⚠️ <strong>Importante:</strong> Token de PRODUÇÃO não funciona em HOMOLOGAÇÃO. 
+                    Você precisa de um token específico de homologação para testar.
+                  </p>
+                </div>
+              )}
+
+              {companyData.ambiente_nfe === 'producao' && (
+                <div className="space-y-2 mt-2">
+                  <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                    ⚠️ ATENÇÃO: Ambiente de PRODUÇÃO
+                  </p>
+                  <p className="text-sm">
+                    Neste ambiente, as NF-e emitidas são REAIS e têm validade fiscal.
+                    Certifique-se de ter:
+                  </p>
+                  <ul className="text-sm list-disc list-inside space-y-1 ml-2">
+                    <li>Token de produção válido (de <a 
+                      href="https://focusnfe.com.br/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      focusnfe.com.br
+                      <ExternalLink className="h-3 w-3" />
+                    </a>)</li>
+                    <li>Certificado digital A1 VÁLIDO (não vencido)</li>
+                    <li>Todos os dados da empresa corretos</li>
+                  </ul>
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="ambiente_nfe">Ambiente NFe</Label>
@@ -375,18 +442,24 @@ const AdminCompany = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="homologacao">Homologação</SelectItem>
-                  <SelectItem value="producao">Produção</SelectItem>
+                  <SelectItem value="homologacao">🟡 Homologação (Testes)</SelectItem>
+                  <SelectItem value="producao">🔴 Produção (NF-e Real)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="focus_nfe_token">Focus NFe Token</Label>
+              <Label htmlFor="focus_nfe_token">
+                Focus NFe Token {companyData.ambiente_nfe === 'homologacao' && '(Homologação)'}
+              </Label>
               <Input
                 id="focus_nfe_token"
                 type="password"
                 value={companyData.focus_nfe_token}
                 onChange={(e) => setCompanyData({ ...companyData, focus_nfe_token: e.target.value })}
+                placeholder={companyData.ambiente_nfe === 'homologacao' 
+                  ? 'Cole aqui o token de homologação' 
+                  : 'Cole aqui o token de produção'
+                }
               />
             </div>
           </div>
