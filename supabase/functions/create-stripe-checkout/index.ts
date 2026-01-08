@@ -477,7 +477,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
             total_amount: totalAmount,
             payment_method: method,
             order_draft_id: order_draft_id || null,
-            customer_email: customerEmail
+            checkout_type: user?.id ? 'authenticated' : 'guest'
           }
         });
     } catch (auditError) {
