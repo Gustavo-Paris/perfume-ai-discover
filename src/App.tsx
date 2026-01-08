@@ -117,12 +117,14 @@ const AppContent = () => {
             <Route path="users" element={<AdminUsers />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="coupons" element={<AdminCoupons />} />
+            <Route path="cupons" element={<AdminCoupons />} />
             <Route path="promotions" element={<AdminPromotions />} />
+            <Route path="promocoes" element={<AdminPromotions />} />
             <Route path="affiliates" element={<AdminAffiliates />} />
+            <Route path="afiliados" element={<AdminAffiliates />} />
             <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="assinaturas" element={<AdminSubscriptions />} />
             <Route path="support" element={<AdminSupport />} />
-            <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
             <Route path="company" element={<AdminCompany />} />
             <Route path="shipments" element={<AdminShipments />} />
