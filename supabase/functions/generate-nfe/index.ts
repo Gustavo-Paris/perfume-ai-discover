@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.2";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { createLogger } from "../_shared/logger.ts";
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -16,9 +17,9 @@ interface GenerateNFERequest {
 }
 
 serve(async (req) => {
-  const requestId = crypto.randomUUID();
-  console.log(`[${requestId}] ========== NFE GENERATION START ==========`);
-  
+  const logger = createLogger('generate-nfe');
+  logger.start();
+
   if (req.method === 'OPTIONS') {
     return handleCorsPreflightRequest(req);
   }
@@ -27,21 +28,19 @@ serve(async (req) => {
 
   try {
     const { order_id }: GenerateNFERequest = await req.json();
-    console.log(`[${requestId}] Request body:`, { order_id });
-    
+    logger.debug("Request received", { order_id });
+
     if (!order_id) {
-      console.error(`[${requestId}] Missing order_id in request`);
+      logger.error("Missing order_id in request");
       throw new Error('order_id is required');
     }
 
-    console.log(`[${requestId}] Generating NFE for order:`, order_id);
-    console.log(`[${requestId}] Environment:`, isProduction ? 'PRODUCTION' : 'HOMOLOGATION');
-    console.log(`[${requestId}] Focus NFe URL:`, focusNfeUrl);
+    logger.important("Generating NFE", { order_id, environment: isProduction ? 'PRODUCTION' : 'HOMOLOGATION' });
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Buscar dados do pedido
-    console.log(`[${requestId}] Fetching order details`);
+    logger.debug("Fetching order details");
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -58,19 +57,18 @@ serve(async (req) => {
       .maybeSingle();
 
     if (orderError) {
-      console.error(`[${requestId}] Order fetch error:`, orderError);
+      logger.error("Order fetch error", { error: orderError.message });
       throw new Error('Erro ao buscar dados do pedido: ' + orderError.message);
     }
-    
+
     if (!order) {
-      console.error(`[${requestId}] Order not found`);
+      logger.error("Order not found");
       throw new Error('Pedido não encontrado');
     }
 
-    console.log(`[${requestId}] Order found:`, { 
+    logger.debug("Order found", {
       order_number: order.order_number,
-      items_count: order.order_items?.length || 0,
-      total_amount: order.total_amount
+      items_count: order.order_items?.length || 0
     });
 
     // Verificar se já existe NF-e para este pedido
@@ -81,7 +79,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingNote) {
-      console.log('NF-e já existe para este pedido');
+      logger.warn("NF-e já existe para este pedido");
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -102,7 +100,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (companyError) {
-      console.error('Erro ao buscar empresa:', companyError);
+      logger.error('Erro ao buscar empresa', { error: companyError.message });
       throw new Error('Erro ao buscar configurações da empresa: ' + companyError.message);
     }
     
@@ -122,15 +120,10 @@ serve(async (req) => {
         : 'database'
       : 'none';
 
-    console.log('Debug token info:', {
+    logger.debug('Token info', {
       isProduction,
-      environment: isProduction ? 'PRODUCTION' : 'HOMOLOGATION',
-      focusNfeUrl,
-      hasCompanyToken: !!company.focus_nfe_token,
-      hasEnvToken: !!(isProduction ? Deno.env.get('FOCUS_NFE_TOKEN') : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN')),
       tokenSource,
-      hasToken: !!focusToken,
-      companyEnvironment: company.ambiente_nfe
+      hasToken: !!focusToken
     });
     
     if (!focusToken) {
@@ -149,7 +142,7 @@ serve(async (req) => {
     
     // VALIDAÇÃO OBRIGATÓRIA: CPF/CNPJ do destinatário
     if (!addressData.cpf_cnpj || addressData.cpf_cnpj.trim() === '') {
-      console.error('CPF/CNPJ não informado no endereço');
+      logger.error('CPF/CNPJ não informado no endereço');
       throw new Error('CPF ou CNPJ do destinatário é obrigatório para emissão de Nota Fiscal. Por favor, atualize o endereço de entrega com o CPF ou CNPJ.');
     }
 
@@ -158,18 +151,18 @@ serve(async (req) => {
       .rpc('validate_cpf_cnpj', { doc: addressData.cpf_cnpj });
 
     if (validationError) {
-      console.error('Erro ao validar CPF/CNPJ:', validationError);
+      logger.error('Erro ao validar CPF/CNPJ', { error: validationError.message });
       throw new Error('Erro ao validar CPF/CNPJ: ' + validationError.message);
     }
 
     if (!isValid) {
-      console.error('CPF/CNPJ inválido:', addressData.cpf_cnpj);
+      logger.error('CPF/CNPJ inválido');
       const cpfCnpjClean = addressData.cpf_cnpj.replace(/\D/g, '');
       const docType = cpfCnpjClean.length === 11 ? 'CPF' : cpfCnpjClean.length === 14 ? 'CNPJ' : 'documento';
       throw new Error(`${docType} inválido: ${addressData.cpf_cnpj}. Por favor, verifique o número e tente novamente.`);
     }
 
-    console.log('CPF/CNPJ validado com sucesso:', addressData.cpf_cnpj);
+    logger.debug('CPF/CNPJ validado com sucesso');
     
     const nfeData = {
       cnpj_emitente: company.cnpj.replace(/\D/g, ''),
@@ -225,10 +218,9 @@ serve(async (req) => {
       })
     };
 
-    console.log('Enviando dados para Focus NFe:', JSON.stringify(nfeData, null, 2));
+    logger.debug('Enviando dados para Focus NFe', { noteNumber: nfeData.numero });
 
     // Enviar para Focus NFe
-    console.log('Enviando para Focus NFe URL:', focusNfeUrl);
     const focusResponse = await fetch(focusNfeUrl, {
       method: 'POST',
       headers: {
@@ -239,9 +231,8 @@ serve(async (req) => {
     });
 
     if (!focusResponse.ok) {
-      console.error('Focus NFe response not ok:', focusResponse.status, focusResponse.statusText);
       const errorText = await focusResponse.text();
-      console.error('Focus NFe error body:', errorText);
+      logger.error('Focus NFe API error', { status: focusResponse.status, statusText: focusResponse.statusText, body: errorText });
       
       // Mensagens específicas para erros comuns
       let userFriendlyError = `Focus NFe API error: ${focusResponse.status} - ${errorText}`;
@@ -262,7 +253,7 @@ serve(async (req) => {
     }
 
     const focusResult = await focusResponse.json();
-    console.log('Resposta Focus NFe:', focusResult);
+    logger.debug('Focus NFe response', { status: focusResult.status, ref: focusResult.ref });
 
     // Criar registro da nota fiscal no banco
     const { data: fiscalNote, error: noteError } = await supabase
@@ -291,7 +282,7 @@ serve(async (req) => {
       .single();
 
     if (noteError) {
-      console.error('Erro ao salvar nota fiscal:', noteError);
+      logger.error('Failed to save fiscal note', { error: noteError.message });
       throw new Error('Erro ao salvar nota fiscal no banco de dados');
     }
 
@@ -322,25 +313,25 @@ serve(async (req) => {
       .insert(noteItems);
 
     if (itemsError) {
-      console.error('Erro ao salver itens da nota:', itemsError);
+      logger.warn('Failed to save fiscal note items', { error: itemsError.message });
     }
 
     // Enviar email automaticamente com retry
     if (focusResult.status === 'autorizado' && focusResult.caminho_danfe) {
-      console.log(`[${requestId}] Attempting to send NFe email to:`, addressData.email);
-      
+      logger.debug('Attempting to send NFe email', { email: addressData.email });
+
       let emailSent = false;
       let lastError = null;
       const maxRetries = 3;
-      
+
       for (let attempt = 1; attempt <= maxRetries && !emailSent; attempt++) {
         try {
-          console.log(`[${requestId}] Email attempt ${attempt}/${maxRetries}`);
-          
+          logger.debug('Email attempt', { attempt, maxRetries });
+
           const emailResponse = await supabase.functions.invoke('send-email', {
             body: {
               to: addressData.email,
-              template: 'nfe_generated',  
+              template: 'nfe_generated',
               data: {
                 customerName: addressData.name,
                 orderNumber: order.order_number,
@@ -350,30 +341,29 @@ serve(async (req) => {
               }
             }
           });
-          
+
           if (emailResponse.error) {
             throw emailResponse.error;
           }
-          
+
           emailSent = true;
-          console.log(`[${requestId}] ✅ NFe email sent successfully on attempt ${attempt}`);
-          
+          logger.debug('NFe email sent successfully', { attempt });
+
         } catch (emailError) {
           lastError = emailError;
-          console.error(`[${requestId}] ❌ Email attempt ${attempt} failed:`, emailError);
-          
+          logger.warn('Email attempt failed', { attempt, error: emailError instanceof Error ? emailError.message : String(emailError) });
+
           // Exponential backoff: wait before retry
           if (attempt < maxRetries) {
             const waitMs = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-            console.log(`[${requestId}] Waiting ${waitMs}ms before retry...`);
             await new Promise(resolve => setTimeout(resolve, waitMs));
           }
         }
       }
-      
+
       // Log final email status
       if (!emailSent) {
-        console.error(`[${requestId}] ❌ Failed to send email after ${maxRetries} attempts. Last error:`, lastError);
+        logger.error('Failed to send NFe email after retries', { maxRetries, error: lastError instanceof Error ? lastError.message : String(lastError) });
         
         // Create notification for admin about email failure
         try {
@@ -399,18 +389,17 @@ serve(async (req) => {
               })));
           }
         } catch (notifError) {
-          console.error(`[${requestId}] Failed to create notification:`, notifError);
+          logger.warn('Failed to create admin notification', { error: notifError instanceof Error ? notifError.message : String(notifError) });
         }
       }
     } else if (focusResult.status !== 'autorizado') {
-      console.log(`[${requestId}] ⏳ NFe not yet authorized (status: ${focusResult.status}), email will not be sent`);
+      logger.debug('NFe not yet authorized, email not sent', { status: focusResult.status });
     }
-    console.log(`[${requestId}] ✅ NFe generated successfully:`, {
+
+    logger.success('NFe generated', {
       nfe_number: noteNumber,
       nfe_key: focusResult.chave_nfe || 'pending',
-      status: focusResult.status,
-      has_pdf: !!focusResult.caminho_danfe,
-      has_xml: !!focusResult.caminho_xml_nota_fiscal
+      status: focusResult.status
     });
     
     // Log security audit event
@@ -435,15 +424,13 @@ serve(async (req) => {
           }
         });
     } catch (auditError) {
-      console.warn(`[${requestId}] Failed to log audit event:`, auditError);
+      logger.warn('Failed to log audit event', { error: auditError instanceof Error ? auditError.message : String(auditError) });
     }
-    
-    console.log(`[${requestId}] ========== NFE GENERATION END ==========`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        request_id: requestId,
+        request_id: logger.requestId,
         fiscal_note: fiscalNote,
         focus_response: focusResult
       }),
@@ -455,25 +442,20 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const orderId = (error as any)?.order_id || 'unknown';
-    
-    console.error(`[${requestId}] ❌ FATAL ERROR generating NFe:`, {
-      error: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
-      order_id: orderId
-    });
-    
+
+    logger.failure('Failed to generate NFe', error, { order_id: orderId });
+
     // Create notifications for all admins about NFe failure
     try {
-      console.log(`[${requestId}] Creating admin notifications for NFe failure`);
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      
+
       const { data: adminRoles, error: adminError } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'admin');
-      
+
       if (adminError) {
-        console.error(`[${requestId}] Failed to fetch admin users:`, adminError);
+        logger.warn('Failed to fetch admin users', { error: adminError.message });
       } else if (adminRoles && adminRoles.length > 0) {
         // Try to get order_number if we have orderId
         let orderNumber = null;
@@ -485,7 +467,7 @@ serve(async (req) => {
             .maybeSingle();
           orderNumber = orderData?.order_number;
         }
-        
+
         const notifications = adminRoles.map(admin => ({
           type: 'system',
           message: `Falha na geração de NFe para pedido ${orderNumber || orderId}`,
@@ -494,33 +476,29 @@ serve(async (req) => {
             order_id: orderId,
             order_number: orderNumber,
             error: errorMessage,
-            request_id: requestId,
+            request_id: logger.requestId,
             retry_available: true
           }
         }));
-        
+
         const { error: notifError } = await supabase
           .from('notifications')
           .insert(notifications);
-        
+
         if (notifError) {
-          console.error(`[${requestId}] Failed to create admin notifications:`, notifError);
-        } else {
-          console.log(`[${requestId}] ✅ Created ${notifications.length} admin notification(s)`);
+          logger.warn('Failed to create admin notifications', { error: notifError.message });
         }
       }
     } catch (notifError) {
-      console.error(`[${requestId}] Error creating notifications:`, notifError);
+      logger.warn('Error creating notifications', { error: notifError instanceof Error ? notifError.message : String(notifError) });
     }
-    
-    console.log(`[${requestId}] ========== NFE GENERATION END (ERROR) ==========`);
-    
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: false,
-        request_id: requestId,
+        request_id: logger.requestId,
         error: errorMessage,
-        details: 'Verifique os logs da função para mais detalhes' 
+        details: 'Verifique os logs da função para mais detalhes'
       }),
       {
         status: 500,

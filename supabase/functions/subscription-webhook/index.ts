@@ -3,8 +3,11 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { createLogger } from "../_shared/logger.ts";
 
 serve(async (req) => {
+  const logger = createLogger('subscription-webhook');
+
   if (req.method === 'OPTIONS') {
     return handleCorsPreflightRequest(req);
   }
@@ -40,7 +43,7 @@ serve(async (req) => {
           stripeWebhookSecret
         );
       } catch (err) {
-        console.error('❌ Webhook signature verification failed:', err.message);
+        logger.error('Webhook signature verification failed', { error: err.message });
         return new Response(
           JSON.stringify({ error: 'Webhook signature verification failed' }),
           { status: 400, headers: corsHeaders }
@@ -50,7 +53,7 @@ serve(async (req) => {
       event = JSON.parse(body);
     }
 
-    console.log('📨 Webhook recebido:', event.type);
+    logger.important('Webhook received', { type: event.type });
 
     // Processar eventos de assinatura
     switch (event.type) {
@@ -63,7 +66,7 @@ serve(async (req) => {
           const subscriptionId = session.subscription as string;
 
           if (!userId || !planId) {
-            console.error('❌ Metadados ausentes na sessão');
+            logger.error('Missing metadata in session', { hasUserId: !!userId, hasPlanId: !!planId });
             break;
           }
 
@@ -89,11 +92,11 @@ serve(async (req) => {
             .single();
 
           if (insertError) {
-            console.error('❌ Erro ao criar assinatura:', insertError);
+            logger.error('Failed to create subscription', { error: insertError.message });
             break;
           }
 
-          console.log('✅ Assinatura criada:', newSub.id);
+          logger.success('Subscription created', { subscriptionId: newSub.id });
 
           // Criar preferências padrão
           await supabase
@@ -143,10 +146,10 @@ serve(async (req) => {
                   }
                 }
               });
-              console.log('✅ Email de boas-vindas enviado para:', userProfile.email);
+              logger.debug('Welcome email sent', { email: userProfile.email });
             }
           } catch (emailError) {
-            console.error('❌ Falha ao enviar email de boas-vindas:', emailError);
+            logger.warn('Failed to send welcome email', { error: emailError instanceof Error ? emailError.message : String(emailError) });
           }
         }
         break;
@@ -168,9 +171,9 @@ serve(async (req) => {
           .eq('stripe_subscription_id', subscription.id);
 
         if (updateError) {
-          console.error('❌ Erro ao atualizar assinatura:', updateError);
+          logger.error('Failed to update subscription', { error: updateError.message, stripeId: subscription.id });
         } else {
-          console.log('✅ Assinatura atualizada:', subscription.id);
+          logger.debug('Subscription updated', { stripeId: subscription.id, status: subscription.status });
         }
         break;
       }
@@ -187,9 +190,9 @@ serve(async (req) => {
           .eq('stripe_subscription_id', subscription.id);
 
         if (cancelError) {
-          console.error('❌ Erro ao cancelar assinatura:', cancelError);
+          logger.error('Failed to cancel subscription', { error: cancelError.message, stripeId: subscription.id });
         } else {
-          console.log('✅ Assinatura cancelada:', subscription.id);
+          logger.debug('Subscription cancelled', { stripeId: subscription.id });
           
           // Registrar no histórico
           const { data: sub } = await supabase
@@ -213,9 +216,9 @@ serve(async (req) => {
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        
+
         if (invoice.subscription) {
-          console.log('✅ Pagamento bem-sucedido para subscription:', invoice.subscription);
+          logger.debug('Payment succeeded', { stripeSubscriptionId: invoice.subscription, amount: invoice.amount_paid / 100 });
           
           // Registrar pagamento no histórico
           const { data: sub } = await supabase
@@ -248,7 +251,7 @@ serve(async (req) => {
             .update({ status: 'past_due' })
             .eq('stripe_subscription_id', invoice.subscription);
 
-          console.log('⚠️ Pagamento falhou para subscription:', invoice.subscription);
+          logger.warn('Payment failed', { stripeSubscriptionId: invoice.subscription, amount: invoice.amount_due / 100 });
 
           // Registrar falha no histórico
           const { data: sub } = await supabase
@@ -294,10 +297,10 @@ serve(async (req) => {
                     }
                   }
                 });
-                console.log('✅ Email de falha de pagamento enviado para:', userProfile.email);
+                logger.debug('Payment failed email sent', { email: userProfile.email });
               }
             } catch (emailError) {
-              console.error('❌ Falha ao enviar email de falha de pagamento:', emailError);
+              logger.warn('Failed to send payment failed email', { error: emailError instanceof Error ? emailError.message : String(emailError) });
             }
           }
         }
@@ -305,7 +308,7 @@ serve(async (req) => {
       }
 
       default:
-        console.log('ℹ️ Evento não processado:', event.type);
+        logger.debug('Event not processed', { type: event.type });
     }
 
     return new Response(
@@ -317,7 +320,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ Erro ao processar webhook:', error);
+    logger.failure('Failed to process webhook', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

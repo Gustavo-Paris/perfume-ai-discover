@@ -2,15 +2,16 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { 
-  validateCSRFToken, 
-  checkRateLimit, 
+import {
+  validateCSRFToken,
+  checkRateLimit,
   logSecurityEvent,
   validateAndSanitizeCheckoutItems,
   getClientIP,
   sanitizeString
 } from "../_shared/security.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { createLogger } from "../_shared/logger.ts";
 
 interface CheckoutItem {
   perfume_id: string;
@@ -31,11 +32,8 @@ interface CheckoutRequest {
   cancel_url?: string;
 }
 
-const logStep = (step: string, details?: any) => {
-  const timestamp = new Date().toISOString();
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[${timestamp}] [STRIPE-CHECKOUT] ${step}${detailsStr}`);
-};
+// Logger instance - replaces verbose console.log statements
+const logger = createLogger('stripe-checkout');
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -46,20 +44,20 @@ serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    logStep("Stripe checkout function started");
+    logger.start();
 
     // Check for Stripe secret key
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
-      logStep("ERROR: STRIPE_SECRET_KEY not configured");
+      logger.error("STRIPE_SECRET_KEY not configured");
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           success: false,
-          error: 'Stripe não configurado. Configure a chave secreta no admin.' 
+          error: 'Stripe não configurado. Configure a chave secreta no admin.'
         }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -77,9 +75,9 @@ serve(async (req) => {
       const token = authHeader.replace('Bearer ', '');
       const { data } = await supabase.auth.getUser(token);
       user = data.user;
-      logStep("User authenticated", { userId: user?.id, email: user?.email });
+      logger.debug("User authenticated", { userId: user?.id });
     } else {
-      logStep("No authentication - guest checkout");
+      logger.debug("Guest checkout mode");
     }
 
 // Parse request body
@@ -88,7 +86,7 @@ const { csrfToken, items, user_email, order_draft_id, payment_method, success_ur
 
     // SECURITY: Validar CSRF token
     if (!validateCSRFToken(csrfToken)) {
-      logStep("SECURITY: CSRF token validation failed");
+      logger.warn("CSRF token validation failed");
       await logSecurityEvent(
         supabase,
         user?.id || null,
@@ -121,7 +119,7 @@ const { csrfToken, items, user_email, order_draft_id, payment_method, success_ur
     );
 
     if (!rateLimit.allowed) {
-      logStep("SECURITY: Rate limit exceeded", { userId: user?.id, ip: clientIP });
+      logger.warn("Rate limit exceeded", { userId: user?.id, ip: clientIP });
       await logSecurityEvent(
         supabase,
         user?.id || null,
@@ -145,10 +143,10 @@ const { csrfToken, items, user_email, order_draft_id, payment_method, success_ur
     let sanitizedItems;
     try {
       sanitizedItems = validateAndSanitizeCheckoutItems(items);
-      logStep("Items validated and sanitized", { count: sanitizedItems.length });
+      logger.debug("Items validated", { count: sanitizedItems.length });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Items inválidos';
-      logStep("SECURITY: Invalid checkout items", { error: errorMsg });
+      logger.warn("Invalid checkout items", { error: errorMsg });
       await logSecurityEvent(
         supabase,
         user?.id || null,
@@ -170,20 +168,20 @@ const { csrfToken, items, user_email, order_draft_id, payment_method, success_ur
     }
 
 const method: 'pix' | 'card' = payment_method === 'pix' ? 'pix' : 'card';
-logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft: !!order_draft_id, method });
+logger.debug("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft: !!order_draft_id, method });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
-    logStep("Stripe initialized");
+    logger.debug("Stripe initialized");
 
     // Determine customer email - para guest checkout, gerar email único
     // Isso evita duplicação de customers no Stripe
     const guestEmail = user_email || `guest-${crypto.randomUUID().slice(0, 8)}@checkout.temp`;
     const customerEmail = user?.email || guestEmail;
     const isGuestCheckout = !user?.email;
-    logStep("Customer email determined", { email: customerEmail, isGuest: isGuestCheckout });
+    logger.debug("Customer email determined", { email: customerEmail, isGuest: isGuestCheckout });
 
     // Check if Stripe customer exists (only for authenticated users)
     let customerId: string | undefined;
@@ -195,12 +193,12 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
 
       if (customers.data.length > 0) {
         customerId = customers.data[0].id;
-        logStep("Existing Stripe customer found", { customerId });
+        logger.debug("Existing Stripe customer found", { customerId });
       } else {
-        logStep("No existing Stripe customer found");
+        logger.debug("No existing Stripe customer found");
       }
     } else {
-      logStep("Guest checkout - skipping customer lookup");
+      logger.debug("Guest checkout - skipping customer lookup");
     }
 
     // Prepare line items for Stripe using sanitized data
@@ -220,7 +218,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
       quantity: item.quantity,
     }));
 
-    logStep("Line items prepared", { count: lineItems.length });
+    logger.debug("Line items prepared", { count: lineItems.length });
 
     // Enrich with shipping and prefill address from order draft
     let shippingCost = 0;
@@ -243,7 +241,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
         .maybeSingle();
 
       if (draftErr) {
-        logStep("Warning: failed to load order draft", { message: draftErr.message });
+        logger.warn("Failed to load order draft", { message: draftErr.message });
       } else if (draft) {
         shippingCost = Number(draft.shipping_cost || 0);
         shippingService = draft.shipping_service || null;
@@ -256,7 +254,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
             .maybeSingle();
           if (!addrErr && addr) {
             addressData = addr;
-            logStep("Address loaded for prefill", { addressId: addr.id });
+            logger.debug("Address loaded for prefill", { addressId: addr.id });
           }
         }
       }
@@ -279,17 +277,17 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
         },
         quantity: 1,
       });
-      logStep("Shipping line item added", { shippingCost, shippingService });
+      logger.debug("Shipping line item added", { shippingCost, shippingService });
     }
 
     // Calculate totals for logging (now including shipping)
     const itemsTotal = sanitizedItems.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
     const totalAmount = itemsTotal + shippingCost;
-    logStep("Total amount calculated", { itemsTotal, shippingCost, total: totalAmount, currency: 'BRL' });
+    logger.debug("Total amount calculated", { itemsTotal, shippingCost, total: totalAmount, currency: 'BRL' });
 
     // Update or create Stripe customer with address to prefill checkout
     if (addressData) {
-      logStep('Address data for customer prefill', { 
+      logger.debug('Address data for customer prefill', { 
         street: addressData.street,
         number: addressData.number,
         city: addressData.city,
@@ -302,7 +300,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
       
       // Validate required address fields
       if (!addressData.street || !addressData.number || !addressData.city || !addressData.state || !addressData.cep) {
-        logStep('Address validation failed - missing required fields', {
+        logger.debug('Address validation failed - missing required fields', {
           hasStreet: !!addressData.street,
           hasNumber: !!addressData.number, 
           hasCity: !!addressData.city,
@@ -335,22 +333,22 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
         }
       };
       
-      logStep('Customer payload prepared', { payload: customerPayload });
+      logger.debug('Customer payload prepared', { payload: customerPayload });
       
       try {
         if (customerId) {
           await stripe.customers.update(customerId, customerPayload);
-          logStep("Stripe customer updated with address", { customerId });
+          logger.debug("Stripe customer updated with address", { customerId });
         } else {
           const newCustomer = await stripe.customers.create({
             email: customerEmail,
             ...customerPayload,
           });
           customerId = newCustomer.id;
-          logStep("Stripe customer created with address", { customerId });
+          logger.debug("Stripe customer created with address", { customerId });
         }
       } catch (e) {
-        logStep("Warning: customer address prefill failed", { message: (e as Error).message, stack: (e as Error).stack });
+        logger.warn("Customer address prefill failed", { message: (e as Error).message });
       }
     }
 
@@ -358,7 +356,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
     // IMPORTANTE: O origin deve sempre vir do header da requisição em produção
     const requestOrigin = req.headers.get('origin');
     if (!requestOrigin) {
-      logStep("WARNING: No origin header - using referer or default");
+      logger.warn("No origin header - using referer or default");
     }
     const origin = requestOrigin || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://perfume-ai-discover.vercel.app';
     let successUrl = success_url || `${origin}/payment-success`;
@@ -409,14 +407,14 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
         }
       });
 
-      logStep("Stripe checkout session created", { 
+      logger.debug("Stripe checkout session created", { 
         sessionId: session.id, 
         url: session.url 
       });
     } catch (stripeError: any) {
       // Handle specific PIX activation error
       if (stripeError.message && stripeError.message.includes('pix is invalid')) {
-        logStep("PIX payment method not activated in Stripe dashboard");
+        logger.error("PIX payment method not activated in Stripe dashboard");
         throw new Error('PIX não está ativado no Stripe. Ative PIX no dashboard do Stripe em: Configurações > Métodos de Pagamento > PIX');
       }
       // Re-throw other Stripe errors
@@ -450,17 +448,17 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
           .insert(orderData);
 
         if (orderError) {
-          logStep("Warning: Could not create order draft", orderError);
+          logger.warn("Could not create order draft", { error: orderError });
         } else {
-          logStep("Order draft created successfully");
+          logger.debug("Order draft created successfully");
         }
       } catch (orderDraftError) {
-        logStep("Warning: Order draft creation failed", orderDraftError);
+        logger.warn("Order draft creation failed", { error: orderDraftError });
         // Don't fail the checkout if order draft fails
       }
     }
 
-    logStep("Stripe checkout completed successfully");
+    logger.success("Stripe checkout completed");
 
     // Log security audit event
     try {
@@ -491,7 +489,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
           }
         });
     } catch (auditError) {
-      logStep("Warning: Failed to log audit event", { error: auditError });
+      logger.warn("Failed to log audit event", { error: auditError });
     }
 
     // Log security event de sucesso
@@ -529,7 +527,7 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in Stripe checkout", { message: errorMessage });
+    logger.debug("ERROR in Stripe checkout", { message: errorMessage });
     
     return new Response(
       JSON.stringify({ 
