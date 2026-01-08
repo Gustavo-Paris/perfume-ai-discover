@@ -2106,6 +2106,7 @@ export type Database = {
           image_url: string | null
           last_cost_calculation: string | null
           name: string
+          ncm: string | null
           price_10ml: number | null
           price_2ml: number | null
           price_5ml: number | null
@@ -2130,6 +2131,7 @@ export type Database = {
           image_url?: string | null
           last_cost_calculation?: string | null
           name: string
+          ncm?: string | null
           price_10ml?: number | null
           price_2ml?: number | null
           price_5ml?: number | null
@@ -2154,6 +2156,7 @@ export type Database = {
           image_url?: string | null
           last_cost_calculation?: string | null
           name?: string
+          ncm?: string | null
           price_10ml?: number | null
           price_2ml?: number | null
           price_5ml?: number | null
