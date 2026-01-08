@@ -142,7 +142,7 @@ serve(async (req) => {
                     planName: plan?.name || 'Clube de Curadoria',
                     planPrice: plan?.price?.toFixed(2) || '0.00',
                     nextShipmentDate: new Date(subscription.current_period_end * 1000).toLocaleDateString('pt-BR'),
-                    dashboardUrl: 'https://perfume-ai-discover.vercel.app/assinaturas'
+                    dashboardUrl: 'https://parisandco.com.br/assinaturas'
                   }
                 }
               });
@@ -292,7 +292,7 @@ serve(async (req) => {
                       amount: (invoice.amount_due / 100).toFixed(2),
                       attemptDate: new Date().toLocaleDateString('pt-BR'),
                       failureReason: 'Pagamento recusado pelo banco emissor',
-                      updatePaymentUrl: 'https://perfume-ai-discover.vercel.app/assinaturas',
+                      updatePaymentUrl: 'https://parisandco.com.br/assinaturas',
                       gracePeriodEnd: gracePeriodEnd.toLocaleDateString('pt-BR')
                     }
                   }

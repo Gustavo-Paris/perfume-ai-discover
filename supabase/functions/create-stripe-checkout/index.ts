@@ -358,7 +358,7 @@ logger.debug("Checkout request parsed", { itemCount: sanitizedItems.length, hasD
     if (!requestOrigin) {
       logger.warn("No origin header - using referer or default");
     }
-    const origin = requestOrigin || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://perfume-ai-discover.vercel.app';
+    const origin = requestOrigin || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://parisandco.com.br';
     let successUrl = success_url || `${origin}/payment-success`;
     let cancelUrl = cancel_url || `${origin}/checkout`;
     if (!successUrl.includes('{CHECKOUT_SESSION_ID}')) {

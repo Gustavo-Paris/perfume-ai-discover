@@ -195,7 +195,7 @@ serve(async (req) => {
                         description: JSON.stringify(alertDetails),
                         ipAddress: alertDetails.ip_address || null,
                         eventCount: alertDetails.event_count || alertDetails.attempts || null,
-                        dashboardUrl: 'https://perfume-ai-discover.vercel.app/admin/security'
+                        dashboardUrl: 'https://parisandco.com.br/admin/security'
                       }
                     }
                   });
