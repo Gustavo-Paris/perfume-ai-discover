@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { generateUUID } from './lib/uuid'
 import { applyObjectHasOwnPolyfill } from './lib/objectHasOwn'
+import { initSentry } from './utils/sentry'
 
 // CRITICAL: Global polyfills - must be first!
 if (typeof crypto !== 'undefined' && !crypto.randomUUID) {
@@ -13,6 +14,12 @@ if (typeof crypto !== 'undefined' && !crypto.randomUUID) {
 
 // Apply Object.hasOwn polyfill for older browsers
 applyObjectHasOwnPolyfill();
+
+// Initialize Sentry for error monitoring in production
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+if (sentryDsn && import.meta.env.PROD) {
+  initSentry(sentryDsn);
+}
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>

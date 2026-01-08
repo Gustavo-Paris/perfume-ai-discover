@@ -113,7 +113,41 @@ serve(async (req) => {
             }
           });
 
-          // TODO: Enviar email de boas-vindas
+          // Enviar email de boas-vindas
+          try {
+            // Buscar dados do usuário
+            const { data: userProfile } = await supabase
+              .from('profiles')
+              .select('email, name')
+              .eq('id', userId)
+              .single();
+
+            // Buscar dados do plano
+            const { data: plan } = await supabase
+              .from('subscription_plans')
+              .select('name, price')
+              .eq('id', planId)
+              .single();
+
+            if (userProfile?.email) {
+              await supabase.functions.invoke('send-email', {
+                body: {
+                  to: userProfile.email,
+                  template: 'subscription_welcome',
+                  data: {
+                    customerName: userProfile.name || 'Cliente',
+                    planName: plan?.name || 'Clube de Curadoria',
+                    planPrice: plan?.price?.toFixed(2) || '0.00',
+                    nextShipmentDate: new Date(subscription.current_period_end * 1000).toLocaleDateString('pt-BR'),
+                    dashboardUrl: 'https://perfume-ai-discover.vercel.app/assinaturas'
+                  }
+                }
+              });
+              console.log('✅ Email de boas-vindas enviado para:', userProfile.email);
+            }
+          } catch (emailError) {
+            console.error('❌ Falha ao enviar email de boas-vindas:', emailError);
+          }
         }
         break;
       }
@@ -233,7 +267,38 @@ serve(async (req) => {
               }
             });
 
-            // TODO: Enviar email de falha de pagamento
+            // Enviar email de falha de pagamento
+            try {
+              const { data: userProfile } = await supabase
+                .from('profiles')
+                .select('email, name')
+                .eq('id', sub.user_id)
+                .single();
+
+              if (userProfile?.email) {
+                // Calcular data limite (7 dias de graça)
+                const gracePeriodEnd = new Date();
+                gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 7);
+
+                await supabase.functions.invoke('send-email', {
+                  body: {
+                    to: userProfile.email,
+                    template: 'subscription_payment_failed',
+                    data: {
+                      customerName: userProfile.name || 'Cliente',
+                      amount: (invoice.amount_due / 100).toFixed(2),
+                      attemptDate: new Date().toLocaleDateString('pt-BR'),
+                      failureReason: 'Pagamento recusado pelo banco emissor',
+                      updatePaymentUrl: 'https://perfume-ai-discover.vercel.app/assinaturas',
+                      gracePeriodEnd: gracePeriodEnd.toLocaleDateString('pt-BR')
+                    }
+                  }
+                });
+                console.log('✅ Email de falha de pagamento enviado para:', userProfile.email);
+              }
+            } catch (emailError) {
+              console.error('❌ Falha ao enviar email de falha de pagamento:', emailError);
+            }
           }
         }
         break;

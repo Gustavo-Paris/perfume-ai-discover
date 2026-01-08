@@ -378,21 +378,138 @@ const templates = {
         <h1 style="color: #22c55e;">📄 Nota Fiscal Eletrônica Gerada</h1>
         <p>Olá {{customerName}},</p>
         <p>Sua Nota Fiscal Eletrônica do pedido #{{orderNumber}} foi gerada com sucesso!</p>
-        
+
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <p><strong>Número da NF-e:</strong> {{nfeNumber}}</p>
           <p><strong>Chave de acesso:</strong> {{nfeKey}}</p>
         </div>
-        
+
         <div style="text-align: center; margin: 30px 0;">
           <a href="{{pdfUrl}}" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
             📥 Baixar PDF da NF-e
           </a>
         </div>
-        
+
         <p>Guarde este documento para seus registros financeiros.</p>
-        
+
         <p>Obrigado por escolher a Perfume Connect!</p>
+      </div>
+    `
+  },
+
+  subscription_welcome: {
+    subject: '🎉 Bem-vindo ao Clube de Curadoria!',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 30px; border-radius: 12px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #0369a1; font-size: 32px; margin: 0;">🎉 Bem-vindo ao Clube!</h1>
+          <p style="color: #0284c7; font-size: 18px; margin: 10px 0;">Sua jornada olfativa começa agora</p>
+        </div>
+
+        <p style="color: #334155; font-size: 16px;">Olá {{customerName}},</p>
+        <p style="color: #334155; font-size: 16px;">Estamos muito felizes em tê-lo como membro do nosso Clube de Curadoria!</p>
+
+        <div style="background: white; padding: 25px; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h3 style="color: #1e293b; margin-top: 0;">📦 Detalhes da sua assinatura:</h3>
+          <p><strong>Plano:</strong> {{planName}}</p>
+          <p><strong>Valor mensal:</strong> R$ {{planPrice}}</p>
+          <p><strong>Próximo envio:</strong> {{nextShipmentDate}}</p>
+        </div>
+
+        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h4 style="color: #92400e; margin-top: 0;">✨ O que você receberá:</h4>
+          <ul style="color: #92400e; margin: 0; padding-left: 20px;">
+            <li>Seleção exclusiva de fragrâncias premium</li>
+            <li>Amostras de lançamentos</li>
+            <li>Acesso antecipado a promoções</li>
+            <li>Pontos em dobro no programa de fidelidade</li>
+          </ul>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{dashboardUrl}}" style="background: linear-gradient(135deg, #0369a1, #0284c7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            Acessar Minha Assinatura
+          </a>
+        </div>
+
+        <p style="color: #64748b; font-size: 14px; text-align: center;">
+          Dúvidas? Entre em contato conosco pelo chat de suporte.
+        </p>
+      </div>
+    `
+  },
+
+  subscription_payment_failed: {
+    subject: '⚠️ Problema com o pagamento da sua assinatura',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fef2f2; padding: 30px; border-radius: 12px; border: 2px solid #fca5a5;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #dc2626; font-size: 28px; margin: 0;">⚠️ Pagamento não processado</h1>
+          <p style="color: #7f1d1d; font-size: 16px; margin: 10px 0;">Precisamos da sua atenção</p>
+        </div>
+
+        <p style="color: #334155; font-size: 16px;">Olá {{customerName}},</p>
+        <p style="color: #334155; font-size: 16px;">Infelizmente não conseguimos processar o pagamento da sua assinatura do Clube de Curadoria.</p>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <p><strong>Valor:</strong> R$ {{amount}}</p>
+          <p><strong>Data da tentativa:</strong> {{attemptDate}}</p>
+          <p><strong>Motivo:</strong> {{failureReason}}</p>
+        </div>
+
+        <p style="color: #334155; font-size: 16px;">Para evitar a suspensão da sua assinatura, por favor atualize seus dados de pagamento:</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{updatePaymentUrl}}" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            Atualizar Forma de Pagamento
+          </a>
+        </div>
+
+        <p style="color: #7f1d1d; font-size: 14px; text-align: center;">
+          ⏰ Você tem até {{gracePeriodEnd}} para regularizar o pagamento.
+        </p>
+
+        <p style="color: #64748b; font-size: 14px; text-align: center;">
+          Se precisar de ajuda, nossa equipe está à disposição.
+        </p>
+      </div>
+    `
+  },
+
+  security_alert: {
+    subject: '🔒 Alerta de Segurança - {{alertType}}',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fef2f2; padding: 30px; border-radius: 12px; border: 2px solid #fca5a5;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #dc2626; font-size: 28px; margin: 0;">🔒 Alerta de Segurança</h1>
+          <p style="color: #7f1d1d; font-size: 16px; margin: 10px 0;">Ação imediata pode ser necessária</p>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <h3 style="color: #1e293b; margin-top: 0;">Tipo de Alerta: {{alertType}}</h3>
+          <p><strong>Severidade:</strong> <span style="color: #dc2626; font-weight: bold;">{{severity}}</span></p>
+          <p><strong>Data/Hora:</strong> {{timestamp}}</p>
+          <p><strong>Detalhes:</strong> {{description}}</p>
+        </div>
+
+        {{#if ipAddress}}
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>IP envolvido:</strong> {{ipAddress}}</p>
+          {{#if eventCount}}
+          <p style="margin: 5px 0 0 0;"><strong>Quantidade de eventos:</strong> {{eventCount}}</p>
+          {{/if}}
+        </div>
+        {{/if}}
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{dashboardUrl}}" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            Ver no Dashboard de Segurança
+          </a>
+        </div>
+
+        <p style="color: #64748b; font-size: 12px; text-align: center;">
+          Este é um email automático do sistema de monitoramento de segurança.
+        </p>
       </div>
     `
   }

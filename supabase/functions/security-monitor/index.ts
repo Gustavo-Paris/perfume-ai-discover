@@ -172,10 +172,40 @@ serve(async (req) => {
           }
         }
 
-        // TODO: Implementar envio de email quando necessário
+        // Enviar email para admins se configurado
         if (config.notification_channels.includes('email')) {
-          console.log('Email notification would be sent here');
-          // Integrar com edge function de envio de email
+          try {
+            // Buscar emails dos admins
+            const { data: adminProfiles } = await supabase
+              .from('profiles')
+              .select('email')
+              .in('id', adminRoles?.map(a => a.user_id) || []);
+
+            if (adminProfiles && adminProfiles.length > 0) {
+              for (const admin of adminProfiles) {
+                if (admin.email) {
+                  await supabase.functions.invoke('send-email', {
+                    body: {
+                      to: admin.email,
+                      template: 'security_alert',
+                      data: {
+                        alertType: config.alert_type,
+                        severity: 'Alta',
+                        timestamp: now.toISOString(),
+                        description: JSON.stringify(alertDetails),
+                        ipAddress: alertDetails.ip_address || null,
+                        eventCount: alertDetails.event_count || alertDetails.attempts || null,
+                        dashboardUrl: 'https://perfume-ai-discover.vercel.app/admin/security'
+                      }
+                    }
+                  });
+                }
+              }
+              console.log(`Security alert email sent to ${adminProfiles.length} admin(s)`);
+            }
+          } catch (emailError) {
+            console.error('Failed to send security alert email:', emailError);
+          }
         }
 
         alerts.push({
