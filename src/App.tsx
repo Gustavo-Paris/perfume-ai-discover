@@ -120,6 +120,7 @@ const AppContent = () => {
             <Route path="promotions" element={<AdminPromotions />} />
             <Route path="affiliates" element={<AdminAffiliates />} />
             <Route path="subscriptions" element={<AdminSubscriptions />} />
+            <Route path="assinaturas" element={<AdminSubscriptions />} />
             <Route path="support" element={<AdminSupport />} />
             <Route path="support/macros" element={<AdminSupportMacros />} />
             <Route path="config" element={<AdminConfig />} />
@@ -140,6 +141,16 @@ const AppContent = () => {
             <Route path="launch-setup" element={
               <Suspense fallback={<div>Carregando...</div>}>
                 <AdminLaunchSetup />
+              </Suspense>
+            } />
+            <Route path="stock-unified" element={
+              <Suspense fallback={<div>Carregando...</div>}>
+                <AdminStockUnified />
+              </Suspense>
+            } />
+            <Route path="order-automation-unified" element={
+              <Suspense fallback={<div>Carregando...</div>}>
+                <AdminOrderAutomationUnified />
               </Suspense>
             } />
             {/* Legacy admin routes */}
