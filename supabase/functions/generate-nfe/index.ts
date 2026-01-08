@@ -125,7 +125,7 @@ serve(async (req) => {
     console.log('Debug token info:', {
       isProduction,
       environment: isProduction ? 'PRODUCTION' : 'HOMOLOGATION',
-      focusApiUrl,
+      focusNfeUrl,
       hasCompanyToken: !!company.focus_nfe_token,
       hasEnvToken: !!(isProduction ? Deno.env.get('FOCUS_NFE_TOKEN') : Deno.env.get('FOCUS_NFE_HOMOLOG_TOKEN')),
       tokenSource,

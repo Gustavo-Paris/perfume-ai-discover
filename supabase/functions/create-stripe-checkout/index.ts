@@ -178,24 +178,29 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
     });
     logStep("Stripe initialized");
 
-    // Determine customer email
-    const customerEmail = user?.email || user_email || 'guest@perfumesparis.com';
-    logStep("Customer email determined", { email: customerEmail });
+    // Determine customer email - para guest checkout, gerar email único
+    // Isso evita duplicação de customers no Stripe
+    const guestEmail = user_email || `guest-${crypto.randomUUID().slice(0, 8)}@checkout.temp`;
+    const customerEmail = user?.email || guestEmail;
+    const isGuestCheckout = !user?.email;
+    logStep("Customer email determined", { email: customerEmail, isGuest: isGuestCheckout });
 
-    // Check if Stripe customer exists
+    // Check if Stripe customer exists (only for authenticated users)
     let customerId: string | undefined;
-    if (customerEmail !== 'guest@perfumesparis.com') {
-      const customers = await stripe.customers.list({ 
-        email: customerEmail, 
-        limit: 1 
+    if (!isGuestCheckout) {
+      const customers = await stripe.customers.list({
+        email: customerEmail,
+        limit: 1
       });
-      
+
       if (customers.data.length > 0) {
         customerId = customers.data[0].id;
         logStep("Existing Stripe customer found", { customerId });
       } else {
         logStep("No existing Stripe customer found");
       }
+    } else {
+      logStep("Guest checkout - skipping customer lookup");
     }
 
     // Prepare line items for Stripe using sanitized data
@@ -350,7 +355,12 @@ logStep("Checkout request parsed", { itemCount: sanitizedItems.length, hasDraft:
     }
 
     // Get origin for redirect URLs and build success/cancel
-    const origin = req.headers.get('origin') || 'http://localhost:5173';
+    // IMPORTANTE: O origin deve sempre vir do header da requisição em produção
+    const requestOrigin = req.headers.get('origin');
+    if (!requestOrigin) {
+      logStep("WARNING: No origin header - using referer or default");
+    }
+    const origin = requestOrigin || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://perfume-ai-discover.vercel.app';
     let successUrl = success_url || `${origin}/payment-success`;
     let cancelUrl = cancel_url || `${origin}/checkout`;
     if (!successUrl.includes('{CHECKOUT_SESSION_ID}')) {

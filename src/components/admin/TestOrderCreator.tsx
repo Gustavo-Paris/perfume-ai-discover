@@ -4,13 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, TestTube, ShoppingBag } from 'lucide-react';
+import { Loader2, TestTube, ShoppingBag, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface TestOrderCreatorProps {
   onSuccess: () => void;
 }
+
+// SEGURANÇA: Este componente só funciona em ambiente de desenvolvimento/homologação
+const isDevEnvironment = () => {
+  const hostname = window.location.hostname;
+  return hostname === 'localhost' ||
+         hostname === '127.0.0.1' ||
+         hostname.includes('preview') ||
+         hostname.includes('staging') ||
+         hostname.includes('homolog') ||
+         import.meta.env.DEV;
+};
 
 export function TestOrderCreator({ onSuccess }: TestOrderCreatorProps) {
   const { toast } = useToast();
@@ -21,6 +33,12 @@ export function TestOrderCreator({ onSuccess }: TestOrderCreatorProps) {
   const [totalAmount, setTotalAmount] = useState(150.00);
   const [selectedPerfume, setSelectedPerfume] = useState<string>('');
   const [perfumes, setPerfumes] = useState<any[]>([]);
+  const [isAllowed, setIsAllowed] = useState(false);
+
+  // Verificar se o ambiente permite criar pedidos de teste
+  useEffect(() => {
+    setIsAllowed(isDevEnvironment());
+  }, []);
 
   // Load perfumes on mount
   useEffect(() => {
@@ -124,6 +142,20 @@ export function TestOrderCreator({ onSuccess }: TestOrderCreatorProps) {
     }
   };
 
+  // SEGURANÇA: Bloquear em produção
+  if (!isAllowed) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Funcionalidade Bloqueada</AlertTitle>
+        <AlertDescription>
+          A criação de pedidos de teste está desabilitada em ambiente de produção por motivos de segurança.
+          Esta funcionalidade só está disponível em ambientes de desenvolvimento, staging ou homologação.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -132,7 +164,8 @@ export function TestOrderCreator({ onSuccess }: TestOrderCreatorProps) {
           Criar Pedido de Teste para Homologação
         </CardTitle>
         <CardDescription>
-          Crie um pedido fictício marcado como PAGO para testar a emissão de NF-e de homologação
+          Crie um pedido fictício marcado como PAGO para testar a emissão de NF-e de homologação.
+          <span className="text-amber-600 font-medium"> ⚠️ Somente para ambiente de teste/homologação.</span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -73,10 +73,12 @@ export const generateSecurityMetaTags = () => {
  * Configuração de CORS segura
  */
 export const CORS_CONFIG = {
-  // Produção: Especificar domínios exatos
+  // IMPORTANTE: Substitua pelos domínios reais de produção antes do lançamento!
+  // Exemplo: 'https://perfumesparis.com', 'https://www.perfumesparis.com'
   allowedOrigins: [
-    'https://seu-dominio.com',
-    'https://www.seu-dominio.com',
+    // TODO: Adicionar domínios de produção reais aqui
+    'https://perfume-ai-discover.vercel.app',
+    'https://www.perfume-ai-discover.vercel.app',
   ],
   
   // Development
