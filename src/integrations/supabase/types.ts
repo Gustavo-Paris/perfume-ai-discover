@@ -18,7 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           route: string
           user_agent: string | null
           user_id: string | null
@@ -26,7 +26,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           route: string
           user_agent?: string | null
           user_id?: string | null
@@ -34,7 +34,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           route?: string
           user_agent?: string | null
           user_id?: string | null
@@ -47,7 +47,7 @@ export type Database = {
           address_id: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string
         }
@@ -56,7 +56,7 @@ export type Database = {
           address_id: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id: string
         }
@@ -65,7 +65,7 @@ export type Database = {
           address_id?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string
         }
@@ -297,7 +297,7 @@ export type Database = {
           action: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           table_accessed: string
           user_agent: string | null
           user_id: string | null
@@ -306,7 +306,7 @@ export type Database = {
           action: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           table_accessed: string
           user_agent?: string | null
           user_id?: string | null
@@ -315,7 +315,7 @@ export type Database = {
           action?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           table_accessed?: string
           user_agent?: string | null
           user_id?: string | null
@@ -723,7 +723,7 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           legal_basis: string | null
           resource_id: string | null
           resource_type: string
@@ -736,7 +736,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           legal_basis?: string | null
           resource_id?: string | null
           resource_type: string
@@ -749,7 +749,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           legal_basis?: string | null
           resource_id?: string | null
           resource_type?: string
@@ -1286,7 +1286,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           user_agent: string | null
         }
@@ -1295,7 +1295,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           user_agent?: string | null
         }
@@ -1304,7 +1304,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           user_agent?: string | null
         }
@@ -2285,7 +2285,7 @@ export type Database = {
           data_retention_days: number | null
           expires_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           legal_basis: string | null
           user_id: string | null
         }
@@ -2298,7 +2298,7 @@ export type Database = {
           data_retention_days?: number | null
           expires_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           legal_basis?: string | null
           user_id?: string | null
         }
@@ -2311,7 +2311,7 @@ export type Database = {
           data_retention_days?: number | null
           expires_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           legal_basis?: string | null
           user_id?: string | null
         }
@@ -2488,7 +2488,7 @@ export type Database = {
           access_type: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           viewed_profile_id: string
           viewer_id: string | null
@@ -2497,7 +2497,7 @@ export type Database = {
           access_type: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           viewed_profile_id: string
           viewer_id?: string | null
@@ -2506,7 +2506,7 @@ export type Database = {
           access_type?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           viewed_profile_id?: string
           viewer_id?: string | null
@@ -2642,7 +2642,7 @@ export type Database = {
           created_at: string
           endpoint: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           request_count: number
           user_id: string | null
           window_start: string
@@ -2652,7 +2652,7 @@ export type Database = {
           created_at?: string
           endpoint: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           request_count?: number
           user_id?: string | null
           window_start?: string
@@ -2662,7 +2662,7 @@ export type Database = {
           created_at?: string
           endpoint?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           request_count?: number
           user_id?: string | null
           window_start?: string
@@ -3005,7 +3005,7 @@ export type Database = {
           clicked_result_id: string | null
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           query: string
           results_count: number | null
           session_id: string | null
@@ -3016,7 +3016,7 @@ export type Database = {
           clicked_result_id?: string | null
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           query: string
           results_count?: number | null
           session_id?: string | null
@@ -3027,7 +3027,7 @@ export type Database = {
           clicked_result_id?: string | null
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           query?: string
           results_count?: number | null
           session_id?: string | null
@@ -3105,7 +3105,7 @@ export type Database = {
           event_description: string
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           risk_level: string
           user_agent: string | null
@@ -3116,7 +3116,7 @@ export type Database = {
           event_description: string
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           risk_level?: string
           user_agent?: string | null
@@ -3127,7 +3127,7 @@ export type Database = {
           event_description?: string
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           risk_level?: string
           user_agent?: string | null
@@ -3771,7 +3771,7 @@ export type Database = {
         Row: {
           accepted_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           type: string
           user_agent: string | null
           user_id: string | null
@@ -3780,7 +3780,7 @@ export type Database = {
         Insert: {
           accepted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           type?: string
           user_agent?: string | null
           user_id?: string | null
@@ -3789,7 +3789,7 @@ export type Database = {
         Update: {
           accepted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           type?: string
           user_agent?: string | null
           user_id?: string | null
@@ -4268,14 +4268,8 @@ export type Database = {
         }
         Returns: undefined
       }
-      auto_fix_perfume_prices: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      bytea_to_text: {
-        Args: { data: string }
-        Returns: string
-      }
+      auto_fix_perfume_prices: { Args: never; Returns: Json }
+      bytea_to_text: { Args: { data: string }; Returns: string }
       calculate_dynamic_product_costs: {
         Args: { perfume_uuid: string; sizes_array: number[] }
         Returns: {
@@ -4307,7 +4301,7 @@ export type Database = {
         }[]
       }
       check_advanced_stock_alerts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           alert_level: string
           brand: string
@@ -4318,31 +4312,35 @@ export type Database = {
           should_reorder: boolean
         }[]
       }
-      check_low_stock_alerts: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      check_perfume_availability: {
-        Args:
-          | {
+      check_low_stock_alerts: { Args: never; Returns: number }
+      check_perfume_availability:
+        | {
+            Args: {
               perfume_uuid: string
               quantity_requested?: number
               size_ml_param: number
             }
-          | {
+            Returns: {
+              available: boolean
+              max_quantity: number
+              stock_ml: number
+            }[]
+          }
+        | {
+            Args: {
               perfume_uuid: string
               quantity_requested?: number
               size_ml_param: number
               user_uuid?: string
             }
-        Returns: {
-          available: boolean
-          max_quantity: number
-          stock_ml: number
-        }[]
-      }
+            Returns: {
+              available: boolean
+              max_quantity: number
+              stock_ml: number
+            }[]
+          }
       check_price_integrity: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           brand: string
           current_prices: Json
@@ -4352,34 +4350,37 @@ export type Database = {
           suggested_action: string
         }[]
       }
-      check_rate_limit: {
-        Args:
-          | {
+      check_rate_limit:
+        | {
+            Args: {
               email_param: string
               ip_param?: unknown
               max_attempts?: number
               window_minutes?: number
             }
-          | {
-              p_endpoint?: string
-              p_ip_address?: string
-              p_limit?: number
-              p_user_id?: string
-              p_window_minutes?: number
-            }
-          | {
+            Returns: Json
+          }
+        | {
+            Args: {
               p_endpoint?: string
               p_ip_address?: unknown
               p_limit?: number
               p_user_id?: string
               p_window_minutes?: number
             }
-        Returns: Json
-      }
-      check_rls_enabled: {
-        Args: { table_name: string }
-        Returns: boolean
-      }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              p_endpoint?: string
+              p_ip_address?: string
+              p_limit?: number
+              p_user_id?: string
+              p_window_minutes?: number
+            }
+            Returns: boolean
+          }
+      check_rls_enabled: { Args: { table_name: string }; Returns: boolean }
       check_stock_availability: {
         Args: {
           perfume_uuid: string
@@ -4397,34 +4398,28 @@ export type Database = {
         Args: { endpoint_name?: string; max_requests?: number }
         Returns: boolean
       }
-      clean_duplicate_perfumes: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_expired_reservations: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_old_access_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      consume_material: {
-        Args:
-          | {
-              material_uuid: string
-              movement_notes?: string
-              order_uuid: string
-              quantity_needed: number
-            }
-          | {
+      clean_duplicate_perfumes: { Args: never; Returns: number }
+      cleanup_expired_reservations: { Args: never; Returns: number }
+      cleanup_old_access_logs: { Args: never; Returns: number }
+      consume_material:
+        | {
+            Args: {
               material_uuid: string
               notes_text?: string
               order_uuid?: string
               quantity_consumed: number
             }
-        Returns: boolean
-      }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              material_uuid: string
+              movement_notes?: string
+              order_uuid: string
+              quantity_needed: number
+            }
+            Returns: boolean
+          }
       create_cart_recovery_attempt: {
         Args: {
           cart_session_uuid: string
@@ -4436,12 +4431,9 @@ export type Database = {
         }
         Returns: string
       }
-      daily_price_integrity_check: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      daily_price_integrity_check: { Args: never; Returns: Json }
       detect_abandoned_carts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cart_session_id: string
           hours_since_abandonment: number
@@ -4453,10 +4445,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      detect_material_info: {
-        Args: { material_name: string }
-        Returns: Json
-      }
+      detect_material_info: { Args: { material_name: string }; Returns: Json }
       fix_perfume_margin: {
         Args: { new_margin_percentage?: number; perfume_uuid: string }
         Returns: boolean
@@ -4465,24 +4454,12 @@ export type Database = {
         Args: { perfume_uuid: string; target_margin_multiplier?: number }
         Returns: Json
       }
-      generate_affiliate_code: {
-        Args: { user_name?: string }
-        Returns: string
-      }
-      generate_fiscal_note_number: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      generate_order_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_sac_protocol: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_affiliate_code: { Args: { user_name?: string }; Returns: string }
+      generate_fiscal_note_number: { Args: never; Returns: number }
+      generate_order_number: { Args: never; Returns: string }
+      generate_sac_protocol: { Args: never; Returns: string }
       get_abc_classification: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           brand: string
           class: string
@@ -4523,7 +4500,7 @@ export type Database = {
         }[]
       }
       get_active_promotions: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           current_price_10ml: number
@@ -4554,7 +4531,7 @@ export type Database = {
         Returns: number
       }
       get_bcg_matrix: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           brand: string
           category: string
@@ -4591,7 +4568,7 @@ export type Database = {
         }[]
       }
       get_company_public_info: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cidade: string
           email_contato: string
@@ -4617,7 +4594,7 @@ export type Database = {
         }[]
       }
       get_coupon_type_analysis: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_coupons: number
           avg_conversion_rate: number
@@ -4664,7 +4641,7 @@ export type Database = {
         }[]
       }
       get_inventory_overview: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           low_stock_items: number
           out_of_stock_items: number
@@ -4686,7 +4663,7 @@ export type Database = {
         }[]
       }
       get_lot_expirations: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           brand: string
           days_until_expiry: number
@@ -4699,7 +4676,7 @@ export type Database = {
         }[]
       }
       get_monthly_comparison: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           change_percentage: number
           current_month: number
@@ -4849,7 +4826,7 @@ export type Database = {
         }[]
       }
       get_perfumes_with_stock: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           base_notes: string[]
           brand: string
@@ -4875,7 +4852,7 @@ export type Database = {
         }[]
       }
       get_product_performance: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avg_margin_percentage: number
           brand: string
@@ -4899,7 +4876,7 @@ export type Database = {
         }[]
       }
       get_public_company_info: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cidade: string
           email_contato: string
@@ -4920,7 +4897,7 @@ export type Database = {
         }[]
       }
       get_sac_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avg_resolution_time: unknown
           open_tickets: number
@@ -4928,12 +4905,9 @@ export type Database = {
           total_tickets: number
         }[]
       }
-      get_security_config: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_security_config: { Args: never; Returns: Json }
       get_stock_levels: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           brand: string
           category: string
@@ -5044,10 +5018,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_user_points_balance: {
-        Args: { user_uuid: string }
-        Returns: number
-      }
+      get_user_points_balance: { Args: { user_uuid: string }; Returns: number }
       get_user_recommendations: {
         Args: { limit_count?: number; user_uuid?: string }
         Returns: {
@@ -5061,10 +5032,7 @@ export type Database = {
           recommendation_score: number
         }[]
       }
-      hard_delete_user_data: {
-        Args: { user_uuid: string }
-        Returns: boolean
-      }
+      hard_delete_user_data: { Args: { user_uuid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5075,27 +5043,77 @@ export type Database = {
       http: {
         Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "http_request"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      http_delete: {
-        Args:
-          | { content: string; content_type: string; uri: string }
-          | { uri: string }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-      }
-      http_get: {
-        Args: { data: Json; uri: string } | { uri: string }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-      }
+      http_delete:
+        | {
+            Args: { uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { content: string; content_type: string; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      http_get:
+        | {
+            Args: { uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { data: Json; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       http_head: {
         Args: { uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "*"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       http_header: {
         Args: { field: string; value: string }
         Returns: Database["public"]["CompositeTypes"]["http_header"]
+        SetofOptions: {
+          from: "*"
+          to: "http_header"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       http_list_curlopt: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           curlopt: string
           value: string
@@ -5104,21 +5122,45 @@ export type Database = {
       http_patch: {
         Args: { content: string; content_type: string; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "*"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      http_post: {
-        Args:
-          | { content: string; content_type: string; uri: string }
-          | { data: Json; uri: string }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-      }
+      http_post:
+        | {
+            Args: { content: string; content_type: string; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { data: Json; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       http_put: {
         Args: { content: string; content_type: string; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "*"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      http_reset_curlopt: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      http_reset_curlopt: { Args: never; Returns: boolean }
       http_set_curlopt: {
         Args: { curlopt: string; value: string }
         Returns: boolean
@@ -5169,9 +5211,9 @@ export type Database = {
         }
         Returns: string
       }
-      log_security_event: {
-        Args:
-          | {
+      log_security_event:
+        | {
+            Args: {
               event_description_param: string
               event_type_param: string
               ip_address_param?: unknown
@@ -5180,15 +5222,18 @@ export type Database = {
               user_agent_param?: string
               user_uuid: string
             }
-          | {
+            Returns: string
+          }
+        | {
+            Args: {
               event_description_param: string
               event_type_param: string
               metadata_param?: Json
               risk_level_param: string
               user_uuid: string
             }
-        Returns: string
-      }
+            Returns: undefined
+          }
       log_subscription_event: {
         Args: {
           p_event_data?: Json
@@ -5210,10 +5255,7 @@ export type Database = {
         }
         Returns: string
       }
-      mark_cart_as_abandoned: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      mark_cart_as_abandoned: { Args: never; Returns: number }
       process_affiliate_referral: {
         Args: { affiliate_code: string; order_id: string; order_total: number }
         Returns: boolean
@@ -5222,38 +5264,20 @@ export type Database = {
         Args: { order_uuid: string }
         Returns: Json
       }
-      recalculate_all_material_costs: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      recalculate_all_perfume_prices: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      recalculate_all_prices: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      recalculate_all_prices_debug: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      recalculate_all_material_costs: { Args: never; Returns: Json }
+      recalculate_all_perfume_prices: { Args: never; Returns: Json }
+      recalculate_all_prices: { Args: never; Returns: Json }
+      recalculate_all_prices_debug: { Args: never; Returns: Json }
       recalculate_perfume_prices_after_material_change: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: undefined
       }
       recalculate_perfume_prices_for_sizes: {
         Args: { perfume_uuid: string; sizes: number[] }
         Returns: boolean
       }
-      sanitize_search_input: {
-        Args: { input_text: string }
-        Returns: string
-      }
-      secure_perfume_access: {
-        Args: { perfume_id: string }
-        Returns: boolean
-      }
+      sanitize_search_input: { Args: { input_text: string }; Returns: string }
+      secure_perfume_access: { Args: { perfume_id: string }; Returns: boolean }
       set_perfume_price: {
         Args: {
           perfume_uuid: string
@@ -5262,10 +5286,7 @@ export type Database = {
         }
         Returns: string
       }
-      text_to_bytea: {
-        Args: { data: string }
-        Returns: string
-      }
+      text_to_bytea: { Args: { data: string }; Returns: string }
       track_query_performance: {
         Args: {
           execution_time_ms: number
@@ -5290,10 +5311,7 @@ export type Database = {
         Args: { new_margin_percentage: number; perfume_uuid: string }
         Returns: Json
       }
-      update_sales_statistics: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      update_sales_statistics: { Args: never; Returns: number }
       upsert_reservation: {
         Args: {
           expires_minutes?: number
@@ -5304,10 +5322,20 @@ export type Database = {
         }
         Returns: string
       }
-      urlencode: {
-        Args: { data: Json } | { string: string } | { string: string }
-        Returns: string
-      }
+      urlencode:
+        | { Args: { data: Json }; Returns: string }
+        | {
+            Args: { string: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { string: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       user_has_purchased_perfume: {
         Args: { perfume_uuid: string; user_uuid: string }
         Returns: boolean
@@ -5324,10 +5352,7 @@ export type Database = {
         Args: { cart_items_param: Json }
         Returns: Json
       }
-      validate_cnpj: {
-        Args: { cnpj: string }
-        Returns: boolean
-      }
+      validate_cnpj: { Args: { cnpj: string }; Returns: boolean }
       validate_coupon: {
         Args: { coupon_code: string; order_total: number; user_uuid: string }
         Returns: Json
@@ -5341,14 +5366,8 @@ export type Database = {
         }
         Returns: Json
       }
-      validate_cpf: {
-        Args: { cpf: string }
-        Returns: boolean
-      }
-      validate_cpf_cnpj: {
-        Args: { doc: string }
-        Returns: boolean
-      }
+      validate_cpf: { Args: { cpf: string }; Returns: boolean }
+      validate_cpf_cnpj: { Args: { doc: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "customer"
@@ -5367,7 +5386,7 @@ export type Database = {
         value: string | null
       }
       http_request: {
-        method: unknown | null
+        method: unknown
         uri: string | null
         headers: Database["public"]["CompositeTypes"]["http_header"][] | null
         content_type: string | null
